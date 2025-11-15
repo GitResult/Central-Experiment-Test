@@ -450,6 +450,92 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
   const [optionsModalData, setOptionsModalData] = useState(null);
   const [pendingChip, setPendingChip] = useState(null);
 
+  // Keyboard autocomplete states
+  const [searchText, setSearchText] = useState('');
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const searchInputRef = useRef(null);
+
+  // Get all available options based on current phrase state
+  const getAvailableOptions = () => {
+    if (phraseChips.length === 0) {
+      // Show starting points
+      return STARTING_POINTS.map(point => ({
+        label: point.label,
+        data: point,
+        type: 'startingPoint'
+      }));
+    }
+
+    const lastChip = phraseChips[phraseChips.length - 1];
+    const contextKey = lastChip.text;
+
+    // If last chip needs a value, return empty (modal will handle this)
+    if (CONTEXTUAL_SUGGESTIONS[contextKey]?.needsValue && !lastChip.hasValue) {
+      return [];
+    }
+
+    // If after a value, show "and" option
+    if (lastChip.hasValue || lastChip.type === 'value' || lastChip.type === 'entityType') {
+      return CONTEXTUAL_SUGGESTIONS['_afterValue'].next.map(s => ({
+        label: s.text,
+        data: s,
+        type: 'suggestion'
+      }));
+    }
+
+    // Show contextual suggestions
+    if (CONTEXTUAL_SUGGESTIONS[contextKey]?.next) {
+      return CONTEXTUAL_SUGGESTIONS[contextKey].next.map(s => ({
+        label: s.text,
+        data: s,
+        type: 'suggestion'
+      }));
+    }
+
+    return [];
+  };
+
+  // Filter options based on search text
+  const filteredOptions = searchText
+    ? getAvailableOptions().filter(opt =>
+        opt.label.toLowerCase().includes(searchText.toLowerCase())
+      )
+    : getAvailableOptions();
+
+  // Reset selected index when filtered options change
+  useEffect(() => {
+    setSelectedSuggestionIndex(0);
+  }, [searchText, phraseChips]);
+
+  // Keyboard navigation in search input
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => Math.min(prev + 1, filteredOptions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && filteredOptions.length > 0) {
+      e.preventDefault();
+      const selected = filteredOptions[selectedSuggestionIndex];
+      handleOptionSelect(selected);
+      setSearchText('');
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setSearchText('');
+      setSelectedSuggestionIndex(0);
+    }
+  };
+
+  // Handle option selection from autocomplete
+  const handleOptionSelect = (option) => {
+    if (option.type === 'startingPoint') {
+      handleStartingPoint(option.data);
+    } else if (option.type === 'suggestion') {
+      addChip(option.data);
+    }
+  };
+
   // Update suggestions based on last chip
   useEffect(() => {
     if (phraseChips.length === 0) {
@@ -824,33 +910,92 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
           )}
         </div>
 
-        {/* Phrase Chips */}
-        <div className="flex flex-wrap gap-3 mb-6 min-h-[60px]">
-          {phraseChips.map((chip) => {
-            // Only show edit button for value chips and entity type chips
-            const canEdit = chip.type === 'value' || chip.type === 'entityType';
+        {/* Phrase Chips and Search Input */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-3 mb-3 min-h-[60px] items-center">
+            {phraseChips.map((chip) => {
+              // Only show edit button for value chips and entity type chips
+              const canEdit = chip.type === 'value' || chip.type === 'entityType';
 
-            return (
-              <div key={chip.id} className="chip-pop">
-                <PhraseChip
-                  chip={chip}
-                  onRemove={() => removeChip(chip.id)}
-                  onEdit={canEdit ? () => editChip(chip.id) : undefined}
-                  showRemove={true}
-                  showEdit={canEdit}
-                  size="md"
-                />
-              </div>
-            );
-          })}
+              return (
+                <div key={chip.id} className="chip-pop">
+                  <PhraseChip
+                    chip={chip}
+                    onRemove={() => removeChip(chip.id)}
+                    onEdit={canEdit ? () => editChip(chip.id) : undefined}
+                    showRemove={true}
+                    showEdit={canEdit}
+                    size="md"
+                  />
+                </div>
+              );
+            })}
 
-          {phraseChips.length === 0 && (
-            <div className="text-gray-400 italic">Choose a starting point below...</div>
+            {/* Keyboard Search Input */}
+            <div className="relative flex-1 min-w-[200px]">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={phraseChips.length === 0 ? "Type to start (e.g., 'current')..." : "Type to add..."}
+                className="w-full px-4 py-2 border-2 border-dashed border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 focus:border-solid text-sm"
+              />
+
+              {/* Autocomplete Dropdown */}
+              {searchText && filteredOptions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-blue-200 rounded-lg shadow-xl z-10 max-h-[300px] overflow-y-auto slide-in">
+                  {filteredOptions.map((option, idx) => {
+                    const isSelected = idx === selectedSuggestionIndex;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          handleOptionSelect(option);
+                          setSearchText('');
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium transition-all flex items-center gap-2 ${
+                          isSelected
+                            ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-800'
+                            : 'hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        {option.data.icon && <option.data.icon className="w-4 h-4" />}
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* No results message */}
+              {searchText && filteredOptions.length === 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-10 p-4 text-center text-sm text-gray-400 slide-in">
+                  No matches for "{searchText}"
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Keyboard hints */}
+          {searchText && (
+            <div className="text-xs text-gray-500 flex items-center gap-4 mt-2">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">↑↓</kbd> Navigate
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> Select
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Esc</kbd> Clear
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Starting Points (only show if no chips) */}
-        {phraseChips.length === 0 && (
+        {/* Starting Points (only show if no chips and not searching) */}
+        {phraseChips.length === 0 && !searchText && (
           <div className="mb-4">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
               Start with
@@ -876,8 +1021,8 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
         )}
       </div>
 
-      {/* Suggestions */}
-      {suggestions.length > 0 && (
+      {/* Suggestions (hide when typing in search) */}
+      {suggestions.length > 0 && !searchText && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4 slide-in">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-yellow-500" />
