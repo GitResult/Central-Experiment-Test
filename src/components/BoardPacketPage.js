@@ -748,7 +748,7 @@ const BoardPacketPage = () => {
                     </Document>
 
                     {/* Marker Overlay */}
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none z-10">
                       {currentMarkers.map((marker) => (
                         <div
                           key={marker.id}
@@ -756,7 +756,7 @@ const BoardPacketPage = () => {
                             e.stopPropagation();
                             setSelectedMarkerId(marker.id);
                           }}
-                          className="absolute pointer-events-auto"
+                          className="absolute pointer-events-auto cursor-pointer"
                           style={{
                             left: `${marker.xNorm * 100}%`,
                             top: `${marker.yNorm * 100}%`,
@@ -764,7 +764,7 @@ const BoardPacketPage = () => {
                           }}
                         >
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg cursor-pointer transition-transform hover:scale-110 ${
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-transform hover:scale-110 ${
                               selectedMarkerId === marker.id
                                 ? 'bg-blue-600 text-white ring-4 ring-blue-200'
                                 : marker.status === 'resolved'
@@ -781,7 +781,7 @@ const BoardPacketPage = () => {
                       {/* Temporary Marker */}
                       {tempMarker && (
                         <div
-                          className="absolute"
+                          className="absolute pointer-events-none"
                           style={{
                             left: `${tempMarker.xNorm * 100}%`,
                             top: `${tempMarker.yNorm * 100}%`,
