@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './contactList.css'
 import Pagination from '../components/UI/pagination';
-import TemplatePhraseFilter from '../components/TemplatePhraseFilter';
+import IncrementalPhraseFilter from '../components/IncrementalPhraseFilter';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -1998,13 +1998,12 @@ const UnifiedContactListing = () => {
                 </div>
               </div>
 
-              {/* Phrase Filter (Template-based) */}
+              {/* Phrase Filter (Incremental) */}
               {filterMode === 'phrase' && (
                 <div className="mt-4">
-                  <TemplatePhraseFilter
-                    onApply={(filters, values) => {
+                  <IncrementalPhraseFilter
+                    onApply={(filters) => {
                       setPhraseFilters(filters);
-                      setCurrentPhrase(JSON.stringify(values));
                     }}
                     onClear={() => {
                       setPhraseFilters([]);
