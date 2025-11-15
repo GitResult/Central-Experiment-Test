@@ -190,11 +190,18 @@ const ENTITY_TYPES = [
 
 // Filter options
 const FILTER_OPTIONS = {
-  locations: ['California', 'Texas', 'Washington', 'Oregon', 'Colorado'],
-  membershipLevels: ['Premium', 'Professional', 'Student'],
-  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
+  provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 'Nova Scotia', 'New Brunswick', 'Newfoundland and Labrador', 'Prince Edward Island'],
+  cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener'],
+  membershipLevels: ['Premium', 'Professional', 'Student', 'Senior', 'Family', 'Corporate'],
+  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years', '20 years'],
   tenureComparisons: ['or more', 'or less', 'exactly'],
-  statuses: ['Active', 'Inactive', 'Pending']
+  statuses: ['Active', 'Inactive', 'Pending', 'Suspended', 'Honorary'],
+  educationLevels: ['High School', 'College Diploma', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Professional Certification'],
+  donationStatus: ['Regular Donor', 'Major Donor', 'Monthly Donor', 'Legacy Donor', 'First-time Donor', 'Lapsed Donor'],
+  donationAmounts: ['$100+', '$500+', '$1,000+', '$5,000+', '$10,000+', '$25,000+'],
+  eventParticipation: ['Frequent Attendee', 'Occasional Attendee', 'Speaker', 'Sponsor', 'Volunteer', 'Never Attended'],
+  committeeRoles: ['Committee Chair', 'Committee Member', 'Board Member', 'Advisory Board', 'Task Force Member'],
+  awards: ['Volunteer of the Year', 'Leadership Award', 'Community Service Award', 'Lifetime Achievement', 'Innovation Award', 'Excellence Award']
 };
 
 // Contextual suggestions based on last chip
@@ -270,13 +277,20 @@ const CONTEXTUAL_SUGGESTIONS = {
   // After "in" -> needs specification
   'in': {
     next: [
-      { text: 'location', type: 'connector', color: 'gray' }
+      { text: 'province', type: 'connector', color: 'gray' },
+      { text: 'city', type: 'connector', color: 'gray' }
     ]
   },
 
-  // After "in location" -> show location values
-  'location': {
-    needsValue: 'location',
+  // After "in province" -> show province values
+  'province': {
+    needsValue: 'province',
+    next: []
+  },
+
+  // After "in city" -> show city values
+  'city': {
+    needsValue: 'city',
     next: []
   },
 
@@ -284,7 +298,12 @@ const CONTEXTUAL_SUGGESTIONS = {
   'with': {
     next: [
       { text: 'status', type: 'connector', color: 'gray' },
-      { text: 'membership level', type: 'connector', color: 'gray' }
+      { text: 'membership level', type: 'connector', color: 'gray' },
+      { text: 'education level', type: 'connector', color: 'gray' },
+      { text: 'donation status', type: 'connector', color: 'gray' },
+      { text: 'event participation', type: 'connector', color: 'gray' },
+      { text: 'committee role', type: 'connector', color: 'gray' },
+      { text: 'award', type: 'connector', color: 'gray' }
     ]
   },
 
@@ -297,6 +316,42 @@ const CONTEXTUAL_SUGGESTIONS = {
   // After "with membership level" -> show membership level values
   'membership level': {
     needsValue: 'membershipLevel',
+    next: []
+  },
+
+  // After "with education level" -> show education level values
+  'education level': {
+    needsValue: 'educationLevel',
+    next: []
+  },
+
+  // After "with donation status" -> show donation status values
+  'donation status': {
+    needsValue: 'donationStatus',
+    next: []
+  },
+
+  // After "with event participation" -> show event participation values
+  'event participation': {
+    needsValue: 'eventParticipation',
+    next: []
+  },
+
+  // After "with committee role" -> show committee role values
+  'committee role': {
+    needsValue: 'committeeRole',
+    next: []
+  },
+
+  // After "with award" -> show award values
+  'award': {
+    needsValue: 'award',
+    next: []
+  },
+
+  // After "who donated" -> show donation amounts
+  'who donated': {
+    needsValue: 'donationAmount',
     next: []
   },
 
@@ -369,9 +424,13 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
         options = ENTITY_TYPES.map(et => ({ label: et.label, ...et }));
         title = 'Select Entity Type';
         break;
-      case 'location':
-        options = FILTER_OPTIONS.locations;
-        title = 'Select Location';
+      case 'province':
+        options = FILTER_OPTIONS.provinces;
+        title = 'Select Province';
+        break;
+      case 'city':
+        options = FILTER_OPTIONS.cities;
+        title = 'Select City';
         break;
       case 'membershipLevel':
         options = FILTER_OPTIONS.membershipLevels;
@@ -385,6 +444,30 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
         options = FILTER_OPTIONS.statuses;
         title = 'Select Status';
         break;
+      case 'educationLevel':
+        options = FILTER_OPTIONS.educationLevels;
+        title = 'Select Education Level';
+        break;
+      case 'donationStatus':
+        options = FILTER_OPTIONS.donationStatus;
+        title = 'Select Donation Status';
+        break;
+      case 'donationAmount':
+        options = FILTER_OPTIONS.donationAmounts;
+        title = 'Select Donation Amount';
+        break;
+      case 'eventParticipation':
+        options = FILTER_OPTIONS.eventParticipation;
+        title = 'Select Event Participation';
+        break;
+      case 'committeeRole':
+        options = FILTER_OPTIONS.committeeRoles;
+        title = 'Select Committee Role';
+        break;
+      case 'award':
+        options = FILTER_OPTIONS.awards;
+        title = 'Select Award';
+        break;
       default:
         return;
     }
@@ -394,7 +477,54 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
   };
 
   const handleValueSelected = (value) => {
-    const { valueType, connectorChip } = optionsModalData;
+    const { valueType, connectorChip, valueChip: previousValueChip, editingChipId } = optionsModalData;
+
+    // Handle editing existing chip
+    if (editingChipId) {
+      if (valueType === 'entityType') {
+        const selectedEntity = ENTITY_TYPES.find(et => et.label === value);
+        const updatedChips = phraseChips.map(chip =>
+          chip.id === editingChipId
+            ? {
+                ...chip,
+                text: selectedEntity.label,
+                entityTypeValue: selectedEntity.type,
+                color: selectedEntity.color,
+                icon: selectedEntity.icon
+              }
+            : chip
+        );
+        setPhraseChips(updatedChips);
+      } else {
+        // Update value chip
+        const updatedChips = phraseChips.map(chip =>
+          chip.id === editingChipId
+            ? {
+                ...chip,
+                text: value,
+                color: getColorForValueType(valueType),
+                icon: getIconForValueType(valueType)
+              }
+            : chip
+        );
+        setPhraseChips(updatedChips);
+      }
+      return;
+    }
+
+    // Handle tenure comparison (or more, or less, exactly)
+    if (valueType === 'tenureComparison') {
+      const comparisonChip = {
+        id: Date.now(),
+        text: value,
+        type: 'value',
+        valueType: 'tenureComparison',
+        color: 'blue',
+        hasValue: true
+      };
+      setPhraseChips([...phraseChips, comparisonChip]);
+      return;
+    }
 
     // Handle entity type selection differently
     if (valueType === 'entityType') {
@@ -451,21 +581,35 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
   const getColorForValueType = (valueType) => {
     const colors = {
-      location: 'red',
+      province: 'red',
+      city: 'orange',
       membershipLevel: 'purple',
       tenure: 'blue',
       tenureComparison: 'blue',
-      status: 'emerald'
+      status: 'emerald',
+      educationLevel: 'indigo',
+      donationStatus: 'green',
+      donationAmount: 'green',
+      eventParticipation: 'yellow',
+      committeeRole: 'purple',
+      award: 'yellow'
     };
     return colors[valueType] || 'gray';
   };
 
   const getIconForValueType = (valueType) => {
     const icons = {
-      location: MapPin,
+      province: MapPin,
+      city: MapPin,
       membershipLevel: Award,
       tenure: Clock,
-      status: Check
+      status: Check,
+      educationLevel: Award,
+      donationStatus: Award,
+      donationAmount: Award,
+      eventParticipation: Calendar,
+      committeeRole: Users,
+      award: Award
     };
     return icons[valueType];
   };
@@ -481,6 +625,88 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
   const removeChip = (chipId) => {
     setPhraseChips(phraseChips.filter(c => c.id !== chipId));
+  };
+
+  const editChip = (chipId) => {
+    const chipToEdit = phraseChips.find(c => c.id === chipId);
+    if (!chipToEdit) return;
+
+    // Only allow editing value chips and entity type chips
+    if (chipToEdit.type === 'value') {
+      // Show the appropriate value selector based on valueType
+      let options = [];
+      let title = '';
+
+      switch(chipToEdit.valueType) {
+        case 'province':
+          options = FILTER_OPTIONS.provinces;
+          title = 'Edit Province';
+          break;
+        case 'city':
+          options = FILTER_OPTIONS.cities;
+          title = 'Edit City';
+          break;
+        case 'membershipLevel':
+          options = FILTER_OPTIONS.membershipLevels;
+          title = 'Edit Membership Level';
+          break;
+        case 'tenure':
+          options = FILTER_OPTIONS.tenureValues;
+          title = 'Edit Tenure';
+          break;
+        case 'status':
+          options = FILTER_OPTIONS.statuses;
+          title = 'Edit Status';
+          break;
+        case 'educationLevel':
+          options = FILTER_OPTIONS.educationLevels;
+          title = 'Edit Education Level';
+          break;
+        case 'donationStatus':
+          options = FILTER_OPTIONS.donationStatus;
+          title = 'Edit Donation Status';
+          break;
+        case 'donationAmount':
+          options = FILTER_OPTIONS.donationAmounts;
+          title = 'Edit Donation Amount';
+          break;
+        case 'eventParticipation':
+          options = FILTER_OPTIONS.eventParticipation;
+          title = 'Edit Event Participation';
+          break;
+        case 'committeeRole':
+          options = FILTER_OPTIONS.committeeRoles;
+          title = 'Edit Committee Role';
+          break;
+        case 'award':
+          options = FILTER_OPTIONS.awards;
+          title = 'Edit Award';
+          break;
+        case 'tenureComparison':
+          options = FILTER_OPTIONS.tenureComparisons;
+          title = 'Edit Comparison';
+          break;
+        default:
+          return;
+      }
+
+      setOptionsModalData({
+        title,
+        options,
+        valueType: chipToEdit.valueType,
+        editingChipId: chipId
+      });
+      setShowOptionsModal(true);
+    } else if (chipToEdit.type === 'entityType') {
+      // Show entity type selector
+      setOptionsModalData({
+        title: 'Edit Entity Type',
+        options: ENTITY_TYPES.map(et => ({ label: et.label, ...et })),
+        valueType: 'entityType',
+        editingChipId: chipId
+      });
+      setShowOptionsModal(true);
+    }
   };
 
   const handleClear = () => {
@@ -525,16 +751,23 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
         {/* Phrase Chips */}
         <div className="flex flex-wrap gap-3 mb-6 min-h-[60px]">
-          {phraseChips.map((chip) => (
-            <div key={chip.id} className="chip-pop">
-              <PhraseChip
-                chip={chip}
-                onRemove={() => removeChip(chip.id)}
-                showRemove={true}
-                size="md"
-              />
-            </div>
-          ))}
+          {phraseChips.map((chip) => {
+            // Only show edit button for value chips and entity type chips
+            const canEdit = chip.type === 'value' || chip.type === 'entityType';
+
+            return (
+              <div key={chip.id} className="chip-pop">
+                <PhraseChip
+                  chip={chip}
+                  onRemove={() => removeChip(chip.id)}
+                  onEdit={canEdit ? () => editChip(chip.id) : undefined}
+                  showRemove={true}
+                  showEdit={canEdit}
+                  size="md"
+                />
+              </div>
+            );
+          })}
 
           {phraseChips.length === 0 && (
             <div className="text-gray-400 italic">Choose a starting point below...</div>
@@ -638,12 +871,19 @@ function phraseChipsToFilters(chips) {
     const chip = chips[i];
 
     if (chip.type === 'value') {
-      if (chip.valueType === 'location') {
+      if (chip.valueType === 'province') {
         filters.push({
-          field: 'location',
+          field: 'province',
           operator: 'eq',
           value: chip.text,
-          label: `Location: ${chip.text}`
+          label: `Province: ${chip.text}`
+        });
+      } else if (chip.valueType === 'city') {
+        filters.push({
+          field: 'city',
+          operator: 'eq',
+          value: chip.text,
+          label: `City: ${chip.text}`
         });
       } else if (chip.valueType === 'membershipLevel') {
         filters.push({
@@ -658,6 +898,48 @@ function phraseChipsToFilters(chips) {
           operator: 'eq',
           value: chip.text,
           label: `Status: ${chip.text}`
+        });
+      } else if (chip.valueType === 'educationLevel') {
+        filters.push({
+          field: 'educationLevel',
+          operator: 'eq',
+          value: chip.text,
+          label: `Education: ${chip.text}`
+        });
+      } else if (chip.valueType === 'donationStatus') {
+        filters.push({
+          field: 'donationStatus',
+          operator: 'eq',
+          value: chip.text,
+          label: `Donation: ${chip.text}`
+        });
+      } else if (chip.valueType === 'donationAmount') {
+        filters.push({
+          field: 'donationAmount',
+          operator: 'gte',
+          value: chip.text,
+          label: `Donated: ${chip.text}`
+        });
+      } else if (chip.valueType === 'eventParticipation') {
+        filters.push({
+          field: 'eventParticipation',
+          operator: 'eq',
+          value: chip.text,
+          label: `Events: ${chip.text}`
+        });
+      } else if (chip.valueType === 'committeeRole') {
+        filters.push({
+          field: 'committeeRole',
+          operator: 'eq',
+          value: chip.text,
+          label: `Committee: ${chip.text}`
+        });
+      } else if (chip.valueType === 'award') {
+        filters.push({
+          field: 'award',
+          operator: 'eq',
+          value: chip.text,
+          label: `Award: ${chip.text}`
         });
       } else if (chip.valueType === 'tenure') {
         // Next chip should be comparison
