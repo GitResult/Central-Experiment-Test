@@ -31,8 +31,12 @@ import {
   Circle, PenTool, MousePointer, Send, AtSign, Mail, Briefcase
 } from 'lucide-react';
 
-// Configure PDF.js worker - using worker from public folder
-pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
+// Configure PDF.js worker - using the recommended approach for Create React App
+// This ensures version matching between pdf.js and the worker
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 // Mock users for mentions
 const AVAILABLE_USERS = [
