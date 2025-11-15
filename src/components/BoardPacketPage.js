@@ -22,8 +22,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import {
   FileText, Upload, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
   Search, Filter, MessageSquare, Check, AlertCircle, Loader2, X, Users,
