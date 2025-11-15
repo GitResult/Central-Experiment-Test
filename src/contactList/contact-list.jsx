@@ -52,10 +52,43 @@ const calculateYears = (startDate, endDate = new Date()) => {
   return Math.floor(years);
 };
 
-// Utility: Get field value from contact (handles nested paths)
+// Field name mapping: Display name → Data field name
+const FIELD_NAME_MAP = {
+  'Id': 'id',
+  'Name': 'name',
+  'Type': 'type',
+  'Status': 'status',
+  'Email': 'email',
+  'Phone': 'phone',
+  'Location': 'location',
+  'Address Line 1': 'addressLine1',
+  'Address Line 2': 'addressLine2',
+  'City': 'city',
+  'Province/State': 'provinceState',
+  'Country': 'country',
+  'Postal/Zip Code': 'postalZipCode',
+  'Age': 'age',
+  'Age Group': 'ageGroup',
+  'Date of Birth': 'dateOfBirth',
+  'Renewal Type': 'renewalType',
+  'Committees': 'committees',
+  'Events': 'events',
+  'Join Date': 'joinDate',
+  'Renewal Date': 'renewalDate',
+  'Engagement': 'engagement',
+  'Revenue': 'revenue',
+  'Membership Level': 'membershipLevel'
+};
+
+// Utility: Get field value from contact (handles both display names and data field names)
 const getFieldValue = (contact, fieldPath) => {
   if (!fieldPath) return null;
-  const parts = fieldPath.split('.');
+
+  // Try to map display name to data field name
+  const mappedField = FIELD_NAME_MAP[fieldPath] || fieldPath;
+
+  // Handle nested paths
+  const parts = mappedField.split('.');
   let value = contact;
   for (const part of parts) {
     if (value == null) return null;
