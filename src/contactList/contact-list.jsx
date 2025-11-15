@@ -3,10 +3,8 @@ import { Search, MoreHorizontal, Plus, X, ChevronRight, Filter, Eye, EyeOff, Clo
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Link } from 'react-router-dom';
 import './contactList.css'
-import Pagination from '../../../components/UI/pagination';
-import DockPrototype from '../personEssential2/DockPrototype';
+import Pagination from '../components/UI/pagination';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -1498,10 +1496,6 @@ const UnifiedContactListing = () => {
   }, []);
 
   return sampleData && (
-    <DockPrototype discussions={discussions} setDiscussions={setDiscussions} initialMarkers={[
-      { id: 1, x: 200, y: 220, discussionId: 1 },
-      { id: 2, x: 1300, y: 830, discussionId: 3 }
-    ]}>
       <div className="min-h-screen bg-slate-50 relative mt-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
         <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -2877,11 +2871,7 @@ const UnifiedContactListing = () => {
                               if (field.name === 'Name') {
                                 return (
                                   <td key={field.name} className="px-3 py-2 text-sm font-bold text-slate-900">
-                                    {contact.id === "C-1001" ? (
-                                      <Link to="/demo/essentials" className="no-underline hover:no-underline">
-                                        {value}
-                                      </Link>
-                                    ) : <span>{value}</span>}
+                                    <span>{value}</span>
                                   </td>
                                 );
                               }
@@ -4212,7 +4202,6 @@ const UnifiedContactListing = () => {
       `}</style>
 
       </div>
-    </DockPrototype>
   );
 };
 

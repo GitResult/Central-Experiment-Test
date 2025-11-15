@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase
+  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -97,6 +97,14 @@ const Navigation = ({ onNavigate }) => {
       icon: Cpu,
       color: 'bg-pink-500',
       features: ['AI Chat', 'Heatmap', 'Task Generation', 'All Resizable Features']
+    },
+    {
+      id: 'contact-list',
+      name: 'Contact List',
+      description: 'Advanced contact management with filtering, interactive charts, maps, and comprehensive analytics.',
+      icon: ListFilter,
+      color: 'bg-emerald-500',
+      features: ['Advanced Filtering', 'Interactive Charts', 'Map Visualization', 'Export Data']
     }
   ];
 
