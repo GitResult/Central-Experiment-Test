@@ -20,7 +20,7 @@
  * @returns {React.Component} BoardPacketPage component
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -107,6 +107,7 @@ const BoardPacketPage = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [viewMode, setViewMode] = useState('view'); // 'view' or 'annotate'
   const [showShareModal, setShowShareModal] = useState(false);
+  const [activeAgendaId, setActiveAgendaId] = useState(null);
 
   // Markers State - using normalized coordinates (0-1)
   const [markers, setMarkers] = useState([
@@ -182,7 +183,35 @@ const BoardPacketPage = () => {
     .filter(m => {
       if (!searchQuery) return true;
       return m.note.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .filter(m => {
+      if (!activeAgendaId) return true;
+      const doc = documents.find(d => d.id === m.documentId);
+      return doc?.agendaId === activeAgendaId;
     });
+
+  // Compute marker counts by document
+  const markerCountsByDoc = useMemo(() => {
+    const counts = {};
+    markers.forEach(m => {
+      if (!counts[m.documentId]) counts[m.documentId] = { total: 0, open: 0 };
+      counts[m.documentId].total += 1;
+      if (m.status === 'open') counts[m.documentId].open += 1;
+    });
+    return counts;
+  }, [markers]);
+
+  // Open markers for current document
+  const openMarkersForDoc = useMemo(() => {
+    if (!currentDocument) return [];
+    return markers
+      .filter(m => m.documentId === currentDocument.id && m.status === 'open')
+      .sort((a, b) => a.page - b.page || a.createdAt - b.createdAt);
+  }, [markers, currentDocument]);
+
+  const openMarkersOnPage = useMemo(() => {
+    return openMarkersForDoc.filter(m => m.page === currentPage);
+  }, [openMarkersForDoc, currentPage]);
 
   // PDF loading handlers
   const onDocumentLoadSuccess = ({ numPages }) => {
@@ -226,9 +255,10 @@ const BoardPacketPage = () => {
 
         // Auto-select the newly uploaded document if it's a PDF
         if (isPdf) {
-          setCurrentDocument(prev => {
-            const updated = documents.find(d => d.id === newDoc.id);
-            return updated ? { ...newDoc, status: 'ready' } : prev;
+          setCurrentDocument({
+            ...newDoc,
+            status: 'ready',
+            pages: null, // Will be filled by onDocumentLoadSuccess
           });
           setCurrentPage(1);
         }
@@ -427,6 +457,17 @@ const BoardPacketPage = () => {
   const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, numPages || currentDocument?.pages || 1));
 
+  // Navigate to next open marker
+  const goToNextOpenMarker = () => {
+    if (!currentDocument || openMarkersForDoc.length === 0) return;
+
+    const currentIndex = openMarkersForDoc.findIndex(m => m.id === selectedMarkerId);
+    const next = openMarkersForDoc[(currentIndex + 1) % openMarkersForDoc.length];
+
+    setCurrentPage(next.page);
+    setSelectedMarkerId(next.id);
+  };
+
   // Get file icon
   const getFileIcon = (type) => {
     return <FileText className="w-4 h-4" />;
@@ -561,7 +602,12 @@ const BoardPacketPage = () => {
               {agendaItems.map(item => (
                 <button
                   key={item.id}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setActiveAgendaId(activeAgendaId === item.id ? null : item.id)}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+                    activeAgendaId === item.id
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   {item.order}. {item.title}
                 </button>
@@ -627,6 +673,11 @@ const BoardPacketPage = () => {
                           {getStatusBadge(doc.status)}
                           {doc.status === 'ready' && doc.pages && (
                             <span className="text-xs text-gray-500">{doc.pages} pages</span>
+                          )}
+                          {markerCountsByDoc[doc.id] && (
+                            <span className="text-xs text-orange-600">
+                              {markerCountsByDoc[doc.id].open} open / {markerCountsByDoc[doc.id].total} notes
+                            </span>
                           )}
                         </div>
                       </div>
@@ -726,6 +777,24 @@ const BoardPacketPage = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Open Items Summary Strip */}
+                {openMarkersForDoc.length > 0 && (
+                  <div className="px-6 py-2 bg-orange-50 border-t border-orange-100">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-orange-700">
+                        <strong>{openMarkersForDoc.length}</strong> open note{openMarkersForDoc.length !== 1 ? 's' : ''} ·{' '}
+                        <strong>{openMarkersOnPage.length}</strong> on this page
+                      </span>
+                      <button
+                        onClick={goToNextOpenMarker}
+                        className="text-orange-600 hover:text-orange-800 font-medium hover:underline"
+                      >
+                        Go to next open →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* PDF Container with Overlay */}
@@ -777,9 +846,9 @@ const BoardPacketPage = () => {
                           }}
                         >
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-transform hover:scale-110 ${
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-all hover:scale-110 ${
                               selectedMarkerId === marker.id
-                                ? 'bg-blue-600 text-white ring-4 ring-blue-200'
+                                ? 'bg-blue-600 text-white ring-4 ring-blue-200 animate-pulse'
                                 : marker.status === 'resolved'
                                 ? 'bg-green-500 text-white'
                                 : 'bg-yellow-500 text-white'
@@ -1192,7 +1261,7 @@ const BoardPacketPage = () => {
               </div>
 
               <p className="text-sm text-gray-600 mb-6">
-                Share this board meeting packet with others
+                Share these board meeting materials with others
               </p>
 
               <div className="space-y-3">
@@ -1215,7 +1284,7 @@ const BoardPacketPage = () => {
                 <button
                   onClick={() => {
                     const subject = encodeURIComponent(meetingInfo.title);
-                    const body = encodeURIComponent(`Please review the board meeting packet for ${meetingInfo.title}\n\nDate: ${meetingInfo.date}\nTime: ${meetingInfo.time}\nLocation: ${meetingInfo.location}`);
+                    const body = encodeURIComponent(`Please review the board meeting materials for ${meetingInfo.title}\n\nDate: ${meetingInfo.date}\nTime: ${meetingInfo.time}\nLocation: ${meetingInfo.location}`);
                     window.location.href = `mailto:?subject=${subject}&body=${body}`;
                     setShowShareModal(false);
                   }}
@@ -1249,7 +1318,7 @@ const BoardPacketPage = () => {
 
               <div className="mt-6 p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600">
-                  <strong>Note:</strong> Recipients will need appropriate permissions to view this board meeting packet.
+                  <strong>Note:</strong> Recipients will need appropriate permissions to view these board meeting materials.
                 </p>
               </div>
             </div>
