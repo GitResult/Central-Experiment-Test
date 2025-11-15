@@ -1,11 +1,14 @@
 /**
  * IncrementalPhraseFilter Component
  *
- * Incremental phrase builder matching ReportPhrase UX pattern.
+ * Incremental phrase builder with granular chips matching ReportPhrase UX pattern.
  * Users build complex multi-criteria filters by adding chips incrementally.
  *
  * Features:
- * - Start with entity selection (Current Members, All Contacts, etc.)
+ * - Granular chip structure: Each word/concept is a separate chip
+ * - Example: [Current] [that have been] [members] [for] [5 years] [or more]
+ * - Start with cohort selection (Current, All Contacts, Lapsed, Pending)
+ * - Select entity types (members, students, professionals, volunteers)
  * - Add multiple conditions with contextual suggestions
  * - Chain criteria with "and" connectors
  * - Edit/remove individual chips
@@ -145,31 +148,44 @@ const OptionsSelector = ({ title, options, onSelect, onClose }) => {
         </div>
 
         <div className="grid grid-cols-1 gap-2">
-          {options.map((option, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                onSelect(typeof option === 'string' ? option : option.label || option.value);
-                onClose();
-              }}
-              className="px-4 py-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-700 transition-all"
-            >
-              {typeof option === 'string' ? option : option.label || option.value}
-            </button>
-          ))}
+          {options.map((option, idx) => {
+            const displayText = typeof option === 'string' ? option : option.label || option.value;
+            const Icon = option.icon;
+
+            return (
+              <button
+                key={idx}
+                onClick={() => {
+                  onSelect(displayText);
+                  onClose();
+                }}
+                className="px-4 py-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-700 transition-all flex items-center gap-2"
+              >
+                {Icon && <Icon className="w-4 h-4" />}
+                {displayText}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-// Starting points
+// Starting points - simplified to just the cohort
 const STARTING_POINTS = [
-  { id: 'current', label: 'Current Members', icon: Users, color: 'blue', type: 'entity', filterHint: { status: 'Active', type: 'MEMBER' } },
-  { id: 'all', label: 'All Contacts', icon: Users, color: 'gray', type: 'entity', filterHint: {} },
-  { id: 'lapsed', label: 'Lapsed Members', icon: X, color: 'red', type: 'entity', filterHint: { status: 'Inactive', type: 'MEMBER' } },
-  { id: 'students', label: 'Students', icon: Users, color: 'emerald', type: 'entity', filterHint: { type: 'STUDENT' } },
-  { id: 'pending', label: 'Pending Members', icon: Clock, color: 'yellow', type: 'entity', filterHint: { status: 'Pending', type: 'MEMBER' } }
+  { id: 'current', label: 'Current', icon: Users, color: 'blue', type: 'cohort', filterHint: { status: 'Active' } },
+  { id: 'all', label: 'All Contacts', icon: Users, color: 'gray', type: 'cohort', filterHint: {} },
+  { id: 'lapsed', label: 'Lapsed', icon: X, color: 'red', type: 'cohort', filterHint: { status: 'Inactive' } },
+  { id: 'pending', label: 'Pending', icon: Clock, color: 'yellow', type: 'cohort', filterHint: { status: 'Pending' } }
+];
+
+// Entity types that can follow "that have been"
+const ENTITY_TYPES = [
+  { label: 'members', type: 'MEMBER', color: 'blue', icon: Users },
+  { label: 'students', type: 'STUDENT', color: 'emerald', icon: Users },
+  { label: 'professionals', type: 'PROFESSIONAL', color: 'purple', icon: Award },
+  { label: 'volunteers', type: 'VOLUNTEER', color: 'orange', icon: Users }
 ];
 
 // Filter options
@@ -178,61 +194,109 @@ const FILTER_OPTIONS = {
   membershipLevels: ['Premium', 'Professional', 'Student'],
   tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
   tenureComparisons: ['or more', 'or less', 'exactly'],
-  statuses: ['Active', 'Inactive', 'Pending'],
-  types: ['Members', 'Students', 'All']
+  statuses: ['Active', 'Inactive', 'Pending']
 };
 
 // Contextual suggestions based on last chip
 const CONTEXTUAL_SUGGESTIONS = {
-  // After entity
-  'Current Members': {
+  // After cohort (Current, All Contacts, Lapsed, Pending)
+  'Current': {
     next: [
-      { text: 'that have been members for', type: 'connector', color: 'gray' },
-      { text: 'in location', type: 'connector', color: 'gray' },
-      { text: 'with membership level', type: 'connector', color: 'gray' }
+      { text: 'that have been', type: 'connector', color: 'gray' }
     ]
   },
   'All Contacts': {
     next: [
-      { text: 'with status', type: 'connector', color: 'gray' },
-      { text: 'in location', type: 'connector', color: 'gray' },
-      { text: 'that have been members for', type: 'connector', color: 'gray' }
+      { text: 'that have been', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' }
     ]
   },
-  'Lapsed Members': {
+  'Lapsed': {
     next: [
-      { text: 'in location', type: 'connector', color: 'gray' },
-      { text: 'that have been members for', type: 'connector', color: 'gray' },
-      { text: 'with membership level', type: 'connector', color: 'gray' }
+      { text: 'that have been', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' }
     ]
   },
-  'Students': {
+  'Pending': {
     next: [
-      { text: 'in location', type: 'connector', color: 'gray' },
-      { text: 'with status', type: 'connector', color: 'gray' }
-    ]
-  },
-  'Pending Members': {
-    next: [
-      { text: 'in location', type: 'connector', color: 'gray' }
+      { text: 'that have been', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' }
     ]
   },
 
-  // After connectors -> value selection
-  'that have been members for': {
+  // After "that have been" -> show entity types
+  'that have been': {
+    needsValue: 'entityType',
+    next: []
+  },
+
+  // After entity type (members, students, professionals, volunteers)
+  'members': {
+    next: [
+      { text: 'for', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' }
+    ]
+  },
+  'students': {
+    next: [
+      { text: 'for', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' }
+    ]
+  },
+  'professionals': {
+    next: [
+      { text: 'for', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' }
+    ]
+  },
+  'volunteers': {
+    next: [
+      { text: 'for', type: 'connector', color: 'gray' },
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' }
+    ]
+  },
+
+  // After "for" -> show tenure values
+  'for': {
     needsValue: 'tenure',
     next: []
   },
-  'in location': {
+
+  // After "in" -> needs specification
+  'in': {
+    next: [
+      { text: 'location', type: 'connector', color: 'gray' }
+    ]
+  },
+
+  // After "in location" -> show location values
+  'location': {
     needsValue: 'location',
     next: []
   },
-  'with membership level': {
-    needsValue: 'membershipLevel',
+
+  // After "with" -> needs specification
+  'with': {
+    next: [
+      { text: 'status', type: 'connector', color: 'gray' },
+      { text: 'membership level', type: 'connector', color: 'gray' }
+    ]
+  },
+
+  // After "with status" -> show status values
+  'status': {
+    needsValue: 'status',
     next: []
   },
-  'with status': {
-    needsValue: 'status',
+
+  // After "with membership level" -> show membership level values
+  'membership level': {
+    needsValue: 'membershipLevel',
     next: []
   },
 
@@ -246,10 +310,9 @@ const CONTEXTUAL_SUGGESTIONS = {
   // After "and"
   'and': {
     next: [
-      { text: 'in location', type: 'connector', color: 'gray' },
-      { text: 'with membership level', type: 'connector', color: 'gray' },
-      { text: 'that have been members for', type: 'connector', color: 'gray' },
-      { text: 'with status', type: 'connector', color: 'gray' }
+      { text: 'in', type: 'connector', color: 'gray' },
+      { text: 'with', type: 'connector', color: 'gray' },
+      { text: 'for', type: 'connector', color: 'gray' }
     ]
   }
 };
@@ -302,6 +365,10 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
     let title = '';
 
     switch(valueType) {
+      case 'entityType':
+        options = ENTITY_TYPES.map(et => ({ label: et.label, ...et }));
+        title = 'Select Entity Type';
+        break;
       case 'location':
         options = FILTER_OPTIONS.locations;
         title = 'Select Location';
@@ -329,7 +396,28 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
   const handleValueSelected = (value) => {
     const { valueType, connectorChip } = optionsModalData;
 
-    // Create value chip
+    // Handle entity type selection differently
+    if (valueType === 'entityType') {
+      const selectedEntity = ENTITY_TYPES.find(et => et.label === value);
+      const entityChip = {
+        id: Date.now(),
+        text: selectedEntity.label,
+        type: 'entityType',
+        entityTypeValue: selectedEntity.type,
+        color: selectedEntity.color,
+        icon: selectedEntity.icon
+      };
+
+      // Mark connector as having value and add entity type chip
+      const updatedChips = phraseChips.map(chip =>
+        chip.id === connectorChip.id ? { ...chip, hasValue: true } : chip
+      );
+
+      setPhraseChips([...updatedChips, entityChip]);
+      return;
+    }
+
+    // Create value chip for other types
     const valueChip = {
       id: Date.now(),
       text: value,
@@ -520,16 +608,27 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 function phraseChipsToFilters(chips) {
   const filters = [];
 
-  // Get starting point filters
-  const entityChip = chips.find(c => c.type === 'entity');
-  if (entityChip && entityChip.filterHint) {
-    Object.entries(entityChip.filterHint).forEach(([field, value]) => {
+  // Get cohort filters (Current, All Contacts, Lapsed, Pending)
+  const cohortChip = chips.find(c => c.type === 'cohort');
+  if (cohortChip && cohortChip.filterHint) {
+    Object.entries(cohortChip.filterHint).forEach(([field, value]) => {
       filters.push({
         field,
         operator: 'eq',
         value,
         label: `${field.charAt(0).toUpperCase() + field.slice(1)}: ${value}`
       });
+    });
+  }
+
+  // Get entity type filter (members, students, professionals, volunteers)
+  const entityTypeChip = chips.find(c => c.type === 'entityType');
+  if (entityTypeChip && entityTypeChip.entityTypeValue) {
+    filters.push({
+      field: 'type',
+      operator: 'eq',
+      value: entityTypeChip.entityTypeValue,
+      label: `Type: ${entityTypeChip.text}`
     });
   }
 
