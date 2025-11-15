@@ -902,27 +902,27 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
     <div className={`incremental-phrase-filter ${className}`}>
       <AnimationStyles />
 
-      <div className="bg-white rounded-xl border-2 border-blue-200 p-6 mb-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-semibold text-gray-700">Build Your Phrase</span>
+      <div className="bg-white rounded-lg border border-gray-200 p-3 mb-2">
+        {/* Header - Compact */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-medium text-gray-700">Build Phrase</span>
           </div>
           {phraseChips.length > 0 && (
             <button
               onClick={handleClear}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
               Clear
             </button>
           )}
         </div>
 
         {/* Phrase Chips and Search Input */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-3 mb-3 min-h-[60px] items-center">
+        <div className="mb-2">
+          <div className="flex flex-wrap gap-2 mb-2 min-h-[40px] items-center">
             {phraseChips.map((chip) => {
               // Only show edit button for value chips and entity type chips
               const canEdit = chip.type === 'value' || chip.type === 'entityType';
@@ -1006,23 +1006,21 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
         {/* Starting Points (only show if no chips and not searching) */}
         {phraseChips.length === 0 && !searchText && (
-          <div className="mb-4">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <div className="mb-2">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
               Start with
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {STARTING_POINTS.map((point) => {
                 const Icon = point.icon;
                 return (
                   <button
                     key={point.id}
                     onClick={() => handleStartingPoint(point)}
-                    className="p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-left transition-all group"
+                    className="px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-left transition-all flex items-center gap-2"
                   >
-                    <div className={`p-2 bg-${point.color}-100 rounded-lg w-fit mb-2 group-hover:bg-${point.color}-200 transition-colors`}>
-                      <Icon className={`w-4 h-4 text-${point.color}-600`} strokeWidth={2} />
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">{point.label}</div>
+                    <Icon className={`w-3.5 h-3.5 text-${point.color}-600`} strokeWidth={2} />
+                    <div className="text-xs font-medium text-gray-900">{point.label}</div>
                   </button>
                 );
               })}
@@ -1033,20 +1031,20 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
       {/* Suggestions (hide when typing in search) */}
       {suggestions.length > 0 && !searchText && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4 slide-in">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-5 h-5 text-yellow-500" />
-            <span className="text-sm font-semibold text-gray-700">Next Steps</span>
+        <div className="bg-white rounded-lg border border-gray-200 p-3 mb-2 slide-in">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Zap className="w-4 h-4 text-yellow-500" />
+            <span className="text-xs font-medium text-gray-700">Next Steps</span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {suggestions.map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => addChip(suggestion)}
-                className="px-4 py-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-700 transition-all text-left flex items-center gap-2"
+                className="px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-xs font-medium text-gray-700 hover:text-blue-700 transition-all text-left flex items-center gap-1.5"
               >
-                {suggestion.icon && <suggestion.icon className="w-4 h-4" />}
+                {suggestion.icon && <suggestion.icon className="w-3.5 h-3.5" />}
                 {suggestion.text}
               </button>
             ))}

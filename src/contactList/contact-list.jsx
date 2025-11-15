@@ -1949,12 +1949,38 @@ const UnifiedContactListing = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {/* Filter Mode Toggle - Moved to far right */}
+                  <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-300 p-0.5">
+                    <button
+                      onClick={() => setFilterMode('phrase')}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                        ${filterMode === 'phrase'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      By Phrase
+                    </button>
+                    <button
+                      onClick={() => setFilterMode('fields')}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                        ${filterMode === 'fields'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      By Fields
+                    </button>
+                  </div>
+
                   <ChevronsLeft size={18} />
-
-                  {/* Download Button */}
                   <Search size={18} />
-
-                  {/* More Options Button */}
                   <Ellipsis onClick={() => setShowFieldsPanel(true)} className='cursorPointer' size={18} />
                 </div>
               </div>
@@ -1966,41 +1992,9 @@ const UnifiedContactListing = () => {
                 </div>
               )}
 
-              {/* Filter Mode Toggle */}
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white rounded-lg border-2 border-gray-200 p-1">
-                  <button
-                    onClick={() => setFilterMode('phrase')}
-                    className={`
-                      flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                      ${filterMode === 'phrase'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    By Phrase
-                  </button>
-                  <button
-                    onClick={() => setFilterMode('fields')}
-                    className={`
-                      flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                      ${filterMode === 'fields'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    <Filter className="w-4 h-4" />
-                    By Fields
-                  </button>
-                </div>
-              </div>
-
-              {/* Phrase Filter (Incremental) */}
+              {/* Phrase Filter (Incremental) - Compact spacing */}
               {filterMode === 'phrase' && (
-                <div className="mt-4">
+                <div className="mt-3">
                   <IncrementalPhraseFilter
                     onApply={(filters) => {
                       setPhraseFilters(filters);
