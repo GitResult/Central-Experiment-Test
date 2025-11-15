@@ -1,6 +1,25 @@
+/**
+ * ReportPhrase Component
+ *
+ * Report phrase search system with intelligent phrase-based searching and filtering.
+ * Allows users to construct complex queries using natural language phrases and
+ * provides comprehensive result management.
+ *
+ * Features:
+ * - Phrase-based search with autocomplete
+ * - Result filtering and sorting
+ * - Quick action chips for common queries
+ * - Analytics integration
+ * - Search history and saved searches
+ * - Export and sharing capabilities
+ *
+ * @component
+ * @returns {React.Component} ReportPhrase component
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, Sparkles, Play, ChevronRight, X, Check, 
+import {
+  Search, Sparkles, Play, ChevronRight, X, Check,
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,

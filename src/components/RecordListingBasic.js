@@ -1,3 +1,22 @@
+/**
+ * RecordListingBasic Component
+ *
+ * Basic record listing interface with visual markers and essential data management features.
+ * Provides core functionality for viewing and interacting with records using markers for
+ * highlighting important data points.
+ *
+ * Features:
+ * - Interactive record table with filtering
+ * - Visual marker system for highlighting records
+ * - Basic drag-and-drop functionality
+ * - Member type selection and filtering
+ * - Charts and radar visualizations
+ * - Agent assignment capabilities
+ *
+ * @component
+ * @returns {React.Component} RecordListingBasic component
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   BarChart3, Edit3, Filter, Eye, Target, TrendingUp, Users, AlertCircle, CheckCircle2, X,

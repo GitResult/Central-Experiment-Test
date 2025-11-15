@@ -1,3 +1,22 @@
+/**
+ * USBSearch Component
+ *
+ * Unified search interface with advanced visualizations and filtering capabilities.
+ * Provides an animated, interactive search experience with multiple visualization
+ * modes including bar charts, line graphs, and pie charts.
+ *
+ * Features:
+ * - Advanced search filters and operators
+ * - Multiple visualization modes (bar, line, pie charts)
+ * - Animated search experience with smooth transitions
+ * - Export functionality for search results
+ * - Grid and list view modes
+ * - Real-time data filtering
+ *
+ * @component
+ * @returns {React.Component} USBSearch component
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2 } from 'lucide-react';
 

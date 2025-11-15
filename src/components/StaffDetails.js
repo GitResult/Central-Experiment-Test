@@ -1,3 +1,21 @@
+/**
+ * StaffDetails Component
+ *
+ * Staff management interface featuring drag-and-drop notes, tasks, and customizable
+ * dashboard widgets. Provides an intuitive interface for managing staff information
+ * and daily activities.
+ *
+ * Features:
+ * - Drag-and-drop notes and task organization
+ * - Customizable dashboard widgets
+ * - Staff information cards
+ * - Template system for common layouts
+ * - Sortable interface elements
+ *
+ * @component
+ * @returns {React.Component} StaffDetails component
+ */
+
 import React, { useMemo, useState, useRef } from "react";
 import {
     DndContext,
