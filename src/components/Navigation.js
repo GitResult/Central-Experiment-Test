@@ -28,8 +28,8 @@ const Navigation = ({ onNavigate }) => {
   const components = [
     {
       id: 'board-packet',
-      name: 'Board Packet',
-      description: 'Board meeting packet management with PDF viewing, annotations, markers, and document collaboration.',
+      name: 'Board Meeting',
+      description: 'Board meeting management with PDF viewing, annotations, markers, and document collaboration.',
       icon: Briefcase,
       color: 'bg-slate-600',
       features: ['PDF Viewing', 'Markers & Annotations', 'Document Upload', 'Meeting Management']

@@ -106,6 +106,7 @@ const BoardPacketPage = () => {
   const [numPages, setNumPages] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [viewMode, setViewMode] = useState('view'); // 'view' or 'annotate'
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Markers State - using normalized coordinates (0-1)
   const [markers, setMarkers] = useState([
@@ -222,6 +223,15 @@ const BoardPacketPage = () => {
               : doc
           )
         );
+
+        // Auto-select the newly uploaded document if it's a PDF
+        if (isPdf) {
+          setCurrentDocument(prev => {
+            const updated = documents.find(d => d.id === newDoc.id);
+            return updated ? { ...newDoc, status: 'ready' } : prev;
+          });
+          setCurrentPage(1);
+        }
       }, 2000 + index * 1000);
     });
   };
@@ -476,10 +486,6 @@ const BoardPacketPage = () => {
             <span className="text-sm text-gray-500">
               Last updated by {meetingInfo.lastUpdated.by} · {meetingInfo.lastUpdated.time}
             </span>
-            <button className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Share2 className="w-4 h-4" />
-              Share Packet
-            </button>
             <button className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
               <Download className="w-4 h-4" />
               Download All
@@ -566,7 +572,7 @@ const BoardPacketPage = () => {
           {/* Documents Section */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">Board Packet Materials</h2>
+              <h2 className="text-sm font-semibold text-gray-900">Board Meeting Materials</h2>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -709,6 +715,13 @@ const BoardPacketPage = () => {
                       >
                         <PenTool className="w-4 h-4" />
                         Annotate
+                      </button>
+                      <button
+                        onClick={() => setShowShareModal(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Share
                       </button>
                     </div>
                   </div>
@@ -1157,6 +1170,87 @@ const BoardPacketPage = () => {
                   <Mail className="w-4 h-4" />
                   <span className="truncate">{hoveredMention.email}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Share Board Meeting</h3>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                Share this board meeting packet with others
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }}
+                  className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Search className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Copy Link</p>
+                    <p className="text-xs text-gray-500">Share via link to anyone</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const subject = encodeURIComponent(meetingInfo.title);
+                    const body = encodeURIComponent(`Please review the board meeting packet for ${meetingInfo.title}\n\nDate: ${meetingInfo.date}\nTime: ${meetingInfo.time}\nLocation: ${meetingInfo.location}`);
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                    setShowShareModal(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Email</p>
+                    <p className="text-xs text-gray-500">Send via email client</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    alert('Download feature would download all documents as a ZIP file');
+                    setShowShareModal(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Download className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Download Package</p>
+                    <p className="text-xs text-gray-500">Download all documents as ZIP</p>
+                  </div>
+                </button>
+              </div>
+
+              <div className="mt-6 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600">
+                  <strong>Note:</strong> Recipients will need appropriate permissions to view this board meeting packet.
+                </p>
               </div>
             </div>
           </div>
