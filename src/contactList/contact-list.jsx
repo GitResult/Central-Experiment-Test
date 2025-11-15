@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './contactList.css'
 import Pagination from '../components/UI/pagination';
+import PhraseFilter from '../components/PhraseFilter';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -40,6 +41,59 @@ const createCustomIcon = (count) => {
     iconAnchor: [15, 15],
     popupAnchor: [0, -15]
   });
+};
+
+// Utility: Calculate years between two dates (for tenure calculation)
+const calculateYears = (startDate, endDate = new Date()) => {
+  if (!startDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const years = (end - start) / (1000 * 60 * 60 * 24 * 365.25);
+  return Math.floor(years);
+};
+
+// Utility: Get field value from contact (handles nested paths)
+const getFieldValue = (contact, fieldPath) => {
+  if (!fieldPath) return null;
+  const parts = fieldPath.split('.');
+  let value = contact;
+  for (const part of parts) {
+    if (value == null) return null;
+    value = value[part];
+  }
+  return value;
+};
+
+// Utility: Evaluate a single filter condition against a contact
+const evaluateFilter = (contact, filter) => {
+  const value = getFieldValue(contact, filter.field);
+  const filterValue = filter.value;
+
+  // Handle null/undefined values
+  if (value == null) return false;
+
+  switch (filter.operator) {
+    case 'eq':
+      return String(value).toLowerCase() === String(filterValue).toLowerCase();
+    case 'neq':
+      return String(value).toLowerCase() !== String(filterValue).toLowerCase();
+    case 'gte':
+      return Number(value) >= Number(filterValue);
+    case 'lte':
+      return Number(value) <= Number(filterValue);
+    case 'gt':
+      return Number(value) > Number(filterValue);
+    case 'lt':
+      return Number(value) < Number(filterValue);
+    case 'between':
+      return Number(value) >= Number(filterValue[0]) && Number(value) <= Number(filterValue[1]);
+    case 'in':
+      return Array.isArray(filterValue) && filterValue.includes(value);
+    case 'contains':
+      return String(value).toLowerCase().includes(String(filterValue).toLowerCase());
+    default:
+      return false;
+  }
 };
 
 // Separate Map Component to prevent re-initialization
@@ -109,6 +163,8 @@ const UnifiedContactListing = () => {
   const [fieldsSubTab, setFieldsSubTab] = useState('byField');
   const [fieldFilters, setFieldFilters] = useState({});
   const [pageFilters, setPageFilters] = useState([]);
+  const [phraseFilters, setPhraseFilters] = useState([]);
+  const [currentPhrase, setCurrentPhrase] = useState('');
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -187,12 +243,27 @@ const UnifiedContactListing = () => {
           throw new Error('Failed to load sample data');
         }
         const data = await response.json();
-        setFilteredContacts(data.members);
-        setMembers(data.members);
+
+        // Add calculated fields like tenureYears to each member
+        const membersWithTenure = data.members.map(member => ({
+          ...member,
+          tenureYears: calculateYears(member.joinDate),
+          tenureBucket: (() => {
+            const years = calculateYears(member.joinDate);
+            if (years < 1) return '0-1 years';
+            if (years < 2) return '1-2 years';
+            if (years < 5) return '2-5 years';
+            if (years < 10) return '5-10 years';
+            return '10+ years';
+          })()
+        }));
+
+        setFilteredContacts(membersWithTenure);
+        setMembers(membersWithTenure);
         setMemberTypeData(data.memberTypeData);
         setRetentionPieData(data.retentionPieData);
         setRenewalTrendData(data.renewalTrendData);
-        setSampleData(data);
+        setSampleData({ ...data, members: membersWithTenure });
       } catch (error) {
         console.error('Error loading sample data:', error);
         setSampleData(null);
@@ -1270,7 +1341,7 @@ const UnifiedContactListing = () => {
     setDraggedChart(null);
   };
 
-  const getFieldValue = (contact, fieldName) => {
+  const getLocalFieldValue = (contact, fieldName) => {
     const fieldKey = fieldName.toLowerCase().replace(/[\/\s]/g, '');
     return contact[fieldKey];
   };
@@ -1279,6 +1350,14 @@ const UnifiedContactListing = () => {
     // Start with contacts already filtered by current view
     let filteredList = filteredContacts;
 
+    // Apply phrase filters (highest priority - defines the cohort)
+    if (phraseFilters.length > 0) {
+      filteredList = filteredList.filter(contact =>
+        phraseFilters.every(filter => evaluateFilter(contact, filter))
+      );
+    }
+
+    // Apply search filter
     if (searchValue && searchValue.trim() !== '') {
       const searchLower = searchValue.toLowerCase();
       filteredList = filteredList.filter(contact => {
@@ -1291,12 +1370,13 @@ const UnifiedContactListing = () => {
       });
     }
 
-    if (Object.entries(fieldFilters).length > 0) {
-      filteredList = filteredContacts.filter(contact => {
+    // Apply field and page filters
+    if (Object.entries(fieldFilters).length > 0 || pageFilters.length > 0) {
+      filteredList = filteredList.filter(contact => {
         // Apply field filters
         for (const [fieldName, filterValue] of Object.entries(fieldFilters)) {
           if (filterValue && filterValue !== '') {
-            const contactValue = getFieldValue(contact, fieldName);
+            const contactValue = getLocalFieldValue(contact, fieldName);
             if (!contactValue || !contactValue.toString().toLowerCase().includes(filterValue.toLowerCase())) {
               return false;
             }
@@ -1306,7 +1386,7 @@ const UnifiedContactListing = () => {
         // Apply page filters
         for (const pageFilter of pageFilters) {
           if (pageFilter.value && pageFilter.value !== '') {
-            const contactValue = getFieldValue(contact, pageFilter.fieldName);
+            const contactValue = getLocalFieldValue(contact, pageFilter.fieldName);
             if (!contactValue || !contactValue.toString().toLowerCase().includes(pageFilter.value.toLowerCase())) {
               return false;
             }
@@ -1851,6 +1931,20 @@ const UnifiedContactListing = () => {
                   {/* ... your existing search dropdown content ... */}
                 </div>
               )}
+
+              {/* Phrase Filter */}
+              <div className="mt-4">
+                <PhraseFilter
+                  onApply={(filters, phrase) => {
+                    setPhraseFilters(filters);
+                    setCurrentPhrase(phrase);
+                  }}
+                  onClear={() => {
+                    setPhraseFilters([]);
+                    setCurrentPhrase('');
+                  }}
+                />
+              </div>
 
               {/* Active Filter Pills */}
               <ActiveFilterPills />
