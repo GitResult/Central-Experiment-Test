@@ -312,6 +312,7 @@ const CONTEXTUAL_SUGGESTIONS = {
   // After entity type (members, students, professionals, volunteers)
   'members': {
     next: [
+      { text: 'that have been', type: 'connector', color: 'gray' },
       { text: 'for', type: 'connector', color: 'gray' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'with', type: 'connector', color: 'gray' }
@@ -319,6 +320,7 @@ const CONTEXTUAL_SUGGESTIONS = {
   },
   'students': {
     next: [
+      { text: 'that have been', type: 'connector', color: 'gray' },
       { text: 'for', type: 'connector', color: 'gray' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'with', type: 'connector', color: 'gray' }
@@ -326,6 +328,7 @@ const CONTEXTUAL_SUGGESTIONS = {
   },
   'professionals': {
     next: [
+      { text: 'that have been', type: 'connector', color: 'gray' },
       { text: 'for', type: 'connector', color: 'gray' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'with', type: 'connector', color: 'gray' }
@@ -333,10 +336,17 @@ const CONTEXTUAL_SUGGESTIONS = {
   },
   'volunteers': {
     next: [
+      { text: 'that have been', type: 'connector', color: 'gray' },
       { text: 'for', type: 'connector', color: 'gray' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'with', type: 'connector', color: 'gray' }
     ]
+  },
+
+  // After "that have been" -> show entity types again
+  'that have been': {
+    needsValue: 'entityType',
+    next: []
   },
 
   // After "for" -> show tenure values
@@ -474,18 +484,18 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
       return [];
     }
 
-    // If after a value, show "and" option
-    if (lastChip.hasValue || lastChip.type === 'value' || lastChip.type === 'entityType') {
-      return CONTEXTUAL_SUGGESTIONS['_afterValue'].next.map(s => ({
+    // Show contextual suggestions first (this includes entity types like "members")
+    if (CONTEXTUAL_SUGGESTIONS[contextKey]?.next) {
+      return CONTEXTUAL_SUGGESTIONS[contextKey].next.map(s => ({
         label: s.text,
         data: s,
         type: 'suggestion'
       }));
     }
 
-    // Show contextual suggestions
-    if (CONTEXTUAL_SUGGESTIONS[contextKey]?.next) {
-      return CONTEXTUAL_SUGGESTIONS[contextKey].next.map(s => ({
+    // If after a value, show "and" option
+    if (lastChip.hasValue || lastChip.type === 'value') {
+      return CONTEXTUAL_SUGGESTIONS['_afterValue'].next.map(s => ({
         label: s.text,
         data: s,
         type: 'suggestion'
