@@ -6,9 +6,10 @@
  *
  * Features:
  * - Granular chip structure: Each word/concept is a separate chip
- * - Example: [Current] [that have been] [members] [for] [5 years] [or more]
+ * - Example: [Current] [members] [for] [5 years] [or more]
+ * - Full keyboard support: Type to search, ↑↓ to navigate, Enter to select
  * - Start with cohort selection (Current, All Contacts, Lapsed, Pending)
- * - Select entity types (members, students, professionals, volunteers)
+ * - Immediately select entity type (members, students, professionals, volunteers)
  * - Add multiple conditions with contextual suggestions
  * - Chain criteria with "and" connectors
  * - Edit/remove individual chips
@@ -119,9 +120,18 @@ const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = fal
   );
 };
 
-// Options selector modal
+// Options selector modal with keyboard navigation
 const OptionsSelector = ({ title, options, onSelect, onClose }) => {
   const modalRef = useRef(null);
+  const inputRef = useRef(null);
+  const [searchText, setSearchText] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Filter options based on search text
+  const filteredOptions = options.filter(option => {
+    const displayText = typeof option === 'string' ? option : option.label || option.value;
+    return displayText.toLowerCase().includes(searchText.toLowerCase());
+  });
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -134,9 +144,41 @@ const OptionsSelector = ({ title, options, onSelect, onClose }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
+  // Focus input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Reset selected index when filtered options change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchText]);
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, filteredOptions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && filteredOptions.length > 0) {
+      e.preventDefault();
+      const selectedOption = filteredOptions[selectedIndex];
+      const displayText = typeof selectedOption === 'string' ? selectedOption : selectedOption.label || selectedOption.value;
+      onSelect(displayText);
+      onClose();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 slide-in">
-      <div ref={modalRef} className="bg-white rounded-xl shadow-2xl border-2 border-blue-200 p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+      <div ref={modalRef} className="bg-white rounded-xl shadow-2xl border-2 border-blue-200 p-6 max-w-lg w-full max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <button
@@ -147,25 +189,68 @@ const OptionsSelector = ({ title, options, onSelect, onClose }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-2">
-          {options.map((option, idx) => {
-            const displayText = typeof option === 'string' ? option : option.label || option.value;
-            const Icon = option.icon;
+        {/* Search input */}
+        <div className="mb-4">
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type to search..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          {searchText && (
+            <div className="mt-2 text-sm text-gray-500">
+              {filteredOptions.length} result{filteredOptions.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
 
-            return (
-              <button
-                key={idx}
-                onClick={() => {
-                  onSelect(displayText);
-                  onClose();
-                }}
-                className="px-4 py-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-700 transition-all flex items-center gap-2"
-              >
-                {Icon && <Icon className="w-4 h-4" />}
-                {displayText}
-              </button>
-            );
-          })}
+        {/* Options list */}
+        <div className="grid grid-cols-1 gap-2 overflow-y-auto flex-1">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option, idx) => {
+              const displayText = typeof option === 'string' ? option : option.label || option.value;
+              const Icon = option.icon;
+              const isSelected = idx === selectedIndex;
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    onSelect(displayText);
+                    onClose();
+                  }}
+                  className={`px-4 py-3 text-left rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-blue-100 border-2 border-blue-400 text-blue-800'
+                      : 'bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-700'
+                  }`}
+                >
+                  {Icon && <Icon className="w-4 h-4" />}
+                  {displayText}
+                </button>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              No results found for "{searchText}"
+            </div>
+          )}
+        </div>
+
+        {/* Keyboard hints */}
+        <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500 flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <kbd className="px-2 py-1 bg-gray-100 rounded">↑↓</kbd> Navigate
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> Select
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-2 py-1 bg-gray-100 rounded">Esc</kbd> Close
+          </span>
         </div>
       </div>
     </div>
@@ -206,34 +291,20 @@ const FILTER_OPTIONS = {
 
 // Contextual suggestions based on last chip
 const CONTEXTUAL_SUGGESTIONS = {
-  // After cohort (Current, All Contacts, Lapsed, Pending)
+  // After cohort (Current, All Contacts, Lapsed, Pending) -> immediately select entity type
   'Current': {
-    next: [
-      { text: 'that have been', type: 'connector', color: 'gray' }
-    ]
+    needsValue: 'entityType',
+    next: []
   },
   'All Contacts': {
-    next: [
-      { text: 'that have been', type: 'connector', color: 'gray' },
-      { text: 'in', type: 'connector', color: 'gray' },
-      { text: 'with', type: 'connector', color: 'gray' }
-    ]
+    needsValue: 'entityType',
+    next: []
   },
   'Lapsed': {
-    next: [
-      { text: 'that have been', type: 'connector', color: 'gray' },
-      { text: 'in', type: 'connector', color: 'gray' }
-    ]
+    needsValue: 'entityType',
+    next: []
   },
   'Pending': {
-    next: [
-      { text: 'that have been', type: 'connector', color: 'gray' },
-      { text: 'in', type: 'connector', color: 'gray' }
-    ]
-  },
-
-  // After "that have been" -> show entity types
-  'that have been': {
     needsValue: 'entityType',
     next: []
   },
@@ -538,12 +609,16 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
         icon: selectedEntity.icon
       };
 
-      // Mark connector as having value and add entity type chip
-      const updatedChips = phraseChips.map(chip =>
-        chip.id === connectorChip.id ? { ...chip, hasValue: true } : chip
-      );
-
-      setPhraseChips([...updatedChips, entityChip]);
+      // If there's a connector chip (not a cohort), mark it as having value
+      if (connectorChip && connectorChip.type === 'connector') {
+        const updatedChips = phraseChips.map(chip =>
+          chip.id === connectorChip.id ? { ...chip, hasValue: true } : chip
+        );
+        setPhraseChips([...updatedChips, entityChip]);
+      } else {
+        // Entity type comes right after cohort (or no connector)
+        setPhraseChips([...phraseChips, entityChip]);
+      }
       return;
     }
 
