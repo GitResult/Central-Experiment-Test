@@ -8,6 +8,7 @@ Central USB Search is a comprehensive data exploration and analysis platform bui
 
 ## Features
 
+- **Central Navigation Hub**: Beautiful landing page to access all components with search functionality
 - **Interactive Data Visualization**: Built-in charts, heatmaps, and radar plots using Recharts
 - **Drag-and-Drop Interface**: Sortable and draggable elements using @dnd-kit
 - **AI-Powered Chat**: Integrated AI assistant for data analysis and task generation
@@ -15,6 +16,7 @@ Central USB Search is a comprehensive data exploration and analysis platform bui
 - **Responsive Design**: Tailwind CSS for mobile-friendly layouts
 - **Performance Analytics**: Real-time performance metrics and revenue tracking
 - **Comparison Mode**: Side-by-side data comparison with filtering
+- **Easy Component Switching**: Navigate between 8 different components with one click
 
 ## Tech Stack
 
@@ -33,6 +35,7 @@ Central-Experiment-Test/
 │   └── index.html              # HTML template
 ├── src/
 │   ├── components/             # React components
+│   │   ├── Navigation.js               # Central navigation hub
 │   │   ├── CompareModeDemo.js          # Main comparison interface with markers and chat
 │   │   ├── StaffDetails.js             # Staff management and notes interface
 │   │   ├── USBSearch.js                # Unified search with visualizations
@@ -41,7 +44,7 @@ Central-Experiment-Test/
 │   │   ├── RecordListingBasic.js       # Basic record listing with markers
 │   │   ├── RecordListingResizable.js   # Resizable record listing panels
 │   │   └── RecordListingAdvanced.js    # Advanced listing with heatmap and AI
-│   ├── App.js                  # Application entry point
+│   ├── App.js                  # Application entry point with navigation
 │   ├── index.js               # React DOM root
 │   └── index.css              # Global styles
 ├── package.json               # Dependencies and scripts
@@ -49,7 +52,27 @@ Central-Experiment-Test/
 └── README.md                  # This file
 ```
 
+## Navigation
+
+When you run the application, you'll see a **central navigation page** that provides access to all available components. The navigation page features:
+
+- **Grid layout** of all 8 components with descriptions
+- **Search functionality** to quickly find components
+- **Feature tags** highlighting key capabilities
+- **One-click access** to any component
+- **Back to Home button** on each component to return to navigation
+
+Simply click on any component card to explore its features. Use the "Back to Home" button in the top-left corner to return to the navigation page.
+
 ## Available Components
+
+### Navigation
+Central hub for accessing all components:
+- Grid layout with component cards
+- Search and filter functionality
+- Component descriptions and features
+- Responsive design
+- Easy navigation between all pages
 
 ### CompareModeDemo
 Main comparison mode interface with:
@@ -136,17 +159,24 @@ Launches the test runner in interactive watch mode.
 ### `npm run eject`
 **Note: this is a one-way operation. Once you eject, you can't go back!**
 
-## Switching Between Components
+## Using the Application
 
-To switch between different demo components, edit `src/App.js` and change the import:
+### Navigation
+The application opens with a **central navigation page** by default. From there:
+
+1. Browse all available components in the grid layout
+2. Use the search bar to filter components by name or features
+3. Click any component card to open it
+4. Use the "Back to Home" button to return to navigation
+
+### Direct Component Access (Advanced)
+For development purposes, you can bypass navigation by editing `src/App.js`:
 
 ```javascript
-// Example: Switch to USBSearch
-import USBSearch from './components/USBSearch';
-
-function App() {
-  return <USBSearch />;
-}
+// Change the initial state to open a specific component directly
+const [currentComponent, setCurrentComponent] = useState('usb-search');
+// Or set to null for navigation page (default)
+const [currentComponent, setCurrentComponent] = useState(null);
 ```
 
 ## Development Guidelines
