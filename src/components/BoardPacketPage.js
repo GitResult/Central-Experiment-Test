@@ -22,6 +22,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { PDFDocument, rgb, degrees } from 'pdf-lib';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import {
@@ -468,6 +469,120 @@ const BoardPacketPage = () => {
     setSelectedMarkerId(next.id);
   };
 
+  // Export PDF with embedded annotations
+  const exportPDFWithAnnotations = async (doc) => {
+    try {
+      if (!doc || !doc.pdfPath) {
+        alert('No PDF document selected');
+        return;
+      }
+
+      // Fetch the original PDF
+      const existingPdfBytes = await fetch(doc.pdfPath).then(res => res.arrayBuffer());
+
+      // Load the PDF with pdf-lib
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const pages = pdfDoc.getPages();
+
+      // Get markers for this document
+      const docMarkers = markers.filter(m => m.documentId === doc.id);
+
+      // Add annotations to each page
+      for (const marker of docMarkers) {
+        const pageIndex = marker.page - 1; // pdf-lib uses 0-based indexing
+        if (pageIndex < 0 || pageIndex >= pages.length) continue;
+
+        const page = pages[pageIndex];
+        const { width, height } = page.getSize();
+
+        // Convert normalized coordinates to PDF coordinates
+        // PDF coordinates: origin at bottom-left, Y increases upward
+        const x = marker.xNorm * width;
+        const y = height - (marker.yNorm * height); // Flip Y axis
+
+        // Draw a circle marker
+        const markerRadius = 12;
+        const markerColor = marker.status === 'resolved'
+          ? rgb(0.13, 0.77, 0.33) // green
+          : rgb(0.96, 0.73, 0.19); // yellow/orange
+
+        page.drawCircle({
+          x: x,
+          y: y,
+          size: markerRadius,
+          borderColor: markerColor,
+          borderWidth: 2,
+          color: rgb(1, 1, 1),
+          opacity: 0.9,
+        });
+
+        // Add marker number
+        const markerNumber = docMarkers.indexOf(marker) + 1;
+        page.drawText(markerNumber.toString(), {
+          x: x - 4,
+          y: y - 4,
+          size: 10,
+          color: rgb(0, 0, 0),
+        });
+
+        // Add annotation text as a text box nearby
+        const annotationX = Math.min(x + 20, width - 200);
+        const annotationY = Math.max(y - 20, 100);
+        const maxWidth = 180;
+
+        // Draw annotation background
+        page.drawRectangle({
+          x: annotationX,
+          y: annotationY - 40,
+          width: maxWidth,
+          height: 60,
+          color: rgb(1, 0.98, 0.9),
+          borderColor: rgb(0.9, 0.7, 0.4),
+          borderWidth: 1,
+        });
+
+        // Add author and note text
+        page.drawText(`${marker.author}:`, {
+          x: annotationX + 5,
+          y: annotationY - 15,
+          size: 8,
+          color: rgb(0, 0, 0),
+          maxWidth: maxWidth - 10,
+        });
+
+        // Truncate long notes
+        const noteText = marker.note.length > 100
+          ? marker.note.substring(0, 97) + '...'
+          : marker.note;
+
+        page.drawText(noteText, {
+          x: annotationX + 5,
+          y: annotationY - 30,
+          size: 7,
+          color: rgb(0.2, 0.2, 0.2),
+          maxWidth: maxWidth - 10,
+        });
+      }
+
+      // Save the modified PDF
+      const pdfBytes = await pdfDoc.save();
+
+      // Create a blob and download
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.name.replace('.pdf', '')}_annotated.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      alert('PDF with embedded annotations downloaded successfully!');
+    } catch (error) {
+      console.error('Error exporting PDF with annotations:', error);
+      alert('Failed to export PDF with annotations. Please try again.');
+    }
+  };
+
   // Get file icon
   const getFileIcon = (type) => {
     return <FileText className="w-4 h-4" />;
@@ -773,6 +888,14 @@ const BoardPacketPage = () => {
                       >
                         <Share2 className="w-4 h-4" />
                         Share
+                      </button>
+                      <button
+                        onClick={() => exportPDFWithAnnotations(currentDocument)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                        title="Download PDF with embedded annotations"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export PDF
                       </button>
                     </div>
                   </div>
@@ -1296,6 +1419,26 @@ const BoardPacketPage = () => {
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">Email</p>
                     <p className="text-xs text-gray-500">Send via email client</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (currentDocument && currentDocument.type === 'pdf') {
+                      exportPDFWithAnnotations(currentDocument);
+                      setShowShareModal(false);
+                    } else {
+                      alert('Please select a PDF document first');
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Export Current PDF</p>
+                    <p className="text-xs text-gray-500">Download with embedded annotations</p>
                   </div>
                 </button>
 
