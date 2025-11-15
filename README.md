@@ -9,6 +9,7 @@ Central USB Search is a comprehensive data exploration and analysis platform bui
 ## Features
 
 - **Central Navigation Hub**: Beautiful landing page to access all components with search functionality
+- **Board Packet Management**: Complete board meeting solution with PDF viewing, annotations, and markers
 - **Interactive Data Visualization**: Built-in charts, heatmaps, and radar plots using Recharts
 - **Drag-and-Drop Interface**: Sortable and draggable elements using @dnd-kit
 - **AI-Powered Chat**: Integrated AI assistant for data analysis and task generation
@@ -16,7 +17,7 @@ Central USB Search is a comprehensive data exploration and analysis platform bui
 - **Responsive Design**: Tailwind CSS for mobile-friendly layouts
 - **Performance Analytics**: Real-time performance metrics and revenue tracking
 - **Comparison Mode**: Side-by-side data comparison with filtering
-- **Easy Component Switching**: Navigate between 8 different components with one click
+- **Easy Component Switching**: Navigate between 9 different components with one click
 
 ## Tech Stack
 
@@ -36,6 +37,7 @@ Central-Experiment-Test/
 ├── src/
 │   ├── components/             # React components
 │   │   ├── Navigation.js               # Central navigation hub
+│   │   ├── BoardPacketPage.js          # Board meeting packet management
 │   │   ├── CompareModeDemo.js          # Main comparison interface with markers and chat
 │   │   ├── StaffDetails.js             # Staff management and notes interface
 │   │   ├── USBSearch.js                # Unified search with visualizations
@@ -56,7 +58,7 @@ Central-Experiment-Test/
 
 When you run the application, you'll see a **central navigation page** that provides access to all available components. The navigation page features:
 
-- **Grid layout** of all 8 components with descriptions
+- **Grid layout** of all 9 components with descriptions
 - **Search functionality** to quickly find components
 - **Feature tags** highlighting key capabilities
 - **One-click access** to any component
@@ -73,6 +75,17 @@ Central hub for accessing all components:
 - Component descriptions and features
 - Responsive design
 - Easy navigation between all pages
+
+### BoardPacketPage
+Board meeting packet management system:
+- PDF document viewing with zoom controls
+- Marker overlay with normalized coordinates (survives zoom/resize)
+- Document upload with conversion status tracking
+- Threaded annotations and comments
+- Agenda-based navigation
+- Three-column layout (agenda, PDF, notes)
+- Share and download packet functionality
+- Meeting information management
 
 ### CompareModeDemo
 Main comparison mode interface with:

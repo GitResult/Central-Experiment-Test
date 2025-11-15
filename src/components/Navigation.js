@@ -19,13 +19,21 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Layout, Maximize2, Cpu, Home, Sparkles
+  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const components = [
+    {
+      id: 'board-packet',
+      name: 'Board Packet',
+      description: 'Board meeting packet management with PDF viewing, annotations, markers, and document collaboration.',
+      icon: Briefcase,
+      color: 'bg-slate-600',
+      features: ['PDF Viewing', 'Markers & Annotations', 'Document Upload', 'Meeting Management']
+    },
     {
       id: 'compare-mode',
       name: 'Compare Mode Demo',

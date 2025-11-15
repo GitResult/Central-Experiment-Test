@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 
 // Import all components
 import Navigation from './components/Navigation';
+import BoardPacketPage from './components/BoardPacketPage';
 import CompareModeDemo from './components/CompareModeDemo';
 import StaffDetails from './components/StaffDetails';
 import USBSearch from './components/USBSearch';
@@ -30,6 +31,7 @@ function App() {
 
   // Component mapping
   const componentMap = {
+    'board-packet': BoardPacketPage,
     'compare-mode': CompareModeDemo,
     'staff-details': StaffDetails,
     'usb-search': USBSearch,
