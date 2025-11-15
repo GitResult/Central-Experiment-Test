@@ -1,3 +1,23 @@
+/**
+ * RecordListingAdvanced Component
+ *
+ * Full-featured record listing interface with heatmap visualization and AI-powered chat.
+ * This is the most advanced version, combining all features from previous iterations
+ * with intelligent AI assistance for data analysis and task generation.
+ *
+ * Features:
+ * - All RecordListingResizable features
+ * - AI-powered chat panel for intelligent assistance
+ * - Advanced heatmap visualizations with size controls
+ * - Automated task generation and management
+ * - Proposal system for task approval
+ * - Drag-and-drop task prioritization
+ * - Enhanced engagement tracking
+ *
+ * @component
+ * @returns {React.Component} RecordListingAdvanced component
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   BarChart3, Edit3, Filter, Eye, Target, TrendingUp, Users, AlertCircle, CheckCircle2, X,
@@ -35,6 +55,7 @@ const CompareModeDemo = () => {
   const [markerPlacementMode, setMarkerPlacementMode] = useState(false);
   const [tempMarkerPosition, setTempMarkerPosition] = useState(null);
   const [savedMarkers, setSavedMarkers] = useState([]);
+  const [currentMarkerType, setCurrentMarkerType] = useState(null); // 'volunteer' or 'newmember'
   const [tasksGenerated, setTasksGenerated] = useState(false);
   const [agentsAssigned, setAgentsAssigned] = useState(false);
   const [showAgentSlideout, setShowAgentSlideout] = useState(false);
@@ -43,6 +64,18 @@ const CompareModeDemo = () => {
   const tableRef = useRef(null);
   const contentRef = useRef(null);
   const [markerPositions, setMarkerPositions] = useState({});
+  
+  // AI Chat Panel State
+  const [showChatPanel, setShowChatPanel] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [proposedTasks, setProposedTasks] = useState([]);
+  const [tasksApproved, setTasksApproved] = useState(false);
+  const [taskProgress, setTaskProgress] = useState({});
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [activeDragTaskId, setActiveDragTaskId] = useState(null);
+  const [chatInput, setChatInput] = useState('');
+  const [isAITyping, setIsAITyping] = useState(false);
+  const chatMessagesEndRef = useRef(null);
 
   const [showHeatmapPanel, setShowHeatmapPanel] = useState(false);
   const [heatmapSize, setHeatmapSize] = useState('S');
@@ -53,6 +86,7 @@ const CompareModeDemo = () => {
   const [showChartConfigSlideout, setShowChartConfigSlideout] = useState(false);
   const [selectedHeatmapVariation, setSelectedHeatmapVariation] = useState('classic');
   const [selectedMemberForRadar, setSelectedMemberForRadar] = useState(null);
+  const [selectedMemberTypes, setSelectedMemberTypes] = useState([]);
 
   const [chartPanels, setChartPanels] = useState([]);
   const [activeChartId, setActiveChartId] = useState(null);
@@ -180,6 +214,7 @@ const CompareModeDemo = () => {
   const isConfigOpen = showChartConfigSlideout;
   const isBothOpen = isPreviewOpen && isConfigOpen;
   const isAnySlideoutOpen = showChartPreviewSlideout || showMarkerSlideout || showMarkerDetailSlideout || showAgentSlideout;
+  const isChatOpen = showChatPanel;
 
   const getStatusAlertCellColor = (percentage) => {
     if (percentage === 0 || percentage == null) return '#f1f5f9';
@@ -251,6 +286,108 @@ const CompareModeDemo = () => {
     );
   }, [showHeatmapPanel]);
 
+  useEffect(() => {
+    if (agentProgress === 100) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 4000);
+    }
+  }, [agentProgress]);
+  
+  // Task Management Functions
+  const handleRemoveTask = (taskId) => {
+    setProposedTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, status: 'removed' } : task
+    ));
+  };
+  
+  const handleEditTask = (taskId, newText) => {
+    setProposedTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, text: newText } : task
+    ));
+    setEditingTaskId(null);
+  };
+  
+  const handleAddTask = () => {
+    const newTask = {
+      id: `task-${Date.now()}`,
+      text: 'New task',
+      details: 'Click to edit details',
+      status: 'pending',
+      editable: true
+    };
+    setProposedTasks(prev => [...prev, newTask]);
+    setEditingTaskId(newTask.id);
+  };
+  
+  const handleTaskDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveDragTaskId(null);
+    
+    if (!over || active.id === over.id) return;
+    
+    setProposedTasks((tasks) => {
+      const oldIndex = tasks.findIndex((t) => t.id === active.id);
+      const newIndex = tasks.findIndex((t) => t.id === over.id);
+      return arrayMove(tasks, oldIndex, newIndex);
+    });
+  };
+  
+  const handleApproveTasksFromChat = () => {
+    setTasksApproved(true);
+    handleApproveAndProceed();
+  };
+  
+  const handleRejectTasks = () => {
+    setChatMessages(prev => [...prev, {
+      id: `msg-${Date.now()}`,
+      type: 'assistant',
+      content: 'Tasks rejected. Would you like me to generate alternative approaches?',
+      timestamp: new Date()
+    }]);
+  };
+  
+  const handleSendMessage = () => {
+    if (!chatInput.trim()) return;
+    
+    // Add user message
+    const userMessage = {
+      id: `msg-user-${Date.now()}`,
+      type: 'user',
+      content: chatInput,
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    
+    // Show AI typing indicator
+    setIsAITyping(true);
+    
+    // Simulate AI response after 1-2 seconds
+    setTimeout(() => {
+      setIsAITyping(false);
+      const aiMessage = {
+        id: `msg-ai-${Date.now()}`,
+        type: 'assistant',
+        content: "I understand your question. Since this is a demo, I'm showing the volunteer activation workflow. In a live system, I would provide specific answers based on your program data and help you refine the action plan further.",
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+    }, 1500);
+  };
+  
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+  
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isAITyping]);
+
   const handleCompareClick = () => {
     setCompareMode(true);
     setStep(1);
@@ -259,7 +396,61 @@ const CompareModeDemo = () => {
   const handleVolunteerMarkerClick = () => {
     setPreviewChartType('volunteer');
     setShowChartPreviewSlideout(true);
+    setCurrentMarkerType('volunteer');
     setStep(2);
+  };
+  
+  const handleNewMemberMarkerClick = () => {
+    setCurrentMarkerType('newmember');
+    setShowChatPanel(true);
+    
+    // Generate new member onboarding journey
+    const journeyTasks = [
+      { 
+        id: 'journey-1', 
+        text: 'Send welcome email',
+        details: 'Welcome Email → Registration Confirmation Page',
+        status: 'pending',
+        editable: true,
+        isJourney: true
+      },
+      { 
+        id: 'journey-2', 
+        text: 'Guide profile setup',
+        details: 'Profile Setup Form → Member Dashboard',
+        status: 'pending',
+        editable: true,
+        isJourney: true
+      },
+      { 
+        id: 'journey-3', 
+        text: 'Collect member interests',
+        details: 'Interest Survey → Personalized Recommendations',
+        status: 'pending',
+        editable: true,
+        isJourney: true
+      },
+      { 
+        id: 'journey-4', 
+        text: 'Invite to first event',
+        details: 'Event Invitation Email → Event RSVP Page',
+        status: 'pending',
+        editable: true,
+        isJourney: true
+      }
+    ];
+    
+    setProposedTasks(journeyTasks);
+    setChatMessages([
+      {
+        id: 'msg-newmember-1',
+        type: 'assistant',
+        content: "I've designed a new member onboarding journey to improve engagement and retention. Below are the proposed journey steps with page-to-page flows:",
+        timestamp: new Date()
+      }
+    ]);
+    
+    setStep(8);
   };
 
   const handleHeatmapMarkerClick = () => {
@@ -284,13 +475,48 @@ const CompareModeDemo = () => {
       id: `heatmap-${Date.now()}`,
       type: 'heatmap',
       size: 'M',
-      height: 400
+      height: 400,
+      selectedTypes: [...selectedMemberTypes],
+      variation: selectedHeatmapVariation
     };
     setChartPanels([...chartPanels, newPanel]);
     setShowHeatmapPanel(true);
     setShowChartPreviewSlideout(false);
     setShowChartConfigSlideout(false);
   };
+  
+  const getFilteredHeatmapData = (panelConfig = null) => {
+    let data = [...statusAlertData];
+    
+    // Use panel config if provided (for canvas charts), otherwise use global state (for preview)
+    const types = panelConfig?.selectedTypes || selectedMemberTypes;
+    
+    // Filter by selected member types (empty array means show all)
+    if (types.length > 0) {
+      data = data.filter(row => types.includes(row.type));
+    }
+    
+    return data;
+  };
+  
+  const toggleMemberType = (type) => {
+    setSelectedMemberTypes(prev => {
+      // If clicking an already selected type and it's the only one, deselect all (show all)
+      if (prev.length === 1 && prev.includes(type)) {
+        return [];
+      }
+      // If currently showing all (empty array), select only this type
+      if (prev.length === 0) {
+        return [type];
+      }
+      // Toggle selection
+      return prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type];
+    });
+  };
+  
+  const availableMemberTypes = [...new Set(statusAlertData.map(d => d.type))].sort();
 
   const handleAddMarker = () => {
     setMarkerPlacementMode(true);
@@ -332,30 +558,182 @@ const CompareModeDemo = () => {
     setShowMarkerDetailSlideout(true);
   };
 
-  const handleGenerateTasks = () => { setTasksGenerated(true); setStep(5); };
-  const handleAssignAgents = () => { setAgentsAssigned(true); setStep(6); };
-  const handleApproveAndProceed = () => {
-    setShowMarkerDetailSlideout(false);
-    setShowAgentSlideout(true);
-    setStep(7);
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += 2;
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-        setAgentProgress(100);
-      } else {
-        setAgentProgress(currentProgress);
-      }
-    }, 100);
-  };
-
-  useEffect(() => {
-    if (agentProgress === 100) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 4000);
+  const handleGenerateTasks = () => { 
+    setTasksGenerated(true); 
+    setStep(5); 
+    
+    // Initialize proposed tasks based on marker type
+    let initialTasks;
+    
+    if (currentMarkerType === 'newmember') {
+      // New member journey tasks
+      initialTasks = [
+        { 
+          id: 'journey-1', 
+          text: 'Send welcome email',
+          details: 'Welcome Email → Registration Confirmation Page',
+          status: 'pending',
+          editable: true,
+          isJourney: true
+        },
+        { 
+          id: 'journey-2', 
+          text: 'Guide profile setup',
+          details: 'Profile Setup Form → Member Dashboard',
+          status: 'pending',
+          editable: true,
+          isJourney: true
+        },
+        { 
+          id: 'journey-3', 
+          text: 'Collect member interests',
+          details: 'Interest Survey → Personalized Recommendations',
+          status: 'pending',
+          editable: true,
+          isJourney: true
+        },
+        { 
+          id: 'journey-4', 
+          text: 'Invite to first event',
+          details: 'Event Invitation Email → Event RSVP Page',
+          status: 'pending',
+          editable: true,
+          isJourney: true
+        }
+      ];
+      
+      setShowChatPanel(true);
+      setChatMessages([
+        {
+          id: 'msg-newmember-1',
+          type: 'assistant',
+          content: "I've designed a new member onboarding journey to improve engagement and retention. Below are the proposed journey steps with page-to-page flows:",
+          timestamp: new Date()
+        }
+      ]);
+    } else {
+      // Volunteer activation tasks
+      initialTasks = [
+        { 
+          id: 'task-1', 
+          text: 'Create onboarding volunteer program',
+          details: 'Target: First-year MEMBERs',
+          status: 'pending',
+          editable: true
+        },
+        { 
+          id: 'task-2', 
+          text: 'Send personalized volunteer invitations',
+          details: 'Timing: Within 30 days of joining',
+          status: 'pending',
+          editable: true
+        },
+        { 
+          id: 'task-3', 
+          text: 'Track and measure volunteer engagement',
+          details: 'Monitor retention improvements',
+          status: 'pending',
+          editable: true
+        }
+      ];
+      
+      setShowChatPanel(true);
+      setChatMessages([
+        {
+          id: 'msg-1',
+          type: 'assistant',
+          content: "I've analyzed the volunteer correlation data and created an action plan to address the First-Year Volunteer Activation Gap. Below are the proposed tasks:",
+          timestamp: new Date()
+        }
+      ]);
     }
-  }, [agentProgress]);
+    
+    setProposedTasks(initialTasks);
+  };
+  
+  const handleAssignAgents = () => { 
+    setAgentsAssigned(true); 
+    setStep(6); 
+  };
+  
+  const handleApproveAndProceed = () => {
+    // Open chat panel instead of agent slideout
+    setShowMarkerDetailSlideout(false);
+    setShowChatPanel(true);
+    setTasksApproved(true);
+    setStep(7);
+    
+    const isJourney = proposedTasks.some(t => t.isJourney);
+    
+    // Add approval message
+    setChatMessages(prev => [...prev, {
+      id: `msg-approve-${Date.now()}`,
+      type: 'assistant',
+      content: isJourney 
+        ? 'Journey approved! Building the new member onboarding workflow...'
+        : 'Tasks approved! Beginning execution with agentic team...',
+      timestamp: new Date()
+    }]);
+    
+    // Simulate task execution
+    const tasks = proposedTasks.filter(t => t.status !== 'removed');
+    let completedCount = 0;
+    
+    tasks.forEach((task, index) => {
+      setTimeout(() => {
+        setTaskProgress(prev => ({
+          ...prev,
+          [task.id]: { status: 'in-progress', progress: 0 }
+        }));
+        
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += 10;
+          if (progress >= 100) {
+            clearInterval(progressInterval);
+            setTaskProgress(prev => ({
+              ...prev,
+              [task.id]: { status: 'completed', progress: 100 }
+            }));
+            
+            completedCount++;
+            
+            // Add completion message for each task
+            setChatMessages(prev => [...prev, {
+              id: `msg-complete-${task.id}`,
+              type: 'assistant',
+              content: `✓ Completed: ${task.text}`,
+              timestamp: new Date()
+            }]);
+            
+            // Final message when all done - AFTER all task completions
+            if (completedCount === tasks.length) {
+              setTimeout(() => {
+                const finalMessage = isJourney
+                  ? '🎉 Onboarding journey complete!\n\nNew Member Onboarding workflow is now live and ready.\n\nThe system has:\n• Configured welcome email automation\n• Set up profile completion prompts\n• Created interest survey with personalized recommendations\n• Scheduled first event invitations\n\nNew members will automatically experience this journey upon registration.'
+                  : '🎉 All tasks completed!\n\nFirst-Year Volunteer Activation program is now live and running.\n\nThe system has:\n• Created the onboarding volunteer program\n• Set up automated personalized invitations\n• Configured engagement tracking and analytics\n\nNew MEMBERs will automatically receive volunteer opportunities within 30 days of joining.';
+                
+                setChatMessages(prev => [...prev, {
+                  id: 'msg-final',
+                  type: 'assistant',
+                  content: finalMessage,
+                  timestamp: new Date()
+                }]);
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 4000);
+              }, 800);
+            }
+          } else {
+            setTaskProgress(prev => ({
+              ...prev,
+              [task.id]: { status: 'in-progress', progress }
+            }));
+          }
+        }, 100);
+      }, index * 2000);
+    });
+  };
 
   const getMarkerButton = (column, color, icon, title, onClick, shouldPulse = false, markerType = 'default', offsetX = 0) => {
     const Icon = icon;
@@ -365,15 +743,24 @@ const CompareModeDemo = () => {
     const colorClasses = {
       amber: 'text-amber-600 border-amber-600 hover:bg-amber-50',
       red: 'text-red-600 border-red-600 hover:bg-red-50',
+      green: 'text-green-600 border-green-600 hover:bg-green-50',
     };
 
     const markerStyles = {
       correlation: 'rounded-lg',
       alert: 'rounded-lg',
+      journey: 'rounded-full',
     };
 
-    const getRotation = () => (markerType === 'correlation' ? 'rotate(45deg)' : 'rotate(0deg)');
-    const getIconRotation = () => (markerType === 'correlation' ? 'rotate(-45deg)' : 'rotate(0deg)');
+    const getRotation = () => {
+      if (markerType === 'correlation') return 'rotate(45deg)';
+      return 'rotate(0deg)';
+    };
+    
+    const getIconRotation = () => {
+      if (markerType === 'correlation') return 'rotate(-45deg)';
+      return 'rotate(0deg)';
+    };
 
     return (
       <button
@@ -571,11 +958,170 @@ const CompareModeDemo = () => {
       </div>
     );
   }
+  
+  // Draggable Task Component
+  function DraggableTask({ task, index }) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+      id: task.id,
+      disabled: task.status === 'removed' || tasksApproved
+    });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    const isInProgress = taskProgress[task.id]?.status === 'in-progress';
+    const isCompleted = taskProgress[task.id]?.status === 'completed';
+    const progress = taskProgress[task.id]?.progress || 0;
+    const isJourneyStep = task.isJourney;
+
+    if (task.status === 'removed') {
+      return (
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 opacity-50">
+          <div className="flex items-start gap-2">
+            <X className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-gray-500 line-through">{task.text}</p>
+              <p className="text-xs text-gray-400 line-through">{task.details}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        ref={setNodeRef}
+        style={style}
+        className={`p-3 rounded-lg border transition-all ${
+          isCompleted 
+            ? 'bg-green-50 border-green-200' 
+            : isInProgress 
+              ? 'bg-blue-50 border-blue-200' 
+              : isJourneyStep
+                ? 'bg-emerald-50 border-emerald-200'
+                : 'bg-gray-50 border-gray-200'
+        } ${isDragging ? 'shadow-lg' : ''}`}
+      >
+        <div className="flex items-start gap-2">
+          {!tasksApproved && (
+            <div 
+              {...attributes} 
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing mt-0.5"
+            >
+              <GripVertical className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
+          
+          {isCompleted && (
+            <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+          )}
+          {isInProgress && (
+            <Activity className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5 animate-pulse" />
+          )}
+          {!isInProgress && !isCompleted && (
+            <div className={`w-4 h-4 rounded border-2 flex-shrink-0 mt-0.5 ${
+              isJourneyStep ? 'border-emerald-400 bg-emerald-100' : 'border-gray-300'
+            }`}>
+              {isJourneyStep && <span className="text-[8px] text-emerald-600 font-bold leading-none">→</span>}
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0">
+            {editingTaskId === task.id ? (
+              <input
+                autoFocus
+                type="text"
+                value={task.text}
+                onChange={(e) => setProposedTasks(prev => prev.map(t => 
+                  t.id === task.id ? { ...t, text: e.target.value } : t
+                ))}
+                onBlur={() => setEditingTaskId(null)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') setEditingTaskId(null);
+                  if (e.key === 'Escape') setEditingTaskId(null);
+                }}
+                className="w-full text-sm font-medium px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <p 
+                className={`text-sm font-medium cursor-pointer hover:text-blue-600 ${
+                  isCompleted ? 'text-green-900' : isInProgress ? 'text-blue-900' : isJourneyStep ? 'text-emerald-900' : 'text-gray-900'
+                }`}
+                onClick={() => !tasksApproved && setEditingTaskId(task.id)}
+              >
+                {task.text}
+              </p>
+            )}
+            <p className={`text-xs mt-0.5 flex items-center gap-1 ${
+              isCompleted ? 'text-green-700' : isInProgress ? 'text-blue-700' : isJourneyStep ? 'text-emerald-700' : 'text-gray-600'
+            }`}>
+              {isJourneyStep && <span className="text-emerald-600">→</span>}
+              {task.details}
+            </p>
+            
+            {isInProgress && (
+              <div className="mt-2">
+                <div className="w-full bg-blue-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {!tasksApproved && !isInProgress && !isCompleted && (
+            <button
+              onClick={() => handleRemoveTask(task.id)}
+              className="text-gray-400 hover:text-red-600 transition-colors"
+              title="Remove task"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   function HeatmapChart({ size, height, onSizeChange, onRemove }) {
     const headerHeight = 80;
     const footerHeight = 60;
-    const contentHeight = height - headerHeight - footerHeight - 48; // 48 for padding
+    const contentHeight = height - headerHeight - footerHeight - 48;
+    
+    const panel = chartPanels.find(p => p.type === 'heatmap');
+    const filteredData = getFilteredHeatmapData(panel);
+    const currentVariation = panel?.variation || selectedHeatmapVariation;
+    
+    const openSettings = () => {
+      // Load current panel settings into state
+      if (panel) {
+        setSelectedMemberTypes(panel.selectedTypes || []);
+        setSelectedHeatmapVariation(panel.variation || 'classic');
+      }
+      setPreviewChartType('heatmap');
+      setShowChartConfigSlideout(true);
+      setShowChartPreviewSlideout(false);
+    };
+    
+    const applySettingsToPanel = () => {
+      setChartPanels(prev => prev.map(p => 
+        p.type === 'heatmap' 
+          ? { ...p, selectedTypes: [...selectedMemberTypes], variation: selectedHeatmapVariation }
+          : p
+      ));
+    };
+    
+    // Apply settings when config closes
+    useEffect(() => {
+      if (!showChartConfigSlideout && panel) {
+        applySettingsToPanel();
+      }
+    }, [showChartConfigSlideout]);
     
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -590,11 +1136,7 @@ const CompareModeDemo = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { 
-                setPreviewChartType('heatmap'); 
-                setShowChartConfigSlideout(true);
-                setShowChartPreviewSlideout(false);
-              }}
+              onClick={openSettings}
               className="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-50 rounded"
               title="Configure chart"
             >
@@ -619,7 +1161,7 @@ const CompareModeDemo = () => {
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {selectedHeatmapVariation === 'classic' && (
+          {currentVariation === 'classic' && (
             <table className="w-full border-collapse">
               <thead className="sticky top-0 bg-gray-50 z-10">
                 <tr>
@@ -631,7 +1173,7 @@ const CompareModeDemo = () => {
                 </tr>
               </thead>
               <tbody>
-                {statusAlertData.map((row, idx) => (
+                {filteredData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-gray-50">
                     <td className="text-xs font-medium text-gray-700 p-3 border-b">{row.type}</td>
                     <td className="text-xs text-gray-700 p-3 border-b text-center">{row.y2024.toLocaleString()}</td>
@@ -652,7 +1194,7 @@ const CompareModeDemo = () => {
             </table>
           )}
 
-          {selectedHeatmapVariation === 'percentage' && (
+          {currentVariation === 'percentage' && (
             <table className="w-full border-collapse">
               <thead className="sticky top-0 bg-gray-50 z-10">
                 <tr>
@@ -662,7 +1204,7 @@ const CompareModeDemo = () => {
                 </tr>
               </thead>
               <tbody>
-                {statusAlertData.map((row, idx) => (
+                {filteredData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-gray-50">
                     <td className="text-xs font-medium text-gray-700 p-3 border-b">{row.type}</td>
                     <td className="p-3 border-b">
@@ -686,7 +1228,7 @@ const CompareModeDemo = () => {
             </table>
           )}
 
-          {selectedHeatmapVariation === 'trend' && (
+          {currentVariation === 'trend' && (
             <table className="w-full border-collapse">
               <thead className="sticky top-0 bg-gray-50 z-10">
                 <tr>
@@ -696,7 +1238,7 @@ const CompareModeDemo = () => {
                 </tr>
               </thead>
               <tbody>
-                {statusAlertData.map((row, idx) => {
+                {filteredData.map((row, idx) => {
                   const trend = getTrendIndicator(row.percentage);
                   const TrendIcon = trend.icon;
                   return (
@@ -721,9 +1263,9 @@ const CompareModeDemo = () => {
             </table>
           )}
 
-          {selectedHeatmapVariation === 'compact' && (
+          {currentVariation === 'compact' && (
             <div className="space-y-2 pr-2">
-              {statusAlertData.map((row, idx) => (
+              {filteredData.map((row, idx) => (
                 <div
                   key={idx}
                   className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
@@ -778,7 +1320,7 @@ const CompareModeDemo = () => {
             ? '64rem' 
             : (showChartPreviewSlideout || showMarkerSlideout || showMarkerDetailSlideout || showAgentSlideout)
               ? '32rem' 
-              : '0' 
+              : '0'
         }}
       >
         {markerPlacementMode && tempMarkerPosition && (
@@ -831,11 +1373,12 @@ const CompareModeDemo = () => {
               {step === 1 && "✨ Click Engagement marker (amber diamond) for volunteer correlation"}
               {step === 2 && "💡 Click 'Add marker to page'"}
               {step === 3 && "📍 Click anywhere, then Save"}
-              {step === 4 && "🎯 Click the yellow pin"}
-              {step === 5 && "📋 Click 'Assign to Agentic Team'"}
-              {step === 6 && "✅ Click 'Approve to Proceed'"}
-              {step >= 7 && agentProgress < 100 && "⚙️ Building program..."}
-              {step >= 7 && agentProgress === 100 && "🎉 Done! Click Engagement scores for radar charts. Also try Status marker for heatmap!"}
+              {step === 4 && "🎯 Click 'Generate Action Plan' in the yellow pin details"}
+              {step === 5 && "💬 Chat opens! Try editing/reordering tasks (optional)"}
+              {step === 6 && "📋 Click 'Assign to Agentic Team'"}
+              {step >= 7 && !tasksApproved && "✅ Click 'Approve' to watch AI execute"}
+              {step >= 7 && tasksApproved && taskProgress['task-3']?.status !== 'completed' && "⚙️ Building volunteer program..."}
+              {step >= 7 && taskProgress['task-3']?.status === 'completed' && "🎉 Done! Click Engagement scores for radar charts or try Status marker for heatmap"}
             </div>
           </div>
 
@@ -1085,7 +1628,7 @@ const CompareModeDemo = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {statusAlertData.map((row, idx) => (
+                          {getFilteredHeatmapData().map((row, idx) => (
                             <tr key={idx}>
                               <td className="text-[9px] font-medium text-gray-700 p-2 border-b border-gray-100 truncate max-w-[120px]">{row.type}</td>
                               <td className="text-[9px] text-gray-700 p-2 border-b border-gray-100 text-center">{row.y2024}</td>
@@ -1119,7 +1662,7 @@ const CompareModeDemo = () => {
                       </button>
                     </div>
                     <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                      {statusAlertData.map((row, idx) => (
+                      {getFilteredHeatmapData().map((row, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                           <div className="w-24 text-[9px] text-gray-700 truncate font-medium">{row.type.split(' ')[0]}</div>
                           <div className="flex-1">
@@ -1166,7 +1709,7 @@ const CompareModeDemo = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {statusAlertData.map((row, idx) => {
+                          {getFilteredHeatmapData().map((row, idx) => {
                             const trend = getTrendIndicator(row.percentage);
                             const TrendIcon = trend.icon;
                             return (
@@ -1209,7 +1752,7 @@ const CompareModeDemo = () => {
                       </button>
                     </div>
                     <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                      {statusAlertData.map((row, idx) => (
+                      {getFilteredHeatmapData().map((row, idx) => (
                         <div 
                           key={idx} 
                           className="flex items-center gap-2 p-2 rounded border border-gray-200"
@@ -1347,9 +1890,76 @@ const CompareModeDemo = () => {
                 </button>
               </div>
             </div>
+            
+            {/* Member Type Filter */}
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-medium text-gray-700">Filter Member Types</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedMemberTypes(availableMemberTypes)}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={() => setSelectedMemberTypes([])}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              
+              <div className="max-h-64 overflow-y-auto space-y-1 pr-2 border border-gray-200 rounded-lg p-2">
+                {availableMemberTypes.map(type => {
+                  const typeData = statusAlertData.find(d => d.type === type);
+                  const isLargestDrop = typeData && typeData.percentage === Math.min(...statusAlertData.map(d => d.percentage));
+                  
+                  return (
+                    <label key={type} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedMemberTypes.length === 0 || selectedMemberTypes.includes(type)}
+                        onChange={() => toggleMemberType(type)}
+                        className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                      />
+                      <span className="text-xs text-gray-700 flex-1">{type}</span>
+                      {typeData && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded ${
+                          typeData.percentage < 0 ? 'bg-red-100 text-red-700' : 
+                          typeData.percentage > 0 ? 'bg-green-100 text-green-700' : 
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {typeData.percentage > 0 ? '+' : ''}{typeData.percentage.toFixed(1)}%
+                        </span>
+                      )}
+                      {isLargestDrop && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-semibold">
+                          Largest Drop
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+              
+              {selectedMemberTypes.length > 0 && selectedMemberTypes.length < availableMemberTypes.length && (
+                <div className="text-xs text-gray-600 mt-2">
+                  {selectedMemberTypes.length} of {availableMemberTypes.length} types selected
+                </div>
+              )}
+            </div>
 
             <div className="border-t border-gray-200 pt-6">
-              <button onClick={() => setShowChartConfigSlideout(false)} className="w-full py-2.5 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition-colors">
+              <button 
+                onClick={() => {
+                  setShowChartConfigSlideout(false);
+                  setShowChartPreviewSlideout(true);
+                }} 
+                className="w-full py-2.5 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition-colors"
+              >
                 Apply Configuration
               </button>
             </div>
@@ -1483,90 +2093,191 @@ const CompareModeDemo = () => {
         </div>
       )}
 
-      {showAgentSlideout && (
-        <div className="fixed right-0 top-0 h-full w-[32rem] bg-white shadow-2xl border-l border-gray-200 z-[100] slideout-panel overflow-y-auto">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Agentic Execution</h2>
-              <button onClick={() => setShowAgentSlideout(false)} className="text-gray-400 hover:text-gray-600">
+      {/* AI Chat Panel - Bottom Right (Professional Style) */}
+      {showChatPanel && (
+        <div className="fixed bottom-6 right-6 w-[440px] bg-white shadow-2xl rounded-xl border border-slate-200 z-[100] chat-panel flex flex-col overflow-hidden" 
+             style={{ height: '620px', maxHeight: 'calc(100vh - 100px)' }}>
+          
+          {/* Header */}
+          <div className="flex-shrink-0 px-5 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-800">AI Assistant</h3>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <p className="text-xs text-slate-600">Active</p>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowChatPanel(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Building Program</span>
-                <span className="text-sm font-semibold text-purple-600">{agentProgress}%</span>
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50">
+            {chatMessages.map((message, msgIndex) => {
+              const isUser = message.type === 'user';
+              
+              // Check if this is the initial AI message that should be followed by task list
+              const shouldShowTaskListAfter = msgIndex === 0 && proposedTasks.length > 0;
+              
+              return (
+                <React.Fragment key={message.id}>
+                  {/* Message Bubble */}
+                  <div className={`flex gap-3 items-start ${isUser ? 'flex-row-reverse' : ''}`}>
+                    {!isUser && (
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <div className={`flex-1 ${isUser ? 'max-w-[80%]' : 'max-w-[85%]'}`}>
+                      <div className={`rounded-xl px-4 py-2.5 shadow-sm ${
+                        isUser 
+                          ? 'bg-indigo-600 text-white ml-auto' 
+                          : 'bg-white border border-slate-200 text-slate-800'
+                      }`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                      </div>
+                      <div className={`text-[10px] text-slate-400 mt-1 ${isUser ? 'text-right mr-2' : 'ml-2'}`}>
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Task List - Show right after initial message */}
+                  {shouldShowTaskListAfter && (
+                    <div className="flex gap-3 items-start">
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 max-w-[85%]">
+                        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                              {tasksApproved ? 'Task Execution' : 'Proposed Tasks'}
+                            </h4>
+                            {!tasksApproved && (
+                              <button
+                                onClick={handleAddTask}
+                                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
+                              >
+                                <span className="text-base leading-none">+</span>
+                              </button>
+                            )}
+                          </div>
+                          
+                          {!tasksApproved ? (
+                            <DndContext
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragStart={(e) => setActiveDragTaskId(e.active.id)}
+                              onDragEnd={handleTaskDragEnd}
+                            >
+                              <SortableContext
+                                items={proposedTasks.map(t => t.id)}
+                                strategy={rectSortingStrategy}
+                              >
+                                <div className="space-y-2">
+                                  {proposedTasks.map((task, index) => (
+                                    <DraggableTask key={task.id} task={task} index={index} />
+                                  ))}
+                                </div>
+                              </SortableContext>
+                            </DndContext>
+                          ) : (
+                            <div className="space-y-2">
+                              {proposedTasks
+                                .filter(task => task.status !== 'removed')
+                                .map((task, index) => (
+                                  <DraggableTask key={task.id} task={task} index={index} />
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1 ml-2">
+                          {tasksApproved ? 'Processing...' : 'Just now'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+            
+            {/* AI Typing Indicator */}
+            {isAITyping && (
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full transition-all duration-300" style={{ width: `${agentProgress}%` }}></div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {agentProgress >= 20 && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">Campaign Created</p>
-                      <p className="text-xs text-green-700">First-Year Volunteer Activation</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {agentProgress >= 40 && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">Email Templates Built</p>
-                      <p className="text-xs text-green-700">3 personalized templates ready</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {agentProgress >= 60 && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">Automation Configured</p>
-                      <p className="text-xs text-green-700">30-day trigger sequence</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {agentProgress >= 80 && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">Analytics Dashboard Set Up</p>
-                      <p className="text-xs text-green-700">Tracking retention metrics</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {agentProgress === 100 && (
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold text-purple-900">Program Ready!</p>
-                      <p className="text-xs text-purple-700">First-Year Volunteer Activation program is live and running</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
+            
+            <div ref={chatMessagesEndRef} />
           </div>
+
+          {/* Action Buttons OR Input - Show buttons when tasks not approved, input otherwise */}
+          {proposedTasks.length > 0 && !tasksApproved ? (
+            <div className="flex-shrink-0 px-4 py-3 border-t border-slate-200 bg-white">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRejectTasks}
+                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-sm border border-slate-200"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={handleApproveTasksFromChat}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Approve
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-shrink-0 px-4 py-3 border-t border-slate-200 bg-white">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-slate-400"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!chatInput.trim()}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
+                    chatInput.trim()
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1587,12 +2298,13 @@ const CompareModeDemo = () => {
           box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
         
-        [style*="marginRight"] {
+        [style*="marginRight"],
+        [style*="marginBottom"] {
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
-          will-change: margin-right;
+          will-change: margin-right, margin-bottom;
         }
         
         .recharts-surface {
@@ -1616,6 +2328,21 @@ const CompareModeDemo = () => {
         * {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .chat-panel {
+          animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes slideInUp {
+          from {
+            transform: translateY(100%) scale(0.95);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
         }
       `}</style>
     </div>

@@ -1,3 +1,23 @@
+/**
+ * PerformanceListing Component
+ *
+ * Performance analytics dashboard featuring member type charts, revenue panels,
+ * and comprehensive performance metrics. Provides draggable/resizable panels
+ * for customizable analytics views.
+ *
+ * Features:
+ * - Member type distribution charts
+ * - Revenue panels with drag and resize functionality
+ * - Aggregation controls for data analysis
+ * - Agent assignment system
+ * - Real-time performance metrics
+ * - Multiple chart types (bar, pie, line charts)
+ * - Volunteer and member tracking
+ *
+ * @component
+ * @returns {React.Component} PerformanceListing component
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart3, Edit3, Filter, Clock, Eye, Target, Focus, TrendingUp, Users, AlertCircle, CheckCircle2, Loader2, X, MapPin, ListTodo, Zap, MoreVertical, DollarSign, AlertTriangle, Activity, Percent } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
