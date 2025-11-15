@@ -31,11 +31,8 @@ import {
   Circle, PenTool, MousePointer, Send, AtSign, Mail, Briefcase
 } from 'lucide-react';
 
-// Configure PDF.js worker - using local worker from node_modules
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// Configure PDF.js worker - using worker from public folder
+pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
 // Mock users for mentions
 const AVAILABLE_USERS = [
