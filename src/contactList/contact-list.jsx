@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, MoreHorizontal, Plus, X, ChevronRight, Filter, Eye, EyeOff, Clock, BarChart3, FileDown, FileUp, GripVertical, Ellipsis, ChevronsLeft, Edit3, Target, Focus, TrendingUp, Users, AlertCircle, CheckCircle2, Loader2, MapPin, ListTodo, Zap, MoreVertical, TrendingDown, DollarSign, AlertTriangle, Activity, Percent } from 'lucide-react';
+import { Search, MoreHorizontal, Plus, X, ChevronRight, Filter, Eye, EyeOff, Clock, BarChart3, FileDown, FileUp, GripVertical, Ellipsis, ChevronsLeft, Edit3, Target, Focus, TrendingUp, Users, AlertCircle, CheckCircle2, Loader2, MapPin, ListTodo, Zap, MoreVertical, TrendingDown, DollarSign, AlertTriangle, Activity, Percent, Sparkles } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './contactList.css'
 import Pagination from '../components/UI/pagination';
-import PhraseFilter from '../components/PhraseFilter';
+import TemplatePhraseFilter from '../components/TemplatePhraseFilter';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -198,6 +198,7 @@ const UnifiedContactListing = () => {
   const [pageFilters, setPageFilters] = useState([]);
   const [phraseFilters, setPhraseFilters] = useState([]);
   const [currentPhrase, setCurrentPhrase] = useState('');
+  const [filterMode, setFilterMode] = useState('phrase'); // 'phrase' or 'fields'
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -1965,22 +1966,56 @@ const UnifiedContactListing = () => {
                 </div>
               )}
 
-              {/* Phrase Filter */}
-              <div className="mt-4">
-                <PhraseFilter
-                  onApply={(filters, phrase) => {
-                    setPhraseFilters(filters);
-                    setCurrentPhrase(phrase);
-                  }}
-                  onClear={() => {
-                    setPhraseFilters([]);
-                    setCurrentPhrase('');
-                  }}
-                />
+              {/* Filter Mode Toggle */}
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white rounded-lg border-2 border-gray-200 p-1">
+                  <button
+                    onClick={() => setFilterMode('phrase')}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                      ${filterMode === 'phrase'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    By Phrase
+                  </button>
+                  <button
+                    onClick={() => setFilterMode('fields')}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                      ${filterMode === 'fields'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    <Filter className="w-4 h-4" />
+                    By Fields
+                  </button>
+                </div>
               </div>
 
-              {/* Active Filter Pills */}
-              <ActiveFilterPills />
+              {/* Phrase Filter (Template-based) */}
+              {filterMode === 'phrase' && (
+                <div className="mt-4">
+                  <TemplatePhraseFilter
+                    onApply={(filters, values) => {
+                      setPhraseFilters(filters);
+                      setCurrentPhrase(JSON.stringify(values));
+                    }}
+                    onClear={() => {
+                      setPhraseFilters([]);
+                      setCurrentPhrase('');
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Active Filter Pills (shown in Fields mode) */}
+              {filterMode === 'fields' && <ActiveFilterPills />}
             </div>
           </div>
         </div>
