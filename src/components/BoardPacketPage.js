@@ -8,29 +8,41 @@
  * - Right: Notes & Annotations
  *
  * Features:
- * - PDF document viewing with zoom controls
+ * - Real PDF document viewing with react-pdf
  * - Marker overlay system with normalized coordinates (survives zoom/resize)
  * - Document upload and conversion status tracking
- * - Threaded annotations and comments
- * - Agenda-based navigation
+ * - Threaded annotations with @mentions
+ * - Mention autocomplete and hover cards
+ * - Agenda creation with PDF upload
  * - Share and download packet functionality
- *
- * Technical Implementation:
- * - Uses normalized coordinates (0-1) for markers to survive zoom
- * - Marker overlay positioned absolutely over PDF pages
- * - Real-time status updates for document conversion
  *
  * @component
  * @returns {React.Component} BoardPacketPage component
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
 import {
   FileText, Upload, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
   Search, Filter, MessageSquare, Check, AlertCircle, Loader2, X, Users,
   Calendar, MapPin, Clock, Eye, Edit3, Trash2, MoreVertical, CheckCircle2,
-  Circle, PenTool, MousePointer
+  Circle, PenTool, MousePointer, Send, AtSign, Mail, Briefcase
 } from 'lucide-react';
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+// Mock users for mentions
+const AVAILABLE_USERS = [
+  { id: 1, name: 'John Smith', designation: 'Board Chair', email: 'john.smith@company.com' },
+  { id: 2, name: 'Sarah Chen', designation: 'CFO', email: 'sarah.chen@company.com' },
+  { id: 3, name: 'Maria Garcia', designation: 'Board Member', email: 'maria.garcia@company.com' },
+  { id: 4, name: 'David Lee', designation: 'CEO', email: 'david.lee@company.com' },
+  { id: 5, name: 'Emily Johnson', designation: 'Board Secretary', email: 'emily.johnson@company.com' },
+  { id: 6, name: 'Michael Brown', designation: 'COO', email: 'michael.brown@company.com' }
+];
 
 const BoardPacketPage = () => {
   // Meeting Info
@@ -42,18 +54,31 @@ const BoardPacketPage = () => {
     lastUpdated: { by: "Sarah Chen", time: "5 min ago" }
   });
 
-  // Agenda Items
-  const [agendaItems] = useState([
+  // Agenda Items State
+  const [agendaItems, setAgendaItems] = useState([
     { id: 1, title: "Opening & Minutes", order: 1 },
     { id: 2, title: "Financials", order: 2 },
     { id: 3, title: "Strategy & Risk", order: 3 },
     { id: 4, title: "Operations", order: 4 }
   ]);
 
-  // Documents State
+  const [showNewAgendaForm, setShowNewAgendaForm] = useState(false);
+  const [newAgendaTitle, setNewAgendaTitle] = useState('');
+
+  // Documents State - First document is the uploaded PDF
   const [documents, setDocuments] = useState([
     {
       id: 1,
+      name: "Board of Directors Dashboard.pdf",
+      type: "pdf",
+      agendaId: 1,
+      status: "ready",
+      pages: null, // Will be set when PDF loads
+      pdfPath: "/Board-of-Directors-Dashboard.pdf",
+      uploadedAt: new Date()
+    },
+    {
+      id: 2,
       name: "Q1 Financials v4.xlsx",
       type: "excel",
       agendaId: 2,
@@ -62,27 +87,19 @@ const BoardPacketPage = () => {
       uploadedAt: new Date()
     },
     {
-      id: 2,
+      id: 3,
       name: "Strategic Plan 2026.pptx",
       type: "powerpoint",
       agendaId: 3,
       status: "ready",
       pages: 25,
       uploadedAt: new Date()
-    },
-    {
-      id: 3,
-      name: "Board Minutes - Feb 2026.pdf",
-      type: "pdf",
-      agendaId: 1,
-      status: "ready",
-      pages: 8,
-      uploadedAt: new Date()
     }
   ]);
 
   const [currentDocument, setCurrentDocument] = useState(documents[0]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [numPages, setNumPages] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [viewMode, setViewMode] = useState('view'); // 'view' or 'annotate'
 
@@ -91,43 +108,35 @@ const BoardPacketPage = () => {
     {
       id: 1,
       documentId: 1,
-      page: 3,
-      xNorm: 0.45,
-      yNorm: 0.32,
-      note: "Revenue projection seems conservative. Can we get a breakdown by segment?",
+      page: 1,
+      xNorm: 0.75,
+      yNorm: 0.35,
+      note: "Great revenue growth! @Sarah Chen can you provide more details on Q4 performance?",
       author: "John Smith",
+      authorId: 1,
       status: "open",
       createdAt: new Date(),
       replies: [
         {
           id: 1,
           author: "Sarah Chen",
-          text: "I'll have finance prepare detailed segment breakdown for next meeting.",
-          createdAt: new Date()
+          authorId: 2,
+          text: "Sure @John Smith! I'll prepare a detailed breakdown for next week. cc @Maria Garcia",
+          createdAt: new Date(),
+          mentions: [{ id: 1, name: "John Smith" }, { id: 3, name: "Maria Garcia" }]
         }
       ]
     },
     {
       id: 2,
       documentId: 1,
-      page: 3,
-      xNorm: 0.72,
-      yNorm: 0.58,
-      note: "Operating expenses increased 15% YoY. What's driving this?",
+      page: 1,
+      xNorm: 0.25,
+      yNorm: 0.65,
+      note: "Customer satisfaction metrics look strong. @David Lee what's driving this improvement?",
       author: "Maria Garcia",
+      authorId: 3,
       status: "open",
-      createdAt: new Date(),
-      replies: []
-    },
-    {
-      id: 3,
-      documentId: 1,
-      page: 5,
-      xNorm: 0.28,
-      yNorm: 0.45,
-      note: "Cash flow looks healthy. Good job team!",
-      author: "David Lee",
-      status: "resolved",
       createdAt: new Date(),
       replies: []
     }
@@ -139,8 +148,18 @@ const BoardPacketPage = () => {
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [tempMarker, setTempMarker] = useState(null);
 
+  // Reply state
+  const [replyText, setReplyText] = useState('');
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [mentionCursorPosition, setMentionCursorPosition] = useState(null);
+  const [hoveredMention, setHoveredMention] = useState(null);
+  const [mentionHoverPosition, setMentionHoverPosition] = useState({ x: 0, y: 0 });
+
   const pageRef = useRef(null);
   const fileInputRef = useRef(null);
+  const replyInputRef = useRef(null);
+  const pageContainerRef = useRef(null);
 
   // Get current document markers
   const currentMarkers = markers.filter(
@@ -151,7 +170,7 @@ const BoardPacketPage = () => {
   const filteredMarkers = markers
     .filter(m => m.documentId === currentDocument?.id)
     .filter(m => {
-      if (markerFilter === 'mine') return m.author === 'John Smith'; // Current user
+      if (markerFilter === 'mine') return m.authorId === 1; // Current user ID
       if (markerFilter === 'unresolved') return m.status === 'open';
       return true;
     })
@@ -160,18 +179,31 @@ const BoardPacketPage = () => {
       return m.note.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
+  // PDF loading handlers
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    // Update document with actual page count
+    setDocuments(prev =>
+      prev.map(doc =>
+        doc.id === currentDocument.id ? { ...doc, pages: numPages } : doc
+      )
+    );
+  };
+
   // Handle file upload
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (e, agendaId = null) => {
     const files = Array.from(e.target.files);
 
     files.forEach((file, index) => {
+      const isPdf = file.type === 'application/pdf';
       const newDoc = {
         id: Date.now() + index,
         name: file.name,
         type: getFileType(file.name),
-        agendaId: 1,
-        status: 'converting',
+        agendaId: agendaId || 1,
+        status: isPdf ? 'converting' : 'converting',
         pages: 0,
+        pdfPath: isPdf ? URL.createObjectURL(file) : null,
         uploadedAt: new Date()
       };
 
@@ -182,7 +214,7 @@ const BoardPacketPage = () => {
         setDocuments(prev =>
           prev.map(doc =>
             doc.id === newDoc.id
-              ? { ...doc, status: 'ready', pages: Math.floor(Math.random() * 20) + 5 }
+              ? { ...doc, status: 'ready', pages: isPdf ? null : Math.floor(Math.random() * 20) + 5 }
               : doc
           )
         );
@@ -201,9 +233,9 @@ const BoardPacketPage = () => {
 
   // Handle marker placement
   const handlePageClick = (e) => {
-    if (viewMode !== 'annotate') return;
+    if (viewMode !== 'annotate' || !pageContainerRef.current) return;
 
-    const rect = pageRef.current.getBoundingClientRect();
+    const rect = pageContainerRef.current.getBoundingClientRect();
     const xNorm = (e.clientX - rect.left) / rect.width;
     const yNorm = (e.clientY - rect.top) / rect.height;
 
@@ -216,6 +248,7 @@ const BoardPacketPage = () => {
       yNorm,
       note: '',
       author: 'John Smith',
+      authorId: 1,
       status: 'open',
       createdAt: new Date(),
       replies: []
@@ -240,13 +273,145 @@ const BoardPacketPage = () => {
     setIsAddingMarker(false);
   };
 
+  // Handle reply with mentions
+  const handleReplyTextChange = (e) => {
+    const text = e.target.value;
+    setReplyText(text);
+
+    // Check for @ mention
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = text.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+      // Check if there's a space after @
+      if (!textAfterAt.includes(' ')) {
+        setMentionSearch(textAfterAt);
+        setMentionCursorPosition(lastAtIndex);
+        setShowMentionSuggestions(true);
+      } else {
+        setShowMentionSuggestions(false);
+      }
+    } else {
+      setShowMentionSuggestions(false);
+    }
+  };
+
+  const insertMention = (user) => {
+    if (mentionCursorPosition === null) return;
+
+    const beforeMention = replyText.slice(0, mentionCursorPosition);
+    const afterMention = replyText.slice(mentionCursorPosition + mentionSearch.length + 1);
+    const newText = `${beforeMention}@${user.name} ${afterMention}`;
+
+    setReplyText(newText);
+    setShowMentionSuggestions(false);
+    setMentionSearch('');
+    setMentionCursorPosition(null);
+
+    // Focus back on input
+    if (replyInputRef.current) {
+      replyInputRef.current.focus();
+    }
+  };
+
+  const sendReply = () => {
+    if (!replyText.trim() || !selectedMarkerId) return;
+
+    // Extract mentions from reply text
+    const mentionRegex = /@(\w+\s\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(replyText)) !== null) {
+      const userName = match[1];
+      const user = AVAILABLE_USERS.find(u => u.name === userName);
+      if (user) {
+        mentions.push({ id: user.id, name: user.name });
+      }
+    }
+
+    const newReply = {
+      id: Date.now(),
+      author: 'John Smith',
+      authorId: 1,
+      text: replyText,
+      createdAt: new Date(),
+      mentions
+    };
+
+    setMarkers(prev =>
+      prev.map(m =>
+        m.id === selectedMarkerId
+          ? { ...m, replies: [...m.replies, newReply] }
+          : m
+      )
+    );
+
+    setReplyText('');
+  };
+
+  const handleMentionHover = (mention, event) => {
+    const user = AVAILABLE_USERS.find(u => u.name === mention);
+    if (user) {
+      setHoveredMention(user);
+      setMentionHoverPosition({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  const handleMentionLeave = () => {
+    setHoveredMention(null);
+  };
+
+  // Render mention with hover card
+  const renderTextWithMentions = (text) => {
+    const parts = text.split(/(@\w+\s\w+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('@')) {
+        const userName = part.slice(1);
+        const user = AVAILABLE_USERS.find(u => u.name === userName);
+        return (
+          <span
+            key={index}
+            className="text-blue-600 font-medium cursor-pointer hover:underline"
+            onMouseEnter={(e) => handleMentionHover(userName, e)}
+            onMouseLeave={handleMentionLeave}
+          >
+            {part}
+          </span>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  // Filtered mention suggestions
+  const filteredMentionSuggestions = AVAILABLE_USERS.filter(user =>
+    user.name.toLowerCase().includes(mentionSearch.toLowerCase())
+  );
+
+  // Create new agenda
+  const handleCreateAgenda = () => {
+    if (!newAgendaTitle.trim()) return;
+
+    const newAgenda = {
+      id: Date.now(),
+      title: newAgendaTitle,
+      order: agendaItems.length + 1
+    };
+
+    setAgendaItems(prev => [...prev, newAgenda]);
+    setNewAgendaTitle('');
+    setShowNewAgendaForm(false);
+  };
+
   // Zoom controls
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 25, 50));
 
   // Page navigation
   const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, currentDocument?.pages || 1));
+  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, numPages || currentDocument?.pages || 1));
 
   // Get file icon
   const getFileIcon = (type) => {
@@ -278,6 +443,8 @@ const BoardPacketPage = () => {
       </span>
     );
   };
+
+  const selectedMarker = markers.find(m => m.id === selectedMarkerId);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -322,7 +489,64 @@ const BoardPacketPage = () => {
         <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
           {/* Agenda Section */}
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Agenda</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-900">Agenda</h2>
+              <button
+                onClick={() => setShowNewAgendaForm(!showNewAgendaForm)}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Add agenda item"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* New Agenda Form */}
+            {showNewAgendaForm && (
+              <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <input
+                  type="text"
+                  placeholder="New agenda item title..."
+                  value={newAgendaTitle}
+                  onChange={(e) => setNewAgendaTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateAgenda();
+                    if (e.key === 'Escape') {
+                      setShowNewAgendaForm(false);
+                      setNewAgendaTitle('');
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreateAgenda}
+                    className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                  >
+                    Add Item
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowNewAgendaForm(false);
+                      setNewAgendaTitle('');
+                    }}
+                    className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div className="mt-2">
+                  <label className="block text-xs text-gray-600 mb-1">Attach PDF (optional):</label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => handleFileUpload(e, agendaItems.length + 1)}
+                    className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1">
               {agendaItems.map(item => (
                 <button
@@ -372,7 +596,12 @@ const BoardPacketPage = () => {
                 {documents.map(doc => (
                   <button
                     key={doc.id}
-                    onClick={() => doc.status === 'ready' && setCurrentDocument(doc)}
+                    onClick={() => {
+                      if (doc.status === 'ready') {
+                        setCurrentDocument(doc);
+                        setCurrentPage(1);
+                      }
+                    }}
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       currentDocument?.id === doc.id
                         ? 'bg-blue-50 border-blue-200'
@@ -386,7 +615,7 @@ const BoardPacketPage = () => {
                         <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {getStatusBadge(doc.status)}
-                          {doc.status === 'ready' && (
+                          {doc.status === 'ready' && doc.pages && (
                             <span className="text-xs text-gray-500">{doc.pages} pages</span>
                           )}
                         </div>
@@ -401,7 +630,7 @@ const BoardPacketPage = () => {
 
         {/* Center - PDF Viewer */}
         <div className="flex-1 flex flex-col bg-gray-100">
-          {currentDocument ? (
+          {currentDocument && currentDocument.type === 'pdf' ? (
             <>
               {/* PDF Toolbar */}
               <div className="bg-white border-b border-gray-200 px-6 py-3">
@@ -442,12 +671,12 @@ const BoardPacketPage = () => {
                         <ChevronLeft className="w-4 h-4" />
                       </button>
                       <span className="text-sm text-gray-700 min-w-[100px] text-center">
-                        Page {currentPage} of {currentDocument.pages}
+                        Page {currentPage} of {numPages || currentDocument.pages || '?'}
                       </span>
                       <button
                         onClick={handleNextPage}
                         className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                        disabled={currentPage >= currentDocument.pages}
+                        disabled={currentPage >= (numPages || currentDocument.pages || 1)}
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -486,31 +715,33 @@ const BoardPacketPage = () => {
               <div className="flex-1 overflow-auto p-8">
                 <div className="max-w-4xl mx-auto">
                   <div
-                    ref={pageRef}
+                    ref={pageContainerRef}
                     onClick={handlePageClick}
-                    className={`relative bg-white shadow-lg ${
+                    className={`relative inline-block ${
                       viewMode === 'annotate' ? 'cursor-crosshair' : 'cursor-default'
                     }`}
                     style={{
-                      width: '100%',
-                      aspectRatio: '8.5 / 11',
                       transform: `scale(${zoomLevel / 100})`,
                       transformOrigin: 'top center',
-                      marginBottom: `${(zoomLevel - 100) * 5}px`
                     }}
                   >
-                    {/* PDF Content Placeholder */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                      <div className="text-center">
-                        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">PDF Page {currentPage} Preview</p>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {viewMode === 'annotate'
-                            ? 'Click anywhere to add a marker'
-                            : 'Switch to Annotate mode to add markers'}
-                        </p>
-                      </div>
-                    </div>
+                    {/* PDF Rendering */}
+                    <Document
+                      file={currentDocument.pdfPath}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      loading={
+                        <div className="flex items-center justify-center bg-white shadow-lg" style={{ width: 800, height: 1035 }}>
+                          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                        </div>
+                      }
+                    >
+                      <Page
+                        pageNumber={currentPage}
+                        width={800}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={true}
+                      />
+                    </Document>
 
                     {/* Marker Overlay */}
                     <div className="absolute inset-0 pointer-events-none">
@@ -563,6 +794,16 @@ const BoardPacketPage = () => {
                 </div>
               </div>
             </>
+          ) : currentDocument ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600 mb-1">Non-PDF Document</p>
+                <p className="text-sm text-gray-500">
+                  {currentDocument.name} - Preview not available for {currentDocument.type} files
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -575,7 +816,7 @@ const BoardPacketPage = () => {
         </div>
 
         {/* Right Sidebar - Notes & Markers */}
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-sm font-semibold text-gray-900 mb-3">Notes & Markers</h2>
@@ -614,9 +855,164 @@ const BoardPacketPage = () => {
             </div>
           </div>
 
-          {/* Marker List */}
+          {/* Marker List / Detail View */}
           <div className="flex-1 overflow-y-auto">
-            {filteredMarkers.length === 0 ? (
+            {selectedMarker ? (
+              /* Detailed Marker View */
+              <div className="p-4">
+                <button
+                  onClick={() => setSelectedMarkerId(null)}
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to all markers
+                </button>
+
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                        selectedMarker.status === 'resolved'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-yellow-500 text-white'
+                      }`}
+                    >
+                      {markers.filter(m => m.documentId === currentDocument.id).indexOf(selectedMarker) + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900">{selectedMarker.author}</p>
+                          <p className="text-xs text-gray-500">
+                            Page {selectedMarker.page} · {selectedMarker.createdAt.toLocaleDateString()}
+                          </p>
+                        </div>
+                        {selectedMarker.status === 'resolved' ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
+                            <Circle className="w-3 h-3" />
+                            Open
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {renderTextWithMentions(selectedMarker.note)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setMarkers(prev =>
+                          prev.map(m =>
+                            m.id === selectedMarker.id
+                              ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
+                              : m
+                          )
+                        );
+                      }}
+                      className="flex-1 px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+                    >
+                      {selectedMarker.status === 'open' ? 'Mark Resolved' : 'Reopen'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMarkers(prev => prev.filter(m => m.id !== selectedMarker.id));
+                        setSelectedMarkerId(null);
+                      }}
+                      className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Replies */}
+                <div className="space-y-3 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Replies ({selectedMarker.replies.length})
+                  </h3>
+
+                  {selectedMarker.replies.map(reply => (
+                    <div key={reply.id} className="bg-white border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                          {reply.author.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{reply.author}</p>
+                          <p className="text-xs text-gray-500">{reply.createdAt.toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700 ml-10 whitespace-pre-wrap">
+                        {renderTextWithMentions(reply.text)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reply Input */}
+                <div className="relative">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 relative">
+                      <textarea
+                        ref={replyInputRef}
+                        value={replyText}
+                        onChange={handleReplyTextChange}
+                        placeholder="Write a reply... Use @ to mention someone"
+                        className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={3}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                            sendReply();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={sendReply}
+                        disabled={!replyText.trim()}
+                        className="absolute bottom-2 right-2 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Send (⌘+Enter)"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mention Suggestions */}
+                  {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                      {filteredMentionSuggestions.map(user => (
+                        <button
+                          key={user.id}
+                          onClick={() => insertMention(user)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+                              {user.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                              <p className="text-xs text-gray-500">{user.designation}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-500 mt-2">
+                  Press ⌘+Enter to send • Use @ to mention
+                </p>
+              </div>
+            ) : filteredMarkers.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">No markers yet</p>
@@ -630,20 +1026,15 @@ const BoardPacketPage = () => {
               <div className="p-4 space-y-3">
                 {filteredMarkers.map((marker, index) => {
                   const markerNumber = markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1;
-                  const isSelected = selectedMarkerId === marker.id;
 
                   return (
-                    <div
+                    <button
                       key={marker.id}
                       onClick={() => {
                         setSelectedMarkerId(marker.id);
                         setCurrentPage(marker.page);
                       }}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        isSelected
-                          ? 'bg-blue-50 border-blue-200'
-                          : 'bg-white border-gray-200 hover:border-gray-300'
-                      }`}
+                      className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
                     >
                       <div className="flex items-start gap-2">
                         <div
@@ -659,11 +1050,17 @@ const BoardPacketPage = () => {
                           <p className="text-sm text-gray-900 line-clamp-2">{marker.note}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs text-gray-500">
-                              Page {marker.page} · {currentDocument?.name}
+                              Page {marker.page}
                             </span>
+                            <span className="text-xs text-gray-400">·</span>
+                            <span className="text-xs text-gray-500">{marker.author}</span>
                           </div>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-600">{marker.author}</span>
+                            {marker.replies.length > 0 && (
+                              <span className="text-xs text-blue-600">
+                                {marker.replies.length} {marker.replies.length === 1 ? 'reply' : 'replies'}
+                              </span>
+                            )}
                             {marker.status === 'resolved' ? (
                               <span className="inline-flex items-center gap-1 text-xs text-green-700">
                                 <CheckCircle2 className="w-3 h-3" />
@@ -676,45 +1073,9 @@ const BoardPacketPage = () => {
                               </span>
                             )}
                           </div>
-
-                          {/* Replies */}
-                          {marker.replies.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-200 space-y-2">
-                              {marker.replies.map(reply => (
-                                <div key={reply.id} className="text-xs">
-                                  <span className="font-medium text-gray-700">{reply.author}:</span>
-                                  <p className="text-gray-600 mt-0.5">{reply.text}</p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Actions */}
-                          {isSelected && (
-                            <div className="flex items-center gap-2 mt-3">
-                              <button className="flex-1 px-2 py-1 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors">
-                                Reply
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMarkers(prev =>
-                                    prev.map(m =>
-                                      m.id === marker.id
-                                        ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
-                                        : m
-                                    )
-                                  );
-                                }}
-                                className="flex-1 px-2 py-1 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
-                              >
-                                {marker.status === 'open' ? 'Resolve' : 'Reopen'}
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -731,7 +1092,7 @@ const BoardPacketPage = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Marker Note</h3>
               <textarea
                 autoFocus
-                placeholder="What do you want to note here?"
+                placeholder="What do you want to note here? Use @ to mention someone"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={4}
                 onKeyDown={(e) => {
@@ -761,6 +1122,36 @@ const BoardPacketPage = () => {
                   >
                     Save Marker
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mention Hover Card */}
+      {hoveredMention && (
+        <div
+          className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-72"
+          style={{
+            left: `${mentionHoverPosition.x + 10}px`,
+            top: `${mentionHoverPosition.y - 80}px`,
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+              {hoveredMention.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-900">{hoveredMention.name}</h4>
+              <div className="space-y-1 mt-2">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Briefcase className="w-4 h-4" />
+                  <span>{hoveredMention.designation}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Mail className="w-4 h-4" />
+                  <span className="truncate">{hoveredMention.email}</span>
                 </div>
               </div>
             </div>
