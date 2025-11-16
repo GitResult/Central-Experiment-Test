@@ -16,31 +16,142 @@
  * @returns {React.Component} Navigation component
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter, X, ChevronDown
+  Database, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter, X,
+  Clock, MapPin, Check, Plus, ChevronRight
 } from 'lucide-react';
-import GlobalPhraseCommand from './GlobalPhraseCommand';
+
+// Import suggestion logic from GlobalPhraseCommand
+const STARTING_POINTS = [
+  { id: 'current', label: 'Current', icon: Users, color: 'blue', type: 'cohort', filterHint: { status: 'Active' } },
+  { id: 'all', label: 'All Contacts', icon: Users, color: 'gray', type: 'cohort', filterHint: {} },
+  { id: 'lapsed', label: 'Lapsed', icon: X, color: 'red', type: 'cohort', filterHint: { status: 'Inactive' } },
+  { id: 'pending', label: 'Pending', icon: Clock, color: 'yellow', type: 'cohort', filterHint: { status: 'Pending' } }
+];
+
+const ENTITY_TYPES = [
+  { label: 'members', type: 'MEMBER', color: 'blue', icon: Users },
+  { label: 'students', type: 'STUDENT', color: 'emerald', icon: Users },
+  { label: 'professionals', type: 'PROFESSIONAL', color: 'purple', icon: Sparkles },
+  { label: 'volunteers', type: 'VOLUNTEER', color: 'orange', icon: Users }
+];
+
+const FILTER_OPTIONS = {
+  provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan'],
+  cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa'],
+  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
+  tenureComparisons: ['or more', 'or less', 'exactly']
+};
+
+// Progressive suggestion logic with 3 levels
+const getSuggestionsForPhrase = (chips) => {
+  if (chips.length === 0) {
+    return {
+      current: STARTING_POINTS,
+      next: ENTITY_TYPES.map(et => ({ ...et, label: et.label, preview: true })),
+      future: [
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true },
+        { label: 'with', icon: Check, preview: true }
+      ]
+    };
+  }
+
+  const lastChip = chips[chips.length - 1];
+
+  if (lastChip.type === 'cohort') {
+    return {
+      current: ENTITY_TYPES,
+      next: [
+        { label: 'that have been', icon: ChevronRight, preview: true },
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true }
+      ],
+      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
+    };
+  }
+
+  if (lastChip.type === 'entityType') {
+    return {
+      current: [
+        { label: 'for', icon: Clock, type: 'connector' },
+        { label: 'in', icon: MapPin, type: 'connector' },
+        { label: 'with', icon: Check, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true })),
+      future: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
+    };
+  }
+
+  if (lastChip.text === 'for') {
+    return {
+      current: FILTER_OPTIONS.tenureValues.map(t => ({ label: t, type: 'value', valueType: 'tenure' })),
+      next: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true })),
+      future: [{ label: 'and', icon: Plus, preview: true }]
+    };
+  }
+
+  if (lastChip.valueType === 'tenure' && !chips.find(c => c.valueType === 'tenureComparison')) {
+    return {
+      current: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, type: 'value', valueType: 'tenureComparison' })),
+      next: [{ label: 'and', icon: Plus, preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  if (lastChip.text === 'in') {
+    return {
+      current: [
+        { label: 'province', icon: MapPin, type: 'connector' },
+        { label: 'city', icon: MapPin, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.provinces.slice(0, 6).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
+    };
+  }
+
+  if (lastChip.text === 'province') {
+    return {
+      current: FILTER_OPTIONS.provinces.map(p => ({ label: p, type: 'value', valueType: 'province' })),
+      next: [{ label: 'and', preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  if (lastChip.type === 'value' || lastChip.valueType === 'tenureComparison') {
+    return {
+      current: [{ label: 'and', icon: Plus, type: 'connector' }],
+      next: [
+        { label: 'in', preview: true },
+        { label: 'with', preview: true },
+        { label: 'for', preview: true }
+      ],
+      future: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true }))
+    };
+  }
+
+  if (lastChip.text === 'and') {
+    return {
+      current: [
+        { label: 'in', icon: MapPin, type: 'connector' },
+        { label: 'with', icon: Check, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
+    };
+  }
+
+  return { current: [], next: [], future: [] };
+};
 
 const Navigation = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isPhraseExpanded, setIsPhraseExpanded] = useState(false);
+  const [isPhraseMode, setIsPhraseMode] = useState(false);
   const [phraseChips, setPhraseChips] = useState([]);
-  const [showPhraseBuilder, setShowPhraseBuilder] = useState(false);
-
-  // Global keyboard shortcut for phrase (Cmd+Shift+/)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === '/' && !isPhraseExpanded) {
-        e.preventDefault();
-        setIsPhraseExpanded(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isPhraseExpanded]);
+  const [phraseSearchText, setPhraseSearchText] = useState('');
+  const phraseInputRef = useRef(null);
 
   const components = [
     {
@@ -144,121 +255,214 @@ const Navigation = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Universal Search Bar (USB) */}
+      {/* Global Inline Phrase Search Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className={`bg-white rounded-xl shadow-lg border border-gray-200 transition-all duration-300 ${
-          isPhraseExpanded ? 'ring-2 ring-blue-500' : ''
-        }`}>
-          {/* Compact USB Bar */}
-          <div className="flex items-center gap-3 p-4">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'max-w-2xl mx-auto'}`}>
+          {/* Search Bar with Chips */}
+          <div
+            className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
+              isPhraseMode ? 'border-blue-500' : 'border-gray-200'
+            }`}
+          >
+            <div className="flex items-center gap-2 flex-wrap p-4">
+              <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
+
+              {/* Phrase Chips */}
+              {phraseChips.map((chip, idx) => (
+                <div
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium"
+                >
+                  {chip.icon && <chip.icon className="w-3.5 h-3.5" />}
+                  <span>{chip.text}</span>
+                  <button
+                    onClick={() => setPhraseChips(phraseChips.filter((_, i) => i !== idx))}
+                    className="hover:bg-blue-200 rounded p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Search Input */}
               <input
+                ref={phraseInputRef}
                 type="text"
-                placeholder="Search components..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                placeholder={phraseChips.length === 0 ? "Search by name, id, email or build a phrase..." : "Continue phrase..."}
+                value={isPhraseMode ? phraseSearchText : searchTerm}
+                onChange={(e) => {
+                  if (isPhraseMode) {
+                    setPhraseSearchText(e.target.value);
+                  } else {
+                    setSearchTerm(e.target.value);
+                  }
+                }}
+                onFocus={() => setIsPhraseMode(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsPhraseMode(false);
+                    setPhraseSearchText('');
+                  } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
+                    setPhraseChips(phraseChips.slice(0, -1));
+                  }
+                }}
+                className="flex-1 outline-none text-sm py-2 bg-transparent min-w-[200px]"
               />
-            </div>
 
-            {/* Phrase Pill */}
-            <button
-              onClick={() => setIsPhraseExpanded(!isPhraseExpanded)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm shadow-sm transition-all ${
-                isPhraseExpanded
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-md'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Phrase</span>
-              {phraseChips.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-white/30 rounded-full text-xs font-bold">
-                  {phraseChips.length}
-                </span>
-              )}
-              <ChevronDown className={`w-4 h-4 transition-transform ${isPhraseExpanded ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-
-          {/* Expanded Phrase Builder */}
-          {isPhraseExpanded && (
-            <div className="border-t border-gray-200 p-4 bg-white/60 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
-                  Build Your Phrase
-                </h3>
+              {/* Close Button when in phrase mode */}
+              {isPhraseMode && (
                 <button
-                  onClick={() => setIsPhraseExpanded(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => {
+                    setIsPhraseMode(false);
+                    setPhraseSearchText('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
-              </div>
-
-              {/* Phrase Chips Area */}
-              <div className="bg-white rounded-lg border-2 border-dashed border-blue-300 p-3 min-h-[60px] mb-3">
-                {phraseChips.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-2">
-                    Click "Open Full Builder" below to create phrase filters
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {phraseChips.map((chip, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium"
-                      >
-                        <span>{chip.text}</span>
-                        <button
-                          onClick={() => setPhraseChips(phraseChips.filter((_, i) => i !== idx))}
-                          className="hover:bg-blue-200 rounded p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowPhraseBuilder(true)}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
-                >
-                  Open Full Builder
-                </button>
-                {phraseChips.length > 0 && (
-                  <>
-                    <button
-                      onClick={() => setPhraseChips([])}
-                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition-colors"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('Navigate to Contact List with filters:', phraseChips);
-                        onNavigate('contact-list');
-                      }}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors"
-                    >
-                      Apply
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">⌘⇧/</kbd> to toggle
-              </p>
+              )}
             </div>
-          )}
+
+            {/* Inline 3-Level Progressive Disclosure Panel */}
+            {isPhraseMode && (
+              <div className="border-t border-gray-200 bg-white/60 backdrop-blur-md">
+                <div className="p-4">
+                  <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    Build Your Phrase
+                  </h3>
+
+                  {/* 3-Column Suggestion Rail */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Level 1: Current (100% opacity) */}
+                    <div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        {phraseChips.length === 0 ? 'Start with' : 'Select'}
+                      </div>
+                      <div className="space-y-1.5">
+                        {getSuggestionsForPhrase(phraseChips).current.slice(0, 6).map((suggestion, idx) => {
+                          const Icon = suggestion.icon;
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                const newChip = {
+                                  id: Date.now(),
+                                  text: suggestion.label,
+                                  type: suggestion.type || 'connector',
+                                  valueType: suggestion.valueType,
+                                  icon: suggestion.icon,
+                                  color: suggestion.color || 'gray',
+                                  ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                  ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.type })
+                                };
+                                setPhraseChips([...phraseChips, newChip]);
+                                setPhraseSearchText('');
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
+                            >
+                              {Icon && <Icon className="w-4 h-4" />}
+                              <span>{suggestion.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Level 2: Next (50% opacity) */}
+                    <div className="opacity-50 hover:opacity-75 transition-opacity">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Then
+                      </div>
+                      <div className="space-y-1.5">
+                        {getSuggestionsForPhrase(phraseChips).next.slice(0, 6).map((suggestion, idx) => {
+                          const Icon = suggestion.icon;
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                const newChip = {
+                                  id: Date.now(),
+                                  text: suggestion.label,
+                                  type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
+                                  valueType: suggestion.valueType,
+                                  icon: suggestion.icon
+                                };
+                                setPhraseChips([...phraseChips, newChip]);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
+                            >
+                              {Icon && <Icon className="w-4 h-4" />}
+                              <span>{suggestion.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Level 3: Future (25% opacity) */}
+                    <div className="opacity-25 hover:opacity-50 transition-opacity">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        After that
+                      </div>
+                      <div className="space-y-1.5">
+                        {getSuggestionsForPhrase(phraseChips).future.slice(0, 6).map((suggestion, idx) => {
+                          const Icon = suggestion.icon;
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                const newChip = {
+                                  id: Date.now(),
+                                  text: suggestion.label,
+                                  type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
+                                  valueType: suggestion.valueType,
+                                  icon: suggestion.icon
+                                };
+                                setPhraseChips([...phraseChips, newChip]);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 bg-gray-100/50 hover:bg-gray-100/80 text-gray-600 hover:text-gray-800 rounded-lg text-sm font-medium transition-all text-left"
+                            >
+                              {Icon && <Icon className="w-4 h-4" />}
+                              <span>{suggestion.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {phraseChips.length > 0 && (
+                    <div className="mt-4 flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setPhraseChips([]);
+                          setPhraseSearchText('');
+                        }}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Clear All
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('Apply phrase filters:', phraseChips);
+                          onNavigate('contact-list');
+                        }}
+                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Apply Phrase Filter
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">Esc</kbd> to close
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -335,20 +539,6 @@ const Navigation = ({ onNavigate }) => {
           </p>
         </div>
       </div>
-
-      {/* Global Phrase Command Modal (Full Builder) */}
-      <GlobalPhraseCommand
-        isOpen={showPhraseBuilder}
-        onClose={() => setShowPhraseBuilder(false)}
-        onApply={(filters) => {
-          console.log('Phrase filters applied:', filters);
-          // Extract chips from the builder and update USB
-          // Note: filters are the structured filter objects, we need to convert back to chips
-          // For now, just close and user can apply from USB
-          setShowPhraseBuilder(false);
-        }}
-        initialPhrase={phraseChips.length > 0 ? { chips: phraseChips } : null}
-      />
     </div>
   );
 };
