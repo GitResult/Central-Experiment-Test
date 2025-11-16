@@ -1762,7 +1762,7 @@ const UnifiedContactListing = () => {
             {/* Search bar start */}
             <div className="relative mt-4">
               {/* Inline Expandable Search Bar with Phrase Builder */}
-              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-[650px]'} relative z-50`}>
+              <div className={`transition-all duration-300 ${isPhraseMode || phraseChips.length > 0 ? 'w-full' : 'w-[650px]'} relative z-50`}>
                 {/* Search Bar with Chips */}
                 <div
                   className={`bg-white rounded-xl shadow-lg transition-all duration-300 ${
