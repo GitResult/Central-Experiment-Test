@@ -53,6 +53,7 @@ export const getSuggestionsForPhrase = (chips) => {
         preview: true
       })),
       future: [
+        { label: 'that have been', icon: ChevronRight, preview: true },
         { label: 'for', icon: Clock, preview: true },
         { label: 'in', icon: MapPin, preview: true },
         { label: 'with', icon: Check, preview: true }
