@@ -1834,8 +1834,8 @@ const UnifiedContactListing = () => {
                             />
                             <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-40 max-h-96 overflow-y-auto">
                               <div className="p-3 border-b border-slate-200">
-                                <h3 className="text-sm font-semibold text-slate-900">Saved Phrases</h3>
-                                <p className="text-xs text-slate-500 mt-1">Select a phrase to load</p>
+                                <h3 className="text-sm font-semibold text-slate-900">Saved Queries</h3>
+                                <p className="text-xs text-slate-500 mt-1">Select a query to load</p>
                               </div>
                               <div className="p-2">
                                 {savedPhrases.length > 0 ? (
@@ -1877,8 +1877,8 @@ const UnifiedContactListing = () => {
                                   ))
                                 ) : (
                                   <div className="px-3 py-8 text-center">
-                                    <p className="text-sm text-slate-500">No saved phrases yet</p>
-                                    <p className="text-xs text-slate-400 mt-1">Create a phrase and click Save</p>
+                                    <p className="text-sm text-slate-500">No saved queries yet</p>
+                                    <p className="text-xs text-slate-400 mt-1">Create a query and click Save</p>
                                   </div>
                                 )}
                               </div>
@@ -4563,12 +4563,12 @@ const UnifiedContactListing = () => {
           </div>
         )}
 
-        {/* Save Phrase Panel - Push Panel */}
+        {/* Save Query Panel - Push Panel */}
         {showSavePhrasePanel && (
           <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-slate-200 mt-8">
               <div className="border-b border-slate-200 bg-white px-6 py-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900">Save Phrase</h2>
+                  <h2 className="text-lg font-bold text-slate-900">Save Query</h2>
                   <button
                     onClick={() => setShowSavePhrasePanel(false)}
                     className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -4579,10 +4579,10 @@ const UnifiedContactListing = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">
-                {/* Current Phrase Display */}
+                {/* Current Query Display */}
                 <div className="mb-6">
                   <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                    Current Phrase
+                    Current Query
                   </label>
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex flex-wrap gap-2">
@@ -4630,7 +4630,7 @@ const UnifiedContactListing = () => {
                 {/* Info Box */}
                 <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <p className="text-xs text-slate-600">
-                    <strong>Tip:</strong> Saved phrases can be quickly accessed from your filters list and reused across sessions.
+                    <strong>Tip:</strong> Saved queries can be quickly accessed from your filters list and reused across sessions.
                   </p>
                 </div>
               </div>
