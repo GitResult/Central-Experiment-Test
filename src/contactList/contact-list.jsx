@@ -1858,7 +1858,7 @@ const UnifiedContactListing = () => {
                                         icon: suggestion.icon,
                                         color: suggestion.color || 'gray',
                                         ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.type })
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
                                       };
                                       setPhraseChips([...phraseChips, newChip]);
                                       setPhraseSearchText('');
@@ -1890,7 +1890,10 @@ const UnifiedContactListing = () => {
                                         text: suggestion.label,
                                         type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
                                         valueType: suggestion.valueType,
-                                        icon: suggestion.icon
+                                        icon: suggestion.icon,
+                                        color: suggestion.color || 'gray',
+                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
                                       };
                                       setPhraseChips([...phraseChips, newChip]);
                                     }}
@@ -1921,7 +1924,10 @@ const UnifiedContactListing = () => {
                                         text: suggestion.label,
                                         type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
                                         valueType: suggestion.valueType,
-                                        icon: suggestion.icon
+                                        icon: suggestion.icon,
+                                        color: suggestion.color || 'gray',
+                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
                                       };
                                       setPhraseChips([...phraseChips, newChip]);
                                     }}

@@ -5,7 +5,7 @@
  * This includes starting points, entity types, filter options, and progressive suggestion logic.
  */
 
-import { Users, X, Clock, MapPin, Check, Plus, ChevronRight, Sparkles } from 'lucide-react';
+import { Users, X, Clock, MapPin, Check, Plus, ChevronRight, Sparkles, TrendingUp, CheckCircle2 } from 'lucide-react';
 
 // Starting point cohorts for phrase building
 export const STARTING_POINTS = [
@@ -42,7 +42,14 @@ export const getSuggestionsForPhrase = (chips) => {
   if (chips.length === 0) {
     return {
       current: STARTING_POINTS,
-      next: ENTITY_TYPES.map(et => ({ ...et, label: et.label, preview: true })),
+      next: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entityType',
+        entityTypeValue: et.type,
+        icon: et.icon,
+        color: et.color,
+        preview: true
+      })),
       future: [
         { label: 'for', icon: Clock, preview: true },
         { label: 'in', icon: MapPin, preview: true },
@@ -55,7 +62,13 @@ export const getSuggestionsForPhrase = (chips) => {
 
   if (lastChip.type === 'cohort') {
     return {
-      current: ENTITY_TYPES,
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entityType',
+        entityTypeValue: et.type,
+        icon: et.icon,
+        color: et.color
+      })),
       next: [
         { label: 'that have been', icon: ChevronRight, preview: true },
         { label: 'for', icon: Clock, preview: true },
@@ -68,12 +81,31 @@ export const getSuggestionsForPhrase = (chips) => {
   if (lastChip.type === 'entityType') {
     return {
       current: [
+        { label: 'that have been', icon: ChevronRight, type: 'connector' },
         { label: 'for', icon: Clock, type: 'connector' },
         { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'with', icon: Check, type: 'connector' }
       ],
       next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true })),
       future: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
+    };
+  }
+
+  // After "that have been" -> show entity types again for tenure filtering
+  if (lastChip.text === 'that have been') {
+    return {
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entityType',
+        entityTypeValue: et.type,
+        icon: et.icon,
+        color: et.color
+      })),
+      next: [
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true }
+      ],
+      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
     };
   }
 
@@ -112,13 +144,34 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
+  // After "city" -> city values
+  if (lastChip.text === 'city') {
+    return {
+      current: FILTER_OPTIONS.cities.map(c => ({ label: c, type: 'value', valueType: 'city' })),
+      next: [{ label: 'and', preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  // After "with" -> additional filter options
+  if (lastChip.text === 'with') {
+    return {
+      current: [
+        { label: 'engagement', icon: TrendingUp, type: 'connector' },
+        { label: 'status', icon: CheckCircle2, type: 'connector' }
+      ],
+      next: [{ label: 'and', preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
   if (lastChip.type === 'value' || lastChip.valueType === 'tenureComparison') {
     return {
       current: [{ label: 'and', icon: Plus, type: 'connector' }],
       next: [
-        { label: 'in', preview: true },
-        { label: 'with', preview: true },
-        { label: 'for', preview: true }
+        { label: 'in', icon: MapPin, preview: true },
+        { label: 'with', icon: Check, preview: true },
+        { label: 'for', icon: Clock, preview: true }
       ],
       future: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true }))
     };
@@ -128,7 +181,8 @@ export const getSuggestionsForPhrase = (chips) => {
     return {
       current: [
         { label: 'in', icon: MapPin, type: 'connector' },
-        { label: 'with', icon: Check, type: 'connector' }
+        { label: 'with', icon: Check, type: 'connector' },
+        { label: 'for', icon: Clock, type: 'connector' }
       ],
       next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true })),
       future: [{ label: 'and', preview: true }]
