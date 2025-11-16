@@ -1760,12 +1760,23 @@ const UnifiedContactListing = () => {
 
             {/* Search bar start */}
             <div className="relative mt-4">
+              {/* Translucent backdrop overlay when search panel is open */}
+              {isPhraseMode && (
+                <div
+                  className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                  onClick={() => {
+                    setIsPhraseMode(false);
+                    setPhraseSearchText('');
+                  }}
+                />
+              )}
+
               {/* Inline Expandable Search Bar with Phrase Builder */}
-              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-full'}`}>
+              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-[300px]'} relative z-50`}>
                 {/* Search Bar with Chips */}
                 <div
-                  className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
-                    isPhraseMode ? 'border-blue-500' : 'border-gray-200'
+                  className={`bg-white rounded-xl shadow-lg transition-all duration-300 ${
+                    isPhraseMode ? '' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2 flex-wrap p-4">
@@ -1792,7 +1803,7 @@ const UnifiedContactListing = () => {
                     <input
                       ref={phraseInputRef}
                       type="text"
-                      placeholder={phraseChips.length === 0 ? "Search by name, id, email or build a phrase..." : "Continue phrase..."}
+                      placeholder={phraseChips.length === 0 ? "Search by Phrase" : "Continue phrase..."}
                       value={isPhraseMode ? phraseSearchText : searchValue}
                       onChange={(e) => {
                         if (isPhraseMode) {
@@ -1829,8 +1840,8 @@ const UnifiedContactListing = () => {
 
                   {/* Inline 3-Level Progressive Disclosure Panel */}
                   {isPhraseMode && (
-                    <div className="border-t border-gray-200 bg-white/60 backdrop-blur-md">
-                      <div className="p-4">
+                    <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white/60 backdrop-blur-md">
+                      <div className="max-w-[1600px] mx-auto px-8 py-4">
                         <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-blue-600" />
                           Build Your Phrase
