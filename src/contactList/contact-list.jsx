@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './contactList.css'
 import Pagination from '../components/UI/pagination';
-import SpotlightPhraseFilter from '../components/SpotlightPhraseFilter';
+import GlobalPhraseCommand from '../components/GlobalPhraseCommand';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -199,6 +199,7 @@ const UnifiedContactListing = () => {
   const [phraseFilters, setPhraseFilters] = useState([]);
   const [currentPhrase, setCurrentPhrase] = useState('');
   const [filterMode, setFilterMode] = useState('phrase'); // 'phrase' or 'fields'
+  const [showPhraseCommand, setShowPhraseCommand] = useState(false);
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -333,6 +334,19 @@ const UnifiedContactListing = () => {
   };
 
   const chartDataToDisplay = getMemberTypeDataWithPercentage();
+
+  // Global keyboard shortcut for phrase filter (Cmd+Shift+/)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === '/' && !showPhraseCommand) {
+        e.preventDefault();
+        setShowPhraseCommand(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showPhraseCommand]);
 
   useEffect(() => {
     if (compareMode && tableRef.current) {
@@ -1992,22 +2006,39 @@ const UnifiedContactListing = () => {
                 </div>
               )}
 
-              {/* Phrase Filter (Spotlight Style) */}
+              {/* Phrase Filter (Global Command Palette) */}
               {filterMode === 'phrase' && (
                 <div className="mt-3">
-                  <SpotlightPhraseFilter
-                    onApply={(filters) => {
-                      setPhraseFilters(filters);
-                    }}
-                    onClear={() => {
-                      setPhraseFilters([]);
-                      setCurrentPhrase('');
-                    }}
-                    onSave={(query) => {
-                      console.log('Saved query:', query);
-                      // TODO: Implement save to localStorage or API
-                    }}
-                  />
+                  <button
+                    onClick={() => setShowPhraseCommand(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>Build Phrase Filter</span>
+                    <kbd className="ml-auto px-2 py-1 bg-white/20 rounded text-xs font-mono">⌘⇧/</kbd>
+                  </button>
+
+                  {/* Show active phrase filters */}
+                  {phraseFilters.length > 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-blue-700">Active Filters</span>
+                        <button
+                          onClick={() => setPhraseFilters([])}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        {phraseFilters.map((filter, idx) => (
+                          <div key={idx} className="text-xs text-blue-800 bg-white px-2 py-1 rounded">
+                            {filter.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -4359,6 +4390,16 @@ const UnifiedContactListing = () => {
           animation: slideIn 0.3s ease-out;
         }
       `}</style>
+
+      {/* Global Phrase Command Modal */}
+      <GlobalPhraseCommand
+        isOpen={showPhraseCommand}
+        onClose={() => setShowPhraseCommand(false)}
+        onApply={(filters) => {
+          setPhraseFilters(filters);
+          setShowPhraseCommand(false);
+        }}
+      />
 
       </div>
   );

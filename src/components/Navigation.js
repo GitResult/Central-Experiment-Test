@@ -16,14 +16,29 @@
  * @returns {React.Component} Navigation component
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
   Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter
 } from 'lucide-react';
+import GlobalPhraseCommand from './GlobalPhraseCommand';
 
 const Navigation = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPhraseCommand, setShowPhraseCommand] = useState(false);
+
+  // Global keyboard shortcut for phrase command (Cmd+Shift+/)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === '/' && !showPhraseCommand) {
+        e.preventDefault();
+        setShowPhraseCommand(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showPhraseCommand]);
 
   const components = [
     {
@@ -139,6 +154,19 @@ const Navigation = ({ onNavigate }) => {
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+
+        {/* Quick Access Pills */}
+        <div className="mt-6 flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-600">Quick Access:</span>
+          <button
+            onClick={() => setShowPhraseCommand(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full font-medium text-sm shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Phrase</span>
+            <kbd className="px-1.5 py-0.5 bg-white/20 rounded text-xs font-mono">⌘⇧/</kbd>
+          </button>
+        </div>
       </div>
 
       {/* Component Grid */}
@@ -214,6 +242,17 @@ const Navigation = ({ onNavigate }) => {
           </p>
         </div>
       </div>
+
+      {/* Global Phrase Command Modal */}
+      <GlobalPhraseCommand
+        isOpen={showPhraseCommand}
+        onClose={() => setShowPhraseCommand(false)}
+        onApply={(filters) => {
+          console.log('Phrase filters applied:', filters);
+          // TODO: Navigate to Contact List with these filters applied
+          setShowPhraseCommand(false);
+        }}
+      />
     </div>
   );
 };
