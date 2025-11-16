@@ -1875,22 +1875,35 @@ const UnifiedContactListing = () => {
                     />
                     </div>
 
-                    {/* Apply/Close Button when in phrase mode */}
+                    {/* Apply/Save/Close Buttons when in phrase mode */}
                     {isPhraseMode && (
                       <>
                         {phraseChips.length > 0 ? (
-                          <button
-                            ref={applyButtonRef}
-                            onClick={() => {
-                              // Convert chips to phrase filters
-                              const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                              setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
-                              setIsPhraseMode(false);
-                            }}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
-                          >
-                            Apply
-                          </button>
+                          <>
+                            <button
+                              ref={applyButtonRef}
+                              onClick={() => {
+                                // Convert chips to phrase filters
+                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                                setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
+                                setIsPhraseMode(false);
+                              }}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                            >
+                              Apply
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Save phrase as a reusable filter
+                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                                console.log('Saving phrase:', phraseText);
+                                // TODO: Implement save functionality
+                              }}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                            >
+                              Save
+                            </button>
+                          </>
                         ) : (
                           <button
                             onClick={() => {
@@ -2045,28 +2058,6 @@ const UnifiedContactListing = () => {
                               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                             >
                               Clear All
-                            </button>
-                            <button
-                              onClick={() => {
-                                // Convert chips to phrase filters
-                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                                setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
-                                setIsPhraseMode(false);
-                              }}
-                              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                              Apply
-                            </button>
-                            <button
-                              onClick={() => {
-                                // Save phrase as a reusable filter
-                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                                console.log('Saving phrase:', phraseText);
-                                // TODO: Implement save functionality
-                              }}
-                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                              Save
                             </button>
                           </div>
                         )}
