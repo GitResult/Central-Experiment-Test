@@ -29,6 +29,7 @@ const UnifiedContactListing = () => {
   const [isPhraseMode, setIsPhraseMode] = useState(false);
   const [phraseChips, setPhraseChips] = useState([]);
   const [phraseSearchText, setPhraseSearchText] = useState('');
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const phraseInputRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
@@ -1761,7 +1762,7 @@ const UnifiedContactListing = () => {
             {/* Search bar start */}
             <div className="relative mt-4">
               {/* Inline Expandable Search Bar with Phrase Builder */}
-              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-[300px]'} relative z-50`}>
+              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-[650px]'} relative z-50`}>
                 {/* Search Bar with Chips */}
                 <div
                   className={`bg-white rounded-xl shadow-lg transition-all duration-300 ${
@@ -1788,30 +1789,87 @@ const UnifiedContactListing = () => {
                       </div>
                     ))}
 
-                    {/* Search Input */}
-                    <input
-                      ref={phraseInputRef}
-                      type="text"
-                      placeholder={phraseChips.length === 0 ? "Search by Phrase" : "Continue phrase..."}
-                      value={isPhraseMode ? phraseSearchText : searchValue}
+                    {/* Search Input with Autocomplete */}
+                    <div className="flex-1 relative min-w-[200px]">
+                      {/* Autocomplete suggestion overlay */}
+                      {isPhraseMode && phraseSearchText && (() => {
+                        const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                        const filteredSuggestions = currentSuggestions.filter(s =>
+                          s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase())
+                        );
+                        const firstMatch = filteredSuggestions[selectedSuggestionIndex];
+                        if (firstMatch) {
+                          return (
+                            <div className="absolute inset-0 pointer-events-none flex items-center">
+                              <span className="text-sm py-2 text-gray-400">
+                                {phraseSearchText}<span>{firstMatch.label.slice(phraseSearchText.length)}</span>
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      <input
+                        ref={phraseInputRef}
+                        type="text"
+                        placeholder={phraseChips.length === 0 ? "Search by Phrase" : "Continue phrase..."}
+                        value={isPhraseMode ? phraseSearchText : searchValue}
                       onChange={(e) => {
                         if (isPhraseMode) {
                           setPhraseSearchText(e.target.value);
+                          setSelectedSuggestionIndex(0); // Reset selection when typing
                         } else {
                           setSearchValue(e.target.value);
                         }
                       }}
-                      onFocus={() => setIsPhraseMode(true)}
+                      onFocus={() => {
+                        setIsPhraseMode(true);
+                        setSelectedSuggestionIndex(0);
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
+                        if (!isPhraseMode) return;
+
+                        const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                        const filteredSuggestions = phraseSearchText
+                          ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                          : currentSuggestions.slice(0, 6);
+
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSelectedSuggestionIndex(prev =>
+                            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+                          );
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : 0);
+                        } else if (e.key === 'Enter' && filteredSuggestions.length > 0) {
+                          e.preventDefault();
+                          const selectedSuggestion = filteredSuggestions[selectedSuggestionIndex];
+                          const newChip = {
+                            id: Date.now(),
+                            text: selectedSuggestion.label,
+                            type: selectedSuggestion.type || 'connector',
+                            valueType: selectedSuggestion.valueType,
+                            icon: selectedSuggestion.icon,
+                            color: selectedSuggestion.color || 'gray',
+                            ...(selectedSuggestion.type === 'cohort' && { filterHint: selectedSuggestion.filterHint }),
+                            ...(selectedSuggestion.type === 'entityType' && { entityTypeValue: selectedSuggestion.entityTypeValue })
+                          };
+                          setPhraseChips([...phraseChips, newChip]);
+                          setPhraseSearchText('');
+                          setSelectedSuggestionIndex(0);
+                        } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
+                          setSelectedSuggestionIndex(0);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
                       }}
-                      className="flex-1 outline-none text-sm py-2 bg-transparent min-w-[200px]"
+                      className="w-full outline-none text-sm py-2 bg-transparent relative z-10"
                     />
+                    </div>
 
                     {/* Close Button when in phrase mode */}
                     {isPhraseMode && (
@@ -1844,32 +1902,45 @@ const UnifiedContactListing = () => {
                               {phraseChips.length === 0 ? 'Start with' : 'Select'}
                             </div>
                             <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).current.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || 'connector',
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                      setPhraseSearchText('');
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
+                              {(() => {
+                                const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                                const filteredSuggestions = phraseSearchText
+                                  ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                                  : currentSuggestions.slice(0, 6);
+
+                                return filteredSuggestions.map((suggestion, idx) => {
+                                  const Icon = suggestion.icon;
+                                  const isSelected = idx === selectedSuggestionIndex;
+                                  return (
+                                    <button
+                                      key={idx}
+                                      onClick={() => {
+                                        const newChip = {
+                                          id: Date.now(),
+                                          text: suggestion.label,
+                                          type: suggestion.type || 'connector',
+                                          valueType: suggestion.valueType,
+                                          icon: suggestion.icon,
+                                          color: suggestion.color || 'gray',
+                                          ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                          ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                        };
+                                        setPhraseChips([...phraseChips, newChip]);
+                                        setPhraseSearchText('');
+                                        setSelectedSuggestionIndex(0);
+                                      }}
+                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                                        isSelected
+                                          ? 'bg-blue-500 text-white'
+                                          : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
+                                      }`}
+                                    >
+                                      {Icon && <Icon className="w-4 h-4" />}
+                                      <span>{suggestion.label}</span>
+                                    </button>
+                                  );
+                                });
+                              })()}
                             </div>
                           </div>
 
