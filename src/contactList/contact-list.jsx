@@ -1921,21 +1921,24 @@ const UnifiedContactListing = () => {
                           const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
 
                           return (
-                            <div className="absolute inset-0 pointer-events-none flex items-center gap-1">
-                              <span className="text-sm py-2 text-gray-900">
-                                {phraseSearchText}
-                                <span className="text-gray-400">{firstMatch.label.slice(phraseSearchText.length)}</span>
-                                {nextSuggestion && (
-                                  <span className="text-gray-300"> {nextSuggestion.label}</span>
-                                )}
-                                {futureSuggestion && (
-                                  <span className="text-gray-300"> {futureSuggestion.label}</span>
-                                )}
-                              </span>
+                            <>
+                              <div className="absolute inset-0 pointer-events-none flex items-center gap-1">
+                                <span className="text-sm py-2 text-gray-900">
+                                  {phraseSearchText}
+                                  <span className="text-gray-400">{firstMatch.label.slice(phraseSearchText.length)}</span>
+                                  {nextSuggestion && (
+                                    <span className="text-gray-300"> {nextSuggestion.label}</span>
+                                  )}
+                                  {futureSuggestion && (
+                                    <span className="text-gray-300"> {futureSuggestion.label}</span>
+                                  )}
+                                </span>
+                              </div>
                               {nextSuggestion && futureSuggestion && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    e.preventDefault();
                                     // Add all three chips
                                     const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
                                       id: Date.now() + idx,
@@ -1952,12 +1955,13 @@ const UnifiedContactListing = () => {
                                     setSelectedSuggestionIndex(0);
                                   }}
                                   title="Click here or press right arrow to select phrases"
-                                  className="pointer-events-auto ml-1 px-2 py-1 text-blue-500 hover:text-white hover:bg-blue-500 rounded transition-all cursor-pointer text-lg font-bold"
+                                  className="absolute left-0 top-0 h-full flex items-center ml-2 px-2 py-1 text-blue-500 hover:text-white hover:bg-blue-500 rounded transition-all cursor-pointer text-lg font-bold z-20"
+                                  style={{ left: `${phraseSearchText.length + firstMatch.label.slice(phraseSearchText.length).length + (nextSuggestion ? nextSuggestion.label.length : 0) + (futureSuggestion ? futureSuggestion.label.length : 0) + 2}ch` }}
                                 >
                                   →
                                 </button>
                               )}
-                            </div>
+                            </>
                           );
                         }
                         return null;
