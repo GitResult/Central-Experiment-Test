@@ -1815,17 +1815,17 @@ const UnifiedContactListing = () => {
                   <div className="flex items-center gap-2 flex-wrap p-4">
                     <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
 
-                    {/* Load Phrase Button - Always Visible */}
+                    {/* Load Query Button - Always Visible */}
                     <div className="relative">
                       <button
                         onClick={() => setShowLoadPhraseDropdown(!showLoadPhraseDropdown)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
                       >
                         <Clock className="w-3.5 h-3.5" />
-                        Load Phrase
+                        Load Query
                       </button>
 
-                      {/* Load Phrase Dropdown */}
+                      {/* Load Query Dropdown */}
                       {showLoadPhraseDropdown && (
                           <>
                             <div
