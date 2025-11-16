@@ -1,0 +1,139 @@
+/**
+ * Phrase Search Configuration
+ *
+ * Contains all constants and logic for the Apple Spotlight-style phrase search feature.
+ * This includes starting points, entity types, filter options, and progressive suggestion logic.
+ */
+
+import { Users, X, Clock, MapPin, Check, Plus, ChevronRight, Sparkles } from 'lucide-react';
+
+// Starting point cohorts for phrase building
+export const STARTING_POINTS = [
+  { id: 'current', label: 'Current', icon: Users, color: 'blue', type: 'cohort', filterHint: { status: 'Active' } },
+  { id: 'all', label: 'All Contacts', icon: Users, color: 'gray', type: 'cohort', filterHint: {} },
+  { id: 'lapsed', label: 'Lapsed', icon: X, color: 'red', type: 'cohort', filterHint: { status: 'Inactive' } },
+  { id: 'pending', label: 'Pending', icon: Clock, color: 'yellow', type: 'cohort', filterHint: { status: 'Pending' } }
+];
+
+// Entity types for filtering
+export const ENTITY_TYPES = [
+  { label: 'members', type: 'MEMBER', color: 'blue', icon: Users },
+  { label: 'students', type: 'STUDENT', color: 'emerald', icon: Users },
+  { label: 'professionals', type: 'PROFESSIONAL', color: 'purple', icon: Sparkles },
+  { label: 'volunteers', type: 'VOLUNTEER', color: 'orange', icon: Users }
+];
+
+// Filter options for various categories
+export const FILTER_OPTIONS = {
+  provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan'],
+  cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa'],
+  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
+  tenureComparisons: ['or more', 'or less', 'exactly']
+};
+
+/**
+ * Progressive suggestion logic with 3 levels (Current, Next, Future)
+ * Returns suggestions based on the current phrase chips
+ *
+ * @param {Array} chips - Current phrase chips
+ * @returns {Object} Object with current, next, and future suggestion arrays
+ */
+export const getSuggestionsForPhrase = (chips) => {
+  if (chips.length === 0) {
+    return {
+      current: STARTING_POINTS,
+      next: ENTITY_TYPES.map(et => ({ ...et, label: et.label, preview: true })),
+      future: [
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true },
+        { label: 'with', icon: Check, preview: true }
+      ]
+    };
+  }
+
+  const lastChip = chips[chips.length - 1];
+
+  if (lastChip.type === 'cohort') {
+    return {
+      current: ENTITY_TYPES,
+      next: [
+        { label: 'that have been', icon: ChevronRight, preview: true },
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true }
+      ],
+      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
+    };
+  }
+
+  if (lastChip.type === 'entityType') {
+    return {
+      current: [
+        { label: 'for', icon: Clock, type: 'connector' },
+        { label: 'in', icon: MapPin, type: 'connector' },
+        { label: 'with', icon: Check, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true })),
+      future: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
+    };
+  }
+
+  if (lastChip.text === 'for') {
+    return {
+      current: FILTER_OPTIONS.tenureValues.map(t => ({ label: t, type: 'value', valueType: 'tenure' })),
+      next: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true })),
+      future: [{ label: 'and', icon: Plus, preview: true }]
+    };
+  }
+
+  if (lastChip.valueType === 'tenure' && !chips.find(c => c.valueType === 'tenureComparison')) {
+    return {
+      current: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, type: 'value', valueType: 'tenureComparison' })),
+      next: [{ label: 'and', icon: Plus, preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  if (lastChip.text === 'in') {
+    return {
+      current: [
+        { label: 'province', icon: MapPin, type: 'connector' },
+        { label: 'city', icon: MapPin, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.provinces.slice(0, 6).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
+    };
+  }
+
+  if (lastChip.text === 'province') {
+    return {
+      current: FILTER_OPTIONS.provinces.map(p => ({ label: p, type: 'value', valueType: 'province' })),
+      next: [{ label: 'and', preview: true }],
+      future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  if (lastChip.type === 'value' || lastChip.valueType === 'tenureComparison') {
+    return {
+      current: [{ label: 'and', icon: Plus, type: 'connector' }],
+      next: [
+        { label: 'in', preview: true },
+        { label: 'with', preview: true },
+        { label: 'for', preview: true }
+      ],
+      future: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true }))
+    };
+  }
+
+  if (lastChip.text === 'and') {
+    return {
+      current: [
+        { label: 'in', icon: MapPin, type: 'connector' },
+        { label: 'with', icon: Check, type: 'connector' }
+      ],
+      next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
+    };
+  }
+
+  return { current: [], next: [], future: [] };
+};
