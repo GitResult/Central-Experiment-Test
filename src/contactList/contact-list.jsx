@@ -16,6 +16,7 @@ const UnifiedContactListing = () => {
   const [searchValue, setSearchValue] = useState('');
   const [showActionsPanel, setShowActionsPanel] = useState(false);
   const [showFieldsPanel, setShowFieldsPanel] = useState(false);
+  const [showSavePhrasePanel, setShowSavePhrasePanel] = useState(false);
   const [activeTab, setActiveTab] = useState('actions');
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [showFilterDetails, setShowFilterDetails] = useState(false);
@@ -30,6 +31,8 @@ const UnifiedContactListing = () => {
   const [phraseChips, setPhraseChips] = useState([]);
   const [phraseSearchText, setPhraseSearchText] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [savedPhraseName, setSavedPhraseName] = useState('');
+  const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
   const phraseInputRef = useRef(null);
   const applyButtonRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
@@ -1894,10 +1897,7 @@ const UnifiedContactListing = () => {
                             </button>
                             <button
                               onClick={() => {
-                                // Save phrase as a reusable filter
-                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                                console.log('Saving phrase:', phraseText);
-                                // TODO: Implement save functionality
+                                setShowSavePhrasePanel(true);
                               }}
                               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
                             >
@@ -4450,6 +4450,127 @@ const UnifiedContactListing = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Save Phrase Panel */}
+        {showSavePhrasePanel && (
+          <>
+            <div
+              className="fixed inset-0 bg-slate-900 bg-opacity-20 z-40"
+              onClick={() => setShowSavePhrasePanel(false)}
+            />
+            <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col">
+              <div className="border-b border-slate-200 bg-white px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-900">Save Phrase</h2>
+                  <button
+                    onClick={() => setShowSavePhrasePanel(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {/* Current Phrase Display */}
+                <div className="mb-6">
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                    Current Phrase
+                  </label>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex flex-wrap gap-2">
+                      {phraseChips.map((chip, idx) => (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
+                        >
+                          {chip.icon && <chip.icon className="w-3 h-3" />}
+                          <span>{chip.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Name Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Filter Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={savedPhraseName}
+                    onChange={(e) => setSavedPhraseName(e.target.value)}
+                    placeholder="e.g., Active Members in Toronto"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Description Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description <span className="text-slate-400 text-xs font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={savedPhraseDescription}
+                    onChange={(e) => setSavedPhraseDescription(e.target.value)}
+                    placeholder="Add a description for this saved filter..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  />
+                </div>
+
+                {/* Info Box */}
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-xs text-slate-600">
+                    <strong>Tip:</strong> Saved phrases can be quickly accessed from your filters list and reused across sessions.
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t border-slate-200 p-6">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowSavePhrasePanel(false);
+                      setSavedPhraseName('');
+                      setSavedPhraseDescription('');
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (savedPhraseName.trim()) {
+                        const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                        console.log('Saving phrase:', {
+                          name: savedPhraseName,
+                          description: savedPhraseDescription,
+                          phrase: phraseText,
+                          chips: phraseChips
+                        });
+                        // TODO: Implement actual save functionality
+                        setShowSavePhrasePanel(false);
+                        setSavedPhraseName('');
+                        setSavedPhraseDescription('');
+                      }
+                    }}
+                    disabled={!savedPhraseName.trim()}
+                    className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      savedPhraseName.trim()
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Save Filter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         <style>{`
