@@ -63,6 +63,7 @@ export const getSuggestionsForPhrase = (chips) => {
 
   const lastChip = chips[chips.length - 1];
 
+  // After selecting a cohort (Current, All Contacts, etc.)
   if (lastChip.type === 'cohort') {
     return {
       current: ENTITY_TYPES.map(et => ({
@@ -75,12 +76,14 @@ export const getSuggestionsForPhrase = (chips) => {
       next: [
         { label: 'that have been', icon: ChevronRight, preview: true },
         { label: 'for', icon: Clock, preview: true },
-        { label: 'in', icon: MapPin, preview: true }
+        { label: 'in', icon: MapPin, preview: true },
+        { label: 'with', icon: Check, preview: true }
       ],
-      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
+      future: ENTITY_TYPES.slice(0, 3).map(et => ({ label: et.label, preview: true }))
     };
   }
 
+  // After selecting an entity type (members, students, etc.)
   if (lastChip.type === 'entityType') {
     return {
       current: [
@@ -89,12 +92,12 @@ export const getSuggestionsForPhrase = (chips) => {
         { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'with', icon: Check, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true })),
-      future: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
+      next: ENTITY_TYPES.slice(0, 4).map(et => ({ label: et.label, preview: true })),
+      future: [{ label: 'for', icon: Clock, preview: true }]
     };
   }
 
-  // After "that have been" -> show entity types again for tenure filtering
+  // After "that have been" -> show entity types (what they used to be)
   if (lastChip.text === 'that have been') {
     return {
       current: ENTITY_TYPES.map(et => ({
@@ -104,10 +107,7 @@ export const getSuggestionsForPhrase = (chips) => {
         icon: et.icon,
         color: et.color
       })),
-      next: [
-        { label: 'for', icon: Clock, preview: true },
-        { label: 'in', icon: MapPin, preview: true }
-      ],
+      next: [{ label: 'for', icon: Clock, preview: true }],
       future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
     };
   }
