@@ -27,7 +27,7 @@ export const ENTITY_TYPES = [
 export const FILTER_OPTIONS = {
   provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan'],
   cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa'],
-  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
+  tenureValues: ['5 years', '1 year', '2 years', '10 years', '15 years', '3 years', 'Custom year...'],
   tenureComparisons: ['or more', 'or less', 'exactly'],
   statuses: ['Active', 'Inactive', 'Pending', 'On Hold', 'Cancelled'],
   engagementLevels: ['High', 'Medium', 'Low', 'Very High', 'Very Low', 'None']
