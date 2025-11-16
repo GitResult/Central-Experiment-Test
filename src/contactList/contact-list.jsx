@@ -1906,19 +1906,56 @@ const UnifiedContactListing = () => {
 
                     {/* Search Input with Autocomplete */}
                     <div className="flex-1 relative min-w-[200px]">
-                      {/* Autocomplete suggestion overlay */}
+                      {/* Autocomplete suggestion overlay with 3-level preview */}
                       {isPhraseMode && phraseSearchText && (() => {
-                        const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                        const suggestions = getSuggestionsForPhrase(phraseChips);
+                        const currentSuggestions = suggestions.current;
                         const filteredSuggestions = currentSuggestions.filter(s =>
                           s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase())
                         );
                         const firstMatch = filteredSuggestions[selectedSuggestionIndex];
+
                         if (firstMatch) {
+                          // Get preview suggestions for next two levels
+                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
+                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
+
                           return (
-                            <div className="absolute inset-0 pointer-events-none flex items-center">
-                              <span className="text-sm py-2 text-gray-400">
-                                {phraseSearchText}<span>{firstMatch.label.slice(phraseSearchText.length)}</span>
+                            <div className="absolute inset-0 pointer-events-none flex items-center gap-1">
+                              <span className="text-sm py-2 text-gray-900">
+                                {phraseSearchText}
+                                <span className="text-gray-400">{firstMatch.label.slice(phraseSearchText.length)}</span>
+                                {nextSuggestion && (
+                                  <span className="text-gray-300"> {nextSuggestion.label}</span>
+                                )}
+                                {futureSuggestion && (
+                                  <span className="text-gray-300"> {futureSuggestion.label}</span>
+                                )}
                               </span>
+                              {nextSuggestion && futureSuggestion && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Add all three chips
+                                    const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
+                                      id: Date.now() + idx,
+                                      text: suggestion.label,
+                                      type: suggestion.type || 'connector',
+                                      valueType: suggestion.valueType,
+                                      icon: suggestion.icon,
+                                      color: suggestion.color || 'gray',
+                                      ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                      ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                    }));
+                                    setPhraseChips([...phraseChips, ...chips]);
+                                    setPhraseSearchText('');
+                                    setSelectedSuggestionIndex(0);
+                                  }}
+                                  className="pointer-events-auto ml-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                >
+                                  <ChevronRight className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           );
                         }
@@ -1945,7 +1982,8 @@ const UnifiedContactListing = () => {
                       onKeyDown={(e) => {
                         if (!isPhraseMode) return;
 
-                        const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                        const suggestions = getSuggestionsForPhrase(phraseChips);
+                        const currentSuggestions = suggestions.current;
                         const filteredSuggestions = phraseSearchText
                           ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
                           : currentSuggestions.slice(0, 6);
@@ -1953,6 +1991,28 @@ const UnifiedContactListing = () => {
                         if (e.key === 'Tab' && phraseChips.length > 0) {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
+                        } else if (e.key === 'ArrowRight' && phraseSearchText && filteredSuggestions.length > 0) {
+                          // ArrowRight adds all 3 preview suggestions at once
+                          e.preventDefault();
+                          const firstMatch = filteredSuggestions[selectedSuggestionIndex];
+                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
+                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
+
+                          if (firstMatch && nextSuggestion && futureSuggestion) {
+                            const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
+                              id: Date.now() + idx,
+                              text: suggestion.label,
+                              type: suggestion.type || 'connector',
+                              valueType: suggestion.valueType,
+                              icon: suggestion.icon,
+                              color: suggestion.color || 'gray',
+                              ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                              ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                            }));
+                            setPhraseChips([...phraseChips, ...chips]);
+                            setPhraseSearchText('');
+                            setSelectedSuggestionIndex(0);
+                          }
                         } else if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           setSelectedSuggestionIndex(prev =>
