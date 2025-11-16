@@ -1840,7 +1840,7 @@ const UnifiedContactListing = () => {
 
                   {/* Inline 3-Level Progressive Disclosure Panel */}
                   {isPhraseMode && (
-                    <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white/60 backdrop-blur-md">
+                    <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white">
                       <div className="max-w-[1600px] mx-auto px-8 py-4">
                         <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-blue-600" />
