@@ -1485,7 +1485,7 @@ const UnifiedContactListing = () => {
   }, []);
 
   return sampleData && (
-      <div className="min-h-screen bg-slate-50 relative mt-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
+      <div className={`min-h-screen bg-slate-50 relative mt-8 transition-all duration-300 ${showSavePhrasePanel ? 'mr-96' : 'mr-0'}`} style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
         <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         @keyframes pulse {
@@ -1815,19 +1815,18 @@ const UnifiedContactListing = () => {
                   <div className="flex items-center gap-2 flex-wrap p-4">
                     <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
 
-                    {/* Load Phrase Button */}
-                    {!isPhraseMode && phraseChips.length === 0 && (
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowLoadPhraseDropdown(!showLoadPhraseDropdown)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
-                        >
-                          <Clock className="w-3.5 h-3.5" />
-                          Load Phrase
-                        </button>
+                    {/* Load Phrase Button - Always Visible */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowLoadPhraseDropdown(!showLoadPhraseDropdown)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        Load Phrase
+                      </button>
 
-                        {/* Load Phrase Dropdown */}
-                        {showLoadPhraseDropdown && (
+                      {/* Load Phrase Dropdown */}
+                      {showLoadPhraseDropdown && (
                           <>
                             <div
                               className="fixed inset-0 z-30"
@@ -1886,8 +1885,7 @@ const UnifiedContactListing = () => {
                             </div>
                           </>
                         )}
-                      </div>
-                    )}
+                    </div>
 
                     {/* Phrase Chips */}
                     {phraseChips.map((chip, idx) => (
@@ -4565,14 +4563,9 @@ const UnifiedContactListing = () => {
           </div>
         )}
 
-        {/* Save Phrase Panel */}
+        {/* Save Phrase Panel - Push Panel */}
         {showSavePhrasePanel && (
-          <>
-            <div
-              className="fixed inset-0 bg-slate-900 bg-opacity-20 z-40"
-              onClick={() => setShowSavePhrasePanel(false)}
-            />
-            <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col">
+          <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-slate-200 mt-8">
               <div className="border-b border-slate-200 bg-white px-6 py-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-slate-900">Save Phrase</h2>
@@ -4682,7 +4675,6 @@ const UnifiedContactListing = () => {
                 </div>
               </div>
             </div>
-          </>
         )}
 
         <style>{`
