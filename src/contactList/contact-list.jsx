@@ -31,6 +31,7 @@ const UnifiedContactListing = () => {
   const [phraseSearchText, setPhraseSearchText] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const phraseInputRef = useRef(null);
+  const applyButtonRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -1835,7 +1836,10 @@ const UnifiedContactListing = () => {
                           ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
                           : currentSuggestions.slice(0, 6);
 
-                        if (e.key === 'ArrowDown') {
+                        if (e.key === 'Tab' && phraseChips.length > 0) {
+                          e.preventDefault();
+                          applyButtonRef.current?.focus();
+                        } else if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           setSelectedSuggestionIndex(prev =>
                             prev < filteredSuggestions.length - 1 ? prev + 1 : prev
@@ -1871,17 +1875,34 @@ const UnifiedContactListing = () => {
                     />
                     </div>
 
-                    {/* Close Button when in phrase mode */}
+                    {/* Apply/Close Button when in phrase mode */}
                     {isPhraseMode && (
-                      <button
-                        onClick={() => {
-                          setIsPhraseMode(false);
-                          setPhraseSearchText('');
-                        }}
-                        className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                      <>
+                        {phraseChips.length > 0 ? (
+                          <button
+                            ref={applyButtonRef}
+                            onClick={() => {
+                              // Convert chips to phrase filters
+                              const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                              setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
+                              setIsPhraseMode(false);
+                            }}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                          >
+                            Apply
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setIsPhraseMode(false);
+                              setPhraseSearchText('');
+                            }}
+                            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -2034,7 +2055,18 @@ const UnifiedContactListing = () => {
                               }}
                               className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                             >
-                              Apply Phrase Filter
+                              Apply
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Save phrase as a reusable filter
+                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                                console.log('Saving phrase:', phraseText);
+                                // TODO: Implement save functionality
+                              }}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Save
                             </button>
                           </div>
                         )}
