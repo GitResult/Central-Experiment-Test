@@ -52,12 +52,17 @@ const FILTER_OPTIONS = {
   awards: ['Volunteer of the Year', 'Leadership Award', 'Community Service Award']
 };
 
-// Progressive suggestion logic
+// Progressive suggestion logic with 3 levels
 const getSuggestionsForPhrase = (chips) => {
   if (chips.length === 0) {
     return {
       current: STARTING_POINTS,
-      next: ENTITY_TYPES.map(et => ({ ...et, label: et.label, preview: true }))
+      next: ENTITY_TYPES.map(et => ({ ...et, label: et.label, preview: true })),
+      future: [
+        { label: 'for', icon: Clock, preview: true },
+        { label: 'in', icon: MapPin, preview: true },
+        { label: 'with', icon: Check, preview: true }
+      ]
     };
   }
 
@@ -68,10 +73,12 @@ const getSuggestionsForPhrase = (chips) => {
     return {
       current: ENTITY_TYPES,
       next: [
+        { label: 'that have been', icon: ChevronRight, preview: true },
         { label: 'for', icon: Clock, preview: true },
         { label: 'in', icon: MapPin, preview: true },
         { label: 'with', icon: Check, preview: true }
-      ]
+      ],
+      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({ label: t, preview: true }))
     };
   }
 
@@ -84,7 +91,8 @@ const getSuggestionsForPhrase = (chips) => {
         { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'with', icon: Check, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true }))
+      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({ label: t, preview: true })),
+      future: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
     };
   }
 
@@ -92,7 +100,8 @@ const getSuggestionsForPhrase = (chips) => {
   if (lastChip.text === 'for') {
     return {
       current: FILTER_OPTIONS.tenureValues.map(t => ({ label: t, type: 'value', valueType: 'tenure' })),
-      next: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true }))
+      next: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, preview: true })),
+      future: [{ label: 'and', icon: Plus, preview: true }]
     };
   }
 
@@ -100,7 +109,11 @@ const getSuggestionsForPhrase = (chips) => {
   if (lastChip.valueType === 'tenure' && !chips.find(c => c.valueType === 'tenureComparison')) {
     return {
       current: FILTER_OPTIONS.tenureComparisons.map(c => ({ label: c, type: 'value', valueType: 'tenureComparison' })),
-      next: [{ label: 'and', icon: Plus, preview: true }]
+      next: [{ label: 'and', icon: Plus, preview: true }],
+      future: [
+        { label: 'in', preview: true },
+        { label: 'with', preview: true }
+      ]
     };
   }
 
@@ -111,7 +124,8 @@ const getSuggestionsForPhrase = (chips) => {
         { label: 'province', icon: MapPin, type: 'connector' },
         { label: 'city', icon: MapPin, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.provinces.slice(0, 6).map(p => ({ label: p, preview: true }))
+      next: FILTER_OPTIONS.provinces.slice(0, 6).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
     };
   }
 
@@ -119,7 +133,11 @@ const getSuggestionsForPhrase = (chips) => {
   if (lastChip.text === 'province') {
     return {
       current: FILTER_OPTIONS.provinces.map(p => ({ label: p, type: 'value', valueType: 'province' })),
-      next: [{ label: 'and', preview: true }]
+      next: [{ label: 'and', preview: true }],
+      future: [
+        { label: 'in', preview: true },
+        { label: 'with', preview: true }
+      ]
     };
   }
 
@@ -127,7 +145,11 @@ const getSuggestionsForPhrase = (chips) => {
   if (lastChip.text === 'city') {
     return {
       current: FILTER_OPTIONS.cities.map(c => ({ label: c, type: 'value', valueType: 'city' })),
-      next: [{ label: 'and', preview: true }]
+      next: [{ label: 'and', preview: true }],
+      future: [
+        { label: 'in', preview: true },
+        { label: 'with', preview: true }
+      ]
     };
   }
 
@@ -139,7 +161,8 @@ const getSuggestionsForPhrase = (chips) => {
         { label: 'in', preview: true },
         { label: 'with', preview: true },
         { label: 'for', preview: true }
-      ]
+      ],
+      future: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true }))
     };
   }
 
@@ -151,11 +174,12 @@ const getSuggestionsForPhrase = (chips) => {
         { label: 'with', icon: Check, type: 'connector' },
         { label: 'for', icon: Clock, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true }))
+      next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true })),
+      future: [{ label: 'and', preview: true }]
     };
   }
 
-  return { current: [], next: [] };
+  return { current: [], next: [], future: [] };
 };
 
 const GlobalPhraseCommand = ({ isOpen, onClose, onApply, initialPhrase = null }) => {
@@ -543,9 +567,9 @@ const GlobalPhraseCommand = ({ isOpen, onClose, onApply, initialPhrase = null })
           </div>
         </div>
 
-        {/* Multi-Column Suggestion Rail */}
-        <div className="grid grid-cols-2 gap-px bg-gray-200" style={{ minHeight: '300px', maxHeight: '400px' }}>
-          {/* Current Options (Left Column) */}
+        {/* Multi-Column Suggestion Rail - 3 Levels */}
+        <div className="grid grid-cols-3 gap-px bg-gray-200" style={{ minHeight: '300px', maxHeight: '400px' }}>
+          {/* Level 1: Current Options (100% opacity) */}
           <div className="bg-white p-4 overflow-y-auto">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
               {phraseChips.length === 0 ? 'Start with' : 'Select'}
@@ -578,22 +602,64 @@ const GlobalPhraseCommand = ({ isOpen, onClose, onApply, initialPhrase = null })
             </div>
           </div>
 
-          {/* Next Steps (Right Column - 50% opacity) */}
-          <div className="bg-gray-50 p-4 overflow-y-auto opacity-60">
+          {/* Level 2: Next Steps (50% opacity, but clickable) */}
+          <div className="bg-gray-50 p-4 overflow-y-auto opacity-50 hover:opacity-75 transition-opacity">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
               Then
             </div>
             <div className="space-y-2">
               {suggestions.next.slice(0, 8).map((suggestion, idx) => {
                 const Icon = suggestion.icon;
+                // Convert preview items to selectable by inferring type if not present
+                const selectableSuggestion = {
+                  ...suggestion,
+                  preview: false,
+                  type: suggestion.type || (suggestion.icon ? 'connector' : 'value')
+                };
+
                 return (
-                  <div
+                  <button
                     key={idx}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/50 text-gray-700 rounded-lg text-sm font-medium"
+                    onClick={() => {
+                      handleSelect(selectableSuggestion);
+                      setSearchText('');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
                   >
                     {Icon && <Icon className="w-4 h-4" />}
                     <span>{suggestion.label}</span>
-                  </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Level 3: Future Steps (25% opacity, clickable for advanced users) */}
+          <div className="bg-gray-100 p-4 overflow-y-auto opacity-25 hover:opacity-50 transition-opacity">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              After that
+            </div>
+            <div className="space-y-2">
+              {suggestions.future.slice(0, 8).map((suggestion, idx) => {
+                const Icon = suggestion.icon;
+                const selectableSuggestion = {
+                  ...suggestion,
+                  preview: false,
+                  type: suggestion.type || (suggestion.icon ? 'connector' : 'value')
+                };
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      handleSelect(selectableSuggestion);
+                      setSearchText('');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 bg-white/30 hover:bg-white/60 text-gray-600 hover:text-gray-800 rounded-lg text-sm font-medium transition-all text-left"
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    <span>{suggestion.label}</span>
+                  </button>
                 );
               })}
             </div>

@@ -185,7 +185,7 @@ const Navigation = ({ onNavigate }) => {
 
           {/* Expanded Phrase Builder */}
           {isPhraseExpanded && (
-            <div className="border-t border-gray-200 p-4 bg-gray-50">
+            <div className="border-t border-gray-200 p-4 bg-white/60 backdrop-blur-md">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-blue-600" />
