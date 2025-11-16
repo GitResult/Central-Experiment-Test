@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './contactList.css'
 import Pagination from '../components/UI/pagination';
-import IncrementalPhraseFilter from '../components/IncrementalPhraseFilter';
+import SpotlightPhraseFilter from '../components/SpotlightPhraseFilter';
 
 // Location coordinates mapping
 const locationCoords = {
@@ -1992,16 +1992,20 @@ const UnifiedContactListing = () => {
                 </div>
               )}
 
-              {/* Phrase Filter (Incremental) - Compact spacing */}
+              {/* Phrase Filter (Spotlight Style) */}
               {filterMode === 'phrase' && (
                 <div className="mt-3">
-                  <IncrementalPhraseFilter
+                  <SpotlightPhraseFilter
                     onApply={(filters) => {
                       setPhraseFilters(filters);
                     }}
                     onClear={() => {
                       setPhraseFilters([]);
                       setCurrentPhrase('');
+                    }}
+                    onSave={(query) => {
+                      console.log('Saved query:', query);
+                      // TODO: Implement save to localStorage or API
                     }}
                   />
                 </div>
