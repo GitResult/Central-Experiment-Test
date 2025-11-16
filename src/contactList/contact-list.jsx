@@ -33,6 +33,45 @@ const UnifiedContactListing = () => {
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [savedPhraseName, setSavedPhraseName] = useState('');
   const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
+  const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
+  const [savedPhrases, setSavedPhrases] = useState([
+    {
+      id: 1,
+      name: 'Active Members in Toronto',
+      description: 'Current active members located in Toronto',
+      chips: [
+        { id: 1, text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+        { id: 2, text: 'members', type: 'entityType', icon: Users, color: 'blue' },
+        { id: 3, text: 'in', type: 'connector', icon: MapPin },
+        { id: 4, text: 'city', type: 'connector', icon: MapPin },
+        { id: 5, text: 'Toronto', type: 'value', valueType: 'city' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Long-term Professionals',
+      description: 'Professionals with 5+ years tenure',
+      chips: [
+        { id: 1, text: 'All Contacts', type: 'cohort', icon: Users, color: 'gray' },
+        { id: 2, text: 'professionals', type: 'entityType', icon: Sparkles, color: 'purple' },
+        { id: 3, text: 'for', type: 'connector', icon: Clock },
+        { id: 4, text: '5 years', type: 'value', valueType: 'tenure' },
+        { id: 5, text: 'or more', type: 'value', valueType: 'tenureComparison' }
+      ]
+    },
+    {
+      id: 3,
+      name: 'High Engagement Students',
+      description: 'Students with high engagement levels',
+      chips: [
+        { id: 1, text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+        { id: 2, text: 'students', type: 'entityType', icon: Users, color: 'emerald' },
+        { id: 3, text: 'with', type: 'connector', icon: Check },
+        { id: 4, text: 'engagement', type: 'connector', icon: TrendingUp },
+        { id: 5, text: 'High', type: 'value', valueType: 'engagement' }
+      ]
+    }
+  ]);
   const phraseInputRef = useRef(null);
   const applyButtonRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
@@ -1775,6 +1814,80 @@ const UnifiedContactListing = () => {
                 >
                   <div className="flex items-center gap-2 flex-wrap p-4">
                     <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
+
+                    {/* Load Phrase Button */}
+                    {!isPhraseMode && phraseChips.length === 0 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowLoadPhraseDropdown(!showLoadPhraseDropdown)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          Load Phrase
+                        </button>
+
+                        {/* Load Phrase Dropdown */}
+                        {showLoadPhraseDropdown && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-30"
+                              onClick={() => setShowLoadPhraseDropdown(false)}
+                            />
+                            <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-40 max-h-96 overflow-y-auto">
+                              <div className="p-3 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-900">Saved Phrases</h3>
+                                <p className="text-xs text-slate-500 mt-1">Select a phrase to load</p>
+                              </div>
+                              <div className="p-2">
+                                {savedPhrases.length > 0 ? (
+                                  savedPhrases.map((phrase) => (
+                                    <button
+                                      key={phrase.id}
+                                      onClick={() => {
+                                        setPhraseChips(phrase.chips.map(chip => ({ ...chip, id: Date.now() + Math.random() })));
+                                        setShowLoadPhraseDropdown(false);
+                                        setIsPhraseMode(true);
+                                      }}
+                                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-lg transition-colors group"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
+                                            {phrase.name}
+                                          </div>
+                                          {phrase.description && (
+                                            <div className="text-xs text-slate-500 mt-0.5">
+                                              {phrase.description}
+                                            </div>
+                                          )}
+                                          <div className="flex flex-wrap gap-1 mt-2">
+                                            {phrase.chips.map((chip, idx) => (
+                                              <div
+                                                key={idx}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+                                              >
+                                                {chip.icon && <chip.icon className="w-3 h-3" />}
+                                                <span>{chip.text}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 flex-shrink-0 mt-0.5" />
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="px-3 py-8 text-center">
+                                    <p className="text-sm text-slate-500">No saved phrases yet</p>
+                                    <p className="text-xs text-slate-400 mt-1">Create a phrase and click Save</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
 
                     {/* Phrase Chips */}
                     {phraseChips.map((chip, idx) => (
@@ -4545,14 +4658,13 @@ const UnifiedContactListing = () => {
                   <button
                     onClick={() => {
                       if (savedPhraseName.trim()) {
-                        const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                        console.log('Saving phrase:', {
+                        const newPhrase = {
+                          id: Date.now(),
                           name: savedPhraseName,
                           description: savedPhraseDescription,
-                          phrase: phraseText,
-                          chips: phraseChips
-                        });
-                        // TODO: Implement actual save functionality
+                          chips: phraseChips.map(chip => ({ ...chip }))
+                        };
+                        setSavedPhrases([...savedPhrases, newPhrase]);
                         setShowSavePhrasePanel(false);
                         setSavedPhraseName('');
                         setSavedPhraseDescription('');
