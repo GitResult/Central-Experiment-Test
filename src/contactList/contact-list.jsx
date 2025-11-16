@@ -1951,9 +1951,10 @@ const UnifiedContactListing = () => {
                                     setPhraseSearchText('');
                                     setSelectedSuggestionIndex(0);
                                   }}
-                                  className="pointer-events-auto ml-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                  title="Click here or press right arrow to select phrases"
+                                  className="pointer-events-auto ml-1 px-2 py-1 text-blue-500 hover:text-white hover:bg-blue-500 rounded transition-all cursor-pointer text-lg font-bold"
                                 >
-                                  <ChevronRight className="w-4 h-4" />
+                                  →
                                 </button>
                               )}
                             </div>
