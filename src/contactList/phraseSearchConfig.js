@@ -28,7 +28,9 @@ export const FILTER_OPTIONS = {
   provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan'],
   cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa'],
   tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years'],
-  tenureComparisons: ['or more', 'or less', 'exactly']
+  tenureComparisons: ['or more', 'or less', 'exactly'],
+  statuses: ['Active', 'Inactive', 'Pending', 'On Hold', 'Cancelled'],
+  engagementLevels: ['High', 'Medium', 'Low', 'Very High', 'Very Low', 'None']
 };
 
 /**
@@ -162,6 +164,24 @@ export const getSuggestionsForPhrase = (chips) => {
       ],
       next: [{ label: 'and', preview: true }],
       future: [{ label: 'in', preview: true }]
+    };
+  }
+
+  // After "status" -> status values
+  if (lastChip.text === 'status') {
+    return {
+      current: FILTER_OPTIONS.statuses.map(s => ({ label: s, type: 'value', valueType: 'status' })),
+      next: [{ label: 'and', icon: Plus, preview: true }],
+      future: [{ label: 'in', icon: MapPin, preview: true }]
+    };
+  }
+
+  // After "engagement" -> engagement level values
+  if (lastChip.text === 'engagement') {
+    return {
+      current: FILTER_OPTIONS.engagementLevels.map(e => ({ label: e, type: 'value', valueType: 'engagement' })),
+      next: [{ label: 'and', icon: Plus, preview: true }],
+      future: [{ label: 'in', icon: MapPin, preview: true }]
     };
   }
 
