@@ -1760,17 +1760,6 @@ const UnifiedContactListing = () => {
 
             {/* Search bar start */}
             <div className="relative mt-4">
-              {/* Translucent backdrop overlay when search panel is open */}
-              {isPhraseMode && (
-                <div
-                  className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-                  onClick={() => {
-                    setIsPhraseMode(false);
-                    setPhraseSearchText('');
-                  }}
-                />
-              )}
-
               {/* Inline Expandable Search Bar with Phrase Builder */}
               <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-[300px]'} relative z-50`}>
                 {/* Search Bar with Chips */}
@@ -1987,6 +1976,18 @@ const UnifiedContactListing = () => {
                   )}
                 </div>
               </div>
+
+              {/* Translucent backdrop overlay for bottom part when search panel is open */}
+              {isPhraseMode && (
+                <div
+                  className="fixed inset-x-0 bottom-0 bg-black/20 backdrop-blur-sm z-30"
+                  style={{ top: '400px' }}
+                  onClick={() => {
+                    setIsPhraseMode(false);
+                    setPhraseSearchText('');
+                  }}
+                />
+              )}
 
               {/* Show active phrase filters */}
               {phraseFilters.length > 0 && (
