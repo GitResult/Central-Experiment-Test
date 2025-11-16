@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase
+  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -97,6 +97,14 @@ const Navigation = ({ onNavigate }) => {
       icon: Cpu,
       color: 'bg-pink-500',
       features: ['AI Chat', 'Heatmap', 'Task Generation', 'All Resizable Features']
+    },
+    {
+      id: 'contact-list',
+      name: 'Contact List',
+      description: 'Advanced contact management with filtering, interactive charts, maps, and comprehensive analytics.',
+      icon: ListFilter,
+      color: 'bg-emerald-500',
+      features: ['Advanced Filtering', 'Interactive Charts', 'Map Visualization', 'Export Data']
     }
   ];
 
@@ -116,20 +124,6 @@ const Navigation = ({ onNavigate }) => {
             <h1 className="text-3xl font-bold text-gray-900">Central USB Search</h1>
           </div>
           <p className="text-gray-600 ml-11">Select a component to explore its features</p>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search components..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
         </div>
       </div>
 
@@ -181,7 +175,7 @@ const Navigation = ({ onNavigate }) => {
                 {/* Hover indicator */}
                 <div className="mt-4 flex items-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-sm font-medium">Open Component</span>
-                  <Sparkles className="w-4 h-4 ml-2" />
+                  <ChevronRight className="w-4 h-4 ml-2" />
                 </div>
               </button>
             );

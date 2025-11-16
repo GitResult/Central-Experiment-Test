@@ -1,103 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, MoreHorizontal, Plus, X, ChevronRight, Filter, Eye, EyeOff, Clock, BarChart3, FileDown, FileUp, GripVertical, Ellipsis, ChevronsLeft, Edit3, Target, Focus, TrendingUp, Users, AlertCircle, CheckCircle2, Loader2, MapPin, ListTodo, Zap, MoreVertical, TrendingDown, DollarSign, AlertTriangle, Activity, Percent } from 'lucide-react';
+import { Search, MoreHorizontal, Plus, X, ChevronRight, Filter, Eye, EyeOff, Clock, BarChart3, FileDown, FileUp, GripVertical, Ellipsis, ChevronsLeft, Edit3, Target, Focus, TrendingUp, Users, AlertCircle, CheckCircle2, Loader2, MapPin, ListTodo, Zap, MoreVertical, TrendingDown, DollarSign, AlertTriangle, Activity, Percent, Sparkles, Check, Briefcase } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Link } from 'react-router-dom';
 import './contactList.css'
-import Pagination from '../../../components/UI/pagination';
-import DockPrototype from '../personEssential2/DockPrototype';
+import Pagination from '../components/UI/pagination';
 
-// Location coordinates mapping
-const locationCoords = {
-  'California': [36.7783, -119.4179],
-  'Texas': [31.9686, -99.9018],
-  'Washington': [47.7511, -120.7401],
-  'Oregon': [43.8041, -120.5542],
-  'Colorado': [39.5501, -105.7821],
-  'Unknown': [39.8283, -98.5795] // Center of US
-};
-
-// Custom marker icon creator
-const createCustomIcon = (count) => {
-  return L.divIcon({
-    html: `
-            <div style="
-                background: #6366f1;
-                color: white;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                font-size: 12px;
-                border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            ">${count}</div>
-        `,
-    className: 'custom-marker',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15]
-  });
-};
-
-// Separate Map Component to prevent re-initialization
-const LeafletMapComponent = ({ chartId, mapData }) => {
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-
-  useEffect(() => {
-    // Only initialize if we don't have a map instance yet
-    if (!mapInstanceRef.current && mapContainerRef.current) {
-      // Create map instance manually
-      mapInstanceRef.current = L.map(mapContainerRef.current, {
-        center: [39.8283, -98.5795],
-        zoom: 4,
-        scrollWheelZoom: true
-      });
-
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
-      }).addTo(mapInstanceRef.current);
-
-      // Add markers
-      Object.entries(mapData).forEach(([location, count]) => {
-        const coords = locationCoords[location] || locationCoords['Unknown'];
-        const marker = L.marker(coords, {
-          icon: createCustomIcon(count)
-        }).addTo(mapInstanceRef.current);
-
-        marker.bindPopup(`
-                    <div style="text-align: center; padding: 5px;">
-                        <strong>${location}</strong><br />
-                        <span style="font-size: 18px; color: #6366f1;">${count}</span> member${count !== 1 ? 's' : ''}
-                    </div>
-                `);
-      });
-    }
-
-    // Cleanup function
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [chartId, mapData]);
-
-  return (
-    <div
-      ref={mapContainerRef}
-      className="relative h-[300px] w-full rounded-lg overflow-hidden z-0"
-      id={`leaflet-map-${chartId}`}
-    />
-  );
-};
+// Import from refactored modules
+import { getSuggestionsForPhrase } from './phraseSearchConfig';
+import { calculateYears, getFieldValue, evaluateFilter } from './contactListUtils';
+import LeafletMapComponent from './components/LeafletMapComponent';
+import { TaskItem, TaskListItem, DeliverableItem, Confetti } from './components/HelperComponents';
 
 const UnifiedContactListing = () => {
   const [searchFocused, setSearchFocused] = useState(false);
@@ -111,6 +23,13 @@ const UnifiedContactListing = () => {
   const [fieldsSubTab, setFieldsSubTab] = useState('byField');
   const [fieldFilters, setFieldFilters] = useState({});
   const [pageFilters, setPageFilters] = useState([]);
+  const [phraseFilters, setPhraseFilters] = useState([]);
+  const [currentPhrase, setCurrentPhrase] = useState('');
+  const [filterMode, setFilterMode] = useState('phrase'); // 'phrase' or 'fields'
+  const [isPhraseMode, setIsPhraseMode] = useState(false);
+  const [phraseChips, setPhraseChips] = useState([]);
+  const [phraseSearchText, setPhraseSearchText] = useState('');
+  const phraseInputRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -189,12 +108,27 @@ const UnifiedContactListing = () => {
           throw new Error('Failed to load sample data');
         }
         const data = await response.json();
-        setFilteredContacts(data.members);
-        setMembers(data.members);
+
+        // Add calculated fields like tenureYears to each member
+        const membersWithTenure = data.members.map(member => ({
+          ...member,
+          tenureYears: calculateYears(member.joinDate),
+          tenureBucket: (() => {
+            const years = calculateYears(member.joinDate);
+            if (years < 1) return '0-1 years';
+            if (years < 2) return '1-2 years';
+            if (years < 5) return '2-5 years';
+            if (years < 10) return '5-10 years';
+            return '10+ years';
+          })()
+        }));
+
+        setFilteredContacts(membersWithTenure);
+        setMembers(membersWithTenure);
         setMemberTypeData(data.memberTypeData);
         setRetentionPieData(data.retentionPieData);
         setRenewalTrendData(data.renewalTrendData);
-        setSampleData(data);
+        setSampleData({ ...data, members: membersWithTenure });
       } catch (error) {
         console.error('Error loading sample data:', error);
         setSampleData(null);
@@ -1272,7 +1206,7 @@ const UnifiedContactListing = () => {
     setDraggedChart(null);
   };
 
-  const getFieldValue = (contact, fieldName) => {
+  const getLocalFieldValue = (contact, fieldName) => {
     const fieldKey = fieldName.toLowerCase().replace(/[\/\s]/g, '');
     return contact[fieldKey];
   };
@@ -1281,6 +1215,14 @@ const UnifiedContactListing = () => {
     // Start with contacts already filtered by current view
     let filteredList = filteredContacts;
 
+    // Apply phrase filters (highest priority - defines the cohort)
+    if (phraseFilters.length > 0) {
+      filteredList = filteredList.filter(contact =>
+        phraseFilters.every(filter => evaluateFilter(contact, filter))
+      );
+    }
+
+    // Apply search filter
     if (searchValue && searchValue.trim() !== '') {
       const searchLower = searchValue.toLowerCase();
       filteredList = filteredList.filter(contact => {
@@ -1293,12 +1235,13 @@ const UnifiedContactListing = () => {
       });
     }
 
-    if (Object.entries(fieldFilters).length > 0) {
-      filteredList = filteredContacts.filter(contact => {
+    // Apply field and page filters
+    if (Object.entries(fieldFilters).length > 0 || pageFilters.length > 0) {
+      filteredList = filteredList.filter(contact => {
         // Apply field filters
         for (const [fieldName, filterValue] of Object.entries(fieldFilters)) {
           if (filterValue && filterValue !== '') {
-            const contactValue = getFieldValue(contact, fieldName);
+            const contactValue = getLocalFieldValue(contact, fieldName);
             if (!contactValue || !contactValue.toString().toLowerCase().includes(filterValue.toLowerCase())) {
               return false;
             }
@@ -1308,7 +1251,7 @@ const UnifiedContactListing = () => {
         // Apply page filters
         for (const pageFilter of pageFilters) {
           if (pageFilter.value && pageFilter.value !== '') {
-            const contactValue = getFieldValue(contact, pageFilter.fieldName);
+            const contactValue = getLocalFieldValue(contact, pageFilter.fieldName);
             if (!contactValue || !contactValue.toString().toLowerCase().includes(pageFilter.value.toLowerCase())) {
               return false;
             }
@@ -1498,10 +1441,6 @@ const UnifiedContactListing = () => {
   }, []);
 
   return sampleData && (
-    <DockPrototype discussions={discussions} setDiscussions={setDiscussions} initialMarkers={[
-      { id: 1, x: 200, y: 220, discussionId: 1 },
-      { id: 2, x: 1300, y: 830, discussionId: 3 }
-    ]}>
       <div className="min-h-screen bg-slate-50 relative mt-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
         <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -1821,45 +1760,286 @@ const UnifiedContactListing = () => {
 
             {/* Search bar start */}
             <div className="relative mt-4">
-              <div className='flex justify-between items-center'>
-                <div className="flex items-center gap-3">
-                  {/* Search Input */}
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Search className="w-5 h-5 text-gray-400" />
-                    </div>
+              {/* Inline Expandable Search Bar with Phrase Builder */}
+              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-full'}`}>
+                {/* Search Bar with Chips */}
+                <div
+                  className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
+                    isPhraseMode ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 flex-wrap p-4">
+                    <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
+
+                    {/* Phrase Chips */}
+                    {phraseChips.map((chip, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium"
+                      >
+                        {chip.icon && <chip.icon className="w-3.5 h-3.5" />}
+                        <span>{chip.text}</span>
+                        <button
+                          onClick={() => setPhraseChips(phraseChips.filter((_, i) => i !== idx))}
+                          className="hover:bg-blue-200 rounded p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Search Input */}
                     <input
+                      ref={phraseInputRef}
                       type="text"
-                      placeholder="Search by name, id, email, or phone"
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                      className="w-full pl-12 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                      style={{ width: "320px" }}
+                      placeholder={phraseChips.length === 0 ? "Search by name, id, email or build a phrase..." : "Continue phrase..."}
+                      value={isPhraseMode ? phraseSearchText : searchValue}
+                      onChange={(e) => {
+                        if (isPhraseMode) {
+                          setPhraseSearchText(e.target.value);
+                        } else {
+                          setSearchValue(e.target.value);
+                        }
+                      }}
+                      onFocus={() => setIsPhraseMode(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setIsPhraseMode(false);
+                          setPhraseSearchText('');
+                        } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
+                          setPhraseChips(phraseChips.slice(0, -1));
+                        }
+                      }}
+                      className="flex-1 outline-none text-sm py-2 bg-transparent min-w-[200px]"
                     />
+
+                    {/* Close Button when in phrase mode */}
+                    {isPhraseMode && (
+                      <button
+                        onClick={() => {
+                          setIsPhraseMode(false);
+                          setPhraseSearchText('');
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inline 3-Level Progressive Disclosure Panel */}
+                  {isPhraseMode && (
+                    <div className="border-t border-gray-200 bg-white/60 backdrop-blur-md">
+                      <div className="p-4">
+                        <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-blue-600" />
+                          Build Your Phrase
+                        </h3>
+
+                        {/* 3-Column Suggestion Rail */}
+                        <div className="grid grid-cols-3 gap-3">
+                          {/* Level 1: Current (100% opacity) */}
+                          <div>
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                              {phraseChips.length === 0 ? 'Start with' : 'Select'}
+                            </div>
+                            <div className="space-y-1.5">
+                              {getSuggestionsForPhrase(phraseChips).current.slice(0, 6).map((suggestion, idx) => {
+                                const Icon = suggestion.icon;
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      const newChip = {
+                                        id: Date.now(),
+                                        text: suggestion.label,
+                                        type: suggestion.type || 'connector',
+                                        valueType: suggestion.valueType,
+                                        icon: suggestion.icon,
+                                        color: suggestion.color || 'gray',
+                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                      };
+                                      setPhraseChips([...phraseChips, newChip]);
+                                      setPhraseSearchText('');
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
+                                  >
+                                    {Icon && <Icon className="w-4 h-4" />}
+                                    <span>{suggestion.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Level 2: Next (50% opacity) */}
+                          <div className="opacity-50 hover:opacity-75 transition-opacity">
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                              Then
+                            </div>
+                            <div className="space-y-1.5">
+                              {getSuggestionsForPhrase(phraseChips).next.slice(0, 6).map((suggestion, idx) => {
+                                const Icon = suggestion.icon;
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      const newChip = {
+                                        id: Date.now(),
+                                        text: suggestion.label,
+                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
+                                        valueType: suggestion.valueType,
+                                        icon: suggestion.icon,
+                                        color: suggestion.color || 'gray',
+                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                      };
+                                      setPhraseChips([...phraseChips, newChip]);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
+                                  >
+                                    {Icon && <Icon className="w-4 h-4" />}
+                                    <span>{suggestion.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Level 3: Future (25% opacity) */}
+                          <div className="opacity-25 hover:opacity-50 transition-opacity">
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                              After that
+                            </div>
+                            <div className="space-y-1.5">
+                              {getSuggestionsForPhrase(phraseChips).future.slice(0, 6).map((suggestion, idx) => {
+                                const Icon = suggestion.icon;
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      const newChip = {
+                                        id: Date.now(),
+                                        text: suggestion.label,
+                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
+                                        valueType: suggestion.valueType,
+                                        icon: suggestion.icon,
+                                        color: suggestion.color || 'gray',
+                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                      };
+                                      setPhraseChips([...phraseChips, newChip]);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-100/50 hover:bg-gray-100/80 text-gray-600 hover:text-gray-800 rounded-lg text-sm font-medium transition-all text-left"
+                                  >
+                                    {Icon && <Icon className="w-4 h-4" />}
+                                    <span>{suggestion.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        {phraseChips.length > 0 && (
+                          <div className="mt-4 flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setPhraseChips([]);
+                                setPhraseSearchText('');
+                              }}
+                              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Clear All
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Convert chips to phrase filters
+                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                                setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
+                                setIsPhraseMode(false);
+                              }}
+                              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Apply Phrase Filter
+                            </button>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-gray-500 mt-3 text-center">
+                          Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">Esc</kbd> to close
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Show active phrase filters */}
+              {phraseFilters.length > 0 && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-blue-700">Active Filters</span>
+                    <button
+                      onClick={() => setPhraseFilters([])}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {phraseFilters.map((filter, idx) => (
+                      <div key={idx} className="text-xs text-blue-800 bg-white px-2 py-1 rounded">
+                        {filter.label}
+                      </div>
+                    ))}
                   </div>
                 </div>
+              )}
+
+              {/* Filter Mode Toggle - Right Side */}
+              <div className='flex justify-end items-center mt-3'>
                 <div className="flex items-center gap-3">
+                  {/* Filter Mode Toggle - Moved to far right */}
+                  <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-300 p-0.5">
+                    <button
+                      onClick={() => setFilterMode('phrase')}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                        ${filterMode === 'phrase'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      By Phrase
+                    </button>
+                    <button
+                      onClick={() => setFilterMode('fields')}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                        ${filterMode === 'fields'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      By Fields
+                    </button>
+                  </div>
+
                   <ChevronsLeft size={18} />
-
-                  {/* Download Button */}
                   <Search size={18} />
-
-                  {/* More Options Button */}
                   <Ellipsis onClick={() => setShowFieldsPanel(true)} className='cursorPointer' size={18} />
                 </div>
               </div>
 
-              {/* Keep the search focused dropdown if you want it */}
-              {searchFocused && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  {/* ... your existing search dropdown content ... */}
-                </div>
-              )}
-
-              {/* Active Filter Pills */}
-              <ActiveFilterPills />
+              {/* Active Filter Pills (shown in Fields mode) */}
+              {filterMode === 'fields' && <ActiveFilterPills />}
             </div>
           </div>
         </div>
@@ -2877,11 +3057,7 @@ const UnifiedContactListing = () => {
                               if (field.name === 'Name') {
                                 return (
                                   <td key={field.name} className="px-3 py-2 text-sm font-bold text-slate-900">
-                                    {contact.id === "C-1001" ? (
-                                      <Link to="/demo/essentials" className="no-underline hover:no-underline">
-                                        {value}
-                                      </Link>
-                                    ) : <span>{value}</span>}
+                                    <span>{value}</span>
                                   </td>
                                 );
                               }
@@ -4210,76 +4386,7 @@ const UnifiedContactListing = () => {
           animation: slideIn 0.3s ease-out;
         }
       `}</style>
-
       </div>
-    </DockPrototype>
-  );
-};
-
-const TaskItem = ({ label, status }) => {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-      {status === 'complete' && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" strokeWidth={1.5} />}
-      {status === 'active' && <Loader2 className="w-5 h-5 text-slate-600 flex-shrink-0 animate-spin" strokeWidth={1.5} />}
-      {status === 'queued' && <div className="w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0" />}
-      <span className={`text-sm ${status === 'complete' ? 'text-gray-500' : 'text-gray-900'}`}>
-        {label}
-      </span>
-    </div>
-  );
-};
-
-const TaskListItem = ({ text, agent }) => {
-  return (
-    <div className="flex items-start gap-2 p-2 bg-gray-50 rounded">
-      <CheckCircle2 className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-      <span className="text-sm text-gray-700">
-        {text} {agent && <span className="text-gray-500">— {agent}</span>}
-      </span>
-    </div>
-  );
-};
-
-const DeliverableItem = ({ icon, title, subtitle }) => {
-  return (
-    <div className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
-      <div className="flex-shrink-0">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-gray-900">{title}</div>
-        <div className="text-xs text-gray-500 mt-0.5">{subtitle}</div>
-      </div>
-      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" strokeWidth={1.5} />
-    </div>
-  );
-};
-
-const Confetti = () => {
-  const particles = Array.from({ length: 50 });
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {particles.map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-2 h-2 rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: '-10px',
-            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'][Math.floor(Math.random() * 5)],
-            animation: `fall ${2 + Math.random() * 2}s linear forwards`,
-            animationDelay: `${Math.random() * 0.5}s`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes fall {
-          to {
-            transform: translateY(100vh) rotate(${Math.random() * 360}deg);
-            opacity: 0;
-          }
-        }
-      `}</style>
-    </div>
   );
 };
 

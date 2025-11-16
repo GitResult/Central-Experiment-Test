@@ -1,0 +1,299 @@
+{
+  "members": [
+    {
+      "id": "C-1001",
+      "name": "Sarah Chen",
+      "email": "sarah.chen@example.com",
+      "phone": "555-0101",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "California",
+      "joinDate": "2015-03-15",
+      "ageGroup": "35-44",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1002",
+      "name": "Michael Rodriguez",
+      "email": "m.rodriguez@example.com",
+      "phone": "555-0102",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Texas",
+      "joinDate": "2018-07-22",
+      "ageGroup": "45-54",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1003",
+      "name": "Emily Watson",
+      "email": "e.watson@example.com",
+      "phone": "555-0103",
+      "status": "Active",
+      "type": "STUDENT",
+      "location": "Washington",
+      "joinDate": "2023-01-10",
+      "ageGroup": "18-24",
+      "membershipLevel": "Student"
+    },
+    {
+      "id": "C-1004",
+      "name": "James Patterson",
+      "email": "j.patterson@example.com",
+      "phone": "555-0104",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Oregon",
+      "joinDate": "2016-11-03",
+      "ageGroup": "55-64",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1005",
+      "name": "Lisa Thompson",
+      "email": "l.thompson@example.com",
+      "phone": "555-0105",
+      "status": "Inactive",
+      "type": "MEMBER",
+      "location": "Colorado",
+      "joinDate": "2019-05-18",
+      "ageGroup": "25-34",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1006",
+      "name": "David Kim",
+      "email": "d.kim@example.com",
+      "phone": "555-0106",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "California",
+      "joinDate": "2014-02-28",
+      "ageGroup": "45-54",
+      "membershipLevel": "Premium"
+    },
+    {
+      "id": "C-1007",
+      "name": "Amanda Foster",
+      "email": "a.foster@example.com",
+      "phone": "555-0107",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Texas",
+      "joinDate": "2017-09-14",
+      "ageGroup": "35-44",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1008",
+      "name": "Robert Martinez",
+      "email": "r.martinez@example.com",
+      "phone": "555-0108",
+      "status": "Pending",
+      "type": "MEMBER",
+      "location": "Washington",
+      "joinDate": "2024-10-01",
+      "ageGroup": "25-34",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1009",
+      "name": "Jennifer Lee",
+      "email": "j.lee@example.com",
+      "phone": "555-0109",
+      "status": "Active",
+      "type": "STUDENT",
+      "location": "Oregon",
+      "joinDate": "2022-08-20",
+      "ageGroup": "18-24",
+      "membershipLevel": "Student"
+    },
+    {
+      "id": "C-1010",
+      "name": "Christopher Brown",
+      "email": "c.brown@example.com",
+      "phone": "555-0110",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Colorado",
+      "joinDate": "2013-06-05",
+      "ageGroup": "55-64",
+      "membershipLevel": "Premium"
+    },
+    {
+      "id": "C-1011",
+      "name": "Jessica Taylor",
+      "email": "j.taylor@example.com",
+      "phone": "555-0111",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "California",
+      "joinDate": "2019-12-10",
+      "ageGroup": "35-44",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1012",
+      "name": "Daniel Wilson",
+      "email": "d.wilson@example.com",
+      "phone": "555-0112",
+      "status": "Inactive",
+      "type": "MEMBER",
+      "location": "Texas",
+      "joinDate": "2020-04-15",
+      "ageGroup": "45-54",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1013",
+      "name": "Michelle Garcia",
+      "email": "m.garcia@example.com",
+      "phone": "555-0113",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Washington",
+      "joinDate": "2015-08-22",
+      "ageGroup": "45-54",
+      "membershipLevel": "Premium"
+    },
+    {
+      "id": "C-1014",
+      "name": "Kevin Anderson",
+      "email": "k.anderson@example.com",
+      "phone": "555-0114",
+      "status": "Active",
+      "type": "STUDENT",
+      "location": "Oregon",
+      "joinDate": "2023-09-01",
+      "ageGroup": "18-24",
+      "membershipLevel": "Student"
+    },
+    {
+      "id": "C-1015",
+      "name": "Ashley Moore",
+      "email": "a.moore@example.com",
+      "phone": "555-0115",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Colorado",
+      "joinDate": "2016-01-30",
+      "ageGroup": "35-44",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1016",
+      "name": "Brian Clark",
+      "email": "b.clark@example.com",
+      "phone": "555-0116",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "California",
+      "joinDate": "2014-10-12",
+      "ageGroup": "55-64",
+      "membershipLevel": "Premium"
+    },
+    {
+      "id": "C-1017",
+      "name": "Nicole Lewis",
+      "email": "n.lewis@example.com",
+      "phone": "555-0117",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Texas",
+      "joinDate": "2018-03-25",
+      "ageGroup": "25-34",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1018",
+      "name": "Ryan Walker",
+      "email": "r.walker@example.com",
+      "phone": "555-0118",
+      "status": "Inactive",
+      "type": "MEMBER",
+      "location": "Washington",
+      "joinDate": "2021-11-08",
+      "ageGroup": "35-44",
+      "membershipLevel": "Professional"
+    },
+    {
+      "id": "C-1019",
+      "name": "Lauren Hill",
+      "email": "l.hill@example.com",
+      "phone": "555-0119",
+      "status": "Active",
+      "type": "MEMBER",
+      "location": "Oregon",
+      "joinDate": "2017-05-14",
+      "ageGroup": "45-54",
+      "membershipLevel": "Premium"
+    },
+    {
+      "id": "C-1020",
+      "name": "Justin Young",
+      "email": "j.young@example.com",
+      "phone": "555-0120",
+      "status": "Active",
+      "type": "STUDENT",
+      "location": "Colorado",
+      "joinDate": "2024-01-15",
+      "ageGroup": "18-24",
+      "membershipLevel": "Student"
+    }
+  ],
+  "memberTypeData": [
+    {
+      "type": "MEMBER",
+      "count": 15,
+      "percentage": 75
+    },
+    {
+      "type": "STUDENT",
+      "count": 5,
+      "percentage": 25
+    }
+  ],
+  "retentionPieData": [
+    {
+      "name": "Active",
+      "value": 16,
+      "color": "#10b981"
+    },
+    {
+      "name": "Inactive",
+      "value": 3,
+      "color": "#64748b"
+    },
+    {
+      "name": "Pending",
+      "value": 1,
+      "color": "#f59e0b"
+    }
+  ],
+  "renewalTrendData": [
+    {
+      "month": "Jan",
+      "renewals": 12
+    },
+    {
+      "month": "Feb",
+      "renewals": 15
+    },
+    {
+      "month": "Mar",
+      "renewals": 18
+    },
+    {
+      "month": "Apr",
+      "renewals": 14
+    },
+    {
+      "month": "May",
+      "renewals": 20
+    },
+    {
+      "month": "Jun",
+      "renewals": 17
+    }
+  ]
+}
