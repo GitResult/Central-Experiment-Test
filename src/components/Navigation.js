@@ -19,26 +19,28 @@
 import React, { useState, useEffect } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter
+  Database, Layout, Maximize2, Cpu, Home, Sparkles, Briefcase, ListFilter, X, ChevronDown
 } from 'lucide-react';
 import GlobalPhraseCommand from './GlobalPhraseCommand';
 
 const Navigation = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showPhraseCommand, setShowPhraseCommand] = useState(false);
+  const [isPhraseExpanded, setIsPhraseExpanded] = useState(false);
+  const [phraseChips, setPhraseChips] = useState([]);
+  const [showPhraseBuilder, setShowPhraseBuilder] = useState(false);
 
-  // Global keyboard shortcut for phrase command (Cmd+Shift+/)
+  // Global keyboard shortcut for phrase (Cmd+Shift+/)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === '/' && !showPhraseCommand) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === '/' && !isPhraseExpanded) {
         e.preventDefault();
-        setShowPhraseCommand(true);
+        setIsPhraseExpanded(true);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showPhraseCommand]);
+  }, [isPhraseExpanded]);
 
   const components = [
     {
@@ -142,30 +144,121 @@ const Navigation = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Universal Search Bar (USB) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search components..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        <div className={`bg-white rounded-xl shadow-lg border border-gray-200 transition-all duration-300 ${
+          isPhraseExpanded ? 'ring-2 ring-blue-500' : ''
+        }`}>
+          {/* Compact USB Bar */}
+          <div className="flex items-center gap-3 p-4">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search components..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
 
-        {/* Quick Access Pills */}
-        <div className="mt-6 flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-600">Quick Access:</span>
-          <button
-            onClick={() => setShowPhraseCommand(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full font-medium text-sm shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Phrase</span>
-            <kbd className="px-1.5 py-0.5 bg-white/20 rounded text-xs font-mono">⌘⇧/</kbd>
-          </button>
+            {/* Phrase Pill */}
+            <button
+              onClick={() => setIsPhraseExpanded(!isPhraseExpanded)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm shadow-sm transition-all ${
+                isPhraseExpanded
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-md'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Phrase</span>
+              {phraseChips.length > 0 && (
+                <span className="px-1.5 py-0.5 bg-white/30 rounded-full text-xs font-bold">
+                  {phraseChips.length}
+                </span>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform ${isPhraseExpanded ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+
+          {/* Expanded Phrase Builder */}
+          {isPhraseExpanded && (
+            <div className="border-t border-gray-200 p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  Build Your Phrase
+                </h3>
+                <button
+                  onClick={() => setIsPhraseExpanded(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Phrase Chips Area */}
+              <div className="bg-white rounded-lg border-2 border-dashed border-blue-300 p-3 min-h-[60px] mb-3">
+                {phraseChips.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-2">
+                    Click "Open Full Builder" below to create phrase filters
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {phraseChips.map((chip, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium"
+                      >
+                        <span>{chip.text}</span>
+                        <button
+                          onClick={() => setPhraseChips(phraseChips.filter((_, i) => i !== idx))}
+                          className="hover:bg-blue-200 rounded p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowPhraseBuilder(true)}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
+                >
+                  Open Full Builder
+                </button>
+                {phraseChips.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => setPhraseChips([])}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition-colors"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('Navigate to Contact List with filters:', phraseChips);
+                        onNavigate('contact-list');
+                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">⌘⇧/</kbd> to toggle
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -243,15 +336,18 @@ const Navigation = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Global Phrase Command Modal */}
+      {/* Global Phrase Command Modal (Full Builder) */}
       <GlobalPhraseCommand
-        isOpen={showPhraseCommand}
-        onClose={() => setShowPhraseCommand(false)}
+        isOpen={showPhraseBuilder}
+        onClose={() => setShowPhraseBuilder(false)}
         onApply={(filters) => {
           console.log('Phrase filters applied:', filters);
-          // TODO: Navigate to Contact List with these filters applied
-          setShowPhraseCommand(false);
+          // Extract chips from the builder and update USB
+          // Note: filters are the structured filter objects, we need to convert back to chips
+          // For now, just close and user can apply from USB
+          setShowPhraseBuilder(false);
         }}
+        initialPhrase={phraseChips.length > 0 ? { chips: phraseChips } : null}
       />
     </div>
   );
