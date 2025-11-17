@@ -97,9 +97,12 @@ export const STARTING_POINTS = [
 
 // Entity types for filtering
 export const ENTITY_TYPES = [
-  { label: 'Members', type: 'entity', color: 'purple', icon: Crown },
-  { label: 'Donors', type: 'entity', color: 'orange', icon: Award },
-  { label: 'Contacts', type: 'entity', color: 'blue', icon: Users }
+  { label: 'members', type: 'entity', color: 'purple', icon: Crown },
+  { label: 'students', type: 'entity', color: 'emerald', icon: GraduationCap },
+  { label: 'professionals', type: 'entity', color: 'blue', icon: Briefcase },
+  { label: 'volunteers', type: 'entity', color: 'orange', icon: Users },
+  { label: 'donors', type: 'entity', color: 'amber', icon: Award },
+  { label: 'contacts', type: 'entity', color: 'gray', icon: Users }
 ];
 
 // Filter options for various categories
@@ -192,13 +195,15 @@ export const getSuggestionsForPhrase = (chips) => {
   // After selecting a year cohort (2019, 2020, etc.)
   if (lastChip.type === 'yearCohort') {
     return {
-      current: [
-        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
-        { label: 'contacts', type: 'entity', icon: Users, color: 'blue' }
-      ],
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: et.type,
+        icon: et.icon,
+        color: et.color
+      })),
       next: [
         { label: 'who renewed in', icon: CalendarClock, type: 'connector', preview: true },
-        { label: 'that have been members', icon: Clock, type: 'connector', preview: true },
+        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
         { label: 'with type', icon: Crown, type: 'connector', preview: true }
       ],
       future: FILTER_OPTIONS.renewalMonths.slice(0, 4).map(m => ({
@@ -218,12 +223,12 @@ export const getSuggestionsForPhrase = (chips) => {
         color: et.color
       })),
       next: [
-        { label: 'that have been members', icon: Clock, type: 'connector', preview: true },
+        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
         { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
         { label: 'with type', icon: Crown, type: 'connector', preview: true }
       ],
-      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({
-        label: t,
+      future: ENTITY_TYPES.slice(0, 4).map(et => ({
+        label: et.label,
         preview: true
       }))
     };
@@ -346,8 +351,27 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After "that have been members" -> show "for"
-  if (lastChipText === 'that have been members') {
+  // After "that have been" -> show entity types
+  if (lastChipText === 'that have been') {
+    return {
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entityType',
+        icon: et.icon,
+        color: et.color
+      })),
+      next: [
+        { label: 'for', icon: Clock, type: 'connector', preview: true }
+      ],
+      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({
+        label: t,
+        preview: true
+      }))
+    };
+  }
+
+  // After entity type following "that have been" -> show "for"
+  if (lastChip.type === 'entityType' && chips.some(c => c.text === 'that have been')) {
     return {
       current: [
         { label: 'for', icon: Clock, type: 'connector' }
@@ -363,7 +387,7 @@ export const getSuggestionsForPhrase = (chips) => {
   }
 
   // After "for" (in tenure context) -> show tenure values
-  if (lastChipText === 'for' && chips.some(c => c.text === 'that have been members')) {
+  if (lastChipText === 'for' && chips.some(c => c.text === 'that have been')) {
     return {
       current: FILTER_OPTIONS.tenureValues.map(t => ({
         label: t,

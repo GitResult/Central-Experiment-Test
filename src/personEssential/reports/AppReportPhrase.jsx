@@ -537,7 +537,7 @@ const PhraseModeReport = (props) => {
       showOptionsSelector('degree', { ...newChip, type: 'degree', icon: GraduationCap, color: 'indigo' });
     } else if (chip.text === 'from province/state') {
       showOptionsSelector('province', { ...newChip, type: 'province', icon: MapPin, color: 'red' });
-    } else if (chip.text === 'for' && phraseChips.some(c => c.text === 'that have been members')) {
+    } else if (chip.text === 'for' && phraseChips.some(c => c.text === 'that have been')) {
       showOptionsSelector('tenure', { ...newChip, type: 'tenure', icon: Clock, color: 'blue' });
     } else if (chip.text === 'who renewed in') {
       showOptionsSelector('renewalMonth', { ...newChip, type: 'renewalMonth', icon: Calendar, color: 'orange' });
