@@ -556,7 +556,7 @@ const ReportBuilder = ({
 
     // Process remaining filters with connectors
     const filterSelections = selections.filter(s =>
-      s.category !== 'Member Year' && !startingDataCategories.includes(s.category) && s.type === 'filter'
+      s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
     );
 
     if (filterSelections.length > 0) {
