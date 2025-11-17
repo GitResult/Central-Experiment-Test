@@ -42,9 +42,9 @@ import {
   MoveRight,
 } from "lucide-react";
 import ReviewTask from "./components/reviewTask";
-import { updateDemoState } from "../../redux/demo/actions";
+import { updateDemoState } from "../redux/demo/actions";
 import ReportBuilder from "./reports/report-browse.tsx";
-import Breadcrumb from "../../components/UI/Breadcrumb.jsx";
+import Breadcrumb from "../components/UI/Breadcrumb.jsx";
 
 /**
  * Fix pack:
