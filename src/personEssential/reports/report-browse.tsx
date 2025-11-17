@@ -207,6 +207,7 @@ const ReportBuilder = (props) => {
   const handleCategorySelect = (category, section) => {
     const values = sampleValues[category] || [];
 
+    // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
       if (section === 'Starting Data') {
         addField(category, values[0]);
@@ -216,6 +217,7 @@ const ReportBuilder = (props) => {
       return;
     }
 
+    // Open panel for this category
     setSelectedCategory(category);
     setValueSearchTerm('');
   };
@@ -972,11 +974,15 @@ const ReportBuilder = (props) => {
                   </div>
 
                   {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => {
-                    // Check if this filter is already selected
-                    const isFilterSelected = selections.some(s => s.category === selectedCategory && s.value === value && s.type === 'filter');
+                    // Check if this exact filter is already selected (must match category, value, and type)
+                    const isFilterSelected = selections.some(s =>
+                      s.type === 'filter' &&
+                      s.category === selectedCategory &&
+                      s.value === value
+                    );
 
                     return (
-                      <div key={i} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
+                      <div key={`${selectedCategory}-${value}-${i}`} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
                         <input
                           type="checkbox"
                           className="rounded"
@@ -988,8 +994,12 @@ const ReportBuilder = (props) => {
                                 addFilter(selectedCategory, value);
                               }
                             } else {
-                              // Remove filter when unchecked
-                              const filterToRemove = selections.find(s => s.category === selectedCategory && s.value === value && s.type === 'filter');
+                              // Remove filter when unchecked - find exact match
+                              const filterToRemove = selections.find(s =>
+                                s.type === 'filter' &&
+                                s.category === selectedCategory &&
+                                s.value === value
+                              );
                               if (filterToRemove) {
                                 removeSelection(filterToRemove.id);
                               }
