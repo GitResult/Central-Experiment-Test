@@ -31,6 +31,10 @@ const UnifiedContactListing = () => {
   const [phraseChips, setPhraseChips] = useState([]);
   const [phraseSearchText, setPhraseSearchText] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  // 3-column selection states
+  const [activeColumn, setActiveColumn] = useState(0); // 0 = current, 1 = next, 2 = future
+  const [columnSelections, setColumnSelections] = useState([null, null, null]); // Track selection in each column
+  const [columnIndices, setColumnIndices] = useState([0, 0, 0]); // Track navigation index in each column
   const [savedPhraseName, setSavedPhraseName] = useState('');
   const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
   const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
@@ -1846,6 +1850,9 @@ const UnifiedContactListing = () => {
                                         setPhraseChips(phrase.chips.map(chip => ({ ...chip, id: Date.now() + Math.random() })));
                                         setShowLoadPhraseDropdown(false);
                                         setIsPhraseMode(true);
+                                        setActiveColumn(0);
+                                        setColumnSelections([null, null, null]);
+                                        setColumnIndices([0, 0, 0]);
                                       }}
                                       className="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-lg transition-colors group"
                                     >
@@ -1983,28 +1990,71 @@ const UnifiedContactListing = () => {
                       onFocus={() => {
                         setIsPhraseMode(true);
                         setSelectedSuggestionIndex(0);
+                        setActiveColumn(0);
+                        setColumnSelections([null, null, null]);
+                        setColumnIndices([0, 0, 0]);
                       }}
                       onKeyDown={(e) => {
                         if (!isPhraseMode) return;
 
                         const suggestions = getSuggestionsForPhrase(phraseChips);
-                        const currentSuggestions = suggestions.current;
-                        const filteredSuggestions = phraseSearchText
-                          ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
-                          : currentSuggestions.slice(0, 6);
+                        const allSuggestions = [
+                          suggestions.current.slice(0, 6),
+                          suggestions.next.slice(0, 6),
+                          suggestions.future.slice(0, 6)
+                        ];
+
+                        // Filter current column suggestions based on search text
+                        if (activeColumn === 0 && phraseSearchText) {
+                          allSuggestions[0] = allSuggestions[0].filter(s =>
+                            s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase())
+                          );
+                        }
+
+                        const currentColumnSuggestions = allSuggestions[activeColumn];
 
                         if (e.key === 'Tab' && phraseChips.length > 0) {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
-                        } else if (e.key === 'ArrowRight' && phraseSearchText && filteredSuggestions.length > 0) {
-                          // ArrowRight adds all 3 preview suggestions at once
+                        } else if (e.key === 'ArrowRight') {
+                          // Move to next column
                           e.preventDefault();
-                          const firstMatch = filteredSuggestions[selectedSuggestionIndex];
-                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
-                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
+                          if (activeColumn < 2 && columnSelections[activeColumn] !== null) {
+                            setActiveColumn(prev => prev + 1);
+                          }
+                        } else if (e.key === 'ArrowLeft') {
+                          // Move to previous column
+                          e.preventDefault();
+                          if (activeColumn > 0) {
+                            setActiveColumn(prev => prev - 1);
+                          }
+                        } else if (e.key === 'ArrowDown') {
+                          // Navigate down within active column
+                          e.preventDefault();
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = Math.min(
+                            newIndices[activeColumn] + 1,
+                            currentColumnSuggestions.length - 1
+                          );
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'ArrowUp') {
+                          // Navigate up within active column
+                          e.preventDefault();
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = Math.max(0, newIndices[activeColumn] - 1);
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'Enter' && currentColumnSuggestions.length > 0) {
+                          // Select item from active column
+                          e.preventDefault();
+                          const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
+                          const newSelections = [...columnSelections];
+                          newSelections[activeColumn] = selectedSuggestion;
+                          setColumnSelections(newSelections);
 
-                          if (firstMatch && nextSuggestion && futureSuggestion) {
-                            const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
+                          // Check if all 3 columns have selections
+                          if (newSelections.every(sel => sel !== null)) {
+                            // Add all 3 selections as chips
+                            const chips = newSelections.map((suggestion, idx) => ({
                               id: Date.now() + idx,
                               text: suggestion.label,
                               type: suggestion.type || 'connector',
@@ -2016,36 +2066,20 @@ const UnifiedContactListing = () => {
                             }));
                             setPhraseChips([...phraseChips, ...chips]);
                             setPhraseSearchText('');
-                            setSelectedSuggestionIndex(0);
+                            // Reset column states for next set
+                            setColumnSelections([null, null, null]);
+                            setColumnIndices([0, 0, 0]);
+                            setActiveColumn(0);
+                          } else if (activeColumn < 2) {
+                            // Move to next column after selection
+                            setActiveColumn(prev => prev + 1);
                           }
-                        } else if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setSelectedSuggestionIndex(prev =>
-                            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
-                          );
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : 0);
-                        } else if (e.key === 'Enter' && filteredSuggestions.length > 0) {
-                          e.preventDefault();
-                          const selectedSuggestion = filteredSuggestions[selectedSuggestionIndex];
-                          const newChip = {
-                            id: Date.now(),
-                            text: selectedSuggestion.label,
-                            type: selectedSuggestion.type || 'connector',
-                            valueType: selectedSuggestion.valueType,
-                            icon: selectedSuggestion.icon,
-                            color: selectedSuggestion.color || 'gray',
-                            ...(selectedSuggestion.type === 'cohort' && { filterHint: selectedSuggestion.filterHint }),
-                            ...(selectedSuggestion.type === 'entityType' && { entityTypeValue: selectedSuggestion.entityTypeValue })
-                          };
-                          setPhraseChips([...phraseChips, newChip]);
-                          setPhraseSearchText('');
-                          setSelectedSuggestionIndex(0);
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
-                          setSelectedSuggestionIndex(0);
+                          setColumnSelections([null, null, null]);
+                          setColumnIndices([0, 0, 0]);
+                          setActiveColumn(0);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
@@ -2099,128 +2133,121 @@ const UnifiedContactListing = () => {
                   {isPhraseMode && (
                     <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white">
                       <div className="max-w-[1600px] mx-auto px-8 py-4">
-                        <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-blue-600" />
-                          Build Your Phrase
-                        </h3>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs font-semibold text-gray-600 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-blue-600" />
+                            Build Your Phrase
+                          </h3>
+                          <div className="text-xs text-gray-500 bg-blue-50 px-3 py-1 rounded-md">
+                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">↑↓</kbd> navigate •
+                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs ml-1">←→</kbd> change column •
+                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs ml-1">Enter</kbd> select
+                          </div>
+                        </div>
 
                         {/* 3-Column Suggestion Rail */}
                         <div className="grid grid-cols-3 gap-3">
-                          {/* Level 1: Current (100% opacity) */}
-                          <div>
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              {phraseChips.length === 0 ? 'Start with' : 'Select'}
-                            </div>
-                            <div className="space-y-1.5">
-                              {(() => {
-                                const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
-                                const filteredSuggestions = phraseSearchText
-                                  ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
-                                  : currentSuggestions.slice(0, 6);
+                          {(() => {
+                            const suggestions = getSuggestionsForPhrase(phraseChips);
+                            const allSuggestions = [
+                              phraseSearchText
+                                ? suggestions.current.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                                : suggestions.current.slice(0, 6),
+                              suggestions.next.slice(0, 6),
+                              suggestions.future.slice(0, 6)
+                            ];
+                            const columnTitles = [
+                              phraseChips.length === 0 ? 'Start with' : 'Select',
+                              'Then',
+                              'After that'
+                            ];
 
-                                return filteredSuggestions.map((suggestion, idx) => {
-                                  const Icon = suggestion.icon;
-                                  const isSelected = idx === selectedSuggestionIndex;
-                                  return (
-                                    <button
-                                      key={idx}
-                                      onClick={() => {
-                                        const newChip = {
-                                          id: Date.now(),
-                                          text: suggestion.label,
-                                          type: suggestion.type || 'connector',
-                                          valueType: suggestion.valueType,
-                                          icon: suggestion.icon,
-                                          color: suggestion.color || 'gray',
-                                          ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                          ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                        };
-                                        setPhraseChips([...phraseChips, newChip]);
-                                        setPhraseSearchText('');
-                                        setSelectedSuggestionIndex(0);
-                                      }}
-                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                                        isSelected
-                                          ? 'bg-blue-500 text-white'
-                                          : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
-                                      }`}
-                                    >
-                                      {Icon && <Icon className="w-4 h-4" />}
-                                      <span>{suggestion.label}</span>
-                                    </button>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          </div>
+                            return allSuggestions.map((columnSuggestions, columnIdx) => {
+                              const isActive = activeColumn === columnIdx;
+                              const isSelected = columnSelections[columnIdx] !== null;
+                              const canAccess = columnIdx === 0 || columnSelections[columnIdx - 1] !== null;
 
-                          {/* Level 2: Next (50% opacity) */}
-                          <div className="opacity-50 hover:opacity-75 transition-opacity">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              Then
-                            </div>
-                            <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).next.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                              return (
+                                <div
+                                  key={columnIdx}
+                                  className={`transition-all ${
+                                    !canAccess
+                                      ? 'opacity-25 pointer-events-none'
+                                      : isActive
+                                      ? 'opacity-100 ring-2 ring-blue-500 rounded-lg p-2 -m-2'
+                                      : isSelected
+                                      ? 'opacity-75'
+                                      : 'opacity-50'
+                                  }`}
+                                >
+                                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center justify-between">
+                                    <span>{columnTitles[columnIdx]}</span>
+                                    {isActive && (
+                                      <span className="text-blue-600 text-xs">←→ to navigate</span>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {columnSuggestions.map((suggestion, idx) => {
+                                      const Icon = suggestion.icon;
+                                      const isHighlighted = isActive && idx === columnIndices[columnIdx];
+                                      const isChosen = isSelected && columnSelections[columnIdx]?.label === suggestion.label;
 
-                          {/* Level 3: Future (25% opacity) */}
-                          <div className="opacity-25 hover:opacity-50 transition-opacity">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              After that
-                            </div>
-                            <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).future.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-100/50 hover:bg-gray-100/80 text-gray-600 hover:text-gray-800 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                                      return (
+                                        <button
+                                          key={idx}
+                                          onClick={() => {
+                                            if (!canAccess) return;
+
+                                            // Set this column as active and select this item
+                                            setActiveColumn(columnIdx);
+                                            const newIndices = [...columnIndices];
+                                            newIndices[columnIdx] = idx;
+                                            setColumnIndices(newIndices);
+
+                                            const newSelections = [...columnSelections];
+                                            newSelections[columnIdx] = suggestion;
+                                            setColumnSelections(newSelections);
+
+                                            // Check if all 3 columns have selections
+                                            if (newSelections.every(sel => sel !== null)) {
+                                              const chips = newSelections.map((sel, i) => ({
+                                                id: Date.now() + i,
+                                                text: sel.label,
+                                                type: sel.type || 'connector',
+                                                valueType: sel.valueType,
+                                                icon: sel.icon,
+                                                color: sel.color || 'gray',
+                                                ...(sel.type === 'cohort' && { filterHint: sel.filterHint }),
+                                                ...(sel.type === 'entityType' && { entityTypeValue: sel.entityTypeValue })
+                                              }));
+                                              setPhraseChips([...phraseChips, ...chips]);
+                                              setPhraseSearchText('');
+                                              setColumnSelections([null, null, null]);
+                                              setColumnIndices([0, 0, 0]);
+                                              setActiveColumn(0);
+                                            } else if (columnIdx < 2) {
+                                              setActiveColumn(columnIdx + 1);
+                                            }
+                                          }}
+                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                                            isChosen
+                                              ? 'bg-green-500 text-white ring-2 ring-green-600'
+                                              : isHighlighted
+                                              ? 'bg-blue-500 text-white'
+                                              : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
+                                          }`}
+                                        >
+                                          {Icon && <Icon className="w-4 h-4" />}
+                                          <span>{suggestion.label}</span>
+                                          {isChosen && <Check className="w-4 h-4 ml-auto" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
 
                         {/* Actions */}
