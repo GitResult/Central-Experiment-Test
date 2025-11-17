@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2 } from 'lucide-react';
 
 
 
@@ -436,6 +436,14 @@ const ReportBuilder = ({
   const [showIslandActions, setShowIslandActions] = useState(false);
   const [filterRecordsContext, setFilterRecordsContext] = useState(null);
 
+  // Browse mode features
+  const [showSaveQueryPanel, setShowSaveQueryPanel] = useState(false);
+  const [showLoadQueryDropdown, setShowLoadQueryDropdown] = useState(false);
+  const [savedQueryName, setSavedQueryName] = useState('');
+  const [savedQueryDescription, setSavedQueryDescription] = useState('');
+  const [savedQueries, setSavedQueries] = useState([]);
+  const [editingSelection, setEditingSelection] = useState(null);
+
   const filteredFields = useMemo(() => {
     const allFields = Object.entries(CATEGORIES).flatMap(([section, categories]) =>
       categories.filter(cat => cat !== 'Combos').map(cat => ({ section, category: cat }))
@@ -465,6 +473,102 @@ const ReportBuilder = ({
     return filtered;
   }, [sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
 
+  // Natural language query builder (from Browse mode)
+  const buildNaturalLanguageQuery = () => {
+    if (selections.length === 0) return '';
+
+    const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+    const yearCohorts = ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+
+    let query = '';
+
+    // Find starting data (Member Year or Starting Data category)
+    const memberYearSel = selections.find(s => s.category === 'Member Year');
+    const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
+
+    if (memberYearSel) {
+      query = `${memberYearSel.value} members`;
+    } else if (startingDataSel) {
+      if (yearCohorts.includes(startingDataSel.category)) {
+        query = startingDataSel.category.replace(' Members', ' members');
+      } else {
+        query = startingDataSel.category.toLowerCase();
+      }
+    }
+
+    // Process remaining filters with connectors
+    const filterSelections = selections.filter(s =>
+      s.category !== 'Member Year' && !startingDataCategories.includes(s.category) && s.type === 'filter'
+    );
+
+    if (filterSelections.length > 0) {
+      const parts = [];
+      let i = 0;
+
+      // Helper function to get proper connector phrase for each category
+      const getConnectorPhrase = (category, value) => {
+        let val = value;
+        if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+
+        if (category === 'Renewal Month') return `who renewed in ${val}`;
+        if (category === 'Renewal Year') return `who renewed in ${val}`;
+        if (category === 'Membership Type') return `that are member type ${val}`;
+        if (category === 'Tenure') return `that have been members for ${val}`;
+        if (category === 'Occupation') return `and occupation is ${val}`;
+        if (category === 'Degree') return `with a Degree: ${val}`;
+        if (category === 'Province/State') return `from province/state ${val}`;
+        return `with ${category.toLowerCase()} ${val}`;
+      };
+
+      while (i < filterSelections.length) {
+        const sel = filterSelections[i];
+        const nextSel = filterSelections[i + 1];
+
+        // Check if this is a BETWEEN scenario
+        if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
+          const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+            ? nextSel.value.split(' - ')[0]
+            : nextSel.value;
+
+          const phrase = getConnectorPhrase(sel.category, sel.value);
+          parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
+          i += 2;
+        } else {
+          // Check for OR connectors with same category
+          let j = i + 1;
+          const orValues = [sel.value];
+          while (j < filterSelections.length &&
+                 filterSelections[j].connector === 'OR' &&
+                 filterSelections[j].category === sel.category) {
+            orValues.push(filterSelections[j].value);
+            j++;
+          }
+
+          if (orValues.length > 1) {
+            // Multiple values with OR
+            const formattedValues = orValues.map(v =>
+              sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+            ).join(' or ');
+
+            const phrase = getConnectorPhrase(sel.category, sel.value);
+            parts.push(phrase.replace(sel.value, formattedValues));
+          } else {
+            // Single value
+            parts.push(getConnectorPhrase(sel.category, sel.value));
+          }
+
+          i = j;
+        }
+      }
+
+      if (parts.length > 0) {
+        // Join all parts with proper spacing
+        query += ' ' + parts.join(' ');
+      }
+    }
+
+    return query.trim();
+  };
 
   const getValueCount = (category, value) => {
     const hash = (category + value).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -2656,9 +2760,14 @@ const ReportBuilder = ({
               <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
             </div>
 
-            <div>
+            <div className="flex-1 max-w-2xl">
               <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
               <div className="text-xs text-gray-500">JD • {calculateFilterImpact(selections).toLocaleString()} records</div>
+              {buildNaturalLanguageQuery() && (
+                <div className="text-xs text-blue-700 mt-1 font-medium italic">
+                  "{buildNaturalLanguageQuery()}"
+                </div>
+              )}
             </div>
 
             {selections.length > 0 && (
@@ -2673,6 +2782,68 @@ const ReportBuilder = ({
           </div>
 
           <div className="flex items-center gap-2" style={{ flex: '0 0 auto' }}>
+            {/* Load Query Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLoadQueryDropdown(!showLoadQueryDropdown)}
+                className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group"
+                title="Load Query"
+              >
+                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+
+              {/* Load Query Dropdown */}
+              {showLoadQueryDropdown && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowLoadQueryDropdown(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-40 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900">Saved Queries</h3>
+                      <p className="text-xs text-gray-500 mt-1">Select a query to load</p>
+                    </div>
+                    <div className="p-2">
+                      {savedQueries.length > 0 ? (
+                        savedQueries.map((query) => (
+                          <button
+                            key={query.id}
+                            onClick={() => {
+                              setSelections(query.selections.map(sel => ({ ...sel, id: Date.now() + Math.random() })));
+                              setReportTitle(query.name);
+                              setShowLoadQueryDropdown(false);
+                              showToast(`Loaded: ${query.name}`);
+                            }}
+                            className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                                  {query.name}
+                                </div>
+                                {query.description && (
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    {query.description}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {query.selections.length} filter{query.selections.length !== 1 ? 's' : ''}
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0 mt-0.5" />
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-8 text-center">
+                          <p className="text-sm text-gray-500">No saved queries yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Create a query and click Save</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
               <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
             </button>
@@ -2682,7 +2853,12 @@ const ReportBuilder = ({
             <button disabled={selections.length === 0} className={`p-4 rounded-full transition-all mx-2 ${selections.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} title="Run Report">
               <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
             </button>
-            <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Save As">
+            <button
+              onClick={() => setShowSaveQueryPanel(true)}
+              disabled={selections.length === 0}
+              className={`p-2.5 rounded-lg transition-colors group ${selections.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              title="Save Query"
+            >
               <Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
             </button>
             <button onClick={() => setActivePanel('more')} className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings">
@@ -2863,17 +3039,19 @@ const ReportBuilder = ({
                               <div key={sel.id}>
                                 {idx > 0 && sel.connector && (
                                   <div className="flex items-center py-2">
-                                    <button
-                                      onClick={() => {
-                                        const newSelections = selections.map(s =>
-                                          s.id === sel.id ? { ...s, connector: s.connector === 'AND' ? 'OR' : 'AND' } : s
-                                        );
-                                        setSelections(newSelections);
+                                    <select
+                                      value={sel.connector || 'AND'}
+                                      onChange={(e) => {
+                                        setSelections(selections.map(s =>
+                                          s.id === sel.id ? { ...s, connector: e.target.value } : s
+                                        ));
                                       }}
-                                      className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded"
+                                      className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
-                                      {sel.connector}
-                                    </button>
+                                      <option value="AND">AND</option>
+                                      <option value="OR">OR</option>
+                                      <option value="BETWEEN">BETWEEN</option>
+                                    </select>
                                   </div>
                                 )}
 
@@ -3668,6 +3846,125 @@ const ReportBuilder = ({
             )}
           </div>
         </>
+      )}
+
+      {/* Save Query Panel */}
+      {showSaveQueryPanel && (
+        <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-gray-200">
+          <div className="border-b border-gray-200 bg-white px-6 py-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
+              <button
+                onClick={() => setShowSaveQueryPanel(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Current Query Display */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                Current Query
+              </label>
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex flex-wrap gap-2">
+                  {selections.map((sel) => (
+                    <div
+                      key={sel.id}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                        sel.type === 'filter'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{sel.category}: {sel.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Name Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Query Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={savedQueryName}
+                onChange={(e) => setSavedQueryName(e.target.value)}
+                placeholder="e.g., 2019 Members - December Renewals"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Description Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Description <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+              </label>
+              <textarea
+                value={savedQueryDescription}
+                onChange={(e) => setSavedQueryDescription(e.target.value)}
+                placeholder="Add a description for this saved query..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              />
+            </div>
+
+            {/* Info Box */}
+            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-600">
+                <strong>Tip:</strong> Saved queries can be quickly accessed from the Load Query button and reused across sessions.
+              </p>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t border-gray-200 p-6">
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSaveQueryPanel(false);
+                  setSavedQueryName('');
+                  setSavedQueryDescription('');
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (savedQueryName.trim()) {
+                    const newQuery = {
+                      id: Date.now(),
+                      name: savedQueryName,
+                      description: savedQueryDescription,
+                      selections: selections.map(sel => ({ ...sel }))
+                    };
+                    setSavedQueries([...savedQueries, newQuery]);
+                    setShowSaveQueryPanel(false);
+                    setSavedQueryName('');
+                    setSavedQueryDescription('');
+                    showToast(`Query saved: ${savedQueryName}`);
+                  }
+                }}
+                disabled={!savedQueryName.trim()}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  savedQueryName.trim()
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Save Query
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
