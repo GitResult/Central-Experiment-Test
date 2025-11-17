@@ -1995,19 +1995,16 @@ const UnifiedContactListing = () => {
                         setActiveColumn(0);
                         setColumnSelections([null, null, null]);
                         setColumnIndices([0, 0, 0]);
-                        setLockedSuggestions(null);
+                        // Lock suggestions when entering phrase mode
+                        if (!lockedSuggestions) {
+                          setLockedSuggestions(getSuggestionsForPhrase(phraseChips));
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (!isPhraseMode) return;
 
-                        // Use locked suggestions if available, otherwise get fresh and lock them
-                        let suggestions;
-                        if (lockedSuggestions) {
-                          suggestions = lockedSuggestions;
-                        } else {
-                          suggestions = getSuggestionsForPhrase(phraseChips);
-                          setLockedSuggestions(suggestions);
-                        }
+                        // Use locked suggestions (should already be set from onFocus)
+                        const suggestions = lockedSuggestions || getSuggestionsForPhrase(phraseChips);
 
                         const allSuggestions = [
                           suggestions.current.slice(0, 6),
