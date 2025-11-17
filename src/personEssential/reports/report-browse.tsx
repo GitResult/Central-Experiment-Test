@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -424,6 +424,105 @@ const ReportBuilder = (props) => {
   }
 
   if (stage === 'browse') {
+    // Get suggested next steps based on current selections
+    const getSuggestedNextSteps = () => {
+      const filters = selections.filter(s => s.type === 'filter');
+      const fields = selections.filter(s => s.type === 'field');
+
+      if (filters.length === 0 && fields.length === 0) {
+        return {
+          title: "Start building your query",
+          suggestions: [
+            { category: "Current Members", section: "Starting Data", reason: "Most common starting point", icon: "Users" },
+            { category: "2024 Members", section: "Starting Data", reason: "Filter by specific year", icon: "Calendar" },
+            { category: "New Members", section: "Starting Data", reason: "Recent additions", icon: "UserPlus" }
+          ]
+        };
+      }
+
+      const hasStartingData = filters.some(f => ['Current Members', 'New Members', 'Lapsed Members', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'].includes(f.category));
+
+      if (hasStartingData && filters.length === 1) {
+        return {
+          title: "Refine your selection",
+          suggestions: [
+            { category: "Membership Type Code", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Hash" },
+            { category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" },
+            { category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
+            { category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" }
+          ]
+        };
+      }
+
+      const hasMemberType = filters.some(f => f.category === 'Membership Type Code');
+      if (hasMemberType && !filters.some(f => f.category === 'Occupation')) {
+        return {
+          title: "Common next filters",
+          suggestions: [
+            { category: "Occupation", section: "Demographics", reason: "Often combined with member type", icon: "Briefcase" },
+            { category: "Degree", section: "Demographics", reason: "Filter by education level", icon: "GraduationCap" },
+            { category: "Province/State", section: "Location", reason: "Add location filter", icon: "MapPin" }
+          ]
+        };
+      }
+
+      const hasOccupation = filters.some(f => f.category === 'Occupation');
+      if (hasOccupation && !filters.some(f => f.category === 'Degree')) {
+        return {
+          title: "Complete your demographic filters",
+          suggestions: [
+            { category: "Degree", section: "Demographics", reason: "Add education requirement", icon: "GraduationCap" },
+            { category: "Province/State", section: "Location", reason: "Add location requirement", icon: "MapPin" }
+          ]
+        };
+      }
+
+      return {
+        title: "Additional filters",
+        suggestions: [
+          { category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" },
+          { category: "Renewal Year", section: "Membership", reason: "Filter by renewal year", icon: "Calendar" }
+        ]
+      };
+    };
+
+    const suggestedSteps = getSuggestedNextSteps();
+
+    // Common query templates
+    const queryTemplates = [
+      {
+        name: "Current members for past 5 years",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Tenure", value: "Past 5 years" }
+        ]
+      },
+      {
+        name: "ECY1 members in BC",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Membership Type Code", value: "ECY1" },
+          { category: "Province/State", value: "BC" }
+        ]
+      },
+      {
+        name: "Practitioners with Masters in BC",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Occupation", value: "Practitioner" },
+          { category: "Degree", value: "Masters" },
+          { category: "Province/State", value: "BC" }
+        ]
+      },
+      {
+        name: "2019 members who renewed in Dec-Jan",
+        filters: [
+          { category: "2019 Members", value: "All 2019 Members" },
+          { category: "Renewal Month", value: "December" }
+        ]
+      }
+    ];
+
     return (
       <div className="max-h-[calc(100vh-115px)] overflow-y-auto bg-gray-50 flex flex-col">
         {/* {"[[BROWSE]]"} */}
@@ -442,6 +541,100 @@ const ReportBuilder = (props) => {
           </div>
         </div>
 
+        {/* Query Builder Panel */}
+        {selections.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
+                  <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selections.map((sel, idx) => {
+                    const Icon = sel.type === 'filter' ? Filter : Eye;
+                    return (
+                      <div key={sel.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${sel.type === 'filter' ? 'bg-blue-100 text-blue-900 border border-blue-300' : 'bg-purple-100 text-purple-900 border border-purple-300'}`}>
+                        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span className="font-medium">{sel.category}</span>
+                        <span className="text-xs opacity-75">= {sel.value}</span>
+                        <button onClick={() => removeSelection(sel.id)} className="hover:bg-white/50 rounded p-0.5">
+                          <X className="w-3 h-3" strokeWidth={2} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{calculateFilterImpact().toLocaleString()}</div>
+                <div className="text-xs text-gray-600">estimated records</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Next Steps Panel */}
+        {selections.length > 0 && suggestedSteps.suggestions.length > 0 && (
+          <div className="bg-amber-50 border-b border-amber-200 px-8 py-4">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{suggestedSteps.title}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {suggestedSteps.suggestions.map((suggestion, idx) => {
+                    const SuggestionIcon = getIconComponent(suggestion.icon);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleCategorySelect(suggestion.category, suggestion.section)}
+                        className="flex items-start gap-2 p-3 bg-white rounded-lg hover:bg-amber-100 transition-colors border border-amber-200 text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <SuggestionIcon className="w-4 h-4 text-amber-700" strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-gray-900">{suggestion.category}</div>
+                          <div className="text-xs text-gray-600 mt-0.5">{suggestion.reason}</div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Query Templates Panel */}
+        {selections.length === 0 && (
+          <div className="bg-white border-b border-gray-200 px-8 py-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-gray-600" />
+              <h3 className="text-sm font-semibold text-gray-900">Quick Start Templates</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {queryTemplates.map((template, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    template.filters.forEach(filter => {
+                      addFilter(filter.category, filter.value);
+                    });
+                    showToast(`Applied template: ${template.name}`);
+                  }}
+                  className="p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group"
+                >
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1">{template.name}</div>
+                  <div className="text-xs text-gray-500">{template.filters.length} filters</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
             const isStartingData = section === 'Starting Data';
@@ -454,21 +647,29 @@ const ReportBuilder = (props) => {
                 <div className={`px-8 pb-8 ${isStartingData ? 'flex flex-wrap gap-3' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
+                    const isSelected = selections.some(s => s.category === category);
 
                     if (isStartingData) {
                       return (
                         <button
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className="px-6 py-3 rounded-full transition-colors group relative"
-                          style={{ backgroundColor: '#f3f4f6' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; }}
+                          className={`px-6 py-3 rounded-full transition-colors group relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+                          style={{ backgroundColor: isSelected ? '#dbeafe' : '#f3f4f6' }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#dbeafe'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? '#dbeafe' : '#f3f4f6'; }}
                         >
-                          <span className="text-sm font-medium text-gray-900">{category}</span>
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
-                          </div>
+                          <span className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>{category}</span>
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-0.5">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          )}
+                          {!isSelected && (
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
+                            </div>
+                          )}
                         </button>
                       );
                     }
@@ -479,7 +680,7 @@ const ReportBuilder = (props) => {
                         <div
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className="flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group"
+                          className={`flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
@@ -490,9 +691,15 @@ const ReportBuilder = (props) => {
                             <div className="font-medium text-gray-900 text-sm">{category}</div>
                             <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
-                            <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
-                          </button>
+                          {isSelected ? (
+                            <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
+                              <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
+                            </button>
+                          )}
                         </div>
                       );
                     }
@@ -501,26 +708,33 @@ const ReportBuilder = (props) => {
                     const iconHoverColors = { 'Location': '#16a34a', 'Membership': '#9333ea', 'Demographics': '#ea580c', 'Commerce': '#059669', 'Communities': '#db2777', 'Communications': '#4f46e5' };
 
                     return (
-                      <div key={category} onClick={() => handleCategorySelect(category, section)} className="group cursor-pointer">
+                      <div key={category} onClick={() => handleCategorySelect(category, section)} className={`group cursor-pointer relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 rounded-lg' : ''}`}>
                         <div
                           className="aspect-square rounded-lg mb-3 relative overflow-hidden transition-all duration-200 flex items-center justify-center"
-                          style={{ backgroundColor: '#e5e7eb' }}
+                          style={{ backgroundColor: isSelected ? hoverColors[section] || '#dbeafe' : '#e5e7eb' }}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#e5e7eb'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? (hoverColors[section] || '#dbeafe') : '#e5e7eb'; }}
                         >
                           <CategoryIcon
                             className="w-12 h-12 text-gray-300 transition-all duration-200 group-hover:scale-110"
                             strokeWidth={1.5}
-                            style={{ color: '#d1d5db' }}
+                            style={{ color: isSelected ? (iconHoverColors[section] || '#3b82f6') : '#d1d5db' }}
                             onMouseEnter={(e) => { e.currentTarget.style.color = iconHoverColors[section] || '#3b82f6'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = isSelected ? (iconHoverColors[section] || '#3b82f6') : '#d1d5db'; }}
                           />
-                          <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white shadow-lg" title="Add as field">
-                            <Plus className="w-4 h-4 text-gray-700" strokeWidth={2} />
-                          </button>
+                          {isSelected && (
+                            <div className="absolute top-2 left-2 bg-blue-500 text-white rounded-full p-0.5">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          )}
+                          {!isSelected && (
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white shadow-lg" title="Add as field">
+                              <Plus className="w-4 h-4 text-gray-700" strokeWidth={2} />
+                            </button>
+                          )}
                         </div>
                         <div>
-                          <div className="font-medium text-sm text-gray-900 group-hover:text-black transition-colors">{category}</div>
+                          <div className={`font-medium text-sm transition-colors ${isSelected ? 'text-blue-900 font-semibold' : 'text-gray-900 group-hover:text-black'}`}>{category}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
                         </div>
                       </div>
