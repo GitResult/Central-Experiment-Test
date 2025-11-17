@@ -16,6 +16,7 @@ const UnifiedContactListing = () => {
   const [searchValue, setSearchValue] = useState('');
   const [showActionsPanel, setShowActionsPanel] = useState(false);
   const [showFieldsPanel, setShowFieldsPanel] = useState(false);
+  const [showSavePhrasePanel, setShowSavePhrasePanel] = useState(false);
   const [activeTab, setActiveTab] = useState('actions');
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [showFilterDetails, setShowFilterDetails] = useState(false);
@@ -29,7 +30,50 @@ const UnifiedContactListing = () => {
   const [isPhraseMode, setIsPhraseMode] = useState(false);
   const [phraseChips, setPhraseChips] = useState([]);
   const [phraseSearchText, setPhraseSearchText] = useState('');
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [savedPhraseName, setSavedPhraseName] = useState('');
+  const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
+  const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
+  const [savedPhrases, setSavedPhrases] = useState([
+    {
+      id: 1,
+      name: 'Active Members in Toronto',
+      description: 'Current active members located in Toronto',
+      chips: [
+        { id: 1, text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+        { id: 2, text: 'members', type: 'entityType', icon: Users, color: 'blue' },
+        { id: 3, text: 'in', type: 'connector', icon: MapPin },
+        { id: 4, text: 'city', type: 'connector', icon: MapPin },
+        { id: 5, text: 'Toronto', type: 'value', valueType: 'city' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Long-term Professionals',
+      description: 'Professionals with 5+ years tenure',
+      chips: [
+        { id: 1, text: 'All Contacts', type: 'cohort', icon: Users, color: 'gray' },
+        { id: 2, text: 'professionals', type: 'entityType', icon: Sparkles, color: 'purple' },
+        { id: 3, text: 'for', type: 'connector', icon: Clock },
+        { id: 4, text: '5 years', type: 'value', valueType: 'tenure' },
+        { id: 5, text: 'or more', type: 'value', valueType: 'tenureComparison' }
+      ]
+    },
+    {
+      id: 3,
+      name: 'High Engagement Students',
+      description: 'Students with high engagement levels',
+      chips: [
+        { id: 1, text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+        { id: 2, text: 'students', type: 'entityType', icon: Users, color: 'emerald' },
+        { id: 3, text: 'with', type: 'connector', icon: Check },
+        { id: 4, text: 'engagement', type: 'connector', icon: TrendingUp },
+        { id: 5, text: 'High', type: 'value', valueType: 'engagement' }
+      ]
+    }
+  ]);
   const phraseInputRef = useRef(null);
+  const applyButtonRef = useRef(null);
   const [activeCharts, setActiveCharts] = useState([]);
   const [showColumnMenu, setShowColumnMenu] = useState(null);
   const [draggedChart, setDraggedChart] = useState(null);
@@ -1441,7 +1485,7 @@ const UnifiedContactListing = () => {
   }, []);
 
   return sampleData && (
-      <div className="min-h-screen bg-slate-50 relative mt-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
+      <div className={`min-h-screen bg-slate-50 relative mt-8 transition-all duration-300 ${showSavePhrasePanel ? 'mr-96' : 'mr-0'}`} style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', cursor: resizingChart ? 'nwse-resize' : 'auto' }} onClick={handlePageClick} ref={contentRef}>
         <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         @keyframes pulse {
@@ -1761,15 +1805,87 @@ const UnifiedContactListing = () => {
             {/* Search bar start */}
             <div className="relative mt-4">
               {/* Inline Expandable Search Bar with Phrase Builder */}
-              <div className={`transition-all duration-300 ${isPhraseMode ? 'w-full' : 'w-full'}`}>
+              <div className={`transition-all duration-300 ${isPhraseMode || phraseChips.length > 0 ? 'w-full' : 'w-[650px]'} relative z-50`}>
                 {/* Search Bar with Chips */}
                 <div
-                  className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
-                    isPhraseMode ? 'border-blue-500' : 'border-gray-200'
+                  className={`bg-white rounded-xl shadow-lg transition-all duration-300 ${
+                    isPhraseMode ? '' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2 flex-wrap p-4">
                     <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
+
+                    {/* Load Query Button - Always Visible */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowLoadPhraseDropdown(!showLoadPhraseDropdown)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        Load Query
+                      </button>
+
+                      {/* Load Query Dropdown */}
+                      {showLoadPhraseDropdown && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-30"
+                              onClick={() => setShowLoadPhraseDropdown(false)}
+                            />
+                            <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-40 max-h-96 overflow-y-auto">
+                              <div className="p-3 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-900">Saved Queries</h3>
+                                <p className="text-xs text-slate-500 mt-1">Select a query to load</p>
+                              </div>
+                              <div className="p-2">
+                                {savedPhrases.length > 0 ? (
+                                  savedPhrases.map((phrase) => (
+                                    <button
+                                      key={phrase.id}
+                                      onClick={() => {
+                                        setPhraseChips(phrase.chips.map(chip => ({ ...chip, id: Date.now() + Math.random() })));
+                                        setShowLoadPhraseDropdown(false);
+                                        setIsPhraseMode(true);
+                                      }}
+                                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-lg transition-colors group"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
+                                            {phrase.name}
+                                          </div>
+                                          {phrase.description && (
+                                            <div className="text-xs text-slate-500 mt-0.5">
+                                              {phrase.description}
+                                            </div>
+                                          )}
+                                          <div className="flex flex-wrap gap-1 mt-2">
+                                            {phrase.chips.map((chip, idx) => (
+                                              <div
+                                                key={idx}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+                                              >
+                                                {chip.icon && <chip.icon className="w-3 h-3" />}
+                                                <span>{chip.text}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 flex-shrink-0 mt-0.5" />
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="px-3 py-8 text-center">
+                                    <p className="text-sm text-slate-500">No saved queries yet</p>
+                                    <p className="text-xs text-slate-400 mt-1">Create a query and click Save</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                    </div>
 
                     {/* Phrase Chips */}
                     {phraseChips.map((chip, idx) => (
@@ -1788,49 +1904,201 @@ const UnifiedContactListing = () => {
                       </div>
                     ))}
 
-                    {/* Search Input */}
-                    <input
-                      ref={phraseInputRef}
-                      type="text"
-                      placeholder={phraseChips.length === 0 ? "Search by name, id, email or build a phrase..." : "Continue phrase..."}
-                      value={isPhraseMode ? phraseSearchText : searchValue}
+                    {/* Search Input with Autocomplete */}
+                    <div className="flex-1 relative min-w-[200px]">
+                      {/* Autocomplete suggestion overlay with 3-level preview */}
+                      {isPhraseMode && phraseSearchText && (() => {
+                        const suggestions = getSuggestionsForPhrase(phraseChips);
+                        const currentSuggestions = suggestions.current;
+                        const filteredSuggestions = currentSuggestions.filter(s =>
+                          s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase())
+                        );
+                        const firstMatch = filteredSuggestions[selectedSuggestionIndex];
+
+                        if (firstMatch) {
+                          // Get preview suggestions for next two levels
+                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
+                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
+
+                          return (
+                            <>
+                              <div className="absolute inset-0 pointer-events-none flex items-center gap-1">
+                                <span className="text-sm py-2 text-gray-900">
+                                  {phraseSearchText}
+                                  <span className="text-gray-400">{firstMatch.label.slice(phraseSearchText.length)}</span>
+                                  {nextSuggestion && (
+                                    <span className="text-gray-300"> {nextSuggestion.label}</span>
+                                  )}
+                                  {futureSuggestion && (
+                                    <span className="text-gray-300"> {futureSuggestion.label}</span>
+                                  )}
+                                </span>
+                              </div>
+                              {nextSuggestion && futureSuggestion && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    // Add all three chips
+                                    const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
+                                      id: Date.now() + idx,
+                                      text: suggestion.label,
+                                      type: suggestion.type || 'connector',
+                                      valueType: suggestion.valueType,
+                                      icon: suggestion.icon,
+                                      color: suggestion.color || 'gray',
+                                      ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                      ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                    }));
+                                    setPhraseChips([...phraseChips, ...chips]);
+                                    setPhraseSearchText('');
+                                    setSelectedSuggestionIndex(0);
+                                  }}
+                                  title="Click here or press right arrow to select phrases"
+                                  className="absolute left-0 top-0 h-full flex items-center ml-2 px-2 py-1 text-blue-500 hover:text-white hover:bg-blue-500 rounded transition-all cursor-pointer text-lg font-bold z-20"
+                                  style={{ left: `${phraseSearchText.length + firstMatch.label.slice(phraseSearchText.length).length + (nextSuggestion ? nextSuggestion.label.length : 0) + (futureSuggestion ? futureSuggestion.label.length : 0) + 2}ch` }}
+                                >
+                                  →
+                                </button>
+                              )}
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      <input
+                        ref={phraseInputRef}
+                        type="text"
+                        placeholder={phraseChips.length === 0 ? "Search by Phrase" : "Continue phrase..."}
+                        value={isPhraseMode ? phraseSearchText : searchValue}
                       onChange={(e) => {
                         if (isPhraseMode) {
                           setPhraseSearchText(e.target.value);
+                          setSelectedSuggestionIndex(0); // Reset selection when typing
                         } else {
                           setSearchValue(e.target.value);
                         }
                       }}
-                      onFocus={() => setIsPhraseMode(true)}
+                      onFocus={() => {
+                        setIsPhraseMode(true);
+                        setSelectedSuggestionIndex(0);
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
+                        if (!isPhraseMode) return;
+
+                        const suggestions = getSuggestionsForPhrase(phraseChips);
+                        const currentSuggestions = suggestions.current;
+                        const filteredSuggestions = phraseSearchText
+                          ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                          : currentSuggestions.slice(0, 6);
+
+                        if (e.key === 'Tab' && phraseChips.length > 0) {
+                          e.preventDefault();
+                          applyButtonRef.current?.focus();
+                        } else if (e.key === 'ArrowRight' && phraseSearchText && filteredSuggestions.length > 0) {
+                          // ArrowRight adds all 3 preview suggestions at once
+                          e.preventDefault();
+                          const firstMatch = filteredSuggestions[selectedSuggestionIndex];
+                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
+                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
+
+                          if (firstMatch && nextSuggestion && futureSuggestion) {
+                            const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
+                              id: Date.now() + idx,
+                              text: suggestion.label,
+                              type: suggestion.type || 'connector',
+                              valueType: suggestion.valueType,
+                              icon: suggestion.icon,
+                              color: suggestion.color || 'gray',
+                              ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                              ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                            }));
+                            setPhraseChips([...phraseChips, ...chips]);
+                            setPhraseSearchText('');
+                            setSelectedSuggestionIndex(0);
+                          }
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSelectedSuggestionIndex(prev =>
+                            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+                          );
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : 0);
+                        } else if (e.key === 'Enter' && filteredSuggestions.length > 0) {
+                          e.preventDefault();
+                          const selectedSuggestion = filteredSuggestions[selectedSuggestionIndex];
+                          const newChip = {
+                            id: Date.now(),
+                            text: selectedSuggestion.label,
+                            type: selectedSuggestion.type || 'connector',
+                            valueType: selectedSuggestion.valueType,
+                            icon: selectedSuggestion.icon,
+                            color: selectedSuggestion.color || 'gray',
+                            ...(selectedSuggestion.type === 'cohort' && { filterHint: selectedSuggestion.filterHint }),
+                            ...(selectedSuggestion.type === 'entityType' && { entityTypeValue: selectedSuggestion.entityTypeValue })
+                          };
+                          setPhraseChips([...phraseChips, newChip]);
+                          setPhraseSearchText('');
+                          setSelectedSuggestionIndex(0);
+                        } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
+                          setSelectedSuggestionIndex(0);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
                       }}
-                      className="flex-1 outline-none text-sm py-2 bg-transparent min-w-[200px]"
+                      className="w-full outline-none text-sm py-2 bg-transparent relative z-10"
                     />
+                    </div>
 
-                    {/* Close Button when in phrase mode */}
+                    {/* Apply/Save/Close Buttons when in phrase mode */}
                     {isPhraseMode && (
-                      <button
-                        onClick={() => {
-                          setIsPhraseMode(false);
-                          setPhraseSearchText('');
-                        }}
-                        className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                      <>
+                        {phraseChips.length > 0 ? (
+                          <>
+                            <button
+                              ref={applyButtonRef}
+                              onClick={() => {
+                                // Convert chips to phrase filters
+                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
+                                setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
+                                setIsPhraseMode(false);
+                              }}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                            >
+                              Apply
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowSavePhrasePanel(true);
+                              }}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                            >
+                              Save
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setIsPhraseMode(false);
+                              setPhraseSearchText('');
+                            }}
+                            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 
                   {/* Inline 3-Level Progressive Disclosure Panel */}
                   {isPhraseMode && (
-                    <div className="border-t border-gray-200 bg-white/60 backdrop-blur-md">
-                      <div className="p-4">
+                    <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white">
+                      <div className="max-w-[1600px] mx-auto px-8 py-4">
                         <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-blue-600" />
                           Build Your Phrase
@@ -1844,32 +2112,45 @@ const UnifiedContactListing = () => {
                               {phraseChips.length === 0 ? 'Start with' : 'Select'}
                             </div>
                             <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).current.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || 'connector',
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                      setPhraseSearchText('');
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
+                              {(() => {
+                                const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
+                                const filteredSuggestions = phraseSearchText
+                                  ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                                  : currentSuggestions.slice(0, 6);
+
+                                return filteredSuggestions.map((suggestion, idx) => {
+                                  const Icon = suggestion.icon;
+                                  const isSelected = idx === selectedSuggestionIndex;
+                                  return (
+                                    <button
+                                      key={idx}
+                                      onClick={() => {
+                                        const newChip = {
+                                          id: Date.now(),
+                                          text: suggestion.label,
+                                          type: suggestion.type || 'connector',
+                                          valueType: suggestion.valueType,
+                                          icon: suggestion.icon,
+                                          color: suggestion.color || 'gray',
+                                          ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                          ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                                        };
+                                        setPhraseChips([...phraseChips, newChip]);
+                                        setPhraseSearchText('');
+                                        setSelectedSuggestionIndex(0);
+                                      }}
+                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                                        isSelected
+                                          ? 'bg-blue-500 text-white'
+                                          : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
+                                      }`}
+                                    >
+                                      {Icon && <Icon className="w-4 h-4" />}
+                                      <span>{suggestion.label}</span>
+                                    </button>
+                                  );
+                                });
+                              })()}
                             </div>
                           </div>
 
@@ -1954,17 +2235,6 @@ const UnifiedContactListing = () => {
                             >
                               Clear All
                             </button>
-                            <button
-                              onClick={() => {
-                                // Convert chips to phrase filters
-                                const phraseText = phraseChips.map(chip => chip.text).join(' ');
-                                setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
-                                setIsPhraseMode(false);
-                              }}
-                              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                              Apply Phrase Filter
-                            </button>
                           </div>
                         )}
 
@@ -1976,6 +2246,18 @@ const UnifiedContactListing = () => {
                   )}
                 </div>
               </div>
+
+              {/* Translucent backdrop overlay for bottom part when search panel is open */}
+              {isPhraseMode && (
+                <div
+                  className="fixed inset-x-0 bottom-0 bg-black/20 backdrop-blur-sm z-30"
+                  style={{ top: '400px' }}
+                  onClick={() => {
+                    setIsPhraseMode(false);
+                    setPhraseSearchText('');
+                  }}
+                />
+              )}
 
               {/* Show active phrase filters */}
               {phraseFilters.length > 0 && (
@@ -4344,6 +4626,120 @@ const UnifiedContactListing = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Save Query Panel - Push Panel */}
+        {showSavePhrasePanel && (
+          <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-slate-200 mt-8">
+              <div className="border-b border-slate-200 bg-white px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-900">Save Query</h2>
+                  <button
+                    onClick={() => setShowSavePhrasePanel(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {/* Current Query Display */}
+                <div className="mb-6">
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                    Current Query
+                  </label>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex flex-wrap gap-2">
+                      {phraseChips.map((chip, idx) => (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
+                        >
+                          {chip.icon && <chip.icon className="w-3 h-3" />}
+                          <span>{chip.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Name Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Filter Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={savedPhraseName}
+                    onChange={(e) => setSavedPhraseName(e.target.value)}
+                    placeholder="e.g., Active Members in Toronto"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Description Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description <span className="text-slate-400 text-xs font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={savedPhraseDescription}
+                    onChange={(e) => setSavedPhraseDescription(e.target.value)}
+                    placeholder="Add a description for this saved filter..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  />
+                </div>
+
+                {/* Info Box */}
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-xs text-slate-600">
+                    <strong>Tip:</strong> Saved queries can be quickly accessed from your filters list and reused across sessions.
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t border-slate-200 p-6">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowSavePhrasePanel(false);
+                      setSavedPhraseName('');
+                      setSavedPhraseDescription('');
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (savedPhraseName.trim()) {
+                        const newPhrase = {
+                          id: Date.now(),
+                          name: savedPhraseName,
+                          description: savedPhraseDescription,
+                          chips: phraseChips.map(chip => ({ ...chip }))
+                        };
+                        setSavedPhrases([...savedPhrases, newPhrase]);
+                        setShowSavePhrasePanel(false);
+                        setSavedPhraseName('');
+                        setSavedPhraseDescription('');
+                      }
+                    }}
+                    disabled={!savedPhraseName.trim()}
+                    className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      savedPhraseName.trim()
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Save Filter
+                  </button>
+                </div>
+              </div>
+            </div>
         )}
 
         <style>{`
