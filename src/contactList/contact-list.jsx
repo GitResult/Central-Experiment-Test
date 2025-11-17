@@ -2138,10 +2138,13 @@ const UnifiedContactListing = () => {
                             setColumnSelections([null, null, null]);
                             setColumnIndices([0, 0, 0]);
                             setActiveColumn(0);
-                            setLockedSuggestions(null);
                             setPreviewChips([]); // Clear preview
                             // Set start position for next selection round
                             setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+                            // Re-lock suggestions for the next round based on new chips
+                            const newChipsForNextRound = [...previousChips, ...chipsToAdd];
+                            const nextRoundSuggestions = getSuggestionsForPhrase(newChipsForNextRound);
+                            setLockedSuggestions(nextRoundSuggestions);
                           } else {
                             // Otherwise, move to next column and update preview to show remaining words
                             setActiveColumn(activeColumn + 1);
@@ -2330,10 +2333,13 @@ const UnifiedContactListing = () => {
                                               setColumnSelections([null, null, null]);
                                               setColumnIndices([0, 0, 0]);
                                               setActiveColumn(0);
-                                              setLockedSuggestions(null);
                                               setPreviewChips([]); // Clear preview
                                               // Set start position for next selection round
                                               setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+                                              // Re-lock suggestions for the next round based on new chips
+                                              const newChipsForNextRound = [...previousChips, ...chipsToAdd];
+                                              const nextRoundSuggestions = getSuggestionsForPhrase(newChipsForNextRound);
+                                              setLockedSuggestions(nextRoundSuggestions);
                                             } else {
                                               // Otherwise, move to next column and update preview to show remaining words
                                               setActiveColumn(columnIdx + 1);
