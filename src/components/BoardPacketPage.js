@@ -431,6 +431,7 @@ const BoardPacketPage = () => {
   const fileInputRef = useRef(null);
   const replyInputRef = useRef(null);
   const pageContainerRef = useRef(null);
+  const newCommentInputRef = useRef(null);
 
   // Get current document markers
   const currentMarkers = markers.filter(
@@ -701,6 +702,48 @@ const BoardPacketPage = () => {
     }
   };
 
+  const insertMentionToNewComment = (user) => {
+    if (mentionCursorPosition === null) return;
+
+    const beforeMention = newCommentText.slice(0, mentionCursorPosition);
+    const afterMention = newCommentText.slice(mentionCursorPosition + mentionSearch.length + 1);
+    const newText = `${beforeMention}@${user.name} ${afterMention}`;
+
+    setNewCommentText(newText);
+    setShowMentionSuggestions(false);
+    setMentionSearch('');
+    setMentionCursorPosition(null);
+
+    // Focus back on input
+    if (newCommentInputRef.current) {
+      newCommentInputRef.current.focus();
+    }
+  };
+
+  const handleNewCommentTextChange = (e) => {
+    const text = e.target.value;
+    setNewCommentText(text);
+
+    // Check for @ mention
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = text.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+      // Check if there's a space after @
+      if (!textAfterAt.includes(' ')) {
+        setMentionSearch(textAfterAt);
+        setMentionCursorPosition(lastAtIndex);
+        setShowMentionSuggestions(true);
+      } else {
+        setShowMentionSuggestions(false);
+      }
+    } else {
+      setShowMentionSuggestions(false);
+    }
+  };
+
   const sendReply = () => {
     if (!replyText.trim() || !selectedMarkerId) return;
 
@@ -725,13 +768,26 @@ const BoardPacketPage = () => {
       mentions
     };
 
-    setMarkers(prev =>
-      prev.map(m =>
-        m.id === selectedMarkerId
-          ? { ...m, replies: [...m.replies, newReply] }
-          : m
-      )
-    );
+    // Check if this is a standalone comment or a marker
+    const isStandalone = standaloneComments.find(c => c.id === selectedMarkerId);
+
+    if (isStandalone) {
+      setStandaloneComments(prev =>
+        prev.map(c =>
+          c.id === selectedMarkerId
+            ? { ...c, replies: [...c.replies, newReply] }
+            : c
+        )
+      );
+    } else {
+      setMarkers(prev =>
+        prev.map(m =>
+          m.id === selectedMarkerId
+            ? { ...m, replies: [...m.replies, newReply] }
+            : m
+        )
+      );
+    }
 
     setReplyText('');
   };
@@ -780,6 +836,9 @@ const BoardPacketPage = () => {
     setStandaloneComments(prev => [...prev, newComment]);
     setNewCommentText('');
     setShowAddComment(false);
+    setShowMentionSuggestions(false);
+    setMentionSearch('');
+    setMentionCursorPosition(null);
   };
 
   // Render mention with hover card
@@ -1483,20 +1542,48 @@ const BoardPacketPage = () => {
                     onClick={() => {
                       setShowAddComment(false);
                       setNewCommentText('');
+                      setShowMentionSuggestions(false);
+                      setMentionSearch('');
+                      setMentionCursorPosition(null);
                     }}
                     className="p-1 text-gray-400 hover:text-gray-600 rounded"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <textarea
-                  placeholder="Add a comment... (use @Name for mentions)"
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={3}
-                  autoFocus
-                />
+                <div className="relative">
+                  <textarea
+                    ref={newCommentInputRef}
+                    placeholder="Add a comment... (use @Name for mentions)"
+                    value={newCommentText}
+                    onChange={handleNewCommentTextChange}
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={3}
+                    autoFocus
+                  />
+                  {/* Mention Suggestions */}
+                  {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {filteredMentionSuggestions.map(user => (
+                        <button
+                          key={user.id}
+                          onClick={() => insertMentionToNewComment(user)}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-semibold">
+                              {user.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.designation}</div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleAddStandaloneComment}
@@ -1509,6 +1596,9 @@ const BoardPacketPage = () => {
                     onClick={() => {
                       setShowAddComment(false);
                       setNewCommentText('');
+                      setShowMentionSuggestions(false);
+                      setMentionSearch('');
+                      setMentionCursorPosition(null);
                     }}
                     className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
                   >
