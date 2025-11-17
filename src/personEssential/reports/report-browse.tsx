@@ -747,6 +747,18 @@ const ReportBuilder = (props) => {
                   <Sparkles className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
                   <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
+                  <button
+                    onClick={() => {
+                      setSelections([]);
+                      setEditingSelection(null);
+                      setSelectedCategory(null);
+                      setSelectedValue(null);
+                      showToast('All selections cleared');
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                  >
+                    Clear
+                  </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selections.map((sel, idx) => {
