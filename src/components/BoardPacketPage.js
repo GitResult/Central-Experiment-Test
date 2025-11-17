@@ -415,6 +415,11 @@ const BoardPacketPage = () => {
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [tempMarker, setTempMarker] = useState(null);
 
+  // Standalone Comments (without markers)
+  const [standaloneComments, setStandaloneComments] = useState([]);
+  const [showAddComment, setShowAddComment] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+
   // Reply state
   const [replyText, setReplyText] = useState('');
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
@@ -432,23 +437,43 @@ const BoardPacketPage = () => {
     m => m.documentId === currentDocument?.id && m.page === currentPage
   );
 
-  // Filter markers for right panel
-  const filteredMarkers = markers
-    .filter(m => m.documentId === currentDocument?.id)
-    .filter(m => {
-      if (markerFilter === 'mine') return m.authorId === 1; // Current user ID
-      if (markerFilter === 'unresolved') return m.status === 'open';
+  // Filter markers and standalone comments for right panel
+  const filteredStandaloneComments = standaloneComments
+    .filter(c => c.documentId === currentDocument?.id)
+    .filter(c => {
+      if (markerFilter === 'mine') return c.authorId === 1; // Current user ID
+      if (markerFilter === 'unresolved') return c.status === 'open';
       return true;
     })
-    .filter(m => {
+    .filter(c => {
       if (!searchQuery) return true;
-      return m.note.toLowerCase().includes(searchQuery.toLowerCase());
+      return c.note.toLowerCase().includes(searchQuery.toLowerCase());
     })
-    .filter(m => {
+    .filter(c => {
       if (!selectedAgendaId) return true;
-      const doc = documents.find(d => d.id === m.documentId);
+      const doc = documents.find(d => d.id === c.documentId);
       return doc?.agendaId === selectedAgendaId;
     });
+
+  const filteredMarkers = [
+    ...markers
+      .filter(m => m.documentId === currentDocument?.id)
+      .filter(m => {
+        if (markerFilter === 'mine') return m.authorId === 1; // Current user ID
+        if (markerFilter === 'unresolved') return m.status === 'open';
+        return true;
+      })
+      .filter(m => {
+        if (!searchQuery) return true;
+        return m.note.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+      .filter(m => {
+        if (!selectedAgendaId) return true;
+        const doc = documents.find(d => d.id === m.documentId);
+        return doc?.agendaId === selectedAgendaId;
+      }),
+    ...filteredStandaloneComments
+  ].sort((a, b) => b.createdAt - a.createdAt); // Sort by most recent
 
   // Get documents for selected agenda
   const agendaDocuments = selectedAgendaId
@@ -721,6 +746,40 @@ const BoardPacketPage = () => {
 
   const handleMentionLeave = () => {
     setHoveredMention(null);
+  };
+
+  // Add standalone comment (without marker)
+  const handleAddStandaloneComment = () => {
+    if (!newCommentText.trim()) return;
+
+    // Extract mentions
+    const mentionRegex = /@(\w+\s\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(newCommentText)) !== null) {
+      const userName = match[1];
+      const user = AVAILABLE_USERS.find(u => u.name === userName);
+      if (user) {
+        mentions.push({ id: user.id, name: user.name });
+      }
+    }
+
+    const newComment = {
+      id: Date.now(),
+      documentId: currentDocument?.id,
+      note: newCommentText,
+      author: 'John Smith',
+      authorId: 1,
+      status: 'open',
+      createdAt: new Date(),
+      replies: [],
+      mentions,
+      isStandalone: true // Flag to identify standalone comments
+    };
+
+    setStandaloneComments(prev => [...prev, newComment]);
+    setNewCommentText('');
+    setShowAddComment(false);
   };
 
   // Render mention with hover card
@@ -1365,9 +1424,18 @@ const BoardPacketPage = () => {
         <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">
-              Comments ({filteredMarkers.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Comments ({filteredMarkers.length})
+              </h2>
+              <button
+                onClick={() => setShowAddComment(true)}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Add comment"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* Filter Tabs */}
             <div className="flex gap-1 mb-3">
@@ -1403,9 +1471,57 @@ const BoardPacketPage = () => {
             </div>
           </div>
 
+          {/* Add Comment Form */}
+          {showAddComment && (
+            <div className="p-4 bg-blue-50 border-b border-blue-200">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-700">
+                    New Comment
+                  </label>
+                  <button
+                    onClick={() => {
+                      setShowAddComment(false);
+                      setNewCommentText('');
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <textarea
+                  placeholder="Add a comment... (use @Name for mentions)"
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={3}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddStandaloneComment}
+                    disabled={!newCommentText.trim()}
+                    className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+                  >
+                    Add Comment
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddComment(false);
+                      setNewCommentText('');
+                    }}
+                    className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Comments List */}
           <div className="flex-1 overflow-y-auto">
-            {filteredMarkers.length === 0 ? (
+            {filteredMarkers.length === 0 && !showAddComment ? (
               <div className="p-8 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">No comments yet</p>
@@ -1427,7 +1543,7 @@ const BoardPacketPage = () => {
                       <button
                         onClick={() => {
                           setSelectedMarkerId(isSelected ? null : marker.id);
-                          if (!isSelected) setCurrentPage(marker.page);
+                          if (!isSelected && !marker.isStandalone) setCurrentPage(marker.page);
                         }}
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           isSelected
@@ -1445,7 +1561,11 @@ const BoardPacketPage = () => {
                                 : 'bg-yellow-500 text-white'
                             }`}
                           >
-                            {markerNumber}
+                            {marker.isStandalone ? (
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            ) : (
+                              markerNumber
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
