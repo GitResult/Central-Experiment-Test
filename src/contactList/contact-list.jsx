@@ -36,6 +36,7 @@ const UnifiedContactListing = () => {
   const [columnSelections, setColumnSelections] = useState([null, null, null]); // Track selection in each column
   const [columnIndices, setColumnIndices] = useState([0, 0, 0]); // Track navigation index in each column
   const [lockedSuggestions, setLockedSuggestions] = useState(null); // Lock suggestions until all 3 are selected
+  const [selectionRoundStart, setSelectionRoundStart] = useState(0); // Track where current selection round started
   const [savedPhraseName, setSavedPhraseName] = useState('');
   const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
   const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
@@ -1998,6 +1999,8 @@ const UnifiedContactListing = () => {
                         // Lock suggestions when entering phrase mode
                         if (!lockedSuggestions) {
                           setLockedSuggestions(getSuggestionsForPhrase(phraseChips));
+                          // Mark where this selection round starts
+                          setSelectionRoundStart(phraseChips.length);
                         }
                       }}
                       onKeyDown={(e) => {
@@ -2095,7 +2098,9 @@ const UnifiedContactListing = () => {
                             }
                           }
 
-                          setPhraseChips([...phraseChips, ...chipsToAdd]);
+                          // Replace chips from current selection round instead of appending
+                          const previousChips = phraseChips.slice(0, selectionRoundStart);
+                          setPhraseChips([...previousChips, ...chipsToAdd]);
                           setPhraseSearchText('');
 
                           // If this was the 3rd column (column 2), reset everything
@@ -2104,6 +2109,8 @@ const UnifiedContactListing = () => {
                             setColumnIndices([0, 0, 0]);
                             setActiveColumn(0);
                             setLockedSuggestions(null);
+                            // Set start position for next selection round
+                            setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
                           } else {
                             // Otherwise, move to next column
                             setActiveColumn(activeColumn + 1);
@@ -2115,6 +2122,7 @@ const UnifiedContactListing = () => {
                           setColumnIndices([0, 0, 0]);
                           setActiveColumn(0);
                           setLockedSuggestions(null);
+                          setSelectionRoundStart(0);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
@@ -2262,7 +2270,9 @@ const UnifiedContactListing = () => {
                                               }
                                             }
 
-                                            setPhraseChips([...phraseChips, ...chipsToAdd]);
+                                            // Replace chips from current selection round instead of appending
+                                            const previousChips = phraseChips.slice(0, selectionRoundStart);
+                                            setPhraseChips([...previousChips, ...chipsToAdd]);
                                             setPhraseSearchText('');
 
                                             // If this was the 3rd column (column 2), reset everything
@@ -2271,6 +2281,8 @@ const UnifiedContactListing = () => {
                                               setColumnIndices([0, 0, 0]);
                                               setActiveColumn(0);
                                               setLockedSuggestions(null);
+                                              // Set start position for next selection round
+                                              setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
                                             } else {
                                               // Otherwise, move to next column
                                               setActiveColumn(columnIdx + 1);
@@ -2305,6 +2317,7 @@ const UnifiedContactListing = () => {
                                 setColumnSelections([null, null, null]);
                                 setColumnIndices([0, 0, 0]);
                                 setActiveColumn(0);
+                                setSelectionRoundStart(0);
                               }}
                               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                             >
