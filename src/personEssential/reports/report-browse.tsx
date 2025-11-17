@@ -458,72 +458,79 @@ const ReportBuilder = (props) => {
       const yearCohorts = ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
 
       let query = '';
-      let hasStartingData = false;
-      let isYearCohort = false;
 
-      // Find starting data
+      // Find starting data (Member Year or Starting Data category)
+      const memberYearSel = selections.find(s => s.category === 'Member Year');
       const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
-      if (startingDataSel) {
-        hasStartingData = true;
-        isYearCohort = yearCohorts.includes(startingDataSel.category);
 
-        if (isYearCohort) {
+      if (memberYearSel) {
+        query = `${memberYearSel.value} members`;
+      } else if (startingDataSel) {
+        if (yearCohorts.includes(startingDataSel.category)) {
           query = startingDataSel.category.replace(' Members', ' members');
         } else {
           query = startingDataSel.category.toLowerCase();
         }
       }
 
-      // Group remaining selections by type
-      const memberTypeSel = selections.find(s => s.category === 'Membership Type');
-      const tenureSel = selections.find(s => s.category === 'Tenure');
-      const occupationSel = selections.find(s => s.category === 'Occupation');
-      const degreeSel = selections.find(s => s.category === 'Degree');
-      const provinceSel = selections.find(s => s.category === 'Province/State');
-      const renewalMonthSel = selections.find(s => s.category === 'Renewal Month');
-      const renewalYearSel = selections.find(s => s.category === 'Renewal Year');
+      // Process remaining filters with connectors
+      const filterSelections = selections.filter(s =>
+        s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
+      );
 
-      // Build query parts
-      const parts = [];
+      if (filterSelections.length > 0) {
+        // Group consecutive filters by connector for better readability
+        const parts = [];
+        let i = 0;
 
-      if (tenureSel) {
-        parts.push(`that have been members for the ${tenureSel.value.toLowerCase()}`);
-      }
+        while (i < filterSelections.length) {
+          const sel = filterSelections[i];
+          const nextSel = filterSelections[i + 1];
 
-      if (memberTypeSel) {
-        // Extract acronym from "ECY1 - Member Early Career Year 1" format, or use full value if no hyphen
-        const memberTypeDisplay = memberTypeSel.value.includes(' - ')
-          ? memberTypeSel.value.split(' - ')[0]
-          : memberTypeSel.value;
-        parts.push(`that are member type ${memberTypeDisplay}`);
-      }
+          // Check if this is a BETWEEN scenario (same category, BETWEEN connector)
+          if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
+            const categoryPhrase = sel.category === 'Renewal Month' ? 'who renewed in' :
+                                  sel.category === 'Renewal Year' ? 'who renewed in' :
+                                  sel.category === 'Member Year' ? 'from years' :
+                                  `with ${sel.category.toLowerCase()}`;
 
-      if (occupationSel) {
-        parts.push(`and occupation is ${occupationSel.value.toLowerCase()}`);
-      }
+            parts.push(`${categoryPhrase} ${sel.value} and ${nextSel.value}`);
+            i += 2; // Skip both selections
+          } else {
+            // Regular single filter
+            const categoryPhrase = sel.category === 'Renewal Month' ? 'who renewed in' :
+                                  sel.category === 'Renewal Year' ? 'who renewed in year' :
+                                  sel.category === 'Membership Type' ? 'that are member type' :
+                                  sel.category === 'Tenure' ? 'that have been members for' :
+                                  sel.category === 'Occupation' ? 'with occupation' :
+                                  sel.category === 'Degree' ? 'with degree' :
+                                  sel.category === 'Province/State' ? 'from' :
+                                  `with ${sel.category.toLowerCase()}`;
 
-      if (degreeSel) {
-        parts.push(`with a Degree: ${degreeSel.value}`);
-      }
+            let value = sel.value;
+            // Extract acronym for Membership Type
+            if (sel.category === 'Membership Type' && value.includes(' - ')) {
+              value = value.split(' - ')[0];
+            }
 
-      if (provinceSel) {
-        parts.push(`from province/state ${provinceSel.value}`);
-      }
+            parts.push(`${categoryPhrase} ${value}`);
 
-      if (renewalMonthSel || renewalYearSel) {
-        let renewalPart = 'who renewed in';
-        if (renewalMonthSel) {
-          renewalPart += ` ${renewalMonthSel.value}`;
+            // Check if next has OR connector - if so, add just the value
+            let j = i + 1;
+            while (j < filterSelections.length && filterSelections[j].connector === 'OR' &&
+                   filterSelections[j].category === sel.category) {
+              const orValue = filterSelections[j].value;
+              parts.push(`or ${orValue}`);
+              j++;
+            }
+
+            i = j; // Move to next unprocessed selection
+          }
         }
-        if (renewalYearSel) {
-          renewalPart += ` ${renewalYearSel.value}`;
-        }
-        parts.push(renewalPart);
-      }
 
-      // Combine all parts
-      if (parts.length > 0) {
-        query += ' ' + parts.join(' ');
+        if (parts.length > 0) {
+          query += ' ' + parts.join(' ');
+        }
       }
 
       return query.trim();
@@ -779,6 +786,7 @@ const ReportBuilder = (props) => {
                           >
                             <option value="AND">AND</option>
                             <option value="OR">OR</option>
+                            <option value="BETWEEN">BETWEEN</option>
                           </select>
                         )}
 
