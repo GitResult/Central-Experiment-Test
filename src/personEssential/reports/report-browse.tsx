@@ -719,7 +719,7 @@ const ReportBuilder = (props) => {
     ];
 
     return (
-      <div className="max-h-[calc(100vh-115px)] overflow-y-auto bg-gray-50 flex flex-col">
+      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
         {/* {"[[BROWSE]]"} */}
         <AnimationStyles />
         {toast && (
@@ -728,6 +728,8 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-4">
             <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
@@ -968,9 +970,12 @@ const ReportBuilder = (props) => {
             );
           })}
         </div>
+        </div>
+        {/* End Main Content Area */}
 
+        {/* Right Side Panels */}
         {selectedCategory && (
-          <div style={{ position: 'absolute', top: 0, right: selectedValue ? '280px' : '0px', height: '100%', width: '480px', backgroundColor: 'white', borderLeft: '1px solid #E5E7EB', boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1)', zIndex: 40, transition: 'right 300ms ease-in-out', display: 'flex', flexDirection: 'column' }}>
+          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1126,7 +1131,7 @@ const ReportBuilder = (props) => {
         )}
 
         {selectedValue && (
-          <div className="absolute top-0 h-full flex flex-col" style={{ right: '0px', width: '320px', backgroundColor: '#F9FAFB', borderLeft: '2px solid #E5E7EB', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', zIndex: 50, animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
+          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '320px' }}>
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => setSelectedValue(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
