@@ -61,14 +61,46 @@ const BoardPacketPage = () => {
 
   // Agenda Items State
   const [agendaItems, setAgendaItems] = useState([
-    { id: 1, title: "Opening & Minutes", order: 1 },
-    { id: 2, title: "Financials", order: 2 },
-    { id: 3, title: "Strategy & Risk", order: 3 },
-    { id: 4, title: "Operations", order: 4 }
+    {
+      id: 1,
+      title: "Opening & Minutes",
+      order: 1,
+      description: "Review and approve previous meeting minutes. Opening remarks from the Chair.",
+      duration: "15 min",
+      presenter: "John Smith"
+    },
+    {
+      id: 2,
+      title: "Financials",
+      order: 2,
+      description: "Q1 2026 financial performance review, budget variance analysis, and cash flow update.",
+      duration: "30 min",
+      presenter: "Sarah Chen"
+    },
+    {
+      id: 3,
+      title: "Strategy & Risk",
+      order: 3,
+      description: "2026 strategic initiatives update, risk assessment, and competitive landscape review.",
+      duration: "45 min",
+      presenter: "David Lee"
+    },
+    {
+      id: 4,
+      title: "Operations",
+      order: 4,
+      description: "Operational metrics, customer satisfaction, and key performance indicators.",
+      duration: "20 min",
+      presenter: "Michael Brown"
+    }
   ]);
 
   const [showNewAgendaForm, setShowNewAgendaForm] = useState(false);
   const [newAgendaTitle, setNewAgendaTitle] = useState('');
+  const [newAgendaDescription, setNewAgendaDescription] = useState('');
+  const [newAgendaDuration, setNewAgendaDuration] = useState('');
+  const [newAgendaPresenter, setNewAgendaPresenter] = useState('');
+  const [selectedAgendaId, setSelectedAgendaId] = useState(null);
 
   // Documents State - First document is the uploaded PDF
   const [documents, setDocuments] = useState([
@@ -111,7 +143,6 @@ const BoardPacketPage = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [viewMode, setViewMode] = useState('view'); // 'view' or 'annotate'
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeAgendaId, setActiveAgendaId] = useState(null);
 
   // Markers State - using normalized coordinates (0-1)
   const [markers, setMarkers] = useState([
@@ -188,10 +219,18 @@ const BoardPacketPage = () => {
       return m.note.toLowerCase().includes(searchQuery.toLowerCase());
     })
     .filter(m => {
-      if (!activeAgendaId) return true;
+      if (!selectedAgendaId) return true;
       const doc = documents.find(d => d.id === m.documentId);
-      return doc?.agendaId === activeAgendaId;
+      return doc?.agendaId === selectedAgendaId;
     });
+
+  // Get documents for selected agenda
+  const agendaDocuments = selectedAgendaId
+    ? documents.filter(doc => doc.agendaId === selectedAgendaId)
+    : documents;
+
+  // Get selected agenda details
+  const selectedAgenda = agendaItems.find(item => item.id === selectedAgendaId);
 
   // Compute marker counts by document
   const markerCountsByDoc = useMemo(() => {
@@ -492,11 +531,17 @@ const BoardPacketPage = () => {
     const newAgenda = {
       id: Date.now(),
       title: newAgendaTitle,
+      description: newAgendaDescription,
+      duration: newAgendaDuration,
+      presenter: newAgendaPresenter,
       order: agendaItems.length + 1
     };
 
     setAgendaItems(prev => [...prev, newAgenda]);
     setNewAgendaTitle('');
+    setNewAgendaDescription('');
+    setNewAgendaDuration('');
+    setNewAgendaPresenter('');
     setShowNewAgendaForm(false);
   };
 
@@ -588,39 +633,66 @@ const BoardPacketPage = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Agenda & Documents */}
-        <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           {/* Agenda Section */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-900">Agenda</h2>
-              <button
-                onClick={() => setShowNewAgendaForm(!showNewAgendaForm)}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Add agenda item"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <div className="flex gap-1">
+                {selectedAgendaId && (
+                  <button
+                    onClick={() => setSelectedAgendaId(null)}
+                    className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Show all agenda items"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowNewAgendaForm(!showNewAgendaForm)}
+                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Add agenda item"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* New Agenda Form */}
             {showNewAgendaForm && (
-              <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                 <input
                   type="text"
-                  placeholder="New agenda item title..."
+                  placeholder="Agenda item title..."
                   value={newAgendaTitle}
                   onChange={(e) => setNewAgendaTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateAgenda();
-                    if (e.key === 'Escape') {
-                      setShowNewAgendaForm(false);
-                      setNewAgendaTitle('');
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <textarea
+                  placeholder="Description (optional)..."
+                  value={newAgendaDescription}
+                  onChange={(e) => setNewAgendaDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={2}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Duration (e.g., 15 min)"
+                    value={newAgendaDuration}
+                    onChange={(e) => setNewAgendaDuration(e.target.value)}
+                    className="px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Presenter"
+                    value={newAgendaPresenter}
+                    onChange={(e) => setNewAgendaPresenter(e.target.value)}
+                    className="px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
                   <button
                     onClick={handleCreateAgenda}
                     className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
@@ -631,52 +703,114 @@ const BoardPacketPage = () => {
                     onClick={() => {
                       setShowNewAgendaForm(false);
                       setNewAgendaTitle('');
+                      setNewAgendaDescription('');
+                      setNewAgendaDuration('');
+                      setNewAgendaPresenter('');
                     }}
                     className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
-                <div className="mt-2">
-                  <label className="block text-xs text-gray-600 mb-1">Attach PDF (optional):</label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleFileUpload(e, agendaItems.length + 1)}
-                    className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
-                  />
-                </div>
               </div>
             )}
 
-            <div className="space-y-1">
-              {agendaItems.map(item => (
+            {/* Agenda List or Detail View */}
+            {!selectedAgendaId ? (
+              <div className="space-y-1">
+                {agendaItems.map(item => {
+                  const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedAgendaId(item.id)}
+                      className="w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.order}. {item.title}
+                          </div>
+                          {item.duration && (
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              <Clock className="w-3 h-3 inline mr-1" />
+                              {item.duration}
+                              {item.presenter && ` • ${item.presenter}`}
+                            </div>
+                          )}
+                        </div>
+                        {itemDocCount > 0 && (
+                          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                            {itemDocCount}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Agenda Detail View */
+              <div className="space-y-3">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    {selectedAgenda.order}. {selectedAgenda.title}
+                  </h3>
+                  {selectedAgenda.description && (
+                    <p className="text-sm text-gray-700 mb-2">
+                      {selectedAgenda.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-gray-600">
+                    {selectedAgenda.duration && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {selectedAgenda.duration}
+                      </span>
+                    )}
+                    {selectedAgenda.presenter && (
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" />
+                        {selectedAgenda.presenter}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Upload File Button for Agenda */}
                 <button
-                  key={item.id}
-                  onClick={() => setActiveAgendaId(activeAgendaId === item.id ? null : item.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                    activeAgendaId === item.id
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.multiple = true;
+                    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+                    input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
+                    input.click();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
                 >
-                  {item.order}. {item.title}
+                  <Plus className="w-4 h-4" />
+                  Add Files to this Agenda Item
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Documents Section */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">Board Meeting Materials</h2>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Add documents"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <h2 className="text-sm font-semibold text-gray-900">
+                {selectedAgendaId ? `Files (${agendaDocuments.length})` : 'All Materials'}
+              </h2>
+              {!selectedAgendaId && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Add documents"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -687,20 +821,28 @@ const BoardPacketPage = () => {
               />
             </div>
 
-            {documents.length === 0 ? (
+            {agendaDocuments.length === 0 ? (
               <div className="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-lg">
                 <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">No documents yet</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Drop files here or click to upload
-                </button>
+                <p className="text-sm text-gray-600 mb-1">
+                  {selectedAgendaId ? 'No files for this agenda item' : 'No documents yet'}
+                </p>
+                {selectedAgendaId ? (
+                  <p className="text-xs text-gray-500">
+                    Use the button above to add files
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Drop files here or click to upload
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
-                {documents.map(doc => (
+                {agendaDocuments.map(doc => (
                   <button
                     key={doc.id}
                     onClick={() => {
