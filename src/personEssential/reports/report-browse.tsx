@@ -971,15 +971,38 @@ const ReportBuilder = (props) => {
                     </button>
                   </div>
 
-                  {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => (
-                    <div key={i} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
-                      <input type="checkbox" className="rounded" onChange={(e) => { if (e.target.checked) addFilter(selectedCategory, value); }} />
-                      <button onClick={() => handleValueSelect(selectedCategory, value)} className="flex-1 text-sm text-left text-blue-600 hover:text-blue-700 hover:underline transition-all cursor-pointer">{value}</button>
-                      <button onClick={() => addField(selectedCategory, value)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Show as field">
-                        <Eye className="w-4 h-4 text-purple-500 hover:text-purple-600" strokeWidth={1.5} />
-                      </button>
-                    </div>
-                  ))}
+                  {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => {
+                    // Check if this filter is already selected
+                    const isFilterSelected = selections.some(s => s.category === selectedCategory && s.value === value && s.type === 'filter');
+
+                    return (
+                      <div key={i} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={isFilterSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Add filter only if it doesn't exist
+                              if (!isFilterSelected) {
+                                addFilter(selectedCategory, value);
+                              }
+                            } else {
+                              // Remove filter when unchecked
+                              const filterToRemove = selections.find(s => s.category === selectedCategory && s.value === value && s.type === 'filter');
+                              if (filterToRemove) {
+                                removeSelection(filterToRemove.id);
+                              }
+                            }
+                          }}
+                        />
+                        <button onClick={() => handleValueSelect(selectedCategory, value)} className="flex-1 text-sm text-left text-blue-600 hover:text-blue-700 hover:underline transition-all cursor-pointer">{value}</button>
+                        <button onClick={() => addField(selectedCategory, value)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Show as field">
+                          <Eye className="w-4 h-4 text-purple-500 hover:text-purple-600" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
