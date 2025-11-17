@@ -229,9 +229,6 @@ const BoardPacketPage = () => {
     ? documents.filter(doc => doc.agendaId === selectedAgendaId)
     : documents;
 
-  // Get selected agenda details
-  const selectedAgenda = agendaItems.find(item => item.id === selectedAgendaId);
-
   // Compute marker counts by document
   const markerCountsByDoc = useMemo(() => {
     const counts = {};
@@ -636,24 +633,13 @@ const BoardPacketPage = () => {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-900">Agenda</h2>
-              <div className="flex gap-1">
-                {selectedAgendaId && (
-                  <button
-                    onClick={() => setSelectedAgendaId(null)}
-                    className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Show all agenda items"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowNewAgendaForm(!showNewAgendaForm)}
-                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Add agenda item"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowNewAgendaForm(!showNewAgendaForm)}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Add agenda item"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
 
             {/* New Agenda Form */}
@@ -713,20 +699,28 @@ const BoardPacketPage = () => {
               </div>
             )}
 
-            {/* Agenda List or Detail View */}
-            {!selectedAgendaId ? (
-              <div className="space-y-1">
-                {agendaItems.map(item => {
-                  const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
-                  return (
+            {/* Agenda List with Inline Detail View */}
+            <div className="space-y-1">
+              {agendaItems.map(item => {
+                const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
+                const isSelected = selectedAgendaId === item.id;
+
+                return (
+                  <div key={item.id} className="space-y-2">
+                    {/* Agenda Item Button */}
                     <button
-                      key={item.id}
-                      onClick={() => setSelectedAgendaId(item.id)}
-                      className="w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                      onClick={() => setSelectedAgendaId(isSelected ? null : item.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
+                        isSelected
+                          ? 'bg-blue-50 border-2 border-blue-300'
+                          : selectedAgendaId
+                          ? 'border border-transparent opacity-50 hover:opacity-75'
+                          : 'border border-transparent hover:bg-gray-50 hover:border-gray-200'
+                      }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
                             {item.order}. {item.title}
                           </div>
                           {item.duration && (
@@ -738,60 +732,50 @@ const BoardPacketPage = () => {
                           )}
                         </div>
                         {itemDocCount > 0 && (
-                          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                          <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                            isSelected
+                              ? 'bg-blue-200 text-blue-800'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
                             {itemDocCount}
                           </span>
                         )}
                       </div>
                     </button>
-                  );
-                })}
-              </div>
-            ) : (
-              /* Agenda Detail View */
-              <div className="space-y-3">
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {selectedAgenda.order}. {selectedAgenda.title}
-                  </h3>
-                  {selectedAgenda.description && (
-                    <p className="text-sm text-gray-700 mb-2">
-                      {selectedAgenda.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-gray-600">
-                    {selectedAgenda.duration && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {selectedAgenda.duration}
-                      </span>
-                    )}
-                    {selectedAgenda.presenter && (
-                      <span className="flex items-center gap-1">
-                        <Briefcase className="w-3 h-3" />
-                        {selectedAgenda.presenter}
-                      </span>
+
+                    {/* Expanded Detail View */}
+                    {isSelected && (
+                      <div className="ml-3 space-y-2 pb-1">
+                        {item.description && (
+                          <div className="px-3 py-2 bg-white rounded border border-blue-200">
+                            <p className="text-sm text-gray-700">
+                              {item.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Upload File Button for Agenda */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.multiple = true;
+                            input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+                            input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
+                            input.click();
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Files
+                        </button>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                {/* Upload File Button for Agenda */}
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.multiple = true;
-                    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
-                    input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
-                    input.click();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Files to this Agenda Item
-                </button>
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
 
           {/* Documents Section */}
