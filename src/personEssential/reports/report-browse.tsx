@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
@@ -249,13 +249,14 @@ const ReportBuilder = (props) => {
     }
   };
 
-  const calculateFilterImpact = () => {
+  // Memoize the record count calculation so it's consistent across all displays
+  const estimatedRecordCount = useMemo(() => {
     const activeFilters = selections.filter(s => s.type === 'filter');
     if (activeFilters.length === 0) return 7100;
     let result = 7100;
     activeFilters.forEach(() => { result = Math.floor(result * (0.3 + Math.random() * 0.4)); });
     return Math.max(50, result);
-  };
+  }, [selections]);
 
   const getValueCount = (category, value) => {
     const hash = (category + value).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -703,7 +704,7 @@ const ReportBuilder = (props) => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{calculateFilterImpact().toLocaleString()}</div>
+                <div className="text-2xl font-bold text-blue-600">{estimatedRecordCount.toLocaleString()}</div>
                 <div className="text-xs text-gray-600">estimated records</div>
               </div>
             </div>
@@ -1095,7 +1096,7 @@ const ReportBuilder = (props) => {
                 </div>
                 <div className="flex-1 max-w-2xl">
                   <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
-                  <div className="text-xs text-gray-500">JD • {calculateFilterImpact().toLocaleString()} records</div>
+                  <div className="text-xs text-gray-500">JD • {estimatedRecordCount.toLocaleString()} records</div>
                   {buildNaturalLanguageQuery() && (
                     <div className="text-xs text-blue-700 mt-1 font-medium italic">
                       "{buildNaturalLanguageQuery()}"
