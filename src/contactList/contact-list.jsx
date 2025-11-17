@@ -31,6 +31,13 @@ const UnifiedContactListing = () => {
   const [phraseChips, setPhraseChips] = useState([]);
   const [phraseSearchText, setPhraseSearchText] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  // 3-column selection states
+  const [activeColumn, setActiveColumn] = useState(0); // 0 = current, 1 = next, 2 = future
+  const [columnSelections, setColumnSelections] = useState([null, null, null]); // Track selection in each column
+  const [columnIndices, setColumnIndices] = useState([0, 0, 0]); // Track navigation index in each column
+  const [lockedSuggestions, setLockedSuggestions] = useState(null); // Lock suggestions until all 3 are selected
+  const [selectionRoundStart, setSelectionRoundStart] = useState(0); // Track where current selection round started
+  const [previewChips, setPreviewChips] = useState([]); // Preview chips shown when typing
   const [savedPhraseName, setSavedPhraseName] = useState('');
   const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
   const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
@@ -1846,6 +1853,10 @@ const UnifiedContactListing = () => {
                                         setPhraseChips(phrase.chips.map(chip => ({ ...chip, id: Date.now() + Math.random() })));
                                         setShowLoadPhraseDropdown(false);
                                         setIsPhraseMode(true);
+                                        setActiveColumn(0);
+                                        setColumnSelections([null, null, null]);
+                                        setColumnIndices([0, 0, 0]);
+                                        setLockedSuggestions(null);
                                       }}
                                       className="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-lg transition-colors group"
                                     >
@@ -1967,6 +1978,14 @@ const UnifiedContactListing = () => {
                         return null;
                       })()}
 
+                      {/* Preview Text Overlay */}
+                      {isPhraseMode && previewChips.length > 0 && (
+                        <div className="absolute left-0 top-0 h-full flex items-center px-2 py-2 pointer-events-none text-sm text-gray-400">
+                          <span className="opacity-0">{phraseSearchText}</span>
+                          <span>{previewChips.join(' ')}</span>
+                        </div>
+                      )}
+
                       <input
                         ref={phraseInputRef}
                         type="text"
@@ -1976,6 +1995,27 @@ const UnifiedContactListing = () => {
                         if (isPhraseMode) {
                           setPhraseSearchText(e.target.value);
                           setSelectedSuggestionIndex(0); // Reset selection when typing
+
+                          // Generate preview text when typing in column 0
+                          if (activeColumn === 0 && e.target.value && lockedSuggestions) {
+                            const suggestions = lockedSuggestions;
+                            const filteredCurrent = suggestions.current.filter(s =>
+                              s.label.toLowerCase().startsWith(e.target.value.toLowerCase())
+                            );
+
+                            if (filteredCurrent.length > 0 && suggestions.next.length > 0 && suggestions.future.length > 0) {
+                              const previewText = [
+                                filteredCurrent[0].label,
+                                suggestions.next[0].label || suggestions.next[0],
+                                suggestions.future[0].label || suggestions.future[0]
+                              ];
+                              setPreviewChips(previewText); // Store as text array
+                            } else {
+                              setPreviewChips([]);
+                            }
+                          } else {
+                            setPreviewChips([]);
+                          }
                         } else {
                           setSearchValue(e.target.value);
                         }
@@ -1983,69 +2023,157 @@ const UnifiedContactListing = () => {
                       onFocus={() => {
                         setIsPhraseMode(true);
                         setSelectedSuggestionIndex(0);
+                        setActiveColumn(0);
+                        setColumnSelections([null, null, null]);
+                        setColumnIndices([0, 0, 0]);
+                        // Lock suggestions when entering phrase mode
+                        if (!lockedSuggestions) {
+                          setLockedSuggestions(getSuggestionsForPhrase(phraseChips));
+                          // Mark where this selection round starts
+                          setSelectionRoundStart(phraseChips.length);
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (!isPhraseMode) return;
 
-                        const suggestions = getSuggestionsForPhrase(phraseChips);
-                        const currentSuggestions = suggestions.current;
-                        const filteredSuggestions = phraseSearchText
-                          ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
-                          : currentSuggestions.slice(0, 6);
+                        // Use locked suggestions (should already be set from onFocus)
+                        const suggestions = lockedSuggestions || getSuggestionsForPhrase(phraseChips);
+
+                        const allSuggestions = [
+                          suggestions.current.slice(0, 6),
+                          suggestions.next.slice(0, 6),
+                          suggestions.future.slice(0, 6)
+                        ];
+
+                        // Filter current column suggestions based on search text
+                        if (activeColumn === 0 && phraseSearchText) {
+                          allSuggestions[0] = allSuggestions[0].filter(s =>
+                            s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase())
+                          );
+                        }
+
+                        const currentColumnSuggestions = allSuggestions[activeColumn];
 
                         if (e.key === 'Tab' && phraseChips.length > 0) {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
-                        } else if (e.key === 'ArrowRight' && phraseSearchText && filteredSuggestions.length > 0) {
-                          // ArrowRight adds all 3 preview suggestions at once
+                        } else if (e.key === 'ArrowRight') {
+                          // Move to next column (skip disabled columns)
                           e.preventDefault();
-                          const firstMatch = filteredSuggestions[selectedSuggestionIndex];
-                          const nextSuggestion = suggestions.next && suggestions.next.length > 0 ? suggestions.next[0] : null;
-                          const futureSuggestion = suggestions.future && suggestions.future.length > 0 ? suggestions.future[0] : null;
-
-                          if (firstMatch && nextSuggestion && futureSuggestion) {
-                            const chips = [firstMatch, nextSuggestion, futureSuggestion].map((suggestion, idx) => ({
-                              id: Date.now() + idx,
-                              text: suggestion.label,
-                              type: suggestion.type || 'connector',
-                              valueType: suggestion.valueType,
-                              icon: suggestion.icon,
-                              color: suggestion.color || 'gray',
-                              ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                              ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                            }));
-                            setPhraseChips([...phraseChips, ...chips]);
-                            setPhraseSearchText('');
-                            setSelectedSuggestionIndex(0);
+                          let nextCol = activeColumn + 1;
+                          while (nextCol < 3 && columnSelections[nextCol] !== null) {
+                            nextCol++;
+                          }
+                          if (nextCol < 3) {
+                            setActiveColumn(nextCol);
+                          }
+                        } else if (e.key === 'ArrowLeft') {
+                          // Move to previous column (skip disabled columns)
+                          e.preventDefault();
+                          let prevCol = activeColumn - 1;
+                          while (prevCol >= 0 && columnSelections[prevCol] !== null) {
+                            prevCol--;
+                          }
+                          if (prevCol >= 0) {
+                            setActiveColumn(prevCol);
                           }
                         } else if (e.key === 'ArrowDown') {
+                          // Navigate down within active column
                           e.preventDefault();
-                          setSelectedSuggestionIndex(prev =>
-                            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = Math.min(
+                            newIndices[activeColumn] + 1,
+                            currentColumnSuggestions.length - 1
                           );
+                          setColumnIndices(newIndices);
                         } else if (e.key === 'ArrowUp') {
+                          // Navigate up within active column
                           e.preventDefault();
-                          setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : 0);
-                        } else if (e.key === 'Enter' && filteredSuggestions.length > 0) {
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = Math.max(0, newIndices[activeColumn] - 1);
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'Enter' && currentColumnSuggestions.length > 0) {
+                          // Select item from active column and add chips cumulatively
                           e.preventDefault();
-                          const selectedSuggestion = filteredSuggestions[selectedSuggestionIndex];
-                          const newChip = {
-                            id: Date.now(),
-                            text: selectedSuggestion.label,
-                            type: selectedSuggestion.type || 'connector',
-                            valueType: selectedSuggestion.valueType,
-                            icon: selectedSuggestion.icon,
-                            color: selectedSuggestion.color || 'gray',
-                            ...(selectedSuggestion.type === 'cohort' && { filterHint: selectedSuggestion.filterHint }),
-                            ...(selectedSuggestion.type === 'entityType' && { entityTypeValue: selectedSuggestion.entityTypeValue })
-                          };
-                          setPhraseChips([...phraseChips, newChip]);
+                          const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
+                          const newSelections = [...columnSelections];
+
+                          // Auto-select first items from previous columns if not already selected
+                          for (let i = 0; i < activeColumn; i++) {
+                            if (!newSelections[i] && allSuggestions[i].length > 0) {
+                              newSelections[i] = allSuggestions[i][0];
+                            }
+                          }
+
+                          // Select the current item
+                          newSelections[activeColumn] = selectedSuggestion;
+                          setColumnSelections(newSelections);
+
+                          // Add chips cumulatively based on active column
+                          // Column 0: add 1 chip, Column 1: add 2 chips, Column 2: add 3 chips
+                          const chipsToAdd = [];
+                          for (let i = 0; i <= activeColumn; i++) {
+                            if (newSelections[i]) {
+                              const suggestion = newSelections[i];
+                              chipsToAdd.push({
+                                id: Date.now() + i + Math.random(),
+                                text: suggestion.label,
+                                type: suggestion.type || 'connector',
+                                valueType: suggestion.valueType,
+                                icon: suggestion.icon,
+                                color: suggestion.color || 'gray',
+                                ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                              });
+                            }
+                          }
+
+                          // Replace chips from current selection round instead of appending
+                          const previousChips = phraseChips.slice(0, selectionRoundStart);
+                          setPhraseChips([...previousChips, ...chipsToAdd]);
                           setPhraseSearchText('');
-                          setSelectedSuggestionIndex(0);
+
+                          // If this was the 3rd column (column 2), reset everything
+                          if (activeColumn === 2) {
+                            setColumnSelections([null, null, null]);
+                            setColumnIndices([0, 0, 0]);
+                            setActiveColumn(0);
+                            setPreviewChips([]); // Clear preview
+                            // Set start position for next selection round
+                            setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+                            // Re-lock suggestions for the next round based on new chips
+                            const newChipsForNextRound = [...previousChips, ...chipsToAdd];
+                            const nextRoundSuggestions = getSuggestionsForPhrase(newChipsForNextRound);
+                            setLockedSuggestions(nextRoundSuggestions);
+                          } else {
+                            // Otherwise, move to next column and update preview to show remaining words
+                            setActiveColumn(activeColumn + 1);
+                            // Update preview to only show remaining unselected words
+                            if (lockedSuggestions) {
+                              const remainingPreview = [];
+                              const allSugs = [
+                                lockedSuggestions.current,
+                                lockedSuggestions.next,
+                                lockedSuggestions.future
+                              ];
+                              for (let i = activeColumn + 1; i < 3; i++) {
+                                if (allSugs[i] && allSugs[i].length > 0) {
+                                  const item = allSugs[i][0];
+                                  remainingPreview.push(item.label || item);
+                                }
+                              }
+                              setPreviewChips(remainingPreview);
+                            }
+                          }
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
-                          setSelectedSuggestionIndex(0);
+                          setColumnSelections([null, null, null]);
+                          setColumnIndices([0, 0, 0]);
+                          setActiveColumn(0);
+                          setLockedSuggestions(null);
+                          setSelectionRoundStart(0);
+                          setPreviewChips([]);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
@@ -2066,6 +2194,7 @@ const UnifiedContactListing = () => {
                                 const phraseText = phraseChips.map(chip => chip.text).join(' ');
                                 setPhraseFilters([{ label: phraseText, chips: phraseChips }]);
                                 setIsPhraseMode(false);
+                                setPreviewChips([]);
                               }}
                               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
                             >
@@ -2085,6 +2214,7 @@ const UnifiedContactListing = () => {
                             onClick={() => {
                               setIsPhraseMode(false);
                               setPhraseSearchText('');
+                              setPreviewChips([]);
                             }}
                             className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                           >
@@ -2099,128 +2229,154 @@ const UnifiedContactListing = () => {
                   {isPhraseMode && (
                     <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white">
                       <div className="max-w-[1600px] mx-auto px-8 py-4">
-                        <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-blue-600" />
-                          Build Your Phrase
-                        </h3>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs font-semibold text-gray-600">
+                            Build Your Phrase
+                          </h3>
+                          <div className="text-xs text-gray-400">
+                            ↑↓ navigate • ←→ change column • Enter select
+                          </div>
+                        </div>
 
                         {/* 3-Column Suggestion Rail */}
                         <div className="grid grid-cols-3 gap-3">
-                          {/* Level 1: Current (100% opacity) */}
-                          <div>
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              {phraseChips.length === 0 ? 'Start with' : 'Select'}
-                            </div>
-                            <div className="space-y-1.5">
-                              {(() => {
-                                const currentSuggestions = getSuggestionsForPhrase(phraseChips).current;
-                                const filteredSuggestions = phraseSearchText
-                                  ? currentSuggestions.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
-                                  : currentSuggestions.slice(0, 6);
+                          {(() => {
+                            // Use locked suggestions if available, otherwise get fresh
+                            const suggestions = lockedSuggestions || getSuggestionsForPhrase(phraseChips);
+                            const allSuggestions = [
+                              phraseSearchText
+                                ? suggestions.current.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
+                                : suggestions.current.slice(0, 6),
+                              suggestions.next.slice(0, 6),
+                              suggestions.future.slice(0, 6)
+                            ];
+                            const columnTitles = [
+                              phraseChips.length === 0 ? 'Start with' : 'Select',
+                              'Then',
+                              'After that'
+                            ];
 
-                                return filteredSuggestions.map((suggestion, idx) => {
-                                  const Icon = suggestion.icon;
-                                  const isSelected = idx === selectedSuggestionIndex;
-                                  return (
-                                    <button
-                                      key={idx}
-                                      onClick={() => {
-                                        const newChip = {
-                                          id: Date.now(),
-                                          text: suggestion.label,
-                                          type: suggestion.type || 'connector',
-                                          valueType: suggestion.valueType,
-                                          icon: suggestion.icon,
-                                          color: suggestion.color || 'gray',
-                                          ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                          ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                        };
-                                        setPhraseChips([...phraseChips, newChip]);
-                                        setPhraseSearchText('');
-                                        setSelectedSuggestionIndex(0);
-                                      }}
-                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                                        isSelected
-                                          ? 'bg-blue-500 text-white'
-                                          : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
-                                      }`}
-                                    >
-                                      {Icon && <Icon className="w-4 h-4" />}
-                                      <span>{suggestion.label}</span>
-                                    </button>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          </div>
+                            return allSuggestions.map((columnSuggestions, columnIdx) => {
+                              const isActive = activeColumn === columnIdx;
+                              const isSelected = columnSelections[columnIdx] !== null;
+                              const isDisabled = isSelected;
 
-                          {/* Level 2: Next (50% opacity) */}
-                          <div className="opacity-50 hover:opacity-75 transition-opacity">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              Then
-                            </div>
-                            <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).next.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                              return (
+                                <div
+                                  key={columnIdx}
+                                  className={`transition-all ${
+                                    isDisabled
+                                      ? 'opacity-30 pointer-events-none'
+                                      : isActive
+                                      ? 'opacity-100'
+                                      : 'opacity-30'
+                                  }`}
+                                >
+                                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    <span>{columnTitles[columnIdx]}</span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {columnSuggestions.map((suggestion, idx) => {
+                                      const Icon = suggestion.icon;
+                                      const isHighlighted = isActive && idx === columnIndices[columnIdx];
+                                      const isChosen = isSelected && columnSelections[columnIdx]?.label === suggestion.label;
 
-                          {/* Level 3: Future (25% opacity) */}
-                          <div className="opacity-25 hover:opacity-50 transition-opacity">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                              After that
-                            </div>
-                            <div className="space-y-1.5">
-                              {getSuggestionsForPhrase(phraseChips).future.slice(0, 6).map((suggestion, idx) => {
-                                const Icon = suggestion.icon;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      const newChip = {
-                                        id: Date.now(),
-                                        text: suggestion.label,
-                                        type: suggestion.type || (suggestion.icon ? 'connector' : 'value'),
-                                        valueType: suggestion.valueType,
-                                        icon: suggestion.icon,
-                                        color: suggestion.color || 'gray',
-                                        ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                                        ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                                      };
-                                      setPhraseChips([...phraseChips, newChip]);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 bg-gray-100/50 hover:bg-gray-100/80 text-gray-600 hover:text-gray-800 rounded-lg text-sm font-medium transition-all text-left"
-                                  >
-                                    {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{suggestion.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                                      return (
+                                        <button
+                                          key={idx}
+                                          onClick={() => {
+                                            // Set this column as active and select this item
+                                            setActiveColumn(columnIdx);
+                                            const newIndices = [...columnIndices];
+                                            newIndices[columnIdx] = idx;
+                                            setColumnIndices(newIndices);
+
+                                            const newSelections = [...columnSelections];
+
+                                            // Auto-select first items from previous columns if not already selected
+                                            for (let i = 0; i < columnIdx; i++) {
+                                              if (!newSelections[i] && allSuggestions[i].length > 0) {
+                                                newSelections[i] = allSuggestions[i][0];
+                                              }
+                                            }
+
+                                            // Select the clicked item
+                                            newSelections[columnIdx] = suggestion;
+                                            setColumnSelections(newSelections);
+
+                                            // Add chips cumulatively based on which column was clicked
+                                            // Column 0: add 1 chip, Column 1: add 2 chips, Column 2: add 3 chips
+                                            const chipsToAdd = [];
+                                            for (let i = 0; i <= columnIdx; i++) {
+                                              if (newSelections[i]) {
+                                                const sel = newSelections[i];
+                                                chipsToAdd.push({
+                                                  id: Date.now() + i + Math.random(),
+                                                  text: sel.label,
+                                                  type: sel.type || 'connector',
+                                                  valueType: sel.valueType,
+                                                  icon: sel.icon,
+                                                  color: sel.color || 'gray',
+                                                  ...(sel.type === 'cohort' && { filterHint: sel.filterHint }),
+                                                  ...(sel.type === 'entityType' && { entityTypeValue: sel.entityTypeValue })
+                                                });
+                                              }
+                                            }
+
+                                            // Replace chips from current selection round instead of appending
+                                            const previousChips = phraseChips.slice(0, selectionRoundStart);
+                                            setPhraseChips([...previousChips, ...chipsToAdd]);
+                                            setPhraseSearchText('');
+
+                                            // If this was the 3rd column (column 2), reset everything
+                                            if (columnIdx === 2) {
+                                              setColumnSelections([null, null, null]);
+                                              setColumnIndices([0, 0, 0]);
+                                              setActiveColumn(0);
+                                              setPreviewChips([]); // Clear preview
+                                              // Set start position for next selection round
+                                              setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+                                              // Re-lock suggestions for the next round based on new chips
+                                              const newChipsForNextRound = [...previousChips, ...chipsToAdd];
+                                              const nextRoundSuggestions = getSuggestionsForPhrase(newChipsForNextRound);
+                                              setLockedSuggestions(nextRoundSuggestions);
+                                            } else {
+                                              // Otherwise, move to next column and update preview to show remaining words
+                                              setActiveColumn(columnIdx + 1);
+                                              // Update preview to only show remaining unselected words
+                                              if (lockedSuggestions) {
+                                                const remainingPreview = [];
+                                                const allSugs = [
+                                                  lockedSuggestions.current,
+                                                  lockedSuggestions.next,
+                                                  lockedSuggestions.future
+                                                ];
+                                                for (let i = columnIdx + 1; i < 3; i++) {
+                                                  if (allSugs[i] && allSugs[i].length > 0) {
+                                                    const item = allSugs[i][0];
+                                                    remainingPreview.push(item.label || item);
+                                                  }
+                                                }
+                                                setPreviewChips(remainingPreview);
+                                              }
+                                            }
+                                          }}
+                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
+                                            isHighlighted
+                                              ? 'bg-blue-500 text-white'
+                                              : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
+                                          }`}
+                                        >
+                                          {Icon && <Icon className="w-4 h-4" />}
+                                          <span>{suggestion.label}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
 
                         {/* Actions */}
@@ -2230,6 +2386,12 @@ const UnifiedContactListing = () => {
                               onClick={() => {
                                 setPhraseChips([]);
                                 setPhraseSearchText('');
+                                setLockedSuggestions(null);
+                                setColumnSelections([null, null, null]);
+                                setColumnIndices([0, 0, 0]);
+                                setActiveColumn(0);
+                                setSelectionRoundStart(0);
+                                setPreviewChips([]);
                               }}
                               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                             >
@@ -2255,6 +2417,7 @@ const UnifiedContactListing = () => {
                   onClick={() => {
                     setIsPhraseMode(false);
                     setPhraseSearchText('');
+                    setPreviewChips([]);
                   }}
                 />
               )}
