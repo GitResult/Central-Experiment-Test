@@ -2028,16 +2028,24 @@ const UnifiedContactListing = () => {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
                         } else if (e.key === 'ArrowRight') {
-                          // Move to next column
+                          // Move to next column (skip disabled columns)
                           e.preventDefault();
-                          if (activeColumn < 2) {
-                            setActiveColumn(prev => prev + 1);
+                          let nextCol = activeColumn + 1;
+                          while (nextCol < 3 && columnSelections[nextCol] !== null) {
+                            nextCol++;
+                          }
+                          if (nextCol < 3) {
+                            setActiveColumn(nextCol);
                           }
                         } else if (e.key === 'ArrowLeft') {
-                          // Move to previous column
+                          // Move to previous column (skip disabled columns)
                           e.preventDefault();
-                          if (activeColumn > 0) {
-                            setActiveColumn(prev => prev - 1);
+                          let prevCol = activeColumn - 1;
+                          while (prevCol >= 0 && columnSelections[prevCol] !== null) {
+                            prevCol--;
+                          }
+                          if (prevCol >= 0) {
+                            setActiveColumn(prevCol);
                           }
                         } else if (e.key === 'ArrowDown') {
                           // Navigate down within active column
@@ -2092,13 +2100,16 @@ const UnifiedContactListing = () => {
 
                           setPhraseChips([...phraseChips, ...chipsToAdd]);
                           setPhraseSearchText('');
-                          // Reset column states for next set
-                          setColumnSelections([null, null, null]);
-                          setColumnIndices([0, 0, 0]);
-                          setActiveColumn(0);
-                          // Only unlock suggestions after selecting from the 3rd column (column 2)
+
+                          // If this was the 3rd column (column 2), reset everything
                           if (activeColumn === 2) {
+                            setColumnSelections([null, null, null]);
+                            setColumnIndices([0, 0, 0]);
+                            setActiveColumn(0);
                             setLockedSuggestions(null);
+                          } else {
+                            // Otherwise, move to next column
+                            setActiveColumn(activeColumn + 1);
                           }
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
@@ -2190,12 +2201,15 @@ const UnifiedContactListing = () => {
                             return allSuggestions.map((columnSuggestions, columnIdx) => {
                               const isActive = activeColumn === columnIdx;
                               const isSelected = columnSelections[columnIdx] !== null;
+                              const isDisabled = isSelected;
 
                               return (
                                 <div
                                   key={columnIdx}
                                   className={`transition-all ${
-                                    isActive
+                                    isDisabled
+                                      ? 'opacity-30 pointer-events-none'
+                                      : isActive
                                       ? 'opacity-100'
                                       : 'opacity-30'
                                   }`}
@@ -2253,12 +2267,16 @@ const UnifiedContactListing = () => {
 
                                             setPhraseChips([...phraseChips, ...chipsToAdd]);
                                             setPhraseSearchText('');
-                                            setColumnSelections([null, null, null]);
-                                            setColumnIndices([0, 0, 0]);
-                                            setActiveColumn(0);
-                                            // Only unlock suggestions after selecting from the 3rd column (column 2)
+
+                                            // If this was the 3rd column (column 2), reset everything
                                             if (columnIdx === 2) {
+                                              setColumnSelections([null, null, null]);
+                                              setColumnIndices([0, 0, 0]);
+                                              setActiveColumn(0);
                                               setLockedSuggestions(null);
+                                            } else {
+                                              // Otherwise, move to next column
+                                              setActiveColumn(columnIdx + 1);
                                             }
                                           }}
                                           className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
@@ -2287,6 +2305,9 @@ const UnifiedContactListing = () => {
                                 setPhraseChips([]);
                                 setPhraseSearchText('');
                                 setLockedSuggestions(null);
+                                setColumnSelections([null, null, null]);
+                                setColumnIndices([0, 0, 0]);
+                                setActiveColumn(0);
                               }}
                               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                             >
