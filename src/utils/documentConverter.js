@@ -2,17 +2,18 @@
  * Document Converter Utility
  *
  * Client-side document conversion to PDF using browser libraries:
- * - DOCX: mammoth.js (converts to HTML) + jsPDF (HTML to PDF)
- * - XLSX: xlsx.js (reads spreadsheet) + jsPDF (renders to PDF)
- * - PPTX: JSZip + DOMParser (extracts text from slides) + jsPDF (creates PDF)
- *   Note: PPTX conversion extracts text only; images and formatting are not preserved
- * - PDF: Direct passthrough
+ * - DOCX: mammoth.js (extracts text) + jsPDF (creates formatted PDF)
+ * - XLSX: xlsx.js (parses spreadsheet) + jsPDF + autotable (renders tables to PDF)
+ * - PPTX: JSZip (unzips file) + DOMParser (extracts text from slide XML) + jsPDF (creates PDF)
+ *
+ * Note: All conversions extract text content only. Images, complex formatting,
+ * and layouts are not preserved. For full fidelity, export to PDF from the source application.
  */
 
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import 'jspdf-autotable';
 import JSZip from 'jszip';
 
 /**
@@ -52,58 +53,91 @@ export const convertToPDF = async (file, onProgress = () => {}) => {
 
 /**
  * Convert Word document to PDF
+ * Extracts text content from DOCX and creates a formatted PDF
  */
 const convertWordToPDF = async (file, onProgress) => {
   onProgress(20);
 
-  // Read file as array buffer
-  const arrayBuffer = await file.arrayBuffer();
-
-  onProgress(40);
-
-  // Convert DOCX to HTML using mammoth
-  const result = await mammoth.convertToHtml({ arrayBuffer });
-  const html = result.value;
-
-  onProgress(60);
-
-  // Create a temporary container for the HTML
-  const container = document.createElement('div');
-  container.style.width = '210mm'; // A4 width
-  container.style.padding = '20mm';
-  container.style.fontFamily = 'Arial, sans-serif';
-  container.style.fontSize = '12pt';
-  container.style.lineHeight = '1.5';
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.innerHTML = html;
-  document.body.appendChild(container);
-
-  onProgress(70);
-
   try {
-    // Convert HTML to PDF using jsPDF
+    // Read file as array buffer
+    const arrayBuffer = await file.arrayBuffer();
+
+    onProgress(40);
+
+    // Convert DOCX to text using mammoth
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    const text = result.value;
+
+    onProgress(60);
+
+    // Create PDF from extracted text
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
 
-    // Use html method to render the content - wrap in promise for proper async handling
-    await new Promise((resolve, reject) => {
-      pdf.html(container, {
-        callback: function(doc) {
-          resolve(doc);
-        },
-        x: 10,
-        y: 10,
-        width: 190, // A4 width minus margins
-        windowWidth: 794, // A4 width in pixels at 96 DPI
-        html2canvas: {
-          scale: 0.5 // Reduce scale for faster rendering
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    const lineHeight = 7;
+    const maxLinesPerPage = Math.floor((pageHeight - margin * 2) / lineHeight);
+
+    onProgress(70);
+
+    // Add header
+    pdf.setFillColor(59, 130, 246);
+    pdf.rect(0, 0, pageWidth, 12, 'F');
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(10);
+    pdf.text(file.name, margin, 8);
+
+    // Add content
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFontSize(11);
+
+    if (text.trim()) {
+      // Split text into lines that fit the page width
+      const lines = pdf.splitTextToSize(text, maxWidth);
+
+      let y = margin + 5;
+      let pageNum = 1;
+      let linesOnPage = 0;
+
+      lines.forEach((line, index) => {
+        // Check if we need a new page
+        if (linesOnPage >= maxLinesPerPage) {
+          pdf.addPage();
+          pageNum++;
+
+          // Add header to new page
+          pdf.setFillColor(59, 130, 246);
+          pdf.rect(0, 0, pageWidth, 12, 'F');
+
+          pdf.setTextColor(255, 255, 255);
+          pdf.setFontSize(10);
+          pdf.text(file.name, margin, 8);
+          pdf.text(`Page ${pageNum}`, pageWidth - margin, 8, { align: 'right' });
+
+          // Reset for content
+          pdf.setTextColor(30, 30, 30);
+          pdf.setFontSize(11);
+
+          y = margin + 5;
+          linesOnPage = 0;
         }
-      }).catch(reject);
-    });
+
+        pdf.text(line, margin, y);
+        y += lineHeight;
+        linesOnPage++;
+      });
+    } else {
+      // Empty document
+      pdf.setTextColor(150, 150, 150);
+      pdf.text('[Empty document or content not extracted]', margin, margin + 10);
+    }
 
     onProgress(90);
 
@@ -113,110 +147,133 @@ const convertWordToPDF = async (file, onProgress) => {
     onProgress(100);
 
     return pdfBlob;
-  } finally {
-    // Clean up
-    document.body.removeChild(container);
+  } catch (error) {
+    console.error('Word conversion error:', error);
+    return createErrorPDF(file, error.message, onProgress);
   }
 };
 
 /**
  * Convert Excel spreadsheet to PDF
+ * Renders spreadsheet data as formatted tables in PDF
  */
 const convertExcelToPDF = async (file, onProgress) => {
   onProgress(20);
 
-  // Read file as array buffer
-  const arrayBuffer = await file.arrayBuffer();
+  try {
+    // Read file as array buffer
+    const arrayBuffer = await file.arrayBuffer();
 
-  onProgress(40);
+    onProgress(40);
 
-  // Parse Excel file
-  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    // Parse Excel file
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
-  onProgress(60);
+    onProgress(60);
 
-  // Create PDF
-  const pdf = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-  let isFirstSheet = true;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const maxWidth = pageWidth - (margin * 2);
 
-  // Process each sheet
-  for (const sheetName of workbook.SheetNames) {
-    if (!isFirstSheet) {
-      pdf.addPage();
-    }
-    isFirstSheet = false;
+    let isFirstSheet = true;
 
-    const worksheet = workbook.Sheets[sheetName];
+    // Process each sheet
+    for (const sheetName of workbook.SheetNames) {
+      if (!isFirstSheet) {
+        pdf.addPage();
+      }
+      isFirstSheet = false;
 
-    // Convert sheet to HTML
-    const html = XLSX.utils.sheet_to_html(worksheet);
+      const worksheet = workbook.Sheets[sheetName];
 
-    // Create temporary container
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.fontFamily = 'Arial, sans-serif';
-    container.style.fontSize = '10pt';
-    container.innerHTML = `
-      <h2 style="margin-bottom: 10px;">${sheetName}</h2>
-      ${html}
-    `;
+      // Add header
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(0, 0, pageWidth, 12, 'F');
 
-    // Style the table
-    const table = container.querySelector('table');
-    if (table) {
-      table.style.borderCollapse = 'collapse';
-      table.style.width = '100%';
-      table.style.fontSize = '9pt';
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.text(file.name, margin, 8);
+      pdf.text(`Sheet: ${sheetName}`, pageWidth - margin, 8, { align: 'right' });
 
-      const cells = table.querySelectorAll('td, th');
-      cells.forEach(cell => {
-        cell.style.border = '1px solid #ddd';
-        cell.style.padding = '4px';
-      });
+      // Convert sheet to array of arrays
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-      const headers = table.querySelectorAll('th');
-      headers.forEach(header => {
-        header.style.backgroundColor = '#f0f0f0';
-        header.style.fontWeight = 'bold';
-      });
-    }
+      if (data.length === 0) {
+        pdf.setTextColor(150, 150, 150);
+        pdf.setFontSize(11);
+        pdf.text('[Empty sheet]', margin, 25);
+        continue;
+      }
 
-    document.body.appendChild(container);
-
-    try {
-      // Add content to PDF - wrap in promise for proper async handling
-      await new Promise((resolve, reject) => {
-        pdf.html(container, {
-          callback: function(doc) {
-            resolve(doc);
+      // Use autoTable for better table rendering
+      if (pdf.autoTable) {
+        pdf.autoTable({
+          head: data.length > 0 ? [data[0]] : [],
+          body: data.slice(1),
+          startY: 18,
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 8,
+            cellPadding: 2
           },
-          x: 10,
-          y: 10,
-          width: 277, // A4 landscape width minus margins
-          windowWidth: 1123, // A4 landscape width in pixels
-          html2canvas: {
-            scale: 0.5 // Reduce scale for faster rendering
+          headStyles: {
+            fillColor: [59, 130, 246],
+            textColor: 255,
+            fontStyle: 'bold'
+          },
+          alternateRowStyles: {
+            fillColor: [245, 247, 250]
           }
-        }).catch(reject);
-      });
-    } finally {
-      document.body.removeChild(container);
+        });
+      } else {
+        // Fallback: render as text if autoTable is not available
+        pdf.setTextColor(30, 30, 30);
+        pdf.setFontSize(8);
+
+        let y = 20;
+        const lineHeight = 5;
+        const maxRows = Math.floor((pageHeight - 25) / lineHeight);
+
+        data.slice(0, maxRows).forEach((row, rowIndex) => {
+          const rowText = row.join(' | ');
+          const lines = pdf.splitTextToSize(rowText, maxWidth);
+
+          if (y + (lines.length * lineHeight) > pageHeight - margin) {
+            return; // Skip if we exceed page height
+          }
+
+          lines.forEach(line => {
+            pdf.text(line, margin, y);
+            y += lineHeight;
+          });
+        });
+
+        if (data.length > maxRows) {
+          pdf.setTextColor(150, 150, 150);
+          pdf.text(`... ${data.length - maxRows} more rows`, margin, y);
+        }
+      }
     }
+
+    onProgress(90);
+
+    const pdfBlob = pdf.output('blob');
+
+    onProgress(100);
+
+    return pdfBlob;
+  } catch (error) {
+    console.error('Excel conversion error:', error);
+    return createErrorPDF(file, error.message, onProgress);
   }
-
-  onProgress(90);
-
-  const pdfBlob = pdf.output('blob');
-
-  onProgress(100);
-
-  return pdfBlob;
 };
 
 /**
