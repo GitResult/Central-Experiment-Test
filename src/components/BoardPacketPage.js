@@ -28,9 +28,25 @@ import {
   FileText, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
   Search, MessageSquare, AlertCircle, Loader2, X,
   Calendar, MapPin, Clock, Eye, CheckCircle2,
-  Circle, PenTool, Send, Mail, Briefcase, Pencil
+  Circle, PenTool, Send, Mail, Briefcase, Pencil, GripVertical
 } from 'lucide-react';
 import { convertToPDF, isSupportedFileType } from '../utils/documentConverter';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Configure PDF.js worker - using the recommended approach for Create React App
 // This ensures version matching between pdf.js and the worker
@@ -48,6 +64,105 @@ const AVAILABLE_USERS = [
   { id: 5, name: 'Emily Johnson', designation: 'Board Secretary', email: 'emily.johnson@company.com' },
   { id: 6, name: 'Michael Brown', designation: 'COO', email: 'michael.brown@company.com' }
 ];
+
+// Sortable Agenda Item Component
+const SortableAgendaItem = ({ item, itemDocCount, isSelected, onSelect, onEdit, onFileUpload }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-2">
+      {/* Agenda Item Button */}
+      <button
+        onClick={onSelect}
+        className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
+          isSelected
+            ? 'bg-blue-50 border-2 border-blue-300'
+            : 'border border-transparent hover:bg-gray-50 hover:border-gray-200'
+        }`}
+      >
+        <div className="flex items-start justify-between">
+          {/* Drag Handle */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="mr-2 mt-0.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+
+          <div className="flex-1">
+            <div className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+              {item.order}. {item.title}
+            </div>
+            {item.duration && (
+              <div className="text-xs text-gray-500 mt-0.5">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {item.duration}
+                {item.presenter && ` • ${item.presenter}`}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 ml-2">
+            {/* Edit Icon */}
+            <button
+              onClick={onEdit}
+              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              title="Edit agenda item"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            {/* File Count */}
+            {itemDocCount > 0 && (
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                isSelected
+                  ? 'bg-blue-200 text-blue-800'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {itemDocCount}
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded Detail View */}
+      {isSelected && (
+        <div className="ml-3 space-y-2 pb-1">
+          {item.description && (
+            <div className="px-3 py-2 bg-white rounded border border-blue-200">
+              <p className="text-sm text-gray-700">
+                {item.description}
+              </p>
+            </div>
+          )}
+
+          {/* Upload File Button for Agenda */}
+          <button
+            onClick={onFileUpload}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Files
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const BoardPacketPage = () => {
   // Meeting Info
@@ -593,6 +708,34 @@ const BoardPacketPage = () => {
     setEditAgendaPresenter('');
   };
 
+  // Drag and Drop for Agenda Items
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setAgendaItems((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+
+        // Reorder the array
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+
+        // Update order property to match new positions
+        return reorderedItems.map((item, index) => ({
+          ...item,
+          order: index + 1
+        }));
+      });
+    }
+  };
+
   // Zoom controls
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 25, 50));
@@ -750,94 +893,44 @@ const BoardPacketPage = () => {
               </div>
             )}
 
-            {/* Agenda List with Inline Detail View */}
-            <div className="space-y-1">
-              {agendaItems.map(item => {
-                const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
-                const isSelected = selectedAgendaId === item.id;
+            {/* Agenda List with Inline Detail View - Drag and Drop Enabled */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={agendaItems.map(item => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1">
+                  {agendaItems.map(item => {
+                    const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
+                    const isSelected = selectedAgendaId === item.id;
 
-                return (
-                  <div key={item.id} className="space-y-2">
-                    {/* Agenda Item Button */}
-                    <button
-                      onClick={() => setSelectedAgendaId(isSelected ? null : item.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
-                        isSelected
-                          ? 'bg-blue-50 border-2 border-blue-300'
-                          : selectedAgendaId
-                          ? 'border border-transparent opacity-50 hover:opacity-75'
-                          : 'border border-transparent hover:bg-gray-50 hover:border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {item.order}. {item.title}
-                          </div>
-                          {item.duration && (
-                            <div className="text-xs text-gray-500 mt-0.5">
-                              <Clock className="w-3 h-3 inline mr-1" />
-                              {item.duration}
-                              {item.presenter && ` • ${item.presenter}`}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 ml-2">
-                          {/* Edit Icon */}
-                          <button
-                            onClick={(e) => handleStartEditAgenda(item, e)}
-                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="Edit agenda item"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          {/* File Count */}
-                          {itemDocCount > 0 && (
-                            <span className={`px-2 py-0.5 text-xs rounded-full ${
-                              isSelected
-                                ? 'bg-blue-200 text-blue-800'
-                                : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {itemDocCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Expanded Detail View */}
-                    {isSelected && (
-                      <div className="ml-3 space-y-2 pb-1">
-                        {item.description && (
-                          <div className="px-3 py-2 bg-white rounded border border-blue-200">
-                            <p className="text-sm text-gray-700">
-                              {item.description}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Upload File Button for Agenda */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.multiple = true;
-                            input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
-                            input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
-                            input.click();
-                          }}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Files
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    return (
+                      <SortableAgendaItem
+                        key={item.id}
+                        item={item}
+                        itemDocCount={itemDocCount}
+                        isSelected={isSelected}
+                        onSelect={() => setSelectedAgendaId(isSelected ? null : item.id)}
+                        onEdit={(e) => handleStartEditAgenda(item, e)}
+                        onFileUpload={(e) => {
+                          e.stopPropagation();
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.multiple = true;
+                          input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+                          input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
+                          input.click();
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
 
           {/* Documents Section */}
