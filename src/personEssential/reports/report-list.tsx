@@ -18,10 +18,20 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2 } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock } from 'lucide-react';
 
-
-
+const getIconComponent = (iconName) => {
+  const iconMap = {
+    Database, Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play,
+    Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin,
+    Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash,
+    UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle,
+    TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt,
+    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper,
+    UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock
+  };
+  return iconMap[iconName] || Database;
+};
 
 interface SortableItemProps {
   id: string;
@@ -444,9 +454,62 @@ const ReportBuilder = ({
   const [savedQueries, setSavedQueries] = useState([]);
   const [editingSelection, setEditingSelection] = useState(null);
 
+  // Dynamic data from JSON
+  const [categories, setCategories] = useState(CATEGORIES);
+  const [sampleValues, setSampleValues] = useState(SAMPLE_VALUES);
+  const [categoryFields, setCategoryFields] = useState(CATEGORY_FIELDS);
+  const [defaultFields, setDefaultFields] = useState(DEFAULT_FIELDS);
+  const [sectionIcons, setSectionIcons] = useState(SECTION_ICONS);
+  const [categoryIcons, setCategoryIcons] = useState(CATEGORY_ICONS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load data from JSON file
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const jsonUrl = `${process.env.PUBLIC_URL}/data/reports/newReport.json`;
+        const response = await fetch(jsonUrl);
+        const data = await response.json();
+
+        const updatedSampleValues = { ...data.sample_values };
+        Object.entries(data.categories).forEach(([section, cats]) => {
+          cats.forEach(cat => {
+            if (!updatedSampleValues[cat]) {
+              updatedSampleValues[cat] = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5', 'Option 6'];
+            }
+          });
+        });
+
+        // Convert icon names to components
+        const convertedSectionIcons = {};
+        Object.entries(data.section_icons).forEach(([key, iconName]) => {
+          convertedSectionIcons[key] = getIconComponent(iconName);
+        });
+
+        const convertedCategoryIcons = {};
+        Object.entries(data.category_icons).forEach(([key, iconName]) => {
+          convertedCategoryIcons[key] = getIconComponent(iconName);
+        });
+
+        setCategories(data.categories);
+        setSampleValues(updatedSampleValues);
+        setCategoryFields(data.category_fields);
+        setDefaultFields(data.default_fields);
+        setSectionIcons(convertedSectionIcons);
+        setCategoryIcons(convertedCategoryIcons);
+      } catch (error) {
+        console.error('Error loading report data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const filteredFields = useMemo(() => {
-    const allFields = Object.entries(CATEGORIES).flatMap(([section, categories]) =>
-      categories.filter(cat => cat !== 'Combos').map(cat => ({ section, category: cat }))
+    const allFields = Object.entries(categories).flatMap(([section, cats]) =>
+      cats.filter(cat => cat !== 'Combos').map(cat => ({ section, category: cat }))
     );
 
     let filtered = allFields;
@@ -471,7 +534,7 @@ const ReportBuilder = ({
     }
 
     return filtered;
-  }, [sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
+  }, [categories, sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
 
   // Natural language query builder (from Browse mode)
   const buildNaturalLanguageQuery = () => {
@@ -576,7 +639,7 @@ const ReportBuilder = ({
   };
 
   const getCategoryTotal = (category) => {
-    const values = SAMPLE_VALUES[category] || [];
+    const values = sampleValues[category] || [];
     return values.reduce((sum, val) => sum + getValueCount(category, val), 0);
   };
 
@@ -720,7 +783,7 @@ const ReportBuilder = ({
       return;
     }
 
-    const values = SAMPLE_VALUES[category] || [];
+    const values = sampleValues[category] || [];
     if (values.length === 1) {
       if (section === 'Starting Data') {
         addField(category, values[0]);
@@ -814,7 +877,7 @@ const ReportBuilder = ({
       if (action === 'field') {
         addSelection(category, 'All Values', 'field');
       } else if (action === 'filter') {
-        const values = SAMPLE_VALUES[category] || [];
+        const values = sampleValues[category] || [];
         if (values.length > 0) {
           addSelection(category, values[0], 'filter');
         }
@@ -1466,9 +1529,9 @@ const ReportBuilder = ({
               </div>
 
               <div className="space-y-1">
-                {Object.keys(CATEGORIES).map(section => {
+                {Object.keys(categories).map(section => {
                   const colors = SECTION_COLORS[section];
-                  const SectionIcon = SECTION_ICONS[section];
+                  const SectionIcon = sectionIcons[section];
                   const isActive = sectionFilters.includes(section);
 
                   return (
@@ -1495,16 +1558,16 @@ const ReportBuilder = ({
 
 
               {/* {filteredFields.map((field, idx) => {
-                const values = SAMPLE_VALUES[field.category] || [];
+                const values = sampleValues[field.category] || [];
                 const colors = SECTION_COLORS[field.section];
-                const CategoryIcon = CATEGORY_ICONS[field.category] || Database;
+                const CategoryIcon = categoryIcons[field.category] || Database;
                 const isExpanded = expandedCategories[field.category];
                 const displayValues = isExpanded ? values : values.slice(0, TOP_VALUES_DISPLAY);
                 const hasMore = values.length > TOP_VALUES_DISPLAY;
                 const isBulkSelected = bulkSelected.includes(field.category);
                 const totalCount = getCategoryTotal(field.category);
                 const isFlipped = flippedCards[field.category];
-                const categoryFields = CATEGORY_FIELDS[field.category] || DEFAULT_FIELDS;
+                const categoryFieldsList = categoryFields[field.category] || defaultFields;
                 const showDropLineBefore = dropLinePosition && dropLinePosition.index === idx && dropLinePosition.position === 'before';
                 const showDropLineAfter = dropLinePosition && dropLinePosition.index === idx && dropLinePosition.position === 'after';
 
@@ -1590,16 +1653,16 @@ const ReportBuilder = ({
                     {filteredFields.map((field, idx) => {
                       const itemId = `field-${idx}-${field.category}`;
 
-                      const values = SAMPLE_VALUES[field.category] || [];
+                      const values = sampleValues[field.category] || [];
                       const colors = SECTION_COLORS[field.section];
-                      const CategoryIcon = CATEGORY_ICONS[field.category] || Database;
+                      const CategoryIcon = categoryIcons[field.category] || Database;
                       const isExpanded = expandedCategories[field.category];
                       const displayValues = isExpanded ? values : values.slice(0, TOP_VALUES_DISPLAY);
                       const hasMore = values.length > TOP_VALUES_DISPLAY;
                       const isBulkSelected = bulkSelected.includes(field.category);
                       const totalCount = getCategoryTotal(field.category);
                       const isFlipped = flippedCards[field.category];
-                      const categoryFields = CATEGORY_FIELDS[field.category] || DEFAULT_FIELDS;
+                      const categoryFieldsList = categoryFields[field.category] || defaultFields;
 
                       return (
                         <SortableItem
@@ -1785,7 +1848,7 @@ const ReportBuilder = ({
                                           {field.category}
                                         </h4>
                                       </div>
-                                      <p className="text-xs text-gray-500 mt-1">{categoryFields.length} fields available</p>
+                                      <p className="text-xs text-gray-500 mt-1">{categoryFieldsList.length} fields available</p>
                                     </div>
                                     <button
                                       onClick={(e) => {
@@ -1802,7 +1865,7 @@ const ReportBuilder = ({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        categoryFields.forEach(fieldName => {
+                                        categoryFieldsList.forEach(fieldName => {
                                           const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                           if (!isAdded) {
                                             addSelection(field.category, fieldName, 'field');
@@ -1826,7 +1889,7 @@ const ReportBuilder = ({
                                     </h5>
                                   </div>
                                   <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
-                                    {categoryFields.map((fieldName, fIdx) => {
+                                    {categoryFieldsList.map((fieldName, fIdx) => {
                                       const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                       return (
                                         <div key={fIdx} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
@@ -1866,7 +1929,7 @@ const ReportBuilder = ({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        categoryFields.forEach(fieldName => {
+                                        categoryFieldsList.forEach(fieldName => {
                                           const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                           if (!isAdded) {
                                             addSelection(field.category, fieldName, 'field');
@@ -2467,7 +2530,7 @@ const ReportBuilder = ({
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${SECTION_COLORS[fieldsPanel.section]?.bg || 'bg-gray-100'}`}>
                     {(() => {
-                      const Icon = CATEGORY_ICONS[fieldsPanel.category] || Database;
+                      const Icon = categoryIcons[fieldsPanel.category] || Database;
                       return <Icon className={`w-4 h-4 ${SECTION_COLORS[fieldsPanel.section]?.icon || 'text-gray-600'}`} strokeWidth={1.5} />;
                     })()}
                   </div>
@@ -2518,7 +2581,7 @@ const ReportBuilder = ({
             <div className="flex-1 overflow-auto p-6 bg-gray-50" style={{ minWidth: 0 }}>
               {fieldsPanelTab === 'fields' ? (
                 <div className="space-y-3">
-                  {(CATEGORY_FIELDS[fieldsPanel.category] || DEFAULT_FIELDS).map((fieldName, idx) => {
+                  {(categoryFields[fieldsPanel.category] || defaultFields).map((fieldName, idx) => {
                     const fieldKey = `${fieldsPanel.category}-field-${fieldName}`;
                     const settings = fieldSettings[fieldKey] || { visible: true, filtered: false, filterValue: '' };
 
@@ -2704,7 +2767,7 @@ const ReportBuilder = ({
                 <>
                   <button
                     onClick={() => {
-                      const fields = CATEGORY_FIELDS[fieldsPanel.category] || DEFAULT_FIELDS;
+                      const fields = categoryFields[fieldsPanel.category] || defaultFields;
                       fields.forEach(fieldName => {
                         addSelection(fieldsPanel.category, fieldName, 'field');
                       });
@@ -3065,7 +3128,7 @@ const ReportBuilder = ({
                                             category: sel.category,
                                             value: sel.value,
                                             filterIndex: idx,
-                                            values: SAMPLE_VALUES[sel.category] || []
+                                            values: sampleValues[sel.category] || []
                                           };
 
                                           if (!waterfallFromFilter || waterfallFromFilter.category !== sel.category) {
