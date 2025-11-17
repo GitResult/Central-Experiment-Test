@@ -245,13 +245,13 @@ const ReportBuilder = (props) => {
 
   const addFilter = (category, value) => {
     if (editingSelection) {
-      // Update existing selection
+      // Update existing selection, preserving its type
       setSelections(selections.map(s =>
         s.id === editingSelection.id
           ? { ...s, category, value }
           : s
       ));
-      showToast(`Filter updated: ${value}`);
+      showToast(`Selection updated: ${value}`);
       setEditingSelection(null);
       setSelectedCategory(null);
     } else {
@@ -762,15 +762,13 @@ const ReportBuilder = (props) => {
                         <span className="font-medium">{sel.category}</span>
                         <span className="text-xs opacity-75">= {sel.value}</span>
                         <div className="flex items-center gap-1 ml-1">
-                          {sel.type === 'filter' && (
-                            <button
-                              onClick={() => handleEditSelection(sel)}
-                              className="hover:bg-white/50 rounded p-0.5 transition-colors"
-                              title="Edit filter value"
-                            >
-                              <Edit2 className="w-3 h-3" strokeWidth={2} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleEditSelection(sel)}
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                            title="Edit selection value"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
                           <button
                             onClick={() => {
                               removeSelection(sel.id);
@@ -779,10 +777,10 @@ const ReportBuilder = (props) => {
                                 setSelectedCategory(null);
                               }
                             }}
-                            className="hover:bg-white/50 rounded p-0.5 transition-colors"
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
                             title="Remove"
                           >
-                            <X className="w-3 h-3" strokeWidth={2} />
+                            <X className="w-3.5 h-3.5" strokeWidth={2} />
                           </button>
                         </div>
                       </div>
