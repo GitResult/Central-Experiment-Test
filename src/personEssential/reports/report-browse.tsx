@@ -486,10 +486,9 @@ const ReportBuilder = (props) => {
       if (filterSelections.length > 0) {
         const parts = [];
         let i = 0;
-        let isFirstFilter = true; // Track if this is the first filter after base
 
-        // Helper functions for phrases
-        const getFullPhrase = (category, value) => {
+        // Helper function to get proper connector phrase for each category
+        const getConnectorPhrase = (category, value) => {
           let val = value;
           if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
@@ -497,23 +496,10 @@ const ReportBuilder = (props) => {
           if (category === 'Renewal Year') return `who renewed in ${val}`;
           if (category === 'Membership Type') return `that are member type ${val}`;
           if (category === 'Tenure') return `that have been members for ${val}`;
-          if (category === 'Occupation') return `with occupation ${val}`;
-          if (category === 'Degree') return `with degree ${val}`;
-          if (category === 'Province/State') return `from ${val}`;
+          if (category === 'Occupation') return `and occupation is ${val}`;
+          if (category === 'Degree') return `with a Degree: ${val}`;
+          if (category === 'Province/State') return `from province/state ${val}`;
           return `with ${category.toLowerCase()} ${val}`;
-        };
-
-        const getSimplePhrase = (category, value) => {
-          let val = value;
-          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
-
-          if (category === 'Renewal Month' || category === 'Renewal Year') return `renewed in ${val}`;
-          if (category === 'Membership Type') return `member type ${val}`;
-          if (category === 'Tenure') return `tenure ${val}`;
-          if (category === 'Occupation') return `occupation ${val}`;
-          if (category === 'Degree') return `degree ${val}`;
-          if (category === 'Province/State') return val;
-          return `${category.toLowerCase()} ${val}`;
         };
 
         while (i < filterSelections.length) {
@@ -526,13 +512,8 @@ const ReportBuilder = (props) => {
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
-            if (isFirstFilter) {
-              const phrase = getFullPhrase(sel.category, sel.value);
-              parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
-            } else {
-              parts.push(`${getSimplePhrase(sel.category, sel.value)} and ${val2}`);
-            }
-            isFirstFilter = false;
+            const phrase = getConnectorPhrase(sel.category, sel.value);
+            parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
             i += 2;
           } else {
             // Check for OR connectors with same category
@@ -551,29 +532,20 @@ const ReportBuilder = (props) => {
                 sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
-              if (isFirstFilter) {
-                const phrase = getFullPhrase(sel.category, sel.value);
-                parts.push(phrase.replace(sel.value, formattedValues));
-              } else {
-                const simplePart = getSimplePhrase(sel.category, sel.value);
-                parts.push(simplePart.replace(sel.value, formattedValues));
-              }
+              const phrase = getConnectorPhrase(sel.category, sel.value);
+              parts.push(phrase.replace(sel.value, formattedValues));
             } else {
               // Single value
-              parts.push(isFirstFilter ? getFullPhrase(sel.category, sel.value) : getSimplePhrase(sel.category, sel.value));
+              parts.push(getConnectorPhrase(sel.category, sel.value));
             }
 
-            isFirstFilter = false;
             i = j;
           }
         }
 
         if (parts.length > 0) {
-          // Join parts: first with space, rest with commas for natural flow
-          query += ' ' + parts[0];
-          for (let k = 1; k < parts.length; k++) {
-            query += ', ' + parts[k];
-          }
+          // Join all parts with proper spacing
+          query += ' ' + parts.join(' ');
         }
       }
 
