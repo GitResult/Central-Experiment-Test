@@ -424,6 +424,81 @@ const ReportBuilder = (props) => {
   }
 
   if (stage === 'browse') {
+    // Convert selections to natural language query
+    const buildNaturalLanguageQuery = () => {
+      if (selections.length === 0) return '';
+
+      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+      const yearCohorts = ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+
+      let query = '';
+      let hasStartingData = false;
+      let isYearCohort = false;
+
+      // Find starting data
+      const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
+      if (startingDataSel) {
+        hasStartingData = true;
+        isYearCohort = yearCohorts.includes(startingDataSel.category);
+
+        if (isYearCohort) {
+          query = startingDataSel.category.replace(' Members', ' members');
+        } else {
+          query = startingDataSel.category.toLowerCase();
+        }
+      }
+
+      // Group remaining selections by type
+      const memberTypeSel = selections.find(s => s.category === 'Membership Type Code');
+      const tenureSel = selections.find(s => s.category === 'Tenure');
+      const occupationSel = selections.find(s => s.category === 'Occupation');
+      const degreeSel = selections.find(s => s.category === 'Degree');
+      const provinceSel = selections.find(s => s.category === 'Province/State');
+      const renewalMonthSel = selections.find(s => s.category === 'Renewal Month');
+      const renewalYearSel = selections.find(s => s.category === 'Renewal Year');
+
+      // Build query parts
+      const parts = [];
+
+      if (tenureSel) {
+        parts.push(`that have been members for the ${tenureSel.value.toLowerCase()}`);
+      }
+
+      if (memberTypeSel) {
+        parts.push(`that are member type ${memberTypeSel.value}`);
+      }
+
+      if (occupationSel) {
+        parts.push(`and occupation is ${occupationSel.value.toLowerCase()}`);
+      }
+
+      if (degreeSel) {
+        parts.push(`with a Degree: ${degreeSel.value}`);
+      }
+
+      if (provinceSel) {
+        parts.push(`from province/state ${provinceSel.value}`);
+      }
+
+      if (renewalMonthSel || renewalYearSel) {
+        let renewalPart = 'who renewed in';
+        if (renewalMonthSel) {
+          renewalPart += ` ${renewalMonthSel.value}`;
+        }
+        if (renewalYearSel) {
+          renewalPart += ` ${renewalYearSel.value}`;
+        }
+        parts.push(renewalPart);
+      }
+
+      // Combine all parts
+      if (parts.length > 0) {
+        query += ' ' + parts.join(' ');
+      }
+
+      return query.trim();
+    };
+
     // Get suggested next steps based on current selections
     const getSuggestedNextSteps = () => {
       // Check all selections regardless of type (field or filter)
@@ -985,9 +1060,14 @@ const ReportBuilder = (props) => {
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
                 </div>
-                <div>
+                <div className="flex-1 max-w-2xl">
                   <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
                   <div className="text-xs text-gray-500">JD • {calculateFilterImpact().toLocaleString()} records</div>
+                  {buildNaturalLanguageQuery() && (
+                    <div className="text-xs text-blue-700 mt-1 font-medium italic">
+                      "{buildNaturalLanguageQuery()}"
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
