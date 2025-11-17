@@ -66,7 +66,25 @@ const AVAILABLE_USERS = [
 ];
 
 // Sortable Agenda Item Component
-const SortableAgendaItem = ({ item, itemDocCount, isSelected, onSelect, onEdit, onFileUpload }) => {
+const SortableAgendaItem = ({
+  item,
+  itemDocCount,
+  isSelected,
+  isEditing,
+  editTitle,
+  editDescription,
+  editDuration,
+  editPresenter,
+  onSelect,
+  onEdit,
+  onFileUpload,
+  onEditTitleChange,
+  onEditDescriptionChange,
+  onEditDurationChange,
+  onEditPresenterChange,
+  onSaveEdit,
+  onCancelEdit
+}) => {
   const {
     attributes,
     listeners,
@@ -139,8 +157,94 @@ const SortableAgendaItem = ({ item, itemDocCount, isSelected, onSelect, onEdit, 
         </div>
       </button>
 
-      {/* Expanded Detail View */}
-      {isSelected && (
+      {/* Expanded Detail View - Edit Mode */}
+      {isSelected && isEditing && (
+        <div className="ml-3 p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Agenda item title..."
+              value={editTitle}
+              onChange={(e) => onEditTitleChange(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              placeholder="Agenda item description..."
+              value={editDescription}
+              onChange={(e) => onEditDescriptionChange(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              rows={3}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Duration
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 15 min"
+                value={editDuration}
+                onChange={(e) => onEditDurationChange(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Presenter
+              </label>
+              <input
+                type="text"
+                placeholder="Presenter name"
+                value={editPresenter}
+                onChange={(e) => onEditPresenterChange(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveEdit();
+              }}
+              disabled={!editTitle.trim()}
+              className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelEdit();
+              }}
+              className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Detail View - Normal Mode */}
+      {isSelected && !isEditing && (
         <div className="ml-3 space-y-2 pb-1">
           {item.description && (
             <div className="px-3 py-2 bg-white rounded border border-blue-200">
@@ -668,7 +772,12 @@ const BoardPacketPage = () => {
 
   // Edit Agenda Functions
   const handleStartEditAgenda = (item, e) => {
-    e.stopPropagation(); // Prevent selecting the agenda item
+    e.stopPropagation(); // Prevent triggering the select button
+    // Select the agenda item if not already selected
+    if (selectedAgendaId !== item.id) {
+      setSelectedAgendaId(item.id);
+    }
+    // Set edit mode and populate form fields
     setEditingAgendaId(item.id);
     setEditAgendaTitle(item.title);
     setEditAgendaDescription(item.description || '');
@@ -907,6 +1016,7 @@ const BoardPacketPage = () => {
                   {agendaItems.map(item => {
                     const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
                     const isSelected = selectedAgendaId === item.id;
+                    const isEditing = editingAgendaId === item.id;
 
                     return (
                       <SortableAgendaItem
@@ -914,6 +1024,11 @@ const BoardPacketPage = () => {
                         item={item}
                         itemDocCount={itemDocCount}
                         isSelected={isSelected}
+                        isEditing={isEditing}
+                        editTitle={editAgendaTitle}
+                        editDescription={editAgendaDescription}
+                        editDuration={editAgendaDuration}
+                        editPresenter={editAgendaPresenter}
                         onSelect={() => setSelectedAgendaId(isSelected ? null : item.id)}
                         onEdit={(e) => handleStartEditAgenda(item, e)}
                         onFileUpload={(e) => {
@@ -925,6 +1040,12 @@ const BoardPacketPage = () => {
                           input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
                           input.click();
                         }}
+                        onEditTitleChange={setEditAgendaTitle}
+                        onEditDescriptionChange={setEditAgendaDescription}
+                        onEditDurationChange={setEditAgendaDuration}
+                        onEditPresenterChange={setEditAgendaPresenter}
+                        onSaveEdit={handleSaveEditAgenda}
+                        onCancelEdit={handleCancelEditAgenda}
                       />
                     );
                   })}
@@ -1626,95 +1747,6 @@ const BoardPacketPage = () => {
         </div>
       )}
 
-      {/* Edit Agenda Modal */}
-      {editingAgendaId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Edit Agenda Item</h3>
-              <button
-                onClick={handleCancelEditAgenda}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Agenda item title..."
-                  value={editAgendaTitle}
-                  onChange={(e) => setEditAgendaTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  placeholder="Agenda item description..."
-                  value={editAgendaDescription}
-                  onChange={(e) => setEditAgendaDescription(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., 15 min"
-                    value={editAgendaDuration}
-                    onChange={(e) => setEditAgendaDuration(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Presenter
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Presenter name"
-                    value={editAgendaPresenter}
-                    onChange={(e) => setEditAgendaPresenter(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
-              <button
-                onClick={handleCancelEditAgenda}
-                className="flex-1 px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEditAgenda}
-                disabled={!editAgendaTitle.trim()}
-                className="flex-1 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
