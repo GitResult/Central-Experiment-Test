@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -426,10 +426,11 @@ const ReportBuilder = (props) => {
   if (stage === 'browse') {
     // Get suggested next steps based on current selections
     const getSuggestedNextSteps = () => {
-      const filters = selections.filter(s => s.type === 'filter');
-      const fields = selections.filter(s => s.type === 'field');
+      // Check all selections regardless of type (field or filter)
+      const allSelections = selections;
+      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
 
-      if (filters.length === 0 && fields.length === 0) {
+      if (allSelections.length === 0) {
         return {
           title: "Start building your query",
           suggestions: [
@@ -440,9 +441,11 @@ const ReportBuilder = (props) => {
         };
       }
 
-      const hasStartingData = filters.some(f => ['Current Members', 'New Members', 'Lapsed Members', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'].includes(f.category));
+      // Check if user has selected a starting data category (can be field or filter)
+      const hasStartingData = allSelections.some(s => startingDataCategories.includes(s.category));
 
-      if (hasStartingData && filters.length === 1) {
+      // Stage 1: After selecting starting data, suggest refining filters
+      if (hasStartingData && allSelections.length === 1) {
         return {
           title: "Refine your selection",
           suggestions: [
@@ -454,8 +457,14 @@ const ReportBuilder = (props) => {
         };
       }
 
-      const hasMemberType = filters.some(f => f.category === 'Membership Type Code');
-      if (hasMemberType && !filters.some(f => f.category === 'Occupation')) {
+      // Stage 2: After adding member type code, suggest demographics
+      const hasMemberType = allSelections.some(s => s.category === 'Membership Type Code');
+      const hasOccupation = allSelections.some(s => s.category === 'Occupation');
+      const hasDegree = allSelections.some(s => s.category === 'Degree');
+      const hasProvince = allSelections.some(s => s.category === 'Province/State');
+      const hasTenure = allSelections.some(s => s.category === 'Tenure');
+
+      if (hasMemberType && !hasOccupation && !hasDegree) {
         return {
           title: "Common next filters",
           suggestions: [
@@ -466,8 +475,8 @@ const ReportBuilder = (props) => {
         };
       }
 
-      const hasOccupation = filters.some(f => f.category === 'Occupation');
-      if (hasOccupation && !filters.some(f => f.category === 'Degree')) {
+      // Stage 3: After adding occupation, suggest degree and location
+      if (hasOccupation && !hasDegree && !hasProvince) {
         return {
           title: "Complete your demographic filters",
           suggestions: [
@@ -477,11 +486,60 @@ const ReportBuilder = (props) => {
         };
       }
 
+      // Stage 4: After degree, suggest location
+      if (hasDegree && !hasProvince) {
+        return {
+          title: "Add location filter",
+          suggestions: [
+            { category: "Province/State", section: "Location", reason: "Complete with location requirement", icon: "MapPin" }
+          ]
+        };
+      }
+
+      // Stage 5: For year-based cohorts, suggest renewal filters
+      const hasYearCohort = allSelections.some(s => ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'].includes(s.category));
+      const hasRenewalMonth = allSelections.some(s => s.category === 'Renewal Month');
+
+      if (hasYearCohort && !hasRenewalMonth && allSelections.length <= 2) {
+        return {
+          title: "Analyze renewal patterns",
+          suggestions: [
+            { category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" },
+            { category: "Renewal Year", section: "Membership", reason: "Filter by renewal year", icon: "Calendar" }
+          ]
+        };
+      }
+
+      // Default: Suggest additional filters that haven't been added
+      const suggestions = [];
+      if (!hasTenure && hasStartingData) {
+        suggestions.push({ category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
+      }
+      if (!hasMemberType) {
+        suggestions.push({ category: "Membership Type Code", section: "Membership", reason: "Filter by member type", icon: "Hash" });
+      }
+      if (!hasOccupation) {
+        suggestions.push({ category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" });
+      }
+      if (!hasDegree) {
+        suggestions.push({ category: "Degree", section: "Demographics", reason: "Filter by education", icon: "GraduationCap" });
+      }
+      if (!hasProvince) {
+        suggestions.push({ category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" });
+      }
+
+      if (suggestions.length > 0) {
+        return {
+          title: "Additional filters you can add",
+          suggestions: suggestions.slice(0, 4)
+        };
+      }
+
       return {
-        title: "Additional filters",
+        title: "Your query looks complete!",
         suggestions: [
-          { category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" },
-          { category: "Renewal Year", section: "Membership", reason: "Filter by renewal year", icon: "Calendar" }
+          { category: "Renewal Month", section: "Membership", reason: "Add renewal timing", icon: "Calendar" },
+          { category: "Career Stage", section: "Demographics", reason: "Add career stage filter", icon: "TrendingUp" }
         ]
       };
     };
