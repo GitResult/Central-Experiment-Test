@@ -20,16 +20,33 @@
  * @returns {React.Component} BoardPacketPage component
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import {
-  FileText, Upload, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
-  Search, Filter, MessageSquare, Check, AlertCircle, Loader2, X, Users,
-  Calendar, MapPin, Clock, Eye, Edit3, Trash2, MoreVertical, CheckCircle2,
-  Circle, PenTool, MousePointer, Send, AtSign, Mail, Briefcase
+  FileText, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
+  Search, MessageSquare, AlertCircle, Loader2, X,
+  Calendar, MapPin, Clock, Eye, CheckCircle2,
+  Circle, PenTool, Send, Mail, Briefcase, Pencil, GripVertical
 } from 'lucide-react';
+import { convertToPDF, isSupportedFileType } from '../utils/documentConverter';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Configure PDF.js worker - using the recommended approach for Create React App
 // This ensures version matching between pdf.js and the worker
@@ -48,6 +65,209 @@ const AVAILABLE_USERS = [
   { id: 6, name: 'Michael Brown', designation: 'COO', email: 'michael.brown@company.com' }
 ];
 
+// Sortable Agenda Item Component
+const SortableAgendaItem = ({
+  item,
+  itemDocCount,
+  isSelected,
+  isEditing,
+  editTitle,
+  editDescription,
+  editDuration,
+  editPresenter,
+  onSelect,
+  onEdit,
+  onFileUpload,
+  onEditTitleChange,
+  onEditDescriptionChange,
+  onEditDurationChange,
+  onEditPresenterChange,
+  onSaveEdit,
+  onCancelEdit
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-2">
+      {/* Agenda Item Button */}
+      <button
+        onClick={onSelect}
+        className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
+          isSelected
+            ? 'bg-blue-50 border-2 border-blue-300'
+            : 'border border-transparent hover:bg-gray-50 hover:border-gray-200'
+        }`}
+      >
+        <div className="flex items-start justify-between">
+          {/* Drag Handle */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="mr-2 mt-0.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+
+          <div className="flex-1">
+            <div className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+              {item.order}. {item.title}
+            </div>
+            {item.duration && (
+              <div className="text-xs text-gray-500 mt-0.5">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {item.duration}
+                {item.presenter && ` • ${item.presenter}`}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 ml-2">
+            {/* Edit Icon */}
+            <button
+              onClick={onEdit}
+              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              title="Edit agenda item"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            {/* File Count */}
+            {itemDocCount > 0 && (
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                isSelected
+                  ? 'bg-blue-200 text-blue-800'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {itemDocCount}
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded Detail View - Edit Mode */}
+      {isSelected && isEditing && (
+        <div className="ml-3 p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Agenda item title..."
+              value={editTitle}
+              onChange={(e) => onEditTitleChange(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              placeholder="Agenda item description..."
+              value={editDescription}
+              onChange={(e) => onEditDescriptionChange(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              rows={3}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Duration
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 15 min"
+                value={editDuration}
+                onChange={(e) => onEditDurationChange(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Presenter
+              </label>
+              <input
+                type="text"
+                placeholder="Presenter name"
+                value={editPresenter}
+                onChange={(e) => onEditPresenterChange(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveEdit();
+              }}
+              disabled={!editTitle.trim()}
+              className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelEdit();
+              }}
+              className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Detail View - Normal Mode */}
+      {isSelected && !isEditing && (
+        <div className="ml-3 space-y-2 pb-1">
+          {item.description && (
+            <div className="px-3 py-2 bg-white rounded border border-blue-200">
+              <p className="text-sm text-gray-700">
+                {item.description}
+              </p>
+            </div>
+          )}
+
+          {/* Upload File Button for Agenda */}
+          <button
+            onClick={onFileUpload}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Files
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const BoardPacketPage = () => {
   // Meeting Info
   const [meetingInfo] = useState({
@@ -60,26 +280,66 @@ const BoardPacketPage = () => {
 
   // Agenda Items State
   const [agendaItems, setAgendaItems] = useState([
-    { id: 1, title: "Opening & Minutes", order: 1 },
-    { id: 2, title: "Financials", order: 2 },
-    { id: 3, title: "Strategy & Risk", order: 3 },
-    { id: 4, title: "Operations", order: 4 }
+    {
+      id: 1,
+      title: "Opening & Minutes",
+      order: 1,
+      description: "Review and approve previous meeting minutes. Opening remarks from the Chair.",
+      duration: "15 min",
+      presenter: "John Smith"
+    },
+    {
+      id: 2,
+      title: "Financials",
+      order: 2,
+      description: "Q1 2026 financial performance review, budget variance analysis, and cash flow update.",
+      duration: "30 min",
+      presenter: "Sarah Chen"
+    },
+    {
+      id: 3,
+      title: "Strategy & Risk",
+      order: 3,
+      description: "2026 strategic initiatives update, risk assessment, and competitive landscape review.",
+      duration: "45 min",
+      presenter: "David Lee"
+    },
+    {
+      id: 4,
+      title: "Operations",
+      order: 4,
+      description: "Operational metrics, customer satisfaction, and key performance indicators.",
+      duration: "20 min",
+      presenter: "Michael Brown"
+    }
   ]);
 
   const [showNewAgendaForm, setShowNewAgendaForm] = useState(false);
   const [newAgendaTitle, setNewAgendaTitle] = useState('');
+  const [newAgendaDescription, setNewAgendaDescription] = useState('');
+  const [newAgendaDuration, setNewAgendaDuration] = useState('');
+  const [newAgendaPresenter, setNewAgendaPresenter] = useState('');
+  const [selectedAgendaId, setSelectedAgendaId] = useState(null);
+
+  // Edit Agenda State
+  const [editingAgendaId, setEditingAgendaId] = useState(null);
+  const [editAgendaTitle, setEditAgendaTitle] = useState('');
+  const [editAgendaDescription, setEditAgendaDescription] = useState('');
+  const [editAgendaDuration, setEditAgendaDuration] = useState('');
+  const [editAgendaPresenter, setEditAgendaPresenter] = useState('');
 
   // Documents State - First document is the uploaded PDF
   const [documents, setDocuments] = useState([
     {
       id: 1,
-      name: "Board of Directors Dashboard.pdf",
+      name: "CPA ANNUAL REPORT 2024-EN-FINAL.pdf",
       type: "pdf",
       agendaId: 1,
       status: "ready",
       pages: null, // Will be set when PDF loads
-      pdfPath: "/Board-of-Directors-Dashboard.pdf",
-      uploadedAt: new Date()
+      pdfPath: "/CPA ANNUAL REPORT 2024-EN-FINAL.pdf",
+      uploadedAt: new Date(),
+      progress: 100
     },
     {
       id: 2,
@@ -88,7 +348,8 @@ const BoardPacketPage = () => {
       agendaId: 2,
       status: "ready",
       pages: 12,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
+      progress: 100
     },
     {
       id: 3,
@@ -97,7 +358,8 @@ const BoardPacketPage = () => {
       agendaId: 3,
       status: "ready",
       pages: 25,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
+      progress: 100
     }
   ]);
 
@@ -107,7 +369,6 @@ const BoardPacketPage = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [viewMode, setViewMode] = useState('view'); // 'view' or 'annotate'
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeAgendaId, setActiveAgendaId] = useState(null);
 
   // Markers State - using normalized coordinates (0-1)
   const [markers, setMarkers] = useState([
@@ -154,6 +415,11 @@ const BoardPacketPage = () => {
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [tempMarker, setTempMarker] = useState(null);
 
+  // Standalone Comments (without markers)
+  const [standaloneComments, setStandaloneComments] = useState([]);
+  const [showAddComment, setShowAddComment] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+
   // Reply state
   const [replyText, setReplyText] = useState('');
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
@@ -162,33 +428,58 @@ const BoardPacketPage = () => {
   const [hoveredMention, setHoveredMention] = useState(null);
   const [mentionHoverPosition, setMentionHoverPosition] = useState({ x: 0, y: 0 });
 
-  const pageRef = useRef(null);
   const fileInputRef = useRef(null);
   const replyInputRef = useRef(null);
   const pageContainerRef = useRef(null);
+  const newCommentInputRef = useRef(null);
 
   // Get current document markers
   const currentMarkers = markers.filter(
     m => m.documentId === currentDocument?.id && m.page === currentPage
   );
 
-  // Filter markers for right panel
-  const filteredMarkers = markers
-    .filter(m => m.documentId === currentDocument?.id)
-    .filter(m => {
-      if (markerFilter === 'mine') return m.authorId === 1; // Current user ID
-      if (markerFilter === 'unresolved') return m.status === 'open';
+  // Filter markers and standalone comments for right panel
+  const filteredStandaloneComments = standaloneComments
+    .filter(c => c.documentId === currentDocument?.id)
+    .filter(c => {
+      if (markerFilter === 'mine') return c.authorId === 1; // Current user ID
+      if (markerFilter === 'unresolved') return c.status === 'open';
       return true;
     })
-    .filter(m => {
+    .filter(c => {
       if (!searchQuery) return true;
-      return m.note.toLowerCase().includes(searchQuery.toLowerCase());
+      return c.note.toLowerCase().includes(searchQuery.toLowerCase());
     })
-    .filter(m => {
-      if (!activeAgendaId) return true;
-      const doc = documents.find(d => d.id === m.documentId);
-      return doc?.agendaId === activeAgendaId;
+    .filter(c => {
+      if (!selectedAgendaId) return true;
+      const doc = documents.find(d => d.id === c.documentId);
+      return doc?.agendaId === selectedAgendaId;
     });
+
+  const filteredMarkers = [
+    ...markers
+      .filter(m => m.documentId === currentDocument?.id)
+      .filter(m => {
+        if (markerFilter === 'mine') return m.authorId === 1; // Current user ID
+        if (markerFilter === 'unresolved') return m.status === 'open';
+        return true;
+      })
+      .filter(m => {
+        if (!searchQuery) return true;
+        return m.note.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+      .filter(m => {
+        if (!selectedAgendaId) return true;
+        const doc = documents.find(d => d.id === m.documentId);
+        return doc?.agendaId === selectedAgendaId;
+      }),
+    ...filteredStandaloneComments
+  ].sort((a, b) => b.createdAt - a.createdAt); // Sort by most recent
+
+  // Get documents for selected agenda
+  const agendaDocuments = selectedAgendaId
+    ? documents.filter(doc => doc.agendaId === selectedAgendaId)
+    : documents;
 
   // Compute marker counts by document
   const markerCountsByDoc = useMemo(() => {
@@ -224,46 +515,97 @@ const BoardPacketPage = () => {
     );
   };
 
-  // Handle file upload
-  const handleFileUpload = (e, agendaId = null) => {
+  // Handle file upload with real conversion
+  const handleFileUpload = async (e, agendaId = null) => {
     const files = Array.from(e.target.files);
 
-    files.forEach((file, index) => {
-      const isPdf = file.type === 'application/pdf';
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Check if file type is supported
+      if (!isSupportedFileType(file.name)) {
+        alert(`File type not supported: ${file.name}`);
+        continue;
+      }
+
       const newDoc = {
-        id: Date.now() + index,
+        id: Date.now() + i,
         name: file.name,
         type: getFileType(file.name),
         agendaId: agendaId || 1,
-        status: isPdf ? 'converting' : 'converting',
+        status: 'converting',
         pages: 0,
-        pdfPath: isPdf ? URL.createObjectURL(file) : null,
-        uploadedAt: new Date()
+        pdfPath: null,
+        uploadedAt: new Date(),
+        progress: 0,
+        originalFile: file
       };
 
+      // Add document to list
       setDocuments(prev => [...prev, newDoc]);
 
-      // Simulate conversion process
-      setTimeout(() => {
+      // Convert to PDF
+      try {
+        const pdfBlob = await convertToPDF(file, (progress) => {
+          // Update progress
+          setDocuments(prev =>
+            prev.map(doc =>
+              doc.id === newDoc.id
+                ? { ...doc, progress }
+                : doc
+            )
+          );
+        });
+
+        // Create object URL for the PDF
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // Update document with PDF
         setDocuments(prev =>
           prev.map(doc =>
             doc.id === newDoc.id
-              ? { ...doc, status: 'ready', pages: isPdf ? null : Math.floor(Math.random() * 20) + 5 }
+              ? {
+                  ...doc,
+                  type: 'pdf', // Update type to PDF after conversion
+                  status: 'ready',
+                  pdfPath: pdfUrl,
+                  progress: 100,
+                  pages: null // Will be set by onDocumentLoadSuccess
+                }
               : doc
           )
         );
 
-        // Auto-select the newly uploaded document if it's a PDF
-        if (isPdf) {
+        // Auto-select the first uploaded document
+        if (i === 0) {
           setCurrentDocument({
             ...newDoc,
+            type: 'pdf', // Update type to PDF after conversion
             status: 'ready',
-            pages: null, // Will be filled by onDocumentLoadSuccess
+            pdfPath: pdfUrl,
+            progress: 100,
+            pages: null
           });
           setCurrentPage(1);
         }
-      }, 2000 + index * 1000);
-    });
+      } catch (error) {
+        console.error('Conversion failed:', error);
+
+        // Update document with error status
+        setDocuments(prev =>
+          prev.map(doc =>
+            doc.id === newDoc.id
+              ? {
+                  ...doc,
+                  status: 'error',
+                  progress: 0,
+                  errorMessage: error.message
+                }
+              : doc
+          )
+        );
+      }
+    }
   };
 
   const getFileType = (filename) => {
@@ -360,6 +702,48 @@ const BoardPacketPage = () => {
     }
   };
 
+  const insertMentionToNewComment = (user) => {
+    if (mentionCursorPosition === null) return;
+
+    const beforeMention = newCommentText.slice(0, mentionCursorPosition);
+    const afterMention = newCommentText.slice(mentionCursorPosition + mentionSearch.length + 1);
+    const newText = `${beforeMention}@${user.name} ${afterMention}`;
+
+    setNewCommentText(newText);
+    setShowMentionSuggestions(false);
+    setMentionSearch('');
+    setMentionCursorPosition(null);
+
+    // Focus back on input
+    if (newCommentInputRef.current) {
+      newCommentInputRef.current.focus();
+    }
+  };
+
+  const handleNewCommentTextChange = (e) => {
+    const text = e.target.value;
+    setNewCommentText(text);
+
+    // Check for @ mention
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = text.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+      // Check if there's a space after @
+      if (!textAfterAt.includes(' ')) {
+        setMentionSearch(textAfterAt);
+        setMentionCursorPosition(lastAtIndex);
+        setShowMentionSuggestions(true);
+      } else {
+        setShowMentionSuggestions(false);
+      }
+    } else {
+      setShowMentionSuggestions(false);
+    }
+  };
+
   const sendReply = () => {
     if (!replyText.trim() || !selectedMarkerId) return;
 
@@ -384,13 +768,26 @@ const BoardPacketPage = () => {
       mentions
     };
 
-    setMarkers(prev =>
-      prev.map(m =>
-        m.id === selectedMarkerId
-          ? { ...m, replies: [...m.replies, newReply] }
-          : m
-      )
-    );
+    // Check if this is a standalone comment or a marker
+    const isStandalone = standaloneComments.find(c => c.id === selectedMarkerId);
+
+    if (isStandalone) {
+      setStandaloneComments(prev =>
+        prev.map(c =>
+          c.id === selectedMarkerId
+            ? { ...c, replies: [...c.replies, newReply] }
+            : c
+        )
+      );
+    } else {
+      setMarkers(prev =>
+        prev.map(m =>
+          m.id === selectedMarkerId
+            ? { ...m, replies: [...m.replies, newReply] }
+            : m
+        )
+      );
+    }
 
     setReplyText('');
   };
@@ -407,13 +804,49 @@ const BoardPacketPage = () => {
     setHoveredMention(null);
   };
 
+  // Add standalone comment (without marker)
+  const handleAddStandaloneComment = () => {
+    if (!newCommentText.trim()) return;
+
+    // Extract mentions
+    const mentionRegex = /@(\w+\s\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(newCommentText)) !== null) {
+      const userName = match[1];
+      const user = AVAILABLE_USERS.find(u => u.name === userName);
+      if (user) {
+        mentions.push({ id: user.id, name: user.name });
+      }
+    }
+
+    const newComment = {
+      id: Date.now(),
+      documentId: currentDocument?.id,
+      note: newCommentText,
+      author: 'John Smith',
+      authorId: 1,
+      status: 'open',
+      createdAt: new Date(),
+      replies: [],
+      mentions,
+      isStandalone: true // Flag to identify standalone comments
+    };
+
+    setStandaloneComments(prev => [...prev, newComment]);
+    setNewCommentText('');
+    setShowAddComment(false);
+    setShowMentionSuggestions(false);
+    setMentionSearch('');
+    setMentionCursorPosition(null);
+  };
+
   // Render mention with hover card
   const renderTextWithMentions = (text) => {
     const parts = text.split(/(@\w+\s\w+)/g);
     return parts.map((part, index) => {
       if (part.startsWith('@')) {
         const userName = part.slice(1);
-        const user = AVAILABLE_USERS.find(u => u.name === userName);
         return (
           <span
             key={index}
@@ -441,12 +874,93 @@ const BoardPacketPage = () => {
     const newAgenda = {
       id: Date.now(),
       title: newAgendaTitle,
+      description: newAgendaDescription,
+      duration: newAgendaDuration,
+      presenter: newAgendaPresenter,
       order: agendaItems.length + 1
     };
 
     setAgendaItems(prev => [...prev, newAgenda]);
     setNewAgendaTitle('');
+    setNewAgendaDescription('');
+    setNewAgendaDuration('');
+    setNewAgendaPresenter('');
     setShowNewAgendaForm(false);
+  };
+
+  // Edit Agenda Functions
+  const handleStartEditAgenda = (item, e) => {
+    e.stopPropagation(); // Prevent triggering the select button
+    // Select the agenda item if not already selected
+    if (selectedAgendaId !== item.id) {
+      setSelectedAgendaId(item.id);
+    }
+    // Set edit mode and populate form fields
+    setEditingAgendaId(item.id);
+    setEditAgendaTitle(item.title);
+    setEditAgendaDescription(item.description || '');
+    setEditAgendaDuration(item.duration || '');
+    setEditAgendaPresenter(item.presenter || '');
+  };
+
+  const handleSaveEditAgenda = () => {
+    if (!editAgendaTitle.trim()) return;
+
+    setAgendaItems(prev =>
+      prev.map(item =>
+        item.id === editingAgendaId
+          ? {
+              ...item,
+              title: editAgendaTitle,
+              description: editAgendaDescription,
+              duration: editAgendaDuration,
+              presenter: editAgendaPresenter
+            }
+          : item
+      )
+    );
+
+    setEditingAgendaId(null);
+    setEditAgendaTitle('');
+    setEditAgendaDescription('');
+    setEditAgendaDuration('');
+    setEditAgendaPresenter('');
+  };
+
+  const handleCancelEditAgenda = () => {
+    setEditingAgendaId(null);
+    setEditAgendaTitle('');
+    setEditAgendaDescription('');
+    setEditAgendaDuration('');
+    setEditAgendaPresenter('');
+  };
+
+  // Drag and Drop for Agenda Items
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setAgendaItems((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+
+        // Reorder the array
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+
+        // Update order property to match new positions
+        return reorderedItems.map((item, index) => ({
+          ...item,
+          order: index + 1
+        }));
+      });
+    }
   };
 
   // Zoom controls
@@ -474,16 +988,16 @@ const BoardPacketPage = () => {
   };
 
   // Get status badge
-  const getStatusBadge = (status) => {
-    if (status === 'converting') {
+  const getStatusBadge = (doc) => {
+    if (doc.status === 'converting') {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
           <Loader2 className="w-3 h-3 animate-spin" />
-          Converting...
+          Converting... {doc.progress}%
         </span>
       );
     }
-    if (status === 'ready') {
+    if (doc.status === 'ready') {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
           <CheckCircle2 className="w-3 h-3" />
@@ -494,12 +1008,10 @@ const BoardPacketPage = () => {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
         <AlertCircle className="w-3 h-3" />
-        Error
+        {doc.errorMessage || 'Error'}
       </span>
     );
   };
-
-  const selectedMarker = markers.find(m => m.id === selectedMarkerId);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -537,7 +1049,7 @@ const BoardPacketPage = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Agenda & Documents */}
-        <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           {/* Agenda Section */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
@@ -553,23 +1065,39 @@ const BoardPacketPage = () => {
 
             {/* New Agenda Form */}
             {showNewAgendaForm && (
-              <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
                 <input
                   type="text"
-                  placeholder="New agenda item title..."
+                  placeholder="Agenda item title..."
                   value={newAgendaTitle}
                   onChange={(e) => setNewAgendaTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateAgenda();
-                    if (e.key === 'Escape') {
-                      setShowNewAgendaForm(false);
-                      setNewAgendaTitle('');
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   autoFocus
                 />
-                <div className="flex gap-2">
+                <textarea
+                  placeholder="Description (optional)..."
+                  value={newAgendaDescription}
+                  onChange={(e) => setNewAgendaDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={2}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Duration (e.g., 15 min)"
+                    value={newAgendaDuration}
+                    onChange={(e) => setNewAgendaDuration(e.target.value)}
+                    className="px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Presenter"
+                    value={newAgendaPresenter}
+                    onChange={(e) => setNewAgendaPresenter(e.target.value)}
+                    className="px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
                   <button
                     onClick={handleCreateAgenda}
                     className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
@@ -580,52 +1108,85 @@ const BoardPacketPage = () => {
                     onClick={() => {
                       setShowNewAgendaForm(false);
                       setNewAgendaTitle('');
+                      setNewAgendaDescription('');
+                      setNewAgendaDuration('');
+                      setNewAgendaPresenter('');
                     }}
                     className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
-                <div className="mt-2">
-                  <label className="block text-xs text-gray-600 mb-1">Attach PDF (optional):</label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleFileUpload(e, agendaItems.length + 1)}
-                    className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
-                  />
-                </div>
               </div>
             )}
 
-            <div className="space-y-1">
-              {agendaItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveAgendaId(activeAgendaId === item.id ? null : item.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                    activeAgendaId === item.id
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {item.order}. {item.title}
-                </button>
-              ))}
-            </div>
+            {/* Agenda List with Inline Detail View - Drag and Drop Enabled */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={agendaItems.map(item => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1">
+                  {agendaItems.map(item => {
+                    const itemDocCount = documents.filter(d => d.agendaId === item.id).length;
+                    const isSelected = selectedAgendaId === item.id;
+                    const isEditing = editingAgendaId === item.id;
+
+                    return (
+                      <SortableAgendaItem
+                        key={item.id}
+                        item={item}
+                        itemDocCount={itemDocCount}
+                        isSelected={isSelected}
+                        isEditing={isEditing}
+                        editTitle={editAgendaTitle}
+                        editDescription={editAgendaDescription}
+                        editDuration={editAgendaDuration}
+                        editPresenter={editAgendaPresenter}
+                        onSelect={() => setSelectedAgendaId(isSelected ? null : item.id)}
+                        onEdit={(e) => handleStartEditAgenda(item, e)}
+                        onFileUpload={(e) => {
+                          e.stopPropagation();
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.multiple = true;
+                          input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+                          input.onchange = (e) => handleFileUpload(e, selectedAgendaId);
+                          input.click();
+                        }}
+                        onEditTitleChange={setEditAgendaTitle}
+                        onEditDescriptionChange={setEditAgendaDescription}
+                        onEditDurationChange={setEditAgendaDuration}
+                        onEditPresenterChange={setEditAgendaPresenter}
+                        onSaveEdit={handleSaveEditAgenda}
+                        onCancelEdit={handleCancelEditAgenda}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
 
           {/* Documents Section */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">Board Meeting Materials</h2>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Add documents"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <h2 className="text-sm font-semibold text-gray-900">
+                {selectedAgendaId ? `Files (${agendaDocuments.length})` : 'All Materials'}
+              </h2>
+              {!selectedAgendaId && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Add documents"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -636,20 +1197,28 @@ const BoardPacketPage = () => {
               />
             </div>
 
-            {documents.length === 0 ? (
+            {agendaDocuments.length === 0 ? (
               <div className="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-lg">
                 <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-1">No documents yet</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Drop files here or click to upload
-                </button>
+                <p className="text-sm text-gray-600 mb-1">
+                  {selectedAgendaId ? 'No files for this agenda item' : 'No documents yet'}
+                </p>
+                {selectedAgendaId ? (
+                  <p className="text-xs text-gray-500">
+                    Use the button above to add files
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Drop files here or click to upload
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
-                {documents.map(doc => (
+                {agendaDocuments.map(doc => (
                   <button
                     key={doc.id}
                     onClick={() => {
@@ -670,7 +1239,7 @@ const BoardPacketPage = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          {getStatusBadge(doc.status)}
+                          {getStatusBadge(doc)}
                           {doc.status === 'ready' && doc.pages && (
                             <span className="text-xs text-gray-500">{doc.pages} pages</span>
                           )}
@@ -831,34 +1400,43 @@ const BoardPacketPage = () => {
 
                     {/* Marker Overlay */}
                     <div className="absolute inset-0 pointer-events-none z-10">
-                      {currentMarkers.map((marker) => (
-                        <div
-                          key={marker.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMarkerId(marker.id);
-                          }}
-                          className="absolute pointer-events-auto cursor-pointer"
-                          style={{
-                            left: `${marker.xNorm * 100}%`,
-                            top: `${marker.yNorm * 100}%`,
-                            transform: 'translate(-50%, -50%)',
-                          }}
-                        >
+                      {currentMarkers.map((marker) => {
+                        const markerNumber = markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1;
+                        const isSelected = selectedMarkerId === marker.id;
+
+                        return (
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-all hover:scale-110 ${
-                              selectedMarkerId === marker.id
-                                ? 'bg-blue-600 text-white ring-4 ring-blue-200 animate-pulse'
-                                : marker.status === 'resolved'
-                                ? 'bg-green-500 text-white'
-                                : 'bg-yellow-500 text-white'
-                            }`}
-                            title={marker.note}
+                            key={marker.id}
+                            className="absolute pointer-events-auto"
+                            style={{
+                              left: `${marker.xNorm * 100}%`,
+                              top: `${marker.yNorm * 100}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
                           >
-                            {markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1}
+                            {/* Marker Pin */}
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMarkerId(isSelected ? null : marker.id);
+                              }}
+                              className="cursor-pointer relative z-20"
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-all hover:scale-110 ${
+                                  isSelected
+                                    ? 'bg-blue-600 text-white ring-4 ring-blue-200'
+                                    : marker.status === 'resolved'
+                                    ? 'bg-green-500 text-white hover:ring-2 hover:ring-green-200'
+                                    : 'bg-yellow-500 text-white hover:ring-2 hover:ring-yellow-200'
+                                }`}
+                              >
+                                {markerNumber}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
 
                       {/* Temporary Marker */}
                       {tempMarker && (
@@ -901,18 +1479,29 @@ const BoardPacketPage = () => {
           )}
         </div>
 
-        {/* Right Sidebar - Notes & Markers */}
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        {/* Right Sidebar - Comments List */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Notes & Markers</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Comments ({filteredMarkers.length})
+              </h2>
+              <button
+                onClick={() => setShowAddComment(true)}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Add comment"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* Filter Tabs */}
             <div className="flex gap-1 mb-3">
               {[
                 { value: 'all', label: 'All' },
                 { value: 'mine', label: 'Mine' },
-                { value: 'unresolved', label: 'Unresolved' }
+                { value: 'unresolved', label: 'Open' }
               ].map(filter => (
                 <button
                   key={filter.value}
@@ -933,7 +1522,7 @@ const BoardPacketPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search in notes..."
+                placeholder="Search comments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -941,151 +1530,53 @@ const BoardPacketPage = () => {
             </div>
           </div>
 
-          {/* Marker List / Detail View */}
-          <div className="flex-1 overflow-y-auto">
-            {selectedMarker ? (
-              /* Detailed Marker View */
-              <div className="p-4">
-                <button
-                  onClick={() => setSelectedMarkerId(null)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to all markers
-                </button>
-
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                        selectedMarker.status === 'resolved'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-yellow-500 text-white'
-                      }`}
-                    >
-                      {markers.filter(m => m.documentId === currentDocument.id).indexOf(selectedMarker) + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium text-gray-900">{selectedMarker.author}</p>
-                          <p className="text-xs text-gray-500">
-                            Page {selectedMarker.page} · {selectedMarker.createdAt.toLocaleDateString()}
-                          </p>
-                        </div>
-                        {selectedMarker.status === 'resolved' ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Resolved
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
-                            <Circle className="w-3 h-3" />
-                            Open
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                        {renderTextWithMentions(selectedMarker.note)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        setMarkers(prev =>
-                          prev.map(m =>
-                            m.id === selectedMarker.id
-                              ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
-                              : m
-                          )
-                        );
-                      }}
-                      className="flex-1 px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
-                    >
-                      {selectedMarker.status === 'open' ? 'Mark Resolved' : 'Reopen'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setMarkers(prev => prev.filter(m => m.id !== selectedMarker.id));
-                        setSelectedMarkerId(null);
-                      }}
-                      className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
+          {/* Add Comment Form */}
+          {showAddComment && (
+            <div className="p-4 bg-blue-50 border-b border-blue-200">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-700">
+                    New Comment
+                  </label>
+                  <button
+                    onClick={() => {
+                      setShowAddComment(false);
+                      setNewCommentText('');
+                      setShowMentionSuggestions(false);
+                      setMentionSearch('');
+                      setMentionCursorPosition(null);
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-
-                {/* Replies */}
-                <div className="space-y-3 mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Replies ({selectedMarker.replies.length})
-                  </h3>
-
-                  {selectedMarker.replies.map(reply => (
-                    <div key={reply.id} className="bg-white border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-start gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                          {reply.author.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{reply.author}</p>
-                          <p className="text-xs text-gray-500">{reply.createdAt.toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700 ml-10 whitespace-pre-wrap">
-                        {renderTextWithMentions(reply.text)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Reply Input */}
                 <div className="relative">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 relative">
-                      <textarea
-                        ref={replyInputRef}
-                        value={replyText}
-                        onChange={handleReplyTextChange}
-                        placeholder="Write a reply... Use @ to mention someone"
-                        className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        rows={3}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            sendReply();
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={sendReply}
-                        disabled={!replyText.trim()}
-                        className="absolute bottom-2 right-2 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Send (⌘+Enter)"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
+                  <textarea
+                    ref={newCommentInputRef}
+                    placeholder="Add a comment... (use @Name for mentions)"
+                    value={newCommentText}
+                    onChange={handleNewCommentTextChange}
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={3}
+                    autoFocus
+                  />
                   {/* Mention Suggestions */}
                   {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       {filteredMentionSuggestions.map(user => (
                         <button
                           key={user.id}
-                          onClick={() => insertMention(user)}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          onClick={() => insertMentionToNewComment(user)}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-semibold">
                               {user.name.split(' ').map(n => n[0]).join('')}
                             </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                              <p className="text-xs text-gray-500">{user.designation}</p>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.designation}</div>
                             </div>
                           </div>
                         </button>
@@ -1093,75 +1584,215 @@ const BoardPacketPage = () => {
                     </div>
                   )}
                 </div>
-
-                <p className="text-xs text-gray-500 mt-2">
-                  Press ⌘+Enter to send • Use @ to mention
-                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddStandaloneComment}
+                    disabled={!newCommentText.trim()}
+                    className="flex-1 px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+                  >
+                    Add Comment
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddComment(false);
+                      setNewCommentText('');
+                      setShowMentionSuggestions(false);
+                      setMentionSearch('');
+                      setMentionCursorPosition(null);
+                    }}
+                    className="px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            ) : filteredMarkers.length === 0 ? (
+            </div>
+          )}
+
+          {/* Comments List */}
+          <div className="flex-1 overflow-y-auto">
+            {filteredMarkers.length === 0 && !showAddComment ? (
               <div className="p-8 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">No markers yet</p>
+                <p className="text-sm text-gray-600">No comments yet</p>
                 <p className="text-xs text-gray-500 mt-1">
                   {viewMode === 'view'
-                    ? 'Switch to Annotate mode to add markers'
-                    : 'Click on the document to add a marker'}
+                    ? 'Switch to Annotate mode to add comments'
+                    : 'Click on the document to add a comment'}
                 </p>
               </div>
             ) : (
               <div className="p-4 space-y-3">
                 {filteredMarkers.map((marker, index) => {
                   const markerNumber = markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1;
+                  const isSelected = selectedMarkerId === marker.id;
 
                   return (
-                    <button
-                      key={marker.id}
-                      onClick={() => {
-                        setSelectedMarkerId(marker.id);
-                        setCurrentPage(marker.page);
-                      }}
-                      className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
-                    >
-                      <div className="flex items-start gap-2">
-                        <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                            marker.status === 'resolved'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-yellow-500 text-white'
-                          }`}
-                        >
-                          {markerNumber}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 line-clamp-2">{marker.note}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-500">
-                              Page {marker.page}
-                            </span>
-                            <span className="text-xs text-gray-400">·</span>
-                            <span className="text-xs text-gray-500">{marker.author}</span>
-                          </div>
-                          <div className="flex items-center justify-between mt-2">
-                            {marker.replies.length > 0 && (
-                              <span className="text-xs text-blue-600">
-                                {marker.replies.length} {marker.replies.length === 1 ? 'reply' : 'replies'}
-                              </span>
-                            )}
-                            {marker.status === 'resolved' ? (
-                              <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                                <CheckCircle2 className="w-3 h-3" />
-                                Resolved
-                              </span>
+                    <div key={marker.id} className="space-y-2">
+                      {/* Comment Card */}
+                      <button
+                        onClick={() => {
+                          setSelectedMarkerId(isSelected ? null : marker.id);
+                          if (!isSelected && !marker.isStandalone) setCurrentPage(marker.page);
+                        }}
+                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                              isSelected
+                                ? 'bg-blue-600 text-white'
+                                : marker.status === 'resolved'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-yellow-500 text-white'
+                            }`}
+                          >
+                            {marker.isStandalone ? (
+                              <MessageSquare className="w-3.5 h-3.5" />
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-xs text-yellow-700">
-                                <Circle className="w-3 h-3" />
-                                Open
-                              </span>
+                              markerNumber
                             )}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-gray-900">{marker.author}</span>
+                              {marker.status === 'resolved' ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Resolved
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded-full">
+                                  <Circle className="w-3 h-3" />
+                                  Open
+                                </span>
+                              )}
+                            </div>
+                            <p className={`text-sm ${isSelected ? 'text-gray-900' : 'text-gray-900 line-clamp-2'}`}>
+                              {isSelected ? renderTextWithMentions(marker.note) : marker.note}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                              <span>Page {marker.page}</span>
+                              <span>·</span>
+                              <span>{marker.createdAt.toLocaleDateString()}</span>
+                              {marker.replies.length > 0 && (
+                                <>
+                                  <span>·</span>
+                                  <span className="text-blue-600">
+                                    {marker.replies.length} {marker.replies.length === 1 ? 'reply' : 'replies'}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </button>
+                      </button>
+
+                      {/* Expanded Detail View */}
+                      {isSelected && (
+                        <div className="ml-8 space-y-3 pb-2">
+                          {/* Replies */}
+                          {marker.replies.length > 0 && (
+                            <div className="space-y-2">
+                              {marker.replies.map(reply => (
+                                <div key={reply.id} className="bg-white border border-gray-200 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-medium text-gray-900">{reply.author}</span>
+                                    <span className="text-xs text-gray-500">
+                                      {reply.createdAt.toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                    {renderTextWithMentions(reply.text)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Reply Input */}
+                          <div className="relative">
+                            <textarea
+                              ref={replyInputRef}
+                              value={replyText}
+                              onChange={handleReplyTextChange}
+                              placeholder="Write a reply... Use @ to mention"
+                              className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                              rows={2}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                  sendReply();
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={sendReply}
+                              disabled={!replyText.trim()}
+                              className="absolute bottom-2 right-2 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Send (⌘+Enter)"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+
+                            {/* Mention Suggestions */}
+                            {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
+                              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-20">
+                                {filteredMentionSuggestions.map(user => (
+                                  <button
+                                    key={user.id}
+                                    onClick={() => insertMention(user)}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+                                        {user.name.split(' ').map(n => n[0]).join('')}
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-xs font-medium text-gray-900">{user.name}</p>
+                                        <p className="text-xs text-gray-500">{user.designation}</p>
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setMarkers(prev =>
+                                  prev.map(m =>
+                                    m.id === marker.id
+                                      ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
+                                      : m
+                                  )
+                                );
+                              }}
+                              className="flex-1 px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+                            >
+                              {marker.status === 'open' ? 'Mark Resolved' : 'Reopen'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Delete this comment?')) {
+                                  setMarkers(prev => prev.filter(m => m.id !== marker.id));
+                                  setSelectedMarkerId(null);
+                                }
+                              }}
+                              className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1325,6 +1956,7 @@ const BoardPacketPage = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
