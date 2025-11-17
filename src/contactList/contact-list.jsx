@@ -35,6 +35,7 @@ const UnifiedContactListing = () => {
   const [activeColumn, setActiveColumn] = useState(0); // 0 = current, 1 = next, 2 = future
   const [columnSelections, setColumnSelections] = useState([null, null, null]); // Track selection in each column
   const [columnIndices, setColumnIndices] = useState([0, 0, 0]); // Track navigation index in each column
+  const [lockedSuggestions, setLockedSuggestions] = useState(null); // Lock suggestions until all 3 are selected
   const [savedPhraseName, setSavedPhraseName] = useState('');
   const [savedPhraseDescription, setSavedPhraseDescription] = useState('');
   const [showLoadPhraseDropdown, setShowLoadPhraseDropdown] = useState(false);
@@ -1853,6 +1854,7 @@ const UnifiedContactListing = () => {
                                         setActiveColumn(0);
                                         setColumnSelections([null, null, null]);
                                         setColumnIndices([0, 0, 0]);
+                                        setLockedSuggestions(null);
                                       }}
                                       className="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-lg transition-colors group"
                                     >
@@ -1993,11 +1995,20 @@ const UnifiedContactListing = () => {
                         setActiveColumn(0);
                         setColumnSelections([null, null, null]);
                         setColumnIndices([0, 0, 0]);
+                        setLockedSuggestions(null);
                       }}
                       onKeyDown={(e) => {
                         if (!isPhraseMode) return;
 
-                        const suggestions = getSuggestionsForPhrase(phraseChips);
+                        // Use locked suggestions if available, otherwise get fresh and lock them
+                        let suggestions;
+                        if (lockedSuggestions) {
+                          suggestions = lockedSuggestions;
+                        } else {
+                          suggestions = getSuggestionsForPhrase(phraseChips);
+                          setLockedSuggestions(suggestions);
+                        }
+
                         const allSuggestions = [
                           suggestions.current.slice(0, 6),
                           suggestions.next.slice(0, 6),
@@ -2080,12 +2091,14 @@ const UnifiedContactListing = () => {
                           setColumnSelections([null, null, null]);
                           setColumnIndices([0, 0, 0]);
                           setActiveColumn(0);
+                          setLockedSuggestions(null); // Unlock suggestions for next round
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
                           setColumnSelections([null, null, null]);
                           setColumnIndices([0, 0, 0]);
                           setActiveColumn(0);
+                          setLockedSuggestions(null);
                         } else if (e.key === 'Backspace' && phraseSearchText === '' && phraseChips.length > 0) {
                           setPhraseChips(phraseChips.slice(0, -1));
                         }
@@ -2151,7 +2164,8 @@ const UnifiedContactListing = () => {
                         {/* 3-Column Suggestion Rail */}
                         <div className="grid grid-cols-3 gap-3">
                           {(() => {
-                            const suggestions = getSuggestionsForPhrase(phraseChips);
+                            // Use locked suggestions if available, otherwise get fresh
+                            const suggestions = lockedSuggestions || getSuggestionsForPhrase(phraseChips);
                             const allSuggestions = [
                               phraseSearchText
                                 ? suggestions.current.filter(s => s.label.toLowerCase().startsWith(phraseSearchText.toLowerCase()))
@@ -2230,6 +2244,7 @@ const UnifiedContactListing = () => {
                                             setColumnSelections([null, null, null]);
                                             setColumnIndices([0, 0, 0]);
                                             setActiveColumn(0);
+                                            setLockedSuggestions(null); // Unlock suggestions for next round
                                           }}
                                           className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
                                             isHighlighted
@@ -2256,6 +2271,7 @@ const UnifiedContactListing = () => {
                               onClick={() => {
                                 setPhraseChips([]);
                                 setPhraseSearchText('');
+                                setLockedSuggestions(null);
                               }}
                               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                             >
