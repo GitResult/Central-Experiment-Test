@@ -595,8 +595,6 @@ const BoardPacketPage = () => {
     );
   };
 
-  const selectedMarker = markers.find(m => m.id === selectedMarkerId);
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Top Header */}
@@ -1022,36 +1020,187 @@ const BoardPacketPage = () => {
                       />
                     </Document>
 
-                    {/* Marker Overlay */}
+                    {/* Marker Overlay with Inline Comments */}
                     <div className="absolute inset-0 pointer-events-none z-10">
-                      {currentMarkers.map((marker) => (
-                        <div
-                          key={marker.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMarkerId(marker.id);
-                          }}
-                          className="absolute pointer-events-auto cursor-pointer"
-                          style={{
-                            left: `${marker.xNorm * 100}%`,
-                            top: `${marker.yNorm * 100}%`,
-                            transform: 'translate(-50%, -50%)',
-                          }}
-                        >
+                      {currentMarkers.map((marker) => {
+                        const markerNumber = markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1;
+                        const isSelected = selectedMarkerId === marker.id;
+
+                        return (
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-all hover:scale-110 ${
-                              selectedMarkerId === marker.id
-                                ? 'bg-blue-600 text-white ring-4 ring-blue-200 animate-pulse'
-                                : marker.status === 'resolved'
-                                ? 'bg-green-500 text-white'
-                                : 'bg-yellow-500 text-white'
-                            }`}
-                            title={marker.note}
+                            key={marker.id}
+                            className="absolute pointer-events-auto"
+                            style={{
+                              left: `${marker.xNorm * 100}%`,
+                              top: `${marker.yNorm * 100}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
                           >
-                            {markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1}
+                            {/* Marker Pin */}
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMarkerId(isSelected ? null : marker.id);
+                              }}
+                              className="cursor-pointer relative z-20"
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shadow-lg transition-all hover:scale-110 ${
+                                  isSelected
+                                    ? 'bg-blue-600 text-white ring-4 ring-blue-200'
+                                    : marker.status === 'resolved'
+                                    ? 'bg-green-500 text-white hover:ring-2 hover:ring-green-200'
+                                    : 'bg-yellow-500 text-white hover:ring-2 hover:ring-yellow-200'
+                                }`}
+                              >
+                                {markerNumber}
+                              </div>
+                            </div>
+
+                            {/* Inline Comment Card */}
+                            {isSelected && (
+                              <div
+                                className="absolute left-10 top-0 w-80 bg-white rounded-lg shadow-xl border-2 border-blue-500 z-10 pointer-events-auto"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {/* Comment Header */}
+                                <div className="p-3 border-b border-gray-200 bg-blue-50">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-semibold text-gray-900">{marker.author}</span>
+                                        {marker.status === 'resolved' ? (
+                                          <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            Resolved
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+                                            <Circle className="w-3 h-3" />
+                                            Open
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Page {marker.page} · {marker.createdAt.toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => setSelectedMarkerId(null)}
+                                      className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Comment Body */}
+                                <div className="p-3 max-h-96 overflow-y-auto">
+                                  <p className="text-sm text-gray-900 whitespace-pre-wrap mb-3">
+                                    {renderTextWithMentions(marker.note)}
+                                  </p>
+
+                                  {/* Replies */}
+                                  {marker.replies.length > 0 && (
+                                    <div className="space-y-2 mb-3 pl-3 border-l-2 border-gray-200">
+                                      {marker.replies.map(reply => (
+                                        <div key={reply.id} className="bg-gray-50 rounded p-2">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-medium text-gray-900">{reply.author}</span>
+                                            <span className="text-xs text-gray-500">
+                                              {reply.createdAt.toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                            {renderTextWithMentions(reply.text)}
+                                          </p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Reply Input */}
+                                  <div className="relative">
+                                    <textarea
+                                      ref={replyInputRef}
+                                      value={replyText}
+                                      onChange={handleReplyTextChange}
+                                      placeholder="Write a reply... Use @ to mention"
+                                      className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                      rows={2}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                          sendReply();
+                                        }
+                                      }}
+                                    />
+                                    <button
+                                      onClick={sendReply}
+                                      disabled={!replyText.trim()}
+                                      className="absolute bottom-2 right-2 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title="Send (⌘+Enter)"
+                                    >
+                                      <Send className="w-4 h-4" />
+                                    </button>
+
+                                    {/* Mention Suggestions */}
+                                    {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
+                                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                        {filteredMentionSuggestions.map(user => (
+                                          <button
+                                            key={user.id}
+                                            onClick={() => insertMention(user)}
+                                            className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+                                                {user.name.split(' ').map(n => n[0]).join('')}
+                                              </div>
+                                              <div className="flex-1">
+                                                <p className="text-xs font-medium text-gray-900">{user.name}</p>
+                                                <p className="text-xs text-gray-500">{user.designation}</p>
+                                              </div>
+                                            </div>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Comment Footer Actions */}
+                                <div className="p-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+                                  <button
+                                    onClick={() => {
+                                      setMarkers(prev =>
+                                        prev.map(m =>
+                                          m.id === marker.id
+                                            ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
+                                            : m
+                                        )
+                                      );
+                                    }}
+                                    className="px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+                                  >
+                                    {marker.status === 'open' ? 'Mark Resolved' : 'Reopen'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm('Delete this comment?')) {
+                                        setMarkers(prev => prev.filter(m => m.id !== marker.id));
+                                        setSelectedMarkerId(null);
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
 
                       {/* Temporary Marker */}
                       {tempMarker && (
@@ -1094,18 +1243,20 @@ const BoardPacketPage = () => {
           )}
         </div>
 
-        {/* Right Sidebar - Notes & Markers */}
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        {/* Right Sidebar - Comments List */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Notes & Markers</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">
+              Comments ({filteredMarkers.length})
+            </h2>
 
             {/* Filter Tabs */}
             <div className="flex gap-1 mb-3">
               {[
                 { value: 'all', label: 'All' },
                 { value: 'mine', label: 'Mine' },
-                { value: 'unresolved', label: 'Unresolved' }
+                { value: 'unresolved', label: 'Open' }
               ].map(filter => (
                 <button
                   key={filter.value}
@@ -1126,7 +1277,7 @@ const BoardPacketPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search in notes..."
+                placeholder="Search comments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1134,177 +1285,24 @@ const BoardPacketPage = () => {
             </div>
           </div>
 
-          {/* Marker List / Detail View */}
+          {/* Comments List */}
           <div className="flex-1 overflow-y-auto">
-            {selectedMarker ? (
-              /* Detailed Marker View */
-              <div className="p-4">
-                <button
-                  onClick={() => setSelectedMarkerId(null)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to all markers
-                </button>
-
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                        selectedMarker.status === 'resolved'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-yellow-500 text-white'
-                      }`}
-                    >
-                      {markers.filter(m => m.documentId === currentDocument.id).indexOf(selectedMarker) + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium text-gray-900">{selectedMarker.author}</p>
-                          <p className="text-xs text-gray-500">
-                            Page {selectedMarker.page} · {selectedMarker.createdAt.toLocaleDateString()}
-                          </p>
-                        </div>
-                        {selectedMarker.status === 'resolved' ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Resolved
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
-                            <Circle className="w-3 h-3" />
-                            Open
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                        {renderTextWithMentions(selectedMarker.note)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        setMarkers(prev =>
-                          prev.map(m =>
-                            m.id === selectedMarker.id
-                              ? { ...m, status: m.status === 'open' ? 'resolved' : 'open' }
-                              : m
-                          )
-                        );
-                      }}
-                      className="flex-1 px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
-                    >
-                      {selectedMarker.status === 'open' ? 'Mark Resolved' : 'Reopen'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setMarkers(prev => prev.filter(m => m.id !== selectedMarker.id));
-                        setSelectedMarkerId(null);
-                      }}
-                      className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {/* Replies */}
-                <div className="space-y-3 mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Replies ({selectedMarker.replies.length})
-                  </h3>
-
-                  {selectedMarker.replies.map(reply => (
-                    <div key={reply.id} className="bg-white border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-start gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                          {reply.author.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{reply.author}</p>
-                          <p className="text-xs text-gray-500">{reply.createdAt.toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700 ml-10 whitespace-pre-wrap">
-                        {renderTextWithMentions(reply.text)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Reply Input */}
-                <div className="relative">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 relative">
-                      <textarea
-                        ref={replyInputRef}
-                        value={replyText}
-                        onChange={handleReplyTextChange}
-                        placeholder="Write a reply... Use @ to mention someone"
-                        className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        rows={3}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            sendReply();
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={sendReply}
-                        disabled={!replyText.trim()}
-                        className="absolute bottom-2 right-2 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Send (⌘+Enter)"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mention Suggestions */}
-                  {showMentionSuggestions && filteredMentionSuggestions.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
-                      {filteredMentionSuggestions.map(user => (
-                        <button
-                          key={user.id}
-                          onClick={() => insertMention(user)}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
-                              {user.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                              <p className="text-xs text-gray-500">{user.designation}</p>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-500 mt-2">
-                  Press ⌘+Enter to send • Use @ to mention
-                </p>
-              </div>
-            ) : filteredMarkers.length === 0 ? (
+            {filteredMarkers.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">No markers yet</p>
+                <p className="text-sm text-gray-600">No comments yet</p>
                 <p className="text-xs text-gray-500 mt-1">
                   {viewMode === 'view'
-                    ? 'Switch to Annotate mode to add markers'
-                    : 'Click on the document to add a marker'}
+                    ? 'Switch to Annotate mode to add comments'
+                    : 'Click on the document to add a comment'}
                 </p>
               </div>
             ) : (
               <div className="p-4 space-y-3">
                 {filteredMarkers.map((marker, index) => {
                   const markerNumber = markers.filter(m => m.documentId === currentDocument.id).indexOf(marker) + 1;
+
+                  const isSelected = selectedMarkerId === marker.id;
 
                   return (
                     <button
@@ -1313,12 +1311,18 @@ const BoardPacketPage = () => {
                         setSelectedMarkerId(marker.id);
                         setCurrentPage(marker.page);
                       }}
-                      className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+                      className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
                     >
                       <div className="flex items-start gap-2">
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                            marker.status === 'resolved'
+                            isSelected
+                              ? 'bg-blue-600 text-white'
+                              : marker.status === 'resolved'
                               ? 'bg-green-500 text-white'
                               : 'bg-yellow-500 text-white'
                           }`}
@@ -1326,7 +1330,9 @@ const BoardPacketPage = () => {
                           {markerNumber}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 line-clamp-2">{marker.note}</p>
+                          <p className={`text-sm line-clamp-2 ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-900'}`}>
+                            {marker.note}
+                          </p>
                           <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs text-gray-500">
                               Page {marker.page}
