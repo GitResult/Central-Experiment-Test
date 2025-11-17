@@ -89,15 +89,20 @@ const convertWordToPDF = async (file, onProgress) => {
       format: 'a4'
     });
 
-    // Use html method to render the content
-    await pdf.html(container, {
-      callback: function(doc) {
-        // This will be handled by the return below
-      },
-      x: 10,
-      y: 10,
-      width: 190, // A4 width minus margins
-      windowWidth: 794 // A4 width in pixels at 96 DPI
+    // Use html method to render the content - wrap in promise for proper async handling
+    await new Promise((resolve, reject) => {
+      pdf.html(container, {
+        callback: function(doc) {
+          resolve(doc);
+        },
+        x: 10,
+        y: 10,
+        width: 190, // A4 width minus margins
+        windowWidth: 794, // A4 width in pixels at 96 DPI
+        html2canvas: {
+          scale: 0.5 // Reduce scale for faster rendering
+        }
+      }).catch(reject);
     });
 
     onProgress(90);
@@ -185,15 +190,20 @@ const convertExcelToPDF = async (file, onProgress) => {
     document.body.appendChild(container);
 
     try {
-      // Add content to PDF
-      await pdf.html(container, {
-        callback: function(doc) {
-          // Handled by return
-        },
-        x: 10,
-        y: 10,
-        width: 277, // A4 landscape width minus margins
-        windowWidth: 1123 // A4 landscape width in pixels
+      // Add content to PDF - wrap in promise for proper async handling
+      await new Promise((resolve, reject) => {
+        pdf.html(container, {
+          callback: function(doc) {
+            resolve(doc);
+          },
+          x: 10,
+          y: 10,
+          width: 277, // A4 landscape width minus margins
+          windowWidth: 1123, // A4 landscape width in pixels
+          html2canvas: {
+            scale: 0.5 // Reduce scale for faster rendering
+          }
+        }).catch(reject);
       });
     } finally {
       document.body.removeChild(container);
