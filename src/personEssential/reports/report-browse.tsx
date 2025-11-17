@@ -193,6 +193,16 @@ const ReportBuilder = (props) => {
     }
   }, [stage]);
 
+  // Memoize the record count calculation so it's consistent across all displays
+  // MUST be before any conditional returns to satisfy React Hooks rules
+  const estimatedRecordCount = useMemo(() => {
+    const activeFilters = selections.filter(s => s.type === 'filter');
+    if (activeFilters.length === 0) return 7100;
+    let result = 7100;
+    activeFilters.forEach(() => { result = Math.floor(result * (0.3 + Math.random() * 0.4)); });
+    return Math.max(50, result);
+  }, [selections]);
+
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
     return <AppReportPhrase />;
@@ -270,15 +280,6 @@ const ReportBuilder = (props) => {
       setProximityRadius(25);
     }
   };
-
-  // Memoize the record count calculation so it's consistent across all displays
-  const estimatedRecordCount = useMemo(() => {
-    const activeFilters = selections.filter(s => s.type === 'filter');
-    if (activeFilters.length === 0) return 7100;
-    let result = 7100;
-    activeFilters.forEach(() => { result = Math.floor(result * (0.3 + Math.random() * 0.4)); });
-    return Math.max(50, result);
-  }, [selections]);
 
   const getValueCount = (category, value) => {
     const hash = (category + value).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
