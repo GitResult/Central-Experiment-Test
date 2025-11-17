@@ -106,12 +106,12 @@ const BoardPacketPage = () => {
   const [documents, setDocuments] = useState([
     {
       id: 1,
-      name: "Board of Directors Dashboard.pdf",
+      name: "CPA ANNUAL REPORT 2024-EN-FINAL.pdf",
       type: "pdf",
       agendaId: 1,
       status: "ready",
       pages: null, // Will be set when PDF loads
-      pdfPath: "/Board-of-Directors-Dashboard.pdf",
+      pdfPath: "/CPA ANNUAL REPORT 2024-EN-FINAL.pdf",
       uploadedAt: new Date(),
       progress: 100
     },
