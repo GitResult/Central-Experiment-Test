@@ -1915,25 +1915,6 @@ const UnifiedContactListing = () => {
                       </div>
                     ))}
 
-                    {/* Preview Chips (greyed out) */}
-                    {previewChips.map((chip, idx) => {
-                      const Icon = chip.icon;
-                      const isSelected = columnSelections[idx] !== null;
-                      return (
-                        <div
-                          key={`preview-${idx}`}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-opacity ${
-                            isSelected
-                              ? 'bg-blue-100 text-blue-700 opacity-100'
-                              : 'bg-gray-100 text-gray-400 opacity-60'
-                          }`}
-                        >
-                          {Icon && <Icon className="w-3.5 h-3.5" />}
-                          <span>{chip.label}</span>
-                        </div>
-                      );
-                    })}
-
                     {/* Search Input with Autocomplete */}
                     <div className="flex-1 relative min-w-[200px]">
                       {/* Autocomplete suggestion overlay with 3-level preview */}
@@ -1997,6 +1978,14 @@ const UnifiedContactListing = () => {
                         return null;
                       })()}
 
+                      {/* Preview Text Overlay */}
+                      {isPhraseMode && previewChips.length > 0 && (
+                        <div className="absolute left-0 top-0 h-full flex items-center px-2 py-2 pointer-events-none text-sm text-gray-400">
+                          <span className="opacity-0">{phraseSearchText}</span>
+                          <span>{previewChips.join(' ')}</span>
+                        </div>
+                      )}
+
                       <input
                         ref={phraseInputRef}
                         type="text"
@@ -2007,7 +1996,7 @@ const UnifiedContactListing = () => {
                           setPhraseSearchText(e.target.value);
                           setSelectedSuggestionIndex(0); // Reset selection when typing
 
-                          // Generate preview chips when typing in column 0
+                          // Generate preview text when typing in column 0
                           if (activeColumn === 0 && e.target.value && lockedSuggestions) {
                             const suggestions = lockedSuggestions;
                             const filteredCurrent = suggestions.current.filter(s =>
@@ -2015,12 +2004,12 @@ const UnifiedContactListing = () => {
                             );
 
                             if (filteredCurrent.length > 0 && suggestions.next.length > 0 && suggestions.future.length > 0) {
-                              const preview = [
-                                filteredCurrent[0],
-                                suggestions.next[0],
-                                suggestions.future[0]
+                              const previewText = [
+                                filteredCurrent[0].label,
+                                suggestions.next[0].label || suggestions.next[0],
+                                suggestions.future[0].label || suggestions.future[0]
                               ];
-                              setPreviewChips(preview);
+                              setPreviewChips(previewText); // Store as text array
                             } else {
                               setPreviewChips([]);
                             }
@@ -2143,7 +2132,6 @@ const UnifiedContactListing = () => {
                           const previousChips = phraseChips.slice(0, selectionRoundStart);
                           setPhraseChips([...previousChips, ...chipsToAdd]);
                           setPhraseSearchText('');
-                          setPreviewChips([]); // Clear preview chips after selection
 
                           // If this was the 3rd column (column 2), reset everything
                           if (activeColumn === 2) {
@@ -2151,11 +2139,28 @@ const UnifiedContactListing = () => {
                             setColumnIndices([0, 0, 0]);
                             setActiveColumn(0);
                             setLockedSuggestions(null);
+                            setPreviewChips([]); // Clear preview
                             // Set start position for next selection round
                             setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
                           } else {
-                            // Otherwise, move to next column
+                            // Otherwise, move to next column and update preview to show remaining words
                             setActiveColumn(activeColumn + 1);
+                            // Update preview to only show remaining unselected words
+                            if (lockedSuggestions) {
+                              const remainingPreview = [];
+                              const allSugs = [
+                                lockedSuggestions.current,
+                                lockedSuggestions.next,
+                                lockedSuggestions.future
+                              ];
+                              for (let i = activeColumn + 1; i < 3; i++) {
+                                if (allSugs[i] && allSugs[i].length > 0) {
+                                  const item = allSugs[i][0];
+                                  remainingPreview.push(item.label || item);
+                                }
+                              }
+                              setPreviewChips(remainingPreview);
+                            }
                           }
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
@@ -2319,7 +2324,6 @@ const UnifiedContactListing = () => {
                                             const previousChips = phraseChips.slice(0, selectionRoundStart);
                                             setPhraseChips([...previousChips, ...chipsToAdd]);
                                             setPhraseSearchText('');
-                                            setPreviewChips([]); // Clear preview chips after selection
 
                                             // If this was the 3rd column (column 2), reset everything
                                             if (columnIdx === 2) {
@@ -2327,11 +2331,28 @@ const UnifiedContactListing = () => {
                                               setColumnIndices([0, 0, 0]);
                                               setActiveColumn(0);
                                               setLockedSuggestions(null);
+                                              setPreviewChips([]); // Clear preview
                                               // Set start position for next selection round
                                               setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
                                             } else {
-                                              // Otherwise, move to next column
+                                              // Otherwise, move to next column and update preview to show remaining words
                                               setActiveColumn(columnIdx + 1);
+                                              // Update preview to only show remaining unselected words
+                                              if (lockedSuggestions) {
+                                                const remainingPreview = [];
+                                                const allSugs = [
+                                                  lockedSuggestions.current,
+                                                  lockedSuggestions.next,
+                                                  lockedSuggestions.future
+                                                ];
+                                                for (let i = columnIdx + 1; i < 3; i++) {
+                                                  if (allSugs[i] && allSugs[i].length > 0) {
+                                                    const item = allSugs[i][0];
+                                                    remainingPreview.push(item.label || item);
+                                                  }
+                                                }
+                                                setPreviewChips(remainingPreview);
+                                              }
                                             }
                                           }}
                                           className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
