@@ -20,16 +20,17 @@
  * @returns {React.Component} BoardPacketPage component
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import {
-  FileText, Upload, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
-  Search, Filter, MessageSquare, Check, AlertCircle, Loader2, X, Users,
-  Calendar, MapPin, Clock, Eye, Edit3, Trash2, MoreVertical, CheckCircle2,
-  Circle, PenTool, MousePointer, Send, AtSign, Mail, Briefcase
+  FileText, Download, Share2, Plus, Minus, ChevronLeft, ChevronRight,
+  Search, MessageSquare, AlertCircle, Loader2, X,
+  Calendar, MapPin, Clock, Eye, CheckCircle2,
+  Circle, PenTool, Send, Mail, Briefcase
 } from 'lucide-react';
+import { convertToPDF, isSupportedFileType } from '../utils/documentConverter';
 
 // Configure PDF.js worker - using the recommended approach for Create React App
 // This ensures version matching between pdf.js and the worker
@@ -79,7 +80,8 @@ const BoardPacketPage = () => {
       status: "ready",
       pages: null, // Will be set when PDF loads
       pdfPath: "/Board-of-Directors-Dashboard.pdf",
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
+      progress: 100
     },
     {
       id: 2,
@@ -88,7 +90,8 @@ const BoardPacketPage = () => {
       agendaId: 2,
       status: "ready",
       pages: 12,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
+      progress: 100
     },
     {
       id: 3,
@@ -97,7 +100,8 @@ const BoardPacketPage = () => {
       agendaId: 3,
       status: "ready",
       pages: 25,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
+      progress: 100
     }
   ]);
 
@@ -162,7 +166,6 @@ const BoardPacketPage = () => {
   const [hoveredMention, setHoveredMention] = useState(null);
   const [mentionHoverPosition, setMentionHoverPosition] = useState({ x: 0, y: 0 });
 
-  const pageRef = useRef(null);
   const fileInputRef = useRef(null);
   const replyInputRef = useRef(null);
   const pageContainerRef = useRef(null);
@@ -224,46 +227,95 @@ const BoardPacketPage = () => {
     );
   };
 
-  // Handle file upload
-  const handleFileUpload = (e, agendaId = null) => {
+  // Handle file upload with real conversion
+  const handleFileUpload = async (e, agendaId = null) => {
     const files = Array.from(e.target.files);
 
-    files.forEach((file, index) => {
-      const isPdf = file.type === 'application/pdf';
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Check if file type is supported
+      if (!isSupportedFileType(file.name)) {
+        alert(`File type not supported: ${file.name}`);
+        continue;
+      }
+
       const newDoc = {
-        id: Date.now() + index,
+        id: Date.now() + i,
         name: file.name,
         type: getFileType(file.name),
         agendaId: agendaId || 1,
-        status: isPdf ? 'converting' : 'converting',
+        status: 'converting',
         pages: 0,
-        pdfPath: isPdf ? URL.createObjectURL(file) : null,
-        uploadedAt: new Date()
+        pdfPath: null,
+        uploadedAt: new Date(),
+        progress: 0,
+        originalFile: file
       };
 
+      // Add document to list
       setDocuments(prev => [...prev, newDoc]);
 
-      // Simulate conversion process
-      setTimeout(() => {
+      // Convert to PDF
+      try {
+        const pdfBlob = await convertToPDF(file, (progress) => {
+          // Update progress
+          setDocuments(prev =>
+            prev.map(doc =>
+              doc.id === newDoc.id
+                ? { ...doc, progress }
+                : doc
+            )
+          );
+        });
+
+        // Create object URL for the PDF
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // Update document with PDF
         setDocuments(prev =>
           prev.map(doc =>
             doc.id === newDoc.id
-              ? { ...doc, status: 'ready', pages: isPdf ? null : Math.floor(Math.random() * 20) + 5 }
+              ? {
+                  ...doc,
+                  status: 'ready',
+                  pdfPath: pdfUrl,
+                  progress: 100,
+                  pages: null // Will be set by onDocumentLoadSuccess
+                }
               : doc
           )
         );
 
-        // Auto-select the newly uploaded document if it's a PDF
-        if (isPdf) {
+        // Auto-select the first uploaded document
+        if (i === 0) {
           setCurrentDocument({
             ...newDoc,
             status: 'ready',
-            pages: null, // Will be filled by onDocumentLoadSuccess
+            pdfPath: pdfUrl,
+            progress: 100,
+            pages: null
           });
           setCurrentPage(1);
         }
-      }, 2000 + index * 1000);
-    });
+      } catch (error) {
+        console.error('Conversion failed:', error);
+
+        // Update document with error status
+        setDocuments(prev =>
+          prev.map(doc =>
+            doc.id === newDoc.id
+              ? {
+                  ...doc,
+                  status: 'error',
+                  progress: 0,
+                  errorMessage: error.message
+                }
+              : doc
+          )
+        );
+      }
+    }
   };
 
   const getFileType = (filename) => {
@@ -413,7 +465,6 @@ const BoardPacketPage = () => {
     return parts.map((part, index) => {
       if (part.startsWith('@')) {
         const userName = part.slice(1);
-        const user = AVAILABLE_USERS.find(u => u.name === userName);
         return (
           <span
             key={index}
@@ -474,16 +525,16 @@ const BoardPacketPage = () => {
   };
 
   // Get status badge
-  const getStatusBadge = (status) => {
-    if (status === 'converting') {
+  const getStatusBadge = (doc) => {
+    if (doc.status === 'converting') {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
           <Loader2 className="w-3 h-3 animate-spin" />
-          Converting...
+          Converting... {doc.progress}%
         </span>
       );
     }
-    if (status === 'ready') {
+    if (doc.status === 'ready') {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
           <CheckCircle2 className="w-3 h-3" />
@@ -494,7 +545,7 @@ const BoardPacketPage = () => {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
         <AlertCircle className="w-3 h-3" />
-        Error
+        {doc.errorMessage || 'Error'}
       </span>
     );
   };
@@ -670,7 +721,7 @@ const BoardPacketPage = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          {getStatusBadge(doc.status)}
+                          {getStatusBadge(doc)}
                           {doc.status === 'ready' && doc.pages && (
                             <span className="text-xs text-gray-500">{doc.pages} pages</span>
                           )}
