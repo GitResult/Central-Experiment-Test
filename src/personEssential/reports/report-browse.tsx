@@ -760,44 +760,63 @@ const ReportBuilder = (props) => {
                     Clear
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {selections.map((sel, idx) => {
                     const Icon = sel.type === 'filter' ? Filter : Eye;
                     const isEditing = editingSelection?.id === sel.id;
                     return (
-                      <div key={sel.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        isEditing
-                          ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
-                          : sel.type === 'filter'
-                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
-                            : 'bg-purple-100 text-purple-900 border border-purple-300'
-                      }`}>
-                        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                        <span className="font-medium">{sel.category}</span>
-                        <span className="text-xs opacity-75">= {sel.value}</span>
-                        <div className="flex items-center gap-1 ml-1">
-                          <button
-                            onClick={() => handleEditSelection(sel)}
-                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                            title="Edit selection value"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              removeSelection(sel.id);
-                              if (editingSelection?.id === sel.id) {
-                                setEditingSelection(null);
-                                setSelectedCategory(null);
-                              }
+                      <React.Fragment key={sel.id}>
+                        {/* Connector dropdown (shown before chips except the first) */}
+                        {idx > 0 && (
+                          <select
+                            value={sel.connector || 'AND'}
+                            onChange={(e) => {
+                              setSelections(selections.map(s =>
+                                s.id === sel.id ? { ...s, connector: e.target.value } : s
+                              ));
                             }}
-                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                            title="Remove"
+                            className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
-                            <X className="w-3.5 h-3.5" strokeWidth={2} />
-                          </button>
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                          </select>
+                        )}
+
+                        {/* Selection chip */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          isEditing
+                            ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                            : sel.type === 'filter'
+                              ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                              : 'bg-purple-100 text-purple-900 border border-purple-300'
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                          <span className="font-medium">{sel.category}</span>
+                          <span className="text-xs opacity-75">= {sel.value}</span>
+                          <div className="flex items-center gap-1 ml-1">
+                            <button
+                              onClick={() => handleEditSelection(sel)}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Edit selection value"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                removeSelection(sel.id);
+                                if (editingSelection?.id === sel.id) {
+                                  setEditingSelection(null);
+                                  setSelectedCategory(null);
+                                }
+                              }}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Remove"
+                            >
+                              <X className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -1089,12 +1108,6 @@ const ReportBuilder = (props) => {
                   </div>
 
                   {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => {
-                    // Check if this exact filter is already selected (must match category, value, and type)
-                    const isFilterSelected = selections.some(s =>
-                      s.type === 'filter' &&
-                      s.category === selectedCategory &&
-                      s.value === value
-                    );
                     // Check if this is the value being edited
                     const isEditingThisValue = editingSelection && editingSelection.value === value;
 
@@ -1109,23 +1122,11 @@ const ReportBuilder = (props) => {
                         <input
                           type="checkbox"
                           className="rounded"
-                          checked={isFilterSelected}
+                          checked={false}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              // Add filter only if it doesn't exist
-                              if (!isFilterSelected) {
-                                addFilter(selectedCategory, value);
-                              }
-                            } else {
-                              // Remove filter when unchecked - find exact match
-                              const filterToRemove = selections.find(s =>
-                                s.type === 'filter' &&
-                                s.category === selectedCategory &&
-                                s.value === value
-                              );
-                              if (filterToRemove) {
-                                removeSelection(filterToRemove.id);
-                              }
+                              // Always add filter - allow duplicates for OR logic
+                              addFilter(selectedCategory, value);
                             }
                           }}
                         />
