@@ -773,7 +773,10 @@ function TaskPanel({ updateDemoStateAction, tasks, selectedTask, searchQuery, on
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => updateDemoStateAction({ selectedTask: task.id, showTaskDetailPanel: true })}
+                onClick={() => updateDemoStateAction({
+                  selectedTask: task.id,
+                  showTaskDetailPanel: task.id !== 'task-2'
+                })}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all ${selectedTask === task.id
                   ? 'bg-blue-50 border-blue-200'
                   : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -830,7 +833,7 @@ function TaskDetailPanel({ updateDemoStateAction, approvalFormOpen, setApprovalF
         />
       )}
 
-      {isCollapsed && showTaskDetailPanel && (
+      {isCollapsed && showTaskDetailPanel && selectedTask !== 'task-2' && (
         <button
           onClick={onToggleCollapse}
           className="fixed right-7 top-[108px] z-20 p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -842,7 +845,7 @@ function TaskDetailPanel({ updateDemoStateAction, approvalFormOpen, setApprovalF
 
       {/* Task Detail Panel */}
       <div
-        className={`pt-2.5 h-[calc(100vh-4rem)] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${showTaskDetailPanel && !isCollapsed ? 'translate-x-0 min-w-[360px] ' : 'translate-x-[500px] hidden w-0'
+        className={`pt-2.5 h-[calc(100vh-4rem)] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${showTaskDetailPanel && !isCollapsed && selectedTask !== 'task-2' ? 'translate-x-0 min-w-[360px] ' : 'translate-x-[500px] hidden w-0'
           }`}
       >
         {/* Header */}
