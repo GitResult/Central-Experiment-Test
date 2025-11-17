@@ -613,11 +613,43 @@ const ReportBuilder = (props) => {
         };
       }
 
+      // Final stage: Always suggest additional categories not yet used
+      const hasCareerStage = allSelections.some(s => s.category === 'Career Stage');
+      const hasWorkplace = allSelections.some(s => s.category === 'Workplace Setting');
+      const hasEducationReceived = allSelections.some(s => s.category === 'Education Received');
+      const hasAreaOfInterest = allSelections.some(s => s.category === 'Area of Interest');
+      const hasCodeOfEthics = allSelections.some(s => s.category === 'Code of Ethics');
+      const hasPrimaryReason = allSelections.some(s => s.category === 'Primary Reason for Joining');
+
+      const additionalSuggestions = [];
+
+      if (!hasRenewalMonth && hasStartingData) {
+        additionalSuggestions.push({ category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" });
+      }
+      if (!hasCareerStage) {
+        additionalSuggestions.push({ category: "Career Stage", section: "Demographics", reason: "Filter by career progression", icon: "TrendingUp" });
+      }
+      if (!hasWorkplace) {
+        additionalSuggestions.push({ category: "Workplace Setting", section: "Demographics", reason: "Filter by work environment", icon: "Building2" });
+      }
+      if (!hasEducationReceived) {
+        additionalSuggestions.push({ category: "Education Received", section: "Demographics", reason: "Filter by completed education", icon: "GraduationCap" });
+      }
+      if (!hasAreaOfInterest) {
+        additionalSuggestions.push({ category: "Area of Interest", section: "Demographics", reason: "Filter by specialization", icon: "Star" });
+      }
+      if (!hasCodeOfEthics) {
+        additionalSuggestions.push({ category: "Code of Ethics", section: "Membership", reason: "Filter by ethics compliance", icon: "Award" });
+      }
+      if (!hasPrimaryReason) {
+        additionalSuggestions.push({ category: "Primary Reason for Joining", section: "Membership", reason: "Filter by motivation", icon: "Target" });
+      }
+
       return {
-        title: "Your query looks complete!",
-        suggestions: [
-          { category: "Renewal Month", section: "Membership", reason: "Add renewal timing", icon: "Calendar" },
-          { category: "Career Stage", section: "Demographics", reason: "Add career stage filter", icon: "TrendingUp" }
+        title: additionalSuggestions.length > 0 ? "Refine further with these filters" : "All common filters applied!",
+        suggestions: additionalSuggestions.length > 0 ? additionalSuggestions.slice(0, 4) : [
+          { category: "Career Stage", section: "Demographics", reason: "Add career stage filter", icon: "TrendingUp" },
+          { category: "Workplace Setting", section: "Demographics", reason: "Add workplace filter", icon: "Building2" }
         ]
       };
     };
