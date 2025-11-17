@@ -2140,14 +2140,11 @@ const UnifiedContactListing = () => {
                     <div className="absolute left-1/2 -translate-x-1/2 w-screen bg-white">
                       <div className="max-w-[1600px] mx-auto px-8 py-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-xs font-semibold text-gray-600 flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-blue-600" />
+                          <h3 className="text-xs font-semibold text-gray-600">
                             Build Your Phrase
                           </h3>
-                          <div className="text-xs text-gray-500 bg-blue-50 px-3 py-1 rounded-md">
-                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">↑↓</kbd> navigate •
-                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs ml-1">←→</kbd> change column •
-                            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs ml-1">Enter</kbd> select
+                          <div className="text-xs text-gray-400">
+                            ↑↓ navigate • ←→ change column • Enter select
                           </div>
                         </div>
 
@@ -2180,17 +2177,12 @@ const UnifiedContactListing = () => {
                                     !canAccess
                                       ? 'opacity-25 pointer-events-none'
                                       : isActive
-                                      ? 'opacity-100 ring-2 ring-blue-500 rounded-lg p-2 -m-2'
-                                      : isSelected
-                                      ? 'opacity-75'
-                                      : 'opacity-50'
+                                      ? 'opacity-100'
+                                      : 'opacity-30'
                                   }`}
                                 >
-                                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center justify-between">
+                                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                     <span>{columnTitles[columnIdx]}</span>
-                                    {isActive && (
-                                      <span className="text-blue-600 text-xs">←→ to navigate</span>
-                                    )}
                                   </div>
                                   <div className="space-y-1.5">
                                     {columnSuggestions.map((suggestion, idx) => {
@@ -2239,17 +2231,14 @@ const UnifiedContactListing = () => {
                                             setColumnIndices([0, 0, 0]);
                                             setActiveColumn(0);
                                           }}
-                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                                            isChosen
-                                              ? 'bg-green-500 text-white ring-2 ring-green-600'
-                                              : isHighlighted
+                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
+                                            isHighlighted
                                               ? 'bg-blue-500 text-white'
-                                              : 'bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-900'
+                                              : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
                                           }`}
                                         >
                                           {Icon && <Icon className="w-4 h-4" />}
                                           <span>{suggestion.label}</span>
-                                          {isChosen && <Check className="w-4 h-4 ml-auto" />}
                                         </button>
                                       );
                                     })}
