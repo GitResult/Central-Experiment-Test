@@ -314,6 +314,7 @@ const BoardPacketPage = () => {
             doc.id === newDoc.id
               ? {
                   ...doc,
+                  type: 'pdf', // Update type to PDF after conversion
                   status: 'ready',
                   pdfPath: pdfUrl,
                   progress: 100,
@@ -327,6 +328,7 @@ const BoardPacketPage = () => {
         if (i === 0) {
           setCurrentDocument({
             ...newDoc,
+            type: 'pdf', // Update type to PDF after conversion
             status: 'ready',
             pdfPath: pdfUrl,
             progress: 100,
