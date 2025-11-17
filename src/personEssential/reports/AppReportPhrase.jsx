@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { connect } from 'react-redux';
 import { updateDemoState } from '../../redux/demo/actions';
+import { getSuggestionsForPhrase as getPhraseSuggestions } from './personEssentialPhraseConfig';
 
 const AnimationStyles = () => (
   <style>{`
@@ -349,6 +350,15 @@ const PhraseModeReport = (props) => {
   const [optionsModalData, setOptionsModalData] = useState(null);
   const inputRef = useRef(null);
 
+  // 3-Column Selection State (from Contact List Search)
+  const [activeColumn, setActiveColumn] = useState(0);
+  const [columnSelections, setColumnSelections] = useState([null, null, null]);
+  const [columnIndices, setColumnIndices] = useState([0, 0, 0]);
+  const [lockedSuggestions, setLockedSuggestions] = useState(null);
+  const [selectionRoundStart, setSelectionRoundStart] = useState(0);
+  const [previewChips, setPreviewChips] = useState([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+
   useEffect(() => {
     if (stage === 'intro') {
       const interval = setInterval(() => {
@@ -452,6 +462,59 @@ const PhraseModeReport = (props) => {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
+  };
+
+  // Handle 3-column selection (from Contact List Search)
+  const handleColumnSelection = (columnIdx, suggestion, allSuggestions) => {
+    const newSelections = [...columnSelections];
+
+    // Auto-select first items from previous columns if not already selected
+    for (let i = 0; i < columnIdx; i++) {
+      if (!newSelections[i] && allSuggestions[i].length > 0) {
+        newSelections[i] = allSuggestions[i][0];
+      }
+    }
+
+    // Select the clicked item
+    newSelections[columnIdx] = suggestion;
+    setColumnSelections(newSelections);
+
+    // Add chips cumulatively based on which column was clicked
+    const chipsToAdd = [];
+    for (let i = 0; i <= columnIdx; i++) {
+      if (newSelections[i]) {
+        const sel = newSelections[i];
+        chipsToAdd.push({
+          id: Date.now() + i + Math.random(),
+          text: sel.label,
+          type: sel.type || 'connector',
+          icon: sel.icon,
+          color: sel.color || 'gray'
+        });
+      }
+    }
+
+    // Replace chips from current selection round instead of appending
+    const previousChips = phraseChips.slice(0, selectionRoundStart);
+    setPhraseChips([...previousChips, ...chipsToAdd]);
+    setInputValue('');
+
+    // If this was the 3rd column (column 2), reset everything
+    if (columnIdx === 2) {
+      setColumnSelections([null, null, null]);
+      setColumnIndices([0, 0, 0]);
+      setActiveColumn(0);
+      setPreviewChips([]);
+      // Set start position for next selection round
+      setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      // Re-lock suggestions for the next round based on new chips
+      const newChipsForNextRound = [...previousChips, ...chipsToAdd];
+      const nextRoundSuggestions = getPhraseSuggestions(newChipsForNextRound);
+      setLockedSuggestions(nextRoundSuggestions);
+    } else {
+      // Otherwise, move to next column
+      setActiveColumn(columnIdx + 1);
+    }
   };
 
   const addChip = (chip) => {
@@ -1043,11 +1106,66 @@ const PhraseModeReport = (props) => {
                     ref={inputRef}
                     type="text"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      setSelectedSuggestionIndex(0); // Reset selection when typing
+                    }}
+                    onKeyDown={(e) => {
+                      const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+                      const allSuggestions = [
+                        phraseSuggestions.current,
+                        phraseSuggestions.next,
+                        phraseSuggestions.future
+                      ];
+                      const currentColumnSuggestions = allSuggestions[activeColumn];
+
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const newIndex = Math.min(columnIndices[activeColumn] + 1, currentColumnSuggestions.length - 1);
+                        const newIndices = [...columnIndices];
+                        newIndices[activeColumn] = newIndex;
+                        setColumnIndices(newIndices);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const newIndex = Math.max(columnIndices[activeColumn] - 1, 0);
+                        const newIndices = [...columnIndices];
+                        newIndices[activeColumn] = newIndex;
+                        setColumnIndices(newIndices);
+                      } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        if (activeColumn < 2) {
+                          setActiveColumn(activeColumn + 1);
+                        }
+                      } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        if (activeColumn > 0) {
+                          setActiveColumn(activeColumn - 1);
+                        }
+                      } else if (e.key === 'Tab') {
+                        e.preventDefault();
+                        setActiveColumn((activeColumn + 1) % 3);
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
+                        if (selectedSuggestion) {
+                          handleColumnSelection(activeColumn, selectedSuggestion, allSuggestions);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setInputValue('');
+                        setColumnSelections([null, null, null]);
+                        setColumnIndices([0, 0, 0]);
+                        setActiveColumn(0);
+                        setLockedSuggestions(null);
+                        setSelectionRoundStart(0);
+                        setPreviewChips([]);
+                      } else if (e.key === 'Backspace' && inputValue === '' && phraseChips.length > 0) {
+                        removeChip(phraseChips[phraseChips.length - 1].id);
+                      }
+                    }}
                     placeholder="Continue typing or select a suggestion below..."
                     className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  
+
                   {inputValue && (
                     <button
                       onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
@@ -1061,27 +1179,113 @@ const PhraseModeReport = (props) => {
               </div>
             </div>
 
-            {suggestions.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8 slide-in-right">
-                <div className="flex items-center gap-2 mb-4">
+            {/* 3-Column Progressive Selection UI */}
+            <div className="bg-white rounded-xl border-2 border-blue-200 p-6 mb-8 slide-in-right">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm font-semibold text-gray-700">Next Steps</span>
-                  <Info className="w-4 h-4 text-gray-400 ml-auto" />
+                  <span className="text-sm font-semibold text-gray-700">Build Your Phrase</span>
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {suggestions.map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => addChip(suggestion)}
-                      className="px-4 py-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-700 transition-all text-left"
-                    >
-                      {suggestion.text}
-                    </button>
-                  ))}
+                <div className="text-xs text-gray-400">
+                  ↑↓ navigate • ←→ change column • Enter select • Tab next column
                 </div>
               </div>
-            )}
+
+              {/* 3-Column Grid */}
+              <div className="grid grid-cols-3 gap-4">
+                {(() => {
+                  // Use locked suggestions if available, otherwise get fresh
+                  const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+                  const allSuggestions = [
+                    inputValue
+                      ? phraseSuggestions.current.filter(s =>
+                          s.label.toLowerCase().startsWith(inputValue.toLowerCase())
+                        )
+                      : phraseSuggestions.current.slice(0, 6),
+                    phraseSuggestions.next.slice(0, 6),
+                    phraseSuggestions.future.slice(0, 6)
+                  ];
+                  const columnTitles = [
+                    phraseChips.length === 0 ? 'Start with' : 'Select',
+                    'Then',
+                    'After that'
+                  ];
+
+                  return allSuggestions.map((columnSuggestions, columnIdx) => {
+                    const isActive = activeColumn === columnIdx;
+                    const isSelected = columnSelections[columnIdx] !== null;
+                    const isDisabled = isSelected;
+
+                    return (
+                      <div
+                        key={columnIdx}
+                        className={`transition-all ${
+                          isDisabled
+                            ? 'opacity-30 pointer-events-none'
+                            : isActive
+                            ? 'opacity-100'
+                            : 'opacity-40'
+                        }`}
+                      >
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                          <span>{columnTitles[columnIdx]}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {columnSuggestions.map((suggestion, idx) => {
+                            const Icon = suggestion.icon;
+                            const isHighlighted = isActive && idx === columnIndices[columnIdx];
+                            const isChosen = isSelected && columnSelections[columnIdx]?.label === suggestion.label;
+
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  // Set this column as active and select this item
+                                  setActiveColumn(columnIdx);
+                                  const newIndices = [...columnIndices];
+                                  newIndices[columnIdx] = idx;
+                                  setColumnIndices(newIndices);
+                                  handleColumnSelection(columnIdx, suggestion, allSuggestions);
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
+                                  isHighlighted
+                                    ? 'bg-blue-500 text-white shadow-md'
+                                    : 'bg-gray-50 hover:bg-blue-50 text-gray-900 hover:text-blue-700'
+                                }`}
+                              >
+                                {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
+                                <span className="truncate">{suggestion.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* Clear All Button */}
+              {phraseChips.length > 0 && (
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setPhraseChips([]);
+                      setInputValue('');
+                      setLockedSuggestions(null);
+                      setColumnSelections([null, null, null]);
+                      setColumnIndices([0, 0, 0]);
+                      setActiveColumn(0);
+                      setSelectionRoundStart(0);
+                      setPreviewChips([]);
+                    }}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <QuickAction
