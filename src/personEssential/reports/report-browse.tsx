@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2 } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -65,6 +65,7 @@ const ReportBuilder = (props) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedValue, setSelectedValue] = useState(null);
   const [valueSearchTerm, setValueSearchTerm] = useState('');
+  const [editingSelection, setEditingSelection] = useState(null);
   const [proximityLocation, setProximityLocation] = useState('');
   const [proximityRadius, setProximityRadius] = useState(25);
   const [dateRangeStart, setDateRangeStart] = useState('');
@@ -224,9 +225,30 @@ const ReportBuilder = (props) => {
 
   const handleValueSelect = (category, value) => setSelectedValue({ category, value });
 
+  const handleEditSelection = (selection) => {
+    // Set the selection being edited
+    setEditingSelection(selection);
+    // Open the category panel for this selection's category
+    setSelectedCategory(selection.category);
+    setValueSearchTerm('');
+  };
+
   const addFilter = (category, value) => {
-    addSelection(category, value, 'filter');
-    showToast(`Filter added: ${value}`);
+    if (editingSelection) {
+      // Update existing selection
+      setSelections(selections.map(s =>
+        s.id === editingSelection.id
+          ? { ...s, category, value }
+          : s
+      ));
+      showToast(`Filter updated: ${value}`);
+      setEditingSelection(null);
+      setSelectedCategory(null);
+    } else {
+      // Add new selection
+      addSelection(category, value, 'filter');
+      showToast(`Filter added: ${value}`);
+    }
   };
 
   const addField = (category, value) => {
@@ -722,14 +744,42 @@ const ReportBuilder = (props) => {
                 <div className="flex flex-wrap gap-2">
                   {selections.map((sel, idx) => {
                     const Icon = sel.type === 'filter' ? Filter : Eye;
+                    const isEditing = editingSelection?.id === sel.id;
                     return (
-                      <div key={sel.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${sel.type === 'filter' ? 'bg-blue-100 text-blue-900 border border-blue-300' : 'bg-purple-100 text-purple-900 border border-purple-300'}`}>
+                      <div key={sel.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        isEditing
+                          ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                          : sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                            : 'bg-purple-100 text-purple-900 border border-purple-300'
+                      }`}>
                         <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                         <span className="font-medium">{sel.category}</span>
                         <span className="text-xs opacity-75">= {sel.value}</span>
-                        <button onClick={() => removeSelection(sel.id)} className="hover:bg-white/50 rounded p-0.5">
-                          <X className="w-3 h-3" strokeWidth={2} />
-                        </button>
+                        <div className="flex items-center gap-1 ml-1">
+                          {sel.type === 'filter' && (
+                            <button
+                              onClick={() => handleEditSelection(sel)}
+                              className="hover:bg-white/50 rounded p-0.5 transition-colors"
+                              title="Edit filter value"
+                            >
+                              <Edit2 className="w-3 h-3" strokeWidth={2} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              removeSelection(sel.id);
+                              if (editingSelection?.id === sel.id) {
+                                setEditingSelection(null);
+                                setSelectedCategory(null);
+                              }
+                            }}
+                            className="hover:bg-white/50 rounded p-0.5 transition-colors"
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" strokeWidth={2} />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -920,8 +970,20 @@ const ReportBuilder = (props) => {
           <div style={{ position: 'absolute', top: 0, right: selectedValue ? '280px' : '0px', height: '100%', width: '480px', backgroundColor: 'white', borderLeft: '1px solid #E5E7EB', boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1)', zIndex: 40, transition: 'right 300ms ease-in-out', display: 'flex', flexDirection: 'column' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{selectedCategory}</h3>
-                <button onClick={() => { setSelectedCategory(null); setSelectedValue(null); }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedCategory}</h3>
+                  {editingSelection && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      <Edit2 className="w-3 h-3" strokeWidth={2} />
+                      Editing: {editingSelection.value}
+                    </p>
+                  )}
+                </div>
+                <button onClick={() => {
+                  setSelectedCategory(null);
+                  setSelectedValue(null);
+                  setEditingSelection(null);
+                }} className="text-gray-400 hover:text-gray-600 transition-colors">
                   <X className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               </div>
@@ -1013,9 +1075,17 @@ const ReportBuilder = (props) => {
                       s.category === selectedCategory &&
                       s.value === value
                     );
+                    // Check if this is the value being edited
+                    const isEditingThisValue = editingSelection && editingSelection.value === value;
 
                     return (
-                      <div key={`${selectedCategory}-${value}-${i}`} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
+                      <div key={`${selectedCategory}-${value}-${i}`} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${
+                        isEditingThisValue
+                          ? 'bg-amber-50 border-2 border-amber-400'
+                          : selectedValue?.value === value
+                            ? 'bg-blue-50 border border-blue-200'
+                            : ''
+                      }`}>
                         <input
                           type="checkbox"
                           className="rounded"
