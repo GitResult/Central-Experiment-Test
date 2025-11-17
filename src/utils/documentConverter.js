@@ -4,7 +4,8 @@
  * Client-side document conversion to PDF using browser libraries:
  * - DOCX: mammoth.js (converts to HTML) + jsPDF (HTML to PDF)
  * - XLSX: xlsx.js (reads spreadsheet) + jsPDF (renders to PDF)
- * - PPTX: Limited support - converts to images/text where possible
+ * - PPTX: JSZip + DOMParser (extracts text from slides) + jsPDF (creates PDF)
+ *   Note: PPTX conversion extracts text only; images and formatting are not preserved
  * - PDF: Direct passthrough
  */
 
@@ -12,6 +13,7 @@ import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
 
 /**
  * Convert a file to PDF
@@ -209,47 +211,196 @@ const convertExcelToPDF = async (file, onProgress) => {
 
 /**
  * Convert PowerPoint to PDF
- * Note: Full PPTX parsing is complex. This creates a placeholder PDF.
+ * Extracts text content from PPTX slides and creates a text-based PDF.
+ * Note: Does not preserve formatting, images, or complex layouts.
  */
 const convertPowerPointToPDF = async (file, onProgress) => {
-  onProgress(50);
+  onProgress(20);
 
-  // For now, create a placeholder PDF indicating the file type
+  try {
+    // Read file as array buffer
+    const arrayBuffer = await file.arrayBuffer();
+
+    onProgress(30);
+
+    // Unzip PPTX file
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    onProgress(40);
+
+    // Extract slide content
+    const slides = [];
+    const slideFiles = [];
+
+    // Get all slide files
+    Object.keys(zip.files).forEach(filename => {
+      if (filename.match(/ppt\/slides\/slide\d+\.xml/)) {
+        slideFiles.push(filename);
+      }
+    });
+
+    // Sort slides by number
+    slideFiles.sort((a, b) => {
+      const numA = parseInt(a.match(/slide(\d+)\.xml/)[1]);
+      const numB = parseInt(b.match(/slide(\d+)\.xml/)[1]);
+      return numA - numB;
+    });
+
+    onProgress(50);
+
+    // Extract text from each slide
+    for (const slideFile of slideFiles) {
+      const slideXml = await zip.files[slideFile].async('string');
+      const textContent = extractTextFromSlideXml(slideXml);
+      slides.push(textContent);
+    }
+
+    onProgress(70);
+
+    // Create PDF from extracted text
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    const maxHeight = pageHeight - (margin * 2);
+
+    // Add each slide as a page
+    slides.forEach((slideText, index) => {
+      if (index > 0) {
+        pdf.addPage();
+      }
+
+      // Slide number header
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(0, 0, pageWidth, 15, 'F');
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(12);
+      pdf.text(`Slide ${index + 1} of ${slides.length}`, margin, 10);
+      pdf.text(file.name, pageWidth - margin, 10, { align: 'right' });
+
+      // Slide content
+      pdf.setTextColor(30, 30, 30);
+      pdf.setFontSize(11);
+
+      if (slideText.trim()) {
+        // Split text into lines that fit the page
+        const lines = pdf.splitTextToSize(slideText, maxWidth);
+
+        let y = 25;
+        lines.forEach(line => {
+          if (y > maxHeight) {
+            return; // Skip if we exceed page height
+          }
+          pdf.text(line, margin, y);
+          y += 6;
+        });
+      } else {
+        // Empty slide
+        pdf.setTextColor(150, 150, 150);
+        pdf.text('[Empty slide or content not extracted]', margin, 30);
+      }
+    });
+
+    // Add info page at the end
+    pdf.addPage();
+    pdf.setFillColor(240, 240, 250);
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFontSize(14);
+    pdf.text('PowerPoint Conversion Info', pageWidth/2, 40, { align: 'center' });
+
+    pdf.setFontSize(10);
+    const infoLines = [
+      'This PDF was generated from a PowerPoint file using text extraction.',
+      '',
+      'Note: The following are NOT preserved in this conversion:',
+      '• Images and graphics',
+      '• Formatting (fonts, colors, sizes)',
+      '• Slide layouts and positioning',
+      '• Charts and diagrams',
+      '• Animations and transitions',
+      '',
+      'For a complete conversion, please export to PDF from PowerPoint directly.'
+    ];
+
+    let y = 60;
+    infoLines.forEach(line => {
+      pdf.text(line, pageWidth/2, y, { align: 'center' });
+      y += 7;
+    });
+
+    onProgress(100);
+
+    return pdf.output('blob');
+  } catch (error) {
+    console.error('PowerPoint conversion error:', error);
+
+    // If extraction fails, create an error PDF
+    return createErrorPDF(file, error.message, onProgress);
+  }
+};
+
+/**
+ * Extract text from slide XML
+ */
+const extractTextFromSlideXml = (xmlString) => {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+
+  // Extract all text nodes (a:t tags in PowerPoint XML)
+  const textNodes = xmlDoc.getElementsByTagName('a:t');
+  const textContent = [];
+
+  for (let i = 0; i < textNodes.length; i++) {
+    const text = textNodes[i].textContent.trim();
+    if (text) {
+      textContent.push(text);
+    }
+  }
+
+  // Join with line breaks, but try to detect paragraphs
+  return textContent.join('\n');
+};
+
+/**
+ * Create an error PDF when conversion fails
+ */
+const createErrorPDF = (file, errorMessage, onProgress) => {
   const pdf = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
     format: 'a4'
   });
 
-  // Create a nice placeholder page
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  // Background
-  pdf.setFillColor(240, 240, 250);
+  pdf.setFillColor(255, 245, 245);
   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // Icon/Box
-  pdf.setFillColor(59, 130, 246);
-  pdf.roundedRect(pageWidth/2 - 30, 40, 60, 60, 5, 5, 'F');
-
-  // Text
-  pdf.setTextColor(59, 130, 246);
-  pdf.setFontSize(48);
-  pdf.text('📊', pageWidth/2, 75, { align: 'center' });
-
-  pdf.setTextColor(30, 30, 30);
+  pdf.setTextColor(200, 50, 50);
   pdf.setFontSize(24);
-  pdf.text('PowerPoint File', pageWidth/2, 120, { align: 'center' });
+  pdf.text('Conversion Error', pageWidth/2, 50, { align: 'center' });
 
-  pdf.setFontSize(14);
-  pdf.setTextColor(100, 100, 100);
-  pdf.text(file.name, pageWidth/2, 135, { align: 'center' });
+  pdf.setTextColor(80, 80, 80);
+  pdf.setFontSize(12);
+  pdf.text(file.name, pageWidth/2, 70, { align: 'center' });
 
-  pdf.setFontSize(11);
-  pdf.text('PowerPoint to PDF conversion has limited support.', pageWidth/2, 155, { align: 'center' });
-  pdf.text('This is a placeholder. For full conversion, please use', pageWidth/2, 165, { align: 'center' });
-  pdf.text('PowerPoint\'s built-in export or a desktop conversion tool.', pageWidth/2, 175, { align: 'center' });
+  pdf.setFontSize(10);
+  const errorLines = pdf.splitTextToSize(`Error: ${errorMessage}`, pageWidth - 60);
+  let y = 90;
+  errorLines.forEach(line => {
+    pdf.text(line, pageWidth/2, y, { align: 'center' });
+    y += 6;
+  });
 
   onProgress(100);
 
