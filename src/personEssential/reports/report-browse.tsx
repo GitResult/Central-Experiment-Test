@@ -479,57 +479,96 @@ const ReportBuilder = (props) => {
       );
 
       if (filterSelections.length > 0) {
-        // Group consecutive filters by connector for better readability
         const parts = [];
         let i = 0;
+        let isFirstFilter = true; // Track if this is the first filter after base
+
+        // Helper functions for phrases
+        const getFullPhrase = (category, value) => {
+          let val = value;
+          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+
+          if (category === 'Renewal Month') return `who renewed in ${val}`;
+          if (category === 'Renewal Year') return `who renewed in ${val}`;
+          if (category === 'Membership Type') return `that are member type ${val}`;
+          if (category === 'Tenure') return `that have been members for ${val}`;
+          if (category === 'Occupation') return `with occupation ${val}`;
+          if (category === 'Degree') return `with degree ${val}`;
+          if (category === 'Province/State') return `from ${val}`;
+          return `with ${category.toLowerCase()} ${val}`;
+        };
+
+        const getSimplePhrase = (category, value) => {
+          let val = value;
+          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+
+          if (category === 'Renewal Month' || category === 'Renewal Year') return `renewed in ${val}`;
+          if (category === 'Membership Type') return `member type ${val}`;
+          if (category === 'Tenure') return `tenure ${val}`;
+          if (category === 'Occupation') return `occupation ${val}`;
+          if (category === 'Degree') return `degree ${val}`;
+          if (category === 'Province/State') return val;
+          return `${category.toLowerCase()} ${val}`;
+        };
 
         while (i < filterSelections.length) {
           const sel = filterSelections[i];
           const nextSel = filterSelections[i + 1];
 
-          // Check if this is a BETWEEN scenario (same category, BETWEEN connector)
+          // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const categoryPhrase = sel.category === 'Renewal Month' ? 'who renewed in' :
-                                  sel.category === 'Renewal Year' ? 'who renewed in' :
-                                  sel.category === 'Member Year' ? 'from years' :
-                                  `with ${sel.category.toLowerCase()}`;
+            const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+              ? nextSel.value.split(' - ')[0]
+              : nextSel.value;
 
-            parts.push(`${categoryPhrase} ${sel.value} and ${nextSel.value}`);
-            i += 2; // Skip both selections
-          } else {
-            // Regular single filter
-            const categoryPhrase = sel.category === 'Renewal Month' ? 'who renewed in' :
-                                  sel.category === 'Renewal Year' ? 'who renewed in year' :
-                                  sel.category === 'Membership Type' ? 'that are member type' :
-                                  sel.category === 'Tenure' ? 'that have been members for' :
-                                  sel.category === 'Occupation' ? 'with occupation' :
-                                  sel.category === 'Degree' ? 'with degree' :
-                                  sel.category === 'Province/State' ? 'from' :
-                                  `with ${sel.category.toLowerCase()}`;
-
-            let value = sel.value;
-            // Extract acronym for Membership Type
-            if (sel.category === 'Membership Type' && value.includes(' - ')) {
-              value = value.split(' - ')[0];
+            if (isFirstFilter) {
+              const phrase = getFullPhrase(sel.category, sel.value);
+              parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
+            } else {
+              parts.push(`${getSimplePhrase(sel.category, sel.value)} and ${val2}`);
             }
-
-            parts.push(`${categoryPhrase} ${value}`);
-
-            // Check if next has OR connector - if so, add just the value
+            isFirstFilter = false;
+            i += 2;
+          } else {
+            // Check for OR connectors with same category
             let j = i + 1;
-            while (j < filterSelections.length && filterSelections[j].connector === 'OR' &&
+            const orValues = [sel.value];
+            while (j < filterSelections.length &&
+                   filterSelections[j].connector === 'OR' &&
                    filterSelections[j].category === sel.category) {
-              const orValue = filterSelections[j].value;
-              parts.push(`or ${orValue}`);
+              orValues.push(filterSelections[j].value);
               j++;
             }
 
-            i = j; // Move to next unprocessed selection
+            if (orValues.length > 1) {
+              // Multiple values with OR
+              const formattedValues = orValues.map(v =>
+                sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+              ).join(' or ');
+
+              if (isFirstFilter) {
+                const phrase = getFullPhrase(sel.category, sel.value);
+                parts.push(phrase.replace(sel.value, formattedValues));
+              } else {
+                const simplePart = getSimplePhrase(sel.category, sel.value);
+                parts.push(simplePart.replace(sel.value, formattedValues));
+              }
+            } else {
+              // Single value
+              parts.push(isFirstFilter ? getFullPhrase(sel.category, sel.value) : getSimplePhrase(sel.category, sel.value));
+            }
+
+            isFirstFilter = false;
+            i = j;
           }
         }
 
         if (parts.length > 0) {
-          query += ' ' + parts.join(' ');
+          // Join parts: first with space, rest with commas for natural flow
+          query += ' ' + parts[0];
+          for (let k = 1; k < parts.length; k++) {
+            query += ', ' + parts[k];
+          }
         }
       }
 
