@@ -2028,14 +2028,10 @@ const UnifiedContactListing = () => {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
                         } else if (e.key === 'ArrowRight') {
-                          // Move to next column (only if previous column has selection)
+                          // Move to next column
                           e.preventDefault();
                           if (activeColumn < 2) {
-                            // Can move to next column if current column has a selection OR if we're moving from column 0 to 1
-                            const canMove = activeColumn === 0 || columnSelections[activeColumn - 1] !== null;
-                            if (canMove) {
-                              setActiveColumn(prev => prev + 1);
-                            }
+                            setActiveColumn(prev => prev + 1);
                           }
                         } else if (e.key === 'ArrowLeft') {
                           // Move to previous column
@@ -2063,6 +2059,15 @@ const UnifiedContactListing = () => {
                           e.preventDefault();
                           const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
                           const newSelections = [...columnSelections];
+
+                          // Auto-select first items from previous columns if not already selected
+                          for (let i = 0; i < activeColumn; i++) {
+                            if (!newSelections[i] && allSuggestions[i].length > 0) {
+                              newSelections[i] = allSuggestions[i][0];
+                            }
+                          }
+
+                          // Select the current item
                           newSelections[activeColumn] = selectedSuggestion;
                           setColumnSelections(newSelections);
 
@@ -2185,15 +2190,12 @@ const UnifiedContactListing = () => {
                             return allSuggestions.map((columnSuggestions, columnIdx) => {
                               const isActive = activeColumn === columnIdx;
                               const isSelected = columnSelections[columnIdx] !== null;
-                              const canAccess = columnIdx === 0 || columnSelections[columnIdx - 1] !== null;
 
                               return (
                                 <div
                                   key={columnIdx}
                                   className={`transition-all ${
-                                    !canAccess
-                                      ? 'opacity-25 pointer-events-none'
-                                      : isActive
+                                    isActive
                                       ? 'opacity-100'
                                       : 'opacity-30'
                                   }`}
@@ -2211,8 +2213,6 @@ const UnifiedContactListing = () => {
                                         <button
                                           key={idx}
                                           onClick={() => {
-                                            if (!canAccess) return;
-
                                             // Set this column as active and select this item
                                             setActiveColumn(columnIdx);
                                             const newIndices = [...columnIndices];
@@ -2220,6 +2220,15 @@ const UnifiedContactListing = () => {
                                             setColumnIndices(newIndices);
 
                                             const newSelections = [...columnSelections];
+
+                                            // Auto-select first items from previous columns if not already selected
+                                            for (let i = 0; i < columnIdx; i++) {
+                                              if (!newSelections[i] && allSuggestions[i].length > 0) {
+                                                newSelections[i] = allSuggestions[i][0];
+                                              }
+                                            }
+
+                                            // Select the clicked item
                                             newSelections[columnIdx] = suggestion;
                                             setColumnSelections(newSelections);
 
