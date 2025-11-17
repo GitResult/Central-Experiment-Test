@@ -2017,10 +2017,14 @@ const UnifiedContactListing = () => {
                           e.preventDefault();
                           applyButtonRef.current?.focus();
                         } else if (e.key === 'ArrowRight') {
-                          // Move to next column
+                          // Move to next column (only if previous column has selection)
                           e.preventDefault();
-                          if (activeColumn < 2 && columnSelections[activeColumn] !== null) {
-                            setActiveColumn(prev => prev + 1);
+                          if (activeColumn < 2) {
+                            // Can move to next column if current column has a selection OR if we're moving from column 0 to 1
+                            const canMove = activeColumn === 0 || columnSelections[activeColumn - 1] !== null;
+                            if (canMove) {
+                              setActiveColumn(prev => prev + 1);
+                            }
                           }
                         } else if (e.key === 'ArrowLeft') {
                           // Move to previous column
@@ -2044,36 +2048,38 @@ const UnifiedContactListing = () => {
                           newIndices[activeColumn] = Math.max(0, newIndices[activeColumn] - 1);
                           setColumnIndices(newIndices);
                         } else if (e.key === 'Enter' && currentColumnSuggestions.length > 0) {
-                          // Select item from active column
+                          // Select item from active column and add chips cumulatively
                           e.preventDefault();
                           const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
                           const newSelections = [...columnSelections];
                           newSelections[activeColumn] = selectedSuggestion;
                           setColumnSelections(newSelections);
 
-                          // Check if all 3 columns have selections
-                          if (newSelections.every(sel => sel !== null)) {
-                            // Add all 3 selections as chips
-                            const chips = newSelections.map((suggestion, idx) => ({
-                              id: Date.now() + idx,
-                              text: suggestion.label,
-                              type: suggestion.type || 'connector',
-                              valueType: suggestion.valueType,
-                              icon: suggestion.icon,
-                              color: suggestion.color || 'gray',
-                              ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
-                              ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
-                            }));
-                            setPhraseChips([...phraseChips, ...chips]);
-                            setPhraseSearchText('');
-                            // Reset column states for next set
-                            setColumnSelections([null, null, null]);
-                            setColumnIndices([0, 0, 0]);
-                            setActiveColumn(0);
-                          } else if (activeColumn < 2) {
-                            // Move to next column after selection
-                            setActiveColumn(prev => prev + 1);
+                          // Add chips cumulatively based on active column
+                          // Column 0: add 1 chip, Column 1: add 2 chips, Column 2: add 3 chips
+                          const chipsToAdd = [];
+                          for (let i = 0; i <= activeColumn; i++) {
+                            if (newSelections[i]) {
+                              const suggestion = newSelections[i];
+                              chipsToAdd.push({
+                                id: Date.now() + i + Math.random(),
+                                text: suggestion.label,
+                                type: suggestion.type || 'connector',
+                                valueType: suggestion.valueType,
+                                icon: suggestion.icon,
+                                color: suggestion.color || 'gray',
+                                ...(suggestion.type === 'cohort' && { filterHint: suggestion.filterHint }),
+                                ...(suggestion.type === 'entityType' && { entityTypeValue: suggestion.entityTypeValue })
+                              });
+                            }
                           }
+
+                          setPhraseChips([...phraseChips, ...chipsToAdd]);
+                          setPhraseSearchText('');
+                          // Reset column states for next set
+                          setColumnSelections([null, null, null]);
+                          setColumnIndices([0, 0, 0]);
+                          setActiveColumn(0);
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
@@ -2208,26 +2214,30 @@ const UnifiedContactListing = () => {
                                             newSelections[columnIdx] = suggestion;
                                             setColumnSelections(newSelections);
 
-                                            // Check if all 3 columns have selections
-                                            if (newSelections.every(sel => sel !== null)) {
-                                              const chips = newSelections.map((sel, i) => ({
-                                                id: Date.now() + i,
-                                                text: sel.label,
-                                                type: sel.type || 'connector',
-                                                valueType: sel.valueType,
-                                                icon: sel.icon,
-                                                color: sel.color || 'gray',
-                                                ...(sel.type === 'cohort' && { filterHint: sel.filterHint }),
-                                                ...(sel.type === 'entityType' && { entityTypeValue: sel.entityTypeValue })
-                                              }));
-                                              setPhraseChips([...phraseChips, ...chips]);
-                                              setPhraseSearchText('');
-                                              setColumnSelections([null, null, null]);
-                                              setColumnIndices([0, 0, 0]);
-                                              setActiveColumn(0);
-                                            } else if (columnIdx < 2) {
-                                              setActiveColumn(columnIdx + 1);
+                                            // Add chips cumulatively based on which column was clicked
+                                            // Column 0: add 1 chip, Column 1: add 2 chips, Column 2: add 3 chips
+                                            const chipsToAdd = [];
+                                            for (let i = 0; i <= columnIdx; i++) {
+                                              if (newSelections[i]) {
+                                                const sel = newSelections[i];
+                                                chipsToAdd.push({
+                                                  id: Date.now() + i + Math.random(),
+                                                  text: sel.label,
+                                                  type: sel.type || 'connector',
+                                                  valueType: sel.valueType,
+                                                  icon: sel.icon,
+                                                  color: sel.color || 'gray',
+                                                  ...(sel.type === 'cohort' && { filterHint: sel.filterHint }),
+                                                  ...(sel.type === 'entityType' && { entityTypeValue: sel.entityTypeValue })
+                                                });
+                                              }
                                             }
+
+                                            setPhraseChips([...phraseChips, ...chipsToAdd]);
+                                            setPhraseSearchText('');
+                                            setColumnSelections([null, null, null]);
+                                            setColumnIndices([0, 0, 0]);
+                                            setActiveColumn(0);
                                           }}
                                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                                             isChosen
