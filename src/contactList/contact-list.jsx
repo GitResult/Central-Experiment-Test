@@ -2091,7 +2091,10 @@ const UnifiedContactListing = () => {
                           setColumnSelections([null, null, null]);
                           setColumnIndices([0, 0, 0]);
                           setActiveColumn(0);
-                          setLockedSuggestions(null); // Unlock suggestions for next round
+                          // Only unlock suggestions after selecting from the 3rd column (column 2)
+                          if (activeColumn === 2) {
+                            setLockedSuggestions(null);
+                          }
                         } else if (e.key === 'Escape') {
                           setIsPhraseMode(false);
                           setPhraseSearchText('');
@@ -2244,7 +2247,10 @@ const UnifiedContactListing = () => {
                                             setColumnSelections([null, null, null]);
                                             setColumnIndices([0, 0, 0]);
                                             setActiveColumn(0);
-                                            setLockedSuggestions(null); // Unlock suggestions for next round
+                                            // Only unlock suggestions after selecting from the 3rd column (column 2)
+                                            if (columnIdx === 2) {
+                                              setLockedSuggestions(null);
+                                            }
                                           }}
                                           className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all text-left ${
                                             isHighlighted
