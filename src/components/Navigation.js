@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight
+  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -105,6 +105,14 @@ const Navigation = ({ onNavigate }) => {
       icon: ListFilter,
       color: 'bg-emerald-500',
       features: ['Advanced Filtering', 'Interactive Charts', 'Map Visualization', 'Export Data']
+    },
+    {
+      id: 'person-essential',
+      name: 'Person Essential',
+      description: 'Person essentials dashboard with customizable widgets, drag-and-drop tasks, and interactive features.',
+      icon: UserCheck,
+      color: 'bg-teal-500',
+      features: ['Custom Widgets', 'Task Management', 'Drag & Drop', 'Report Builder']
     }
   ];
 

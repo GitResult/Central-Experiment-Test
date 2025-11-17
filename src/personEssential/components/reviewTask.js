@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import ListView from "./listView"
-import CalendarView from "./calendarView"
 import MembershipStory from "./membershipStory"
-import { Tab, Tabs } from "@heroui/react";
 
 const ReviewTask = () => {
     const [viewType, setViewType] = useState('listView');
@@ -32,15 +30,33 @@ const ReviewTask = () => {
                 <h1 className="text-2xl font-semibold text-gray-900">{sampleData.campaign.title}</h1>
                 <p className="text-sm text-gray-500 mt-1">{sampleData.campaign.subtitle}</p>
             </div>
-            {viewType === 'listView' || viewType === 'calendarView' ? (
+            {viewType === 'listView' ? (
                 <div className="flex justify-end mt-3 me-2">
-                    <Tabs aria-label="Tabs variants">
-                        <Tab key="List" title="List" onClick={() => setViewType('listView')} />
-                        <Tab key="Calendar" title="Calendar" onClick={() => setViewType('calendarView')} />
-                    </Tabs>
+                    <div className="inline-flex rounded-lg border border-gray-200 p-1">
+                        <button
+                            onClick={() => setViewType('listView')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                viewType === 'listView'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                            List
+                        </button>
+                        <button
+                            onClick={() => setViewType('membershipStory')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                viewType === 'membershipStory'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                            Membership Story
+                        </button>
+                    </div>
                 </div>
             ) : null}
-            {viewType === 'listView' ? <ListView></ListView> : viewType === 'calendarView' ? <CalendarView setViewType={setViewType}></CalendarView> : <MembershipStory></MembershipStory>}
+            {viewType === 'listView' ? <ListView></ListView> : <MembershipStory></MembershipStory>}
         </div>
     );
 }

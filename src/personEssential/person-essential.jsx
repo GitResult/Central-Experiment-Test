@@ -42,10 +42,9 @@ import {
   MoveRight,
 } from "lucide-react";
 import ReviewTask from "./components/reviewTask";
-import { updateDemoState } from "../../../redux/demo/actions";
-import { useHistory } from "react-router-dom";
+import { updateDemoState } from "../redux/demo/actions";
 import ReportBuilder from "./reports/report-browse.tsx";
-import Breadcrumb from "../../../components/UI/Breadcrumb.jsx";
+import Breadcrumb from "../components/UI/Breadcrumb.jsx";
 
 /**
  * Fix pack:
@@ -333,7 +332,6 @@ function SortableCard({ card, onToggleWidth, onRemove, onSizeChange, onResizeSta
 }
 
 function CardContent({ card, onTaskClick }) {
-  const history = useHistory();
 
   switch (card.type) {
     case "contact":
@@ -443,7 +441,7 @@ function CardContent({ card, onTaskClick }) {
             {/* Profile */}
             <button
               className="flex items-center justify-between pl-3 py-2.5 rounded-full border-2 border-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all group"
-              onClick={() => history.push("/demo/contact-profile")}
+              onClick={() => console.log('Navigate to contact profile')}
             >
 
               <div className="flex items-center gap-3">
@@ -464,7 +462,7 @@ function CardContent({ card, onTaskClick }) {
             {/* Enterprise */}
             <button
               className="flex items-center justify-between pl-3 py-2.5 rounded-full border-2 border-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all group"
-              onClick={() => history.push("/demo/contact-enterprise")}
+              onClick={() => console.log('Navigate to contact enterprise')}
             >
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 flex items-center justify-center">
@@ -775,7 +773,10 @@ function TaskPanel({ updateDemoStateAction, tasks, selectedTask, searchQuery, on
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => updateDemoStateAction({ selectedTask: task.id, showTaskDetailPanel: true })}
+                onClick={() => updateDemoStateAction({
+                  selectedTask: task.id,
+                  showTaskDetailPanel: task.id !== 'task-2'
+                })}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all ${selectedTask === task.id
                   ? 'bg-blue-50 border-blue-200'
                   : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -832,7 +833,7 @@ function TaskDetailPanel({ updateDemoStateAction, approvalFormOpen, setApprovalF
         />
       )}
 
-      {isCollapsed && showTaskDetailPanel && (
+      {isCollapsed && showTaskDetailPanel && selectedTask !== 'task-2' && (
         <button
           onClick={onToggleCollapse}
           className="fixed right-7 top-[108px] z-20 p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -844,7 +845,7 @@ function TaskDetailPanel({ updateDemoStateAction, approvalFormOpen, setApprovalF
 
       {/* Task Detail Panel */}
       <div
-        className={`pt-2.5 h-[calc(100vh-4rem)] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${showTaskDetailPanel && !isCollapsed ? 'translate-x-0 min-w-[360px] ' : 'translate-x-[500px] hidden w-0'
+        className={`pt-2.5 h-[calc(100vh-4rem)] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${showTaskDetailPanel && !isCollapsed && selectedTask !== 'task-2' ? 'translate-x-0 min-w-[360px] ' : 'translate-x-[500px] hidden w-0'
           }`}
       >
         {/* Header */}

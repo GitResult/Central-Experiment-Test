@@ -1,0 +1,197 @@
+{
+  "summary": {
+    "totalMembers": 7100,
+    "previousYear": 6850,
+    "growth": 250,
+    "growthPercent": 3.6
+  },
+  "membershipTypes": [
+    {
+      "name": "Full-Time Members",
+      "count": 4200,
+      "percentage": 59,
+      "color": "#3B82F6"
+    },
+    {
+      "name": "Part-Time Members",
+      "count": 1800,
+      "percentage": 25,
+      "color": "#10B981"
+    },
+    {
+      "name": "Student Members",
+      "count": 950,
+      "percentage": 13,
+      "color": "#F59E0B"
+    },
+    {
+      "name": "Honorary Members",
+      "count": 150,
+      "percentage": 2,
+      "color": "#8B5CF6"
+    }
+  ],
+  "ageGroups": [
+    {
+      "range": "18-25",
+      "count": 850,
+      "percentage": 12
+    },
+    {
+      "range": "26-35",
+      "count": 2100,
+      "percentage": 30
+    },
+    {
+      "range": "36-50",
+      "count": 2400,
+      "percentage": 34
+    },
+    {
+      "range": "51-65",
+      "count": 1300,
+      "percentage": 18
+    },
+    {
+      "range": "65+",
+      "count": 450,
+      "percentage": 6
+    }
+  ],
+  "provinces": [
+    {
+      "name": "British Columbia",
+      "code": "BC",
+      "count": 2200,
+      "percentage": 31
+    },
+    {
+      "name": "Ontario",
+      "code": "ON",
+      "count": 2800,
+      "percentage": 39
+    },
+    {
+      "name": "Quebec",
+      "code": "QC",
+      "count": 1200,
+      "percentage": 17
+    },
+    {
+      "name": "Alberta",
+      "code": "AB",
+      "count": 650,
+      "percentage": 9
+    },
+    {
+      "name": "Other",
+      "code": "OT",
+      "count": 250,
+      "percentage": 4
+    }
+  ],
+  "sections": [
+    {
+      "name": "Community Psychology",
+      "members": 1850,
+      "growth": 12
+    },
+    {
+      "name": "Clinical Practice",
+      "members": 1650,
+      "growth": 8
+    },
+    {
+      "name": "Research & Development",
+      "members": 1200,
+      "growth": 15
+    },
+    {
+      "name": "Educational Psychology",
+      "members": 950,
+      "growth": 6
+    },
+    {
+      "name": "Organizational Psychology",
+      "members": 800,
+      "growth": 10
+    },
+    {
+      "name": "Health Psychology",
+      "members": 650,
+      "growth": 5
+    }
+  ],
+  "journeyData": {
+    "stages": [
+      {
+        "name": "Awareness",
+        "count": 8500,
+        "percentage": 100
+      },
+      {
+        "name": "Interest",
+        "count": 5200,
+        "percentage": 61
+      },
+      {
+        "name": "Application",
+        "count": 3800,
+        "percentage": 45
+      },
+      {
+        "name": "Approval",
+        "count": 3200,
+        "percentage": 38
+      },
+      {
+        "name": "Active Member",
+        "count": 7100,
+        "percentage": 84
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": 1,
+      "title": "Overview",
+      "description": "Membership overview and key metrics"
+    },
+    {
+      "id": 2,
+      "title": "Demographics",
+      "description": "Member demographics and distribution"
+    },
+    {
+      "id": 3,
+      "title": "Growth Trends",
+      "description": "Membership growth and trends over time"
+    }
+  ],
+  "historicalData": [
+    {
+      "year": 2020,
+      "members": 6200
+    },
+    {
+      "year": 2021,
+      "members": 6400
+    },
+    {
+      "year": 2022,
+      "members": 6550
+    },
+    {
+      "year": 2023,
+      "members": 6750
+    },
+    {
+      "year": 2024,
+      "members": 6850
+    },
+    {
+      "year": 2025,
+      "members": 7100
+    }
+  ]
+}
