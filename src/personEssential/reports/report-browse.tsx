@@ -475,7 +475,7 @@ const ReportBuilder = (props) => {
       }
 
       // Group remaining selections by type
-      const memberTypeSel = selections.find(s => s.category === 'Membership Type Code');
+      const memberTypeSel = selections.find(s => s.category === 'Membership Type');
       const tenureSel = selections.find(s => s.category === 'Tenure');
       const occupationSel = selections.find(s => s.category === 'Occupation');
       const degreeSel = selections.find(s => s.category === 'Degree');
@@ -491,7 +491,11 @@ const ReportBuilder = (props) => {
       }
 
       if (memberTypeSel) {
-        parts.push(`that are member type ${memberTypeSel.value}`);
+        // Extract acronym from "ECY1 - Member Early Career Year 1" format, or use full value if no hyphen
+        const memberTypeDisplay = memberTypeSel.value.includes(' - ')
+          ? memberTypeSel.value.split(' - ')[0]
+          : memberTypeSel.value;
+        parts.push(`that are member type ${memberTypeDisplay}`);
       }
 
       if (occupationSel) {
@@ -550,7 +554,7 @@ const ReportBuilder = (props) => {
         return {
           title: "Refine your selection",
           suggestions: [
-            { category: "Membership Type Code", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Hash" },
+            { category: "Membership Type", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Crown" },
             { category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" },
             { category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
             { category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" }
@@ -558,8 +562,8 @@ const ReportBuilder = (props) => {
         };
       }
 
-      // Stage 2: After adding member type code, suggest demographics
-      const hasMemberType = allSelections.some(s => s.category === 'Membership Type Code');
+      // Stage 2: After adding member type, suggest demographics
+      const hasMemberType = allSelections.some(s => s.category === 'Membership Type');
       const hasOccupation = allSelections.some(s => s.category === 'Occupation');
       const hasDegree = allSelections.some(s => s.category === 'Degree');
       const hasProvince = allSelections.some(s => s.category === 'Province/State');
@@ -617,7 +621,7 @@ const ReportBuilder = (props) => {
         suggestions.push({ category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
       }
       if (!hasMemberType) {
-        suggestions.push({ category: "Membership Type Code", section: "Membership", reason: "Filter by member type", icon: "Hash" });
+        suggestions.push({ category: "Membership Type", section: "Membership", reason: "Filter by member type", icon: "Crown" });
       }
       if (!hasOccupation) {
         suggestions.push({ category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" });
@@ -692,7 +696,7 @@ const ReportBuilder = (props) => {
         name: "ECY1 members in BC",
         filters: [
           { category: "Current Members", value: "All Current Members" },
-          { category: "Membership Type Code", value: "ECY1" },
+          { category: "Membership Type", value: "ECY1 - Member Early Career Year 1" },
           { category: "Province/State", value: "BC" }
         ]
       },

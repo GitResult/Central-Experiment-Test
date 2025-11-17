@@ -22,7 +22,6 @@
         ],
         "Membership": [
             "Membership Type",
-            "Membership Type Code",
             "Tenure",
             "Code of Ethics",
             "Primary Reason for Joining",
@@ -118,13 +117,25 @@
     ],
     "sample_values": {
         "Membership Type": [
+            "ECY1 - Member Early Career Year 1",
+            "ECY2 - Member Early Career Year 2",
+            "ECY3 - Member Early Career Year 3",
+            "STU1 - Student Member Year 1",
+            "STU2 - Student Member Year 2",
+            "CORP1 - Corporate Member",
+            "PROF1 - Professional Member",
+            "PROF2 - Professional Member Level 2",
+            "Individual - Individual Member",
+            "Professional - Professional Member",
+            "Corporate - Corporate Member",
+            "Student - Student Member",
+            "Senior - Senior Member",
+            "Family - Family Member",
+            "Lifetime - Life Member",
+            "Honorary - Honorary Member",
             "Fellow",
             "Life Fellow",
-            "Life Member",
-            "Member",
             "International Affiliate",
-            "Member Early Career Year 1",
-            "Member Early Career Year 2",
             "Section Associate"
         ],
         "Career Stage": [
@@ -182,24 +193,6 @@
         ],
         "2019 Members": [
             "All 2019 Members"
-        ],
-        "Membership Type Code": [
-            "ECY1",
-            "ECY2",
-            "ECY3",
-            "STU1",
-            "STU2",
-            "CORP1",
-            "PROF1",
-            "PROF2",
-            "Individual",
-            "Professional",
-            "Corporate",
-            "Student",
-            "Senior",
-            "Family",
-            "Lifetime",
-            "Honorary"
         ],
         "Tenure": [
             "Past 1 year",
@@ -337,7 +330,6 @@
         "In Region": "Map",
         "In Country": "Globe",
         "Membership Type": "Crown",
-        "Membership Type Code": "Hash",
         "Tenure": "Clock",
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
