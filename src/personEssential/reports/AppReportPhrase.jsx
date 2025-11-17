@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, Sparkles, Play, ChevronRight, X, Check, 
+import {
+  Search, Sparkles, Play, ChevronRight, X, Check,
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
   Edit2, Trash2, Settings,
-  MoveLeft
+  MoveLeft, GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
 import { updateDemoState } from '../../redux/demo/actions';
@@ -519,7 +519,7 @@ const PhraseModeReport = (props) => {
 
   const addChip = (chip) => {
     const newChip = { ...chip, id: Date.now() };
-    
+
     // Check if this chip text requires options selection
     if (chip.text === 'in location') {
       showOptionsSelector('location', { ...newChip, type: 'location', icon: MapPin, color: 'red' });
@@ -531,6 +531,16 @@ const PhraseModeReport = (props) => {
       showOptionsSelector('timeframe', { ...newChip, type: 'timeframe', icon: Calendar, color: 'orange' });
     } else if (chip.text === 'greater than' || chip.text === 'equals') {
       showOptionsSelector('amount', { ...newChip, type: 'comparison', color: 'green' });
+    } else if (chip.text === 'occupation is') {
+      showOptionsSelector('occupation', { ...newChip, type: 'occupation', icon: Briefcase, color: 'teal' });
+    } else if (chip.text === 'with a Degree:') {
+      showOptionsSelector('degree', { ...newChip, type: 'degree', icon: GraduationCap, color: 'indigo' });
+    } else if (chip.text === 'from province/state') {
+      showOptionsSelector('province', { ...newChip, type: 'province', icon: MapPin, color: 'red' });
+    } else if (chip.text === 'for' && phraseChips.some(c => c.text === 'that have been members')) {
+      showOptionsSelector('tenure', { ...newChip, type: 'tenure', icon: Clock, color: 'blue' });
+    } else if (chip.text === 'who renewed in') {
+      showOptionsSelector('renewalMonth', { ...newChip, type: 'renewalMonth', icon: Calendar, color: 'orange' });
     } else if (chip.type === 'location') {
       showOptionsSelector('location', newChip);
     } else if (chip.type === 'timeframe') {
@@ -585,6 +595,30 @@ const PhraseModeReport = (props) => {
       case 'connector':
         options = ['that have', 'with status', 'in location', 'with type', 'from'];
         title = 'Change Connector';
+        break;
+      case 'occupation':
+        options = FILTER_OPTIONS.occupations;
+        title = 'Select Occupation';
+        break;
+      case 'degree':
+        options = FILTER_OPTIONS.degrees;
+        title = 'Select Degree';
+        break;
+      case 'province':
+        options = FILTER_OPTIONS.provinces;
+        title = 'Select Province/State';
+        break;
+      case 'tenure':
+        options = FILTER_OPTIONS.tenureValues;
+        title = 'Select Tenure';
+        break;
+      case 'renewalMonth':
+        options = FILTER_OPTIONS.renewalMonths;
+        title = 'Select Renewal Month';
+        break;
+      case 'renewalYear':
+        options = FILTER_OPTIONS.renewalYears;
+        title = 'Select Renewal Year';
         break;
       default:
         options = [];
@@ -688,6 +722,66 @@ const PhraseModeReport = (props) => {
         type: 'attribute',
         color: attrOption ? attrOption.color : 'green',
         icon: attrOption ? attrOption.icon : undefined
+      };
+    }
+    // Handle occupation changes
+    else if (optionsModalData.type === 'occupation') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'occupation',
+        color: 'teal',
+        icon: Briefcase
+      };
+    }
+    // Handle degree changes
+    else if (optionsModalData.type === 'degree') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'degree',
+        color: 'indigo',
+        icon: GraduationCap
+      };
+    }
+    // Handle province changes
+    else if (optionsModalData.type === 'province') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'province',
+        color: 'red',
+        icon: MapPin
+      };
+    }
+    // Handle tenure changes
+    else if (optionsModalData.type === 'tenure') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'tenure',
+        color: 'blue',
+        icon: Clock
+      };
+    }
+    // Handle renewal month changes
+    else if (optionsModalData.type === 'renewalMonth') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'renewalMonth',
+        color: 'orange',
+        icon: Calendar
+      };
+    }
+    // Handle renewal year changes
+    else if (optionsModalData.type === 'renewalYear') {
+      finalChip = {
+        ...chip,
+        text: option,
+        type: 'renewalYear',
+        color: 'orange',
+        icon: Calendar
       };
     }
     // Handle all other types
@@ -794,6 +888,42 @@ const PhraseModeReport = (props) => {
     else if (chip.type === 'limit' || FILTER_OPTIONS.limitOptions.some(l => l.label === chip.text)) {
       optionType = 'limit';
       showOptionsSelector('limit', chip);
+      return;
+    }
+    // Occupation chips
+    else if (chip.type === 'occupation' || FILTER_OPTIONS.occupations.includes(chip.text)) {
+      optionType = 'occupation';
+      showOptionsSelector('occupation', chip);
+      return;
+    }
+    // Degree chips
+    else if (chip.type === 'degree' || FILTER_OPTIONS.degrees.includes(chip.text)) {
+      optionType = 'degree';
+      showOptionsSelector('degree', chip);
+      return;
+    }
+    // Province chips
+    else if (chip.type === 'province' || FILTER_OPTIONS.provinces.includes(chip.text)) {
+      optionType = 'province';
+      showOptionsSelector('province', chip);
+      return;
+    }
+    // Tenure chips
+    else if (chip.type === 'tenure' || FILTER_OPTIONS.tenureValues.includes(chip.text)) {
+      optionType = 'tenure';
+      showOptionsSelector('tenure', chip);
+      return;
+    }
+    // Renewal month chips
+    else if (chip.type === 'renewalMonth' || FILTER_OPTIONS.renewalMonths.includes(chip.text)) {
+      optionType = 'renewalMonth';
+      showOptionsSelector('renewalMonth', chip);
+      return;
+    }
+    // Renewal year chips
+    else if (chip.type === 'renewalYear' || FILTER_OPTIONS.renewalYears.includes(chip.text)) {
+      optionType = 'renewalYear';
+      showOptionsSelector('renewalYear', chip);
       return;
     }
   };
