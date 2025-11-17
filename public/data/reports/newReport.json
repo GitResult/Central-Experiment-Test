@@ -5,26 +5,38 @@
             "New Members",
             "Lapsed Members",
             "Contacts",
+            "2024 Members",
+            "2023 Members",
+            "2022 Members",
+            "2021 Members",
+            "2020 Members",
+            "2019 Members",
             "Other"
         ],
         "Location": [
             "Proximity",
             "In City",
             "In Region",
-            "In Country"
+            "In Country",
+            "Province/State"
         ],
         "Membership": [
             "Membership Type",
+            "Membership Type Code",
+            "Tenure",
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
-            "Joined/Renewed"
+            "Joined/Renewed",
+            "Renewal Month",
+            "Renewal Year"
         ],
         "Demographics": [
             "Career Stage",
             "Occupation",
             "Workplace Setting",
             "Education Received",
+            "Degree",
             "Education Current",
             "Area of Interest"
         ],
@@ -152,6 +164,107 @@
             "Administrator",
             "Student",
             "Other"
+        ],
+        "2024 Members": [
+            "All 2024 Members"
+        ],
+        "2023 Members": [
+            "All 2023 Members"
+        ],
+        "2022 Members": [
+            "All 2022 Members"
+        ],
+        "2021 Members": [
+            "All 2021 Members"
+        ],
+        "2020 Members": [
+            "All 2020 Members"
+        ],
+        "2019 Members": [
+            "All 2019 Members"
+        ],
+        "Membership Type Code": [
+            "ECY1",
+            "ECY2",
+            "ECY3",
+            "STU1",
+            "STU2",
+            "CORP1",
+            "PROF1",
+            "PROF2",
+            "Individual",
+            "Professional",
+            "Corporate",
+            "Student",
+            "Senior",
+            "Family",
+            "Lifetime",
+            "Honorary"
+        ],
+        "Tenure": [
+            "Past 1 year",
+            "Past 2 years",
+            "Past 3 years",
+            "Past 5 years",
+            "Past 10 years",
+            "Past 15 years",
+            "Past 20 years",
+            "More than 5 years"
+        ],
+        "Degree": [
+            "Masters",
+            "Bachelors",
+            "Doctorate",
+            "PhD",
+            "MBA",
+            "Certificate",
+            "Diploma",
+            "Associate"
+        ],
+        "Province/State": [
+            "ON",
+            "BC",
+            "AB",
+            "QC",
+            "MB",
+            "SK",
+            "NS",
+            "NB",
+            "PE",
+            "NL",
+            "YT",
+            "NT",
+            "NU",
+            "Ontario",
+            "British Columbia",
+            "Alberta",
+            "Quebec",
+            "Manitoba",
+            "Saskatchewan"
+        ],
+        "Renewal Month": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "Renewal Year": [
+            "2024",
+            "2023",
+            "2022",
+            "2021",
+            "2020",
+            "2019",
+            "2018",
+            "2017"
         ]
     },
     "section_icons": {
@@ -212,12 +325,20 @@
         "New Members": "UserPlus",
         "Lapsed Members": "UserMinus",
         "Contacts": "Mail",
+        "2024 Members": "Calendar",
+        "2023 Members": "Calendar",
+        "2022 Members": "Calendar",
+        "2021 Members": "Calendar",
+        "2020 Members": "Calendar",
+        "2019 Members": "Calendar",
         "Other": "Database",
         "Proximity": "MapPin",
         "In City": "Building2",
         "In Region": "Map",
         "In Country": "Globe",
         "Membership Type": "Crown",
+        "Membership Type Code": "Hash",
+        "Tenure": "Clock",
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
@@ -244,6 +365,10 @@
         "CPA Member Benefit": "Gift",
         "Psychology in the News": "Newspaper",
         "Psynopsis Magazine": "BookOpen",
-        "Volunteer Availability": "UserCheck"
+        "Volunteer Availability": "UserCheck",
+        "Province/State": "MapPin",
+        "Degree": "GraduationCap",
+        "Renewal Month": "Calendar",
+        "Renewal Year": "Calendar"
     }
 }
