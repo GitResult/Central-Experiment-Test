@@ -20,6 +20,7 @@ import RecordListingBasic from './components/RecordListingBasic';
 import RecordListingResizable from './components/RecordListingResizable';
 import RecordListingAdvanced from './components/RecordListingAdvanced';
 import ContactList from './contactList';
+import PersonEssential from './personEssential';
 
 /**
  * Main App Component with Navigation
@@ -42,6 +43,7 @@ function App() {
     'record-listing-resizable': RecordListingResizable,
     'record-listing-advanced': RecordListingAdvanced,
     'contact-list': ContactList,
+    'person-essential': PersonEssential,
   };
 
   // Get the component to render

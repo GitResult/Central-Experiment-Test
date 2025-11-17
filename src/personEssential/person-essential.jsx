@@ -42,10 +42,9 @@ import {
   MoveRight,
 } from "lucide-react";
 import ReviewTask from "./components/reviewTask";
-import { updateDemoState } from "../../../redux/demo/actions";
-import { useHistory } from "react-router-dom";
+import { updateDemoState } from "../../redux/demo/actions";
 import ReportBuilder from "./reports/report-browse.tsx";
-import Breadcrumb from "../../../components/UI/Breadcrumb.jsx";
+import Breadcrumb from "../../components/UI/Breadcrumb.jsx";
 
 /**
  * Fix pack:
@@ -333,7 +332,6 @@ function SortableCard({ card, onToggleWidth, onRemove, onSizeChange, onResizeSta
 }
 
 function CardContent({ card, onTaskClick }) {
-  const history = useHistory();
 
   switch (card.type) {
     case "contact":
@@ -443,7 +441,7 @@ function CardContent({ card, onTaskClick }) {
             {/* Profile */}
             <button
               className="flex items-center justify-between pl-3 py-2.5 rounded-full border-2 border-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all group"
-              onClick={() => history.push("/demo/contact-profile")}
+              onClick={() => console.log('Navigate to contact profile')}
             >
 
               <div className="flex items-center gap-3">
@@ -464,7 +462,7 @@ function CardContent({ card, onTaskClick }) {
             {/* Enterprise */}
             <button
               className="flex items-center justify-between pl-3 py-2.5 rounded-full border-2 border-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-all group"
-              onClick={() => history.push("/demo/contact-enterprise")}
+              onClick={() => console.log('Navigate to contact enterprise')}
             >
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 flex items-center justify-center">
