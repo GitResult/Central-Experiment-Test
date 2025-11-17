@@ -1211,7 +1211,7 @@ const ReportBuilder = ({
   );
 
   return (
-    <div className="max-h-[calc(100vh-115px)] overflow-y-auto bg-gray-50 flex flex-col">
+    <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
       <AnimationStyles />
 
       {filterRecordsContext && (
@@ -1359,6 +1359,8 @@ const ReportBuilder = ({
         </div>
       )}
 
+      {/* Main Content Area - Flex 1 */}
+      <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -2049,19 +2051,14 @@ const ReportBuilder = ({
           )}
         </div>
       </div>
+      </div>
+      {/* End Main Content Area */}
 
+      {/* Right Side Panels */}
       {selectedCombo && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: '0px',
-            width: '320px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 50,
-            animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '320px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
             <div className="flex items-center gap-2 mb-3">
@@ -2159,19 +2156,9 @@ const ReportBuilder = ({
       )}
 
       {selectedFieldDetail && (
-        <>
-          <div className="absolute inset-0 bg-black bg-opacity-10 z-40" onClick={() => { setSelectedFieldDetail(null); setSelectedSecondaryValue(null); setRecordSearchTerm(''); setSelectedRecords([]); }} />
           <div
-            className="absolute top-0 h-full flex flex-col"
-            style={{
-              right: selectedSecondaryValue ? '280px' : '0px',
-              width: '420px',
-              backgroundColor: '#F9FAFB',
-              borderLeft: '2px solid #E5E7EB',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              zIndex: 50,
-              transition: 'right 300ms ease-in-out'
-            }}
+            className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+            style={{ width: '420px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center gap-2 mb-3">
@@ -2386,22 +2373,12 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       {selectedSecondaryValue && (
-        <>
           <div
-            className="absolute top-0 h-full flex flex-col"
-            style={{
-              right: '0px',
-              width: '320px',
-              backgroundColor: '#F9FAFB',
-              borderLeft: '2px solid #E5E7EB',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              zIndex: 51,
-              animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-            }}
+            className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+            style={{ width: '320px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center gap-2 mb-3">
@@ -2593,21 +2570,12 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       {fieldsPanel && (
-        <>
-          <div className="absolute inset-0 bg-black bg-opacity-20 z-40" onClick={() => { setFieldsPanel(null); setSelectedFieldDetail(null); setSelectedSecondaryValue(null); setRecordSearchTerm(''); setSelectedRecords([]); }} />
-
           <div
-            className="absolute top-0 h-full bg-white border-l border-gray-200 shadow-2xl flex flex-col animate-slideInRight"
-            style={{
-              right: selectedFieldDetail ? (selectedSecondaryValue ? '620px' : '340px') : '0px',
-              width: '480px',
-              zIndex: 49,
-              transition: 'right 300ms ease-in-out'
-            }}
+            className="h-full bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-all duration-300 ease-in-out"
+            style={{ width: '480px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center justify-between mb-4">
@@ -2893,7 +2861,6 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
@@ -3501,16 +3468,8 @@ const ReportBuilder = ({
 
       {waterfallFromFilter && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: detailFromWaterfall ? '320px' : '0px',
-            width: '360px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 50,
-            transition: 'right 300ms ease-in-out'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '360px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
@@ -3640,16 +3599,8 @@ const ReportBuilder = ({
 
       {detailFromWaterfall && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: '0px',
-            width: '360px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 51,
-            animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '360px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
