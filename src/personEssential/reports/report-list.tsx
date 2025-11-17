@@ -540,8 +540,7 @@ const ReportBuilder = ({
   const buildNaturalLanguageQuery = () => {
     if (selections.length === 0) return '';
 
-    const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
-    const yearCohorts = ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+    const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
 
     let query = '';
 
@@ -552,11 +551,7 @@ const ReportBuilder = ({
     if (memberYearSel) {
       query = `${memberYearSel.value} members`;
     } else if (startingDataSel) {
-      if (yearCohorts.includes(startingDataSel.category)) {
-        query = startingDataSel.category.replace(' Members', ' members');
-      } else {
-        query = startingDataSel.category.toLowerCase();
-      }
+      query = startingDataSel.category.toLowerCase();
     }
 
     // Process remaining filters with connectors
@@ -1448,6 +1443,95 @@ const ReportBuilder = ({
           </div>
         </div>
       </div>
+
+      {/* Query Builder Panel - Your Query Section */}
+      {selections.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
+                <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
+                <button
+                  onClick={clearAllSelections}
+                  className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center">
+                {selections.map((sel, idx) => {
+                  const Icon = sel.type === 'filter' ? Filter : Eye;
+                  const isEditing = editingSelection?.id === sel.id;
+                  return (
+                    <React.Fragment key={sel.id}>
+                      {/* Connector dropdown (shown before chips except the first) */}
+                      {idx > 0 && (
+                        <select
+                          value={sel.connector || 'AND'}
+                          onChange={(e) => {
+                            setSelections(selections.map(s =>
+                              s.id === sel.id ? { ...s, connector: e.target.value } : s
+                            ));
+                          }}
+                          className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="AND">AND</option>
+                          <option value="OR">OR</option>
+                          <option value="BETWEEN">BETWEEN</option>
+                        </select>
+                      )}
+
+                      {/* Selection chip */}
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        isEditing
+                          ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                          : sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                            : 'bg-purple-100 text-purple-900 border border-purple-300'
+                      }`}>
+                        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span className="font-medium">{sel.category}</span>
+                        <span className="text-xs opacity-75">= {sel.value}</span>
+                        <div className="flex items-center gap-1 ml-1">
+                          <button
+                            onClick={() => {
+                              // Edit functionality - open the category selection
+                              setEditingSelection(sel);
+                              // Would need to trigger the category panel here
+                            }}
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                            title="Edit selection value"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              removeSelection(sel.id);
+                              if (editingSelection?.id === sel.id) {
+                                setEditingSelection(null);
+                              }
+                            }}
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                            title="Remove"
+                          >
+                            <X className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{calculateFilterImpact(selections).toLocaleString()}</div>
+              <div className="text-xs text-gray-600">estimated records</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-gray-50 px-8 py-4">
         <div className="flex items-center gap-3">

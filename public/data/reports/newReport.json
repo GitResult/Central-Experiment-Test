@@ -5,12 +5,6 @@
             "New Members",
             "Lapsed Members",
             "Contacts",
-            "2024 Members",
-            "2023 Members",
-            "2022 Members",
-            "2021 Members",
-            "2020 Members",
-            "2019 Members",
             "Other"
         ],
         "Location": [
@@ -177,24 +171,6 @@
             "Student",
             "Other"
         ],
-        "2024 Members": [
-            "All 2024 Members"
-        ],
-        "2023 Members": [
-            "All 2023 Members"
-        ],
-        "2022 Members": [
-            "All 2022 Members"
-        ],
-        "2021 Members": [
-            "All 2021 Members"
-        ],
-        "2020 Members": [
-            "All 2020 Members"
-        ],
-        "2019 Members": [
-            "All 2019 Members"
-        ],
         "Tenure": [
             "Past 1 year",
             "Past 2 years",
@@ -331,12 +307,6 @@
         "New Members": "UserPlus",
         "Lapsed Members": "UserMinus",
         "Contacts": "Mail",
-        "2024 Members": "Calendar",
-        "2023 Members": "Calendar",
-        "2022 Members": "Calendar",
-        "2021 Members": "Calendar",
-        "2020 Members": "Calendar",
-        "2019 Members": "Calendar",
         "Other": "Database",
         "Proximity": "MapPin",
         "In City": "Building2",

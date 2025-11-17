@@ -459,8 +459,7 @@ const ReportBuilder = (props) => {
     const buildNaturalLanguageQuery = () => {
       if (selections.length === 0) return '';
 
-      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
-      const yearCohorts = ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
 
       let query = '';
 
@@ -471,11 +470,7 @@ const ReportBuilder = (props) => {
       if (memberYearSel) {
         query = `${memberYearSel.value} members`;
       } else if (startingDataSel) {
-        if (yearCohorts.includes(startingDataSel.category)) {
-          query = startingDataSel.category.replace(' Members', ' members');
-        } else {
-          query = startingDataSel.category.toLowerCase();
-        }
+        query = startingDataSel.category.toLowerCase();
       }
 
       // Process remaining filters with connectors
