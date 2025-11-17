@@ -4,6 +4,7 @@ import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
 import ReportList from './report-list.tsx';
+import AppReportPhrase from './AppReportPhrase.jsx';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
@@ -190,6 +191,11 @@ const ReportBuilder = (props) => {
       setTimeout(() => setShowPanel(true), 1700);
     }
   }, [stage]);
+
+  // Render AppReportPhrase when phrase mode is active
+  if (isPhraseActive) {
+    return <AppReportPhrase />;
+  }
 
   const addSelection = (category, value, type = 'filter') => {
     setSelections([...selections, { id: Date.now(), category, value, type, connector: selections.length > 0 ? 'AND' : null }]);
