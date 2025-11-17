@@ -203,12 +203,30 @@ export const getSuggestionsForPhrase = (chips) => {
       current: [
         { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'with', icon: Check, type: 'connector' },
-        { label: 'for', icon: Clock, type: 'connector' }
+        { label: 'for', icon: Clock, type: 'connector' },
+        { label: 'that have been', icon: ChevronRight, type: 'connector' }
       ],
       next: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({ label: p, preview: true })),
       future: [{ label: 'and', preview: true }]
     };
   }
 
-  return { current: [], next: [], future: [] };
+  // Default fallback to allow continuous phrase building
+  // Always offer connectors to continue the phrase
+  return {
+    current: [
+      { label: 'and', icon: Plus, type: 'connector' },
+      { label: 'in', icon: MapPin, type: 'connector' },
+      { label: 'with', icon: Check, type: 'connector' },
+      { label: 'for', icon: Clock, type: 'connector' },
+      { label: 'that have been', icon: ChevronRight, type: 'connector' }
+    ],
+    next: [
+      { label: 'province', icon: MapPin, preview: true },
+      { label: 'city', icon: MapPin, preview: true },
+      { label: 'engagement', icon: TrendingUp, preview: true },
+      { label: 'status', icon: CheckCircle2, preview: true }
+    ],
+    future: ENTITY_TYPES.slice(0, 4).map(et => ({ label: et.label, preview: true }))
+  };
 };
