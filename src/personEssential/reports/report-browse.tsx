@@ -490,7 +490,7 @@ const ReportBuilder = (props) => {
           if (category === 'Renewal Month') return `who renewed in ${val}`;
           if (category === 'Renewal Year') return `who renewed in ${val}`;
           if (category === 'Membership Type') return `that are member type ${val}`;
-          if (category === 'Tenure') return `that have been members for ${val}`;
+          if (category === 'Consecutive Membership Years') return `that have been members for ${val}`;
           if (category === 'Occupation') return `and occupation is ${val}`;
           if (category === 'Degree') return `with a Degree: ${val}`;
           if (category === 'Province/State') return `from province/state ${val}`;
@@ -574,7 +574,7 @@ const ReportBuilder = (props) => {
           suggestions: [
             { category: "Membership Type", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Crown" },
             { category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" },
-            { category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
+            { category: "Consecutive Membership Years", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
             { category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" }
           ]
         };
@@ -585,7 +585,7 @@ const ReportBuilder = (props) => {
       const hasOccupation = allSelections.some(s => s.category === 'Occupation');
       const hasDegree = allSelections.some(s => s.category === 'Degree');
       const hasProvince = allSelections.some(s => s.category === 'Province/State');
-      const hasTenure = allSelections.some(s => s.category === 'Tenure');
+      const hasConsecutiveMembershipYears = allSelections.some(s => s.category === 'Consecutive Membership Years');
 
       if (hasMemberType && !hasOccupation && !hasDegree) {
         return {
@@ -635,8 +635,8 @@ const ReportBuilder = (props) => {
 
       // Default: Suggest additional filters that haven't been added
       const suggestions = [];
-      if (!hasTenure && hasStartingData) {
-        suggestions.push({ category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
+      if (!hasConsecutiveMembershipYears && hasStartingData) {
+        suggestions.push({ category: "Consecutive Membership Years", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
       }
       if (!hasMemberType) {
         suggestions.push({ category: "Membership Type", section: "Membership", reason: "Filter by member type", icon: "Crown" });
@@ -707,7 +707,7 @@ const ReportBuilder = (props) => {
         name: "Current members for past 5 years",
         filters: [
           { category: "Current Members", value: "All Current Members" },
-          { category: "Tenure", value: "Past 5 years" }
+          { category: "Consecutive Membership Years", value: "Past 5 years" }
         ]
       },
       {

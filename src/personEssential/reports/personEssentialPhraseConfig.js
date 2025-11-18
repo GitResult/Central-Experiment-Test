@@ -138,7 +138,7 @@ export const FILTER_OPTIONS = {
   degrees: [
     'Masters', 'Bachelors', 'Doctorate', 'PhD', 'MBA', 'Certificate', 'Diploma', 'Associate'
   ],
-  tenureValues: [
+  consecutiveMembershipYearsValues: [
     'past 1 year', 'past 2 years', 'past 3 years', 'past 5 years',
     'past 10 years', 'past 15 years', 'past 20 years', 'more than 5 years'
   ],
@@ -363,7 +363,7 @@ export const getSuggestionsForPhrase = (chips) => {
       next: [
         { label: 'for', icon: Clock, type: 'connector', preview: true }
       ],
-      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({
+      future: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 4).map(t => ({
         label: t,
         preview: true
       }))
@@ -376,7 +376,7 @@ export const getSuggestionsForPhrase = (chips) => {
       current: [
         { label: 'for', icon: Clock, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({
+      next: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 6).map(t => ({
         label: t,
         preview: true
       })),
@@ -386,12 +386,12 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After "for" (in tenure context) -> show tenure values
+  // After "for" (in consecutive membership years context) -> show consecutive membership years values
   if (lastChipText === 'for' && chips.some(c => c.text === 'that have been')) {
     return {
-      current: FILTER_OPTIONS.tenureValues.map(t => ({
+      current: FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
         label: t,
-        type: 'tenure',
+        type: 'consecutiveMembershipYears',
         icon: Clock,
         color: 'blue'
       })),
@@ -405,8 +405,8 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After tenure value
-  if (lastChip.type === 'tenure') {
+  // After consecutive membership years value
+  if (lastChip.type === 'consecutiveMembershipYears') {
     return {
       current: [
         { label: 'and', icon: Plus, type: 'connector' }
@@ -619,8 +619,8 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After timeframe, location, status, membershipType, value, tenure, occupation, degree, province, renewalMonth, or renewalYear
-  if (['timeframe', 'location', 'status', 'membershipType', 'value', 'tenure', 'occupation', 'degree', 'province'].includes(lastChip.type)) {
+  // After timeframe, location, status, membershipType, value, consecutiveMembershipYears, occupation, degree, province, renewalMonth, or renewalYear
+  if (['timeframe', 'location', 'status', 'membershipType', 'value', 'consecutiveMembershipYears', 'occupation', 'degree', 'province'].includes(lastChip.type)) {
     return {
       current: [
         { label: 'and', icon: Plus, type: 'connector' },

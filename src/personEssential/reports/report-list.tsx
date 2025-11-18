@@ -571,7 +571,7 @@ const ReportBuilder = ({
         if (category === 'Renewal Month') return `who renewed in ${val}`;
         if (category === 'Renewal Year') return `who renewed in ${val}`;
         if (category === 'Membership Type') return `that are member type ${val}`;
-        if (category === 'Tenure') return `that have been members for ${val}`;
+        if (category === 'Consecutive Membership Years') return `that have been members for ${val}`;
         if (category === 'Occupation') return `and occupation is ${val}`;
         if (category === 'Degree') return `with a Degree: ${val}`;
         if (category === 'Province/State') return `from province/state ${val}`;

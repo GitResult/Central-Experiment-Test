@@ -17,7 +17,7 @@
         "Membership": [
             "Membership Type",
             "Member Year",
-            "Tenure",
+            "Consecutive Membership Years",
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
@@ -171,7 +171,7 @@
             "Student",
             "Other"
         ],
-        "Tenure": [
+        "Consecutive Membership Years": [
             "Past 1 year",
             "Past 2 years",
             "Past 3 years",
@@ -314,7 +314,7 @@
         "In Country": "Globe",
         "Membership Type": "Crown",
         "Member Year": "Calendar",
-        "Tenure": "Clock",
+        "Consecutive Membership Years": "Clock",
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
