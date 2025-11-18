@@ -102,12 +102,19 @@ const ReportBuilder = (props) => {
   const [categoryFields, setCategoryFields] = useState({});
   const [defaultFields, setDefaultFields] = useState([]);
   const [sectionIcons, setSectionIcons] = useState({});
+  const [recordCounts, setRecordCounts] = useState({});
   const sectionColors = {
     "Starting Data": {
       "header": "text-blue-700",
       "icon": "text-blue-400",
       "bg": "bg-blue-50",
       "border": "border-blue-200"
+    },
+    "Status": {
+      "header": "text-teal-700",
+      "icon": "text-teal-400",
+      "bg": "bg-teal-50",
+      "border": "border-teal-200"
     },
     "Location": {
       "header": "text-green-700",
@@ -194,6 +201,7 @@ const ReportBuilder = (props) => {
       setDefaultFields(data.default_fields);
       setSectionIcons(data.section_icons);
       setCategoryIcons(data.category_icons);
+      setRecordCounts(data.record_counts || {});
       setIsLoading(false);
     };
     fetchData();
@@ -242,7 +250,7 @@ const ReportBuilder = (props) => {
 
     // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
-      if (section === 'Starting Data') {
+      if (section === 'Starting Data' || section === 'Status') {
         addField(category, values[0]);
       } else {
         addFilter(category, values[0]);
@@ -438,14 +446,14 @@ const ReportBuilder = (props) => {
           </svg>
         </div>
 
-        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out inset-x-0 bg-white border-t border-gray-200 shadow-2xl transition-all duration-700 z-20 ${showPanel ? 'translate-y-0' : 'translate-y-full'}`} style={{ height: '88px' }}>
-          <div className="flex h-full bg-white items-center justify-between px-6">
+        <div className={`fixed ease-in-out left-0 bg-white border-t border-gray-200 shadow-2xl transition-all duration-300 z-20 ${showPanel ? 'translate-y-0' : 'translate-y-full'}`} style={{ bottom: 0, height: showPreview ? '621px' : '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
+          <div className="flex bg-white items-center justify-between px-6" style={{ height: '88px' }}>
 
             <div className="flex items-center space-x-4">
               <ChevronUp
                 size={18}
                 onClick={() => setShowPreview(!showPreview)}
-                className={`cursor-pointer text-gray-400/50 ${showPreview ? 'rotate-180' : ''}`}
+                className={`cursor-pointer text-gray-400/50 transition-transform ${showPreview ? 'rotate-180' : ''}`}
               />
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -464,7 +472,11 @@ const ReportBuilder = (props) => {
           </div>
 
           {/* Report VIEW Content */}
-          <ReportViewComponent selections={selections} />
+          {showPreview && (
+            <div className="overflow-auto" style={{ height: 'calc(621px - 88px)' }}>
+              <ReportViewComponent selections={selections} />
+            </div>
+          )}
 
         </div>
       </div>
@@ -753,8 +765,10 @@ const ReportBuilder = (props) => {
       }
     ];
 
+    const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
+
     return (
-      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
+      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex relative">
         {/* {"[[BROWSE]]"} */}
         <AnimationStyles />
         {toast && (
@@ -764,7 +778,7 @@ const ReportBuilder = (props) => {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
+        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300" style={{ marginRight: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-4">
             <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
@@ -927,45 +941,22 @@ const ReportBuilder = (props) => {
 
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
-            const isStartingData = section === 'Starting Data';
             const isThreeColumn = categories.length >= 6;
+            const isFourColumn = categories.length === 4;
 
             return (
               <div key={section}>
                 <div className="px-8 py-4"><h2 className="text-xl font-semibold text-black">{section}</h2></div>
 
-                <div className={`px-8 pb-8 ${isStartingData ? 'flex flex-wrap gap-3' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
+                <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
                     const isSelected = selections.some(s => s.category === category);
+                    const recordCount = recordCounts[category] || 0;
+                    const formattedCount = recordCount.toLocaleString();
 
-                    if (isStartingData) {
-                      return (
-                        <button
-                          key={category}
-                          onClick={() => handleCategorySelect(category, section)}
-                          className={`px-6 py-3 rounded-full transition-colors group relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
-                          style={{ backgroundColor: isSelected ? '#dbeafe' : '#f3f4f6' }}
-                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? '#dbeafe' : '#f3f4f6'; }}
-                        >
-                          <span className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>{category}</span>
-                          {isSelected && (
-                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-0.5">
-                              <Check className="w-3 h-3" strokeWidth={3} />
-                            </div>
-                          )}
-                          {!isSelected && (
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    }
-
-                    if (isThreeColumn) {
-                      const hoverColors = { 'Location': '#dcfce7', 'Membership': '#f3e8ff', 'Demographics': '#fed7aa', 'Commerce': '#d1fae5', 'Communities': '#fce7f3', 'Communications': '#e0e7ff' };
+                    if (isThreeColumn || isFourColumn) {
+                      const hoverColors = { 'Starting Data': '#dbeafe', 'Status': '#ccfbf1', 'Location': '#dcfce7', 'Membership': '#f3e8ff', 'Demographics': '#fed7aa', 'Commerce': '#d1fae5', 'Communities': '#fce7f3', 'Communications': '#e0e7ff' };
                       return (
                         <div
                           key={category}
@@ -979,7 +970,7 @@ const ReportBuilder = (props) => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 text-sm">{category}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                           </div>
                           {isSelected ? (
                             <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
@@ -1025,7 +1016,7 @@ const ReportBuilder = (props) => {
                         </div>
                         <div>
                           <div className={`font-medium text-sm transition-colors ${isSelected ? 'text-blue-900 font-semibold' : 'text-gray-900 group-hover:text-black'}`}>{category}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                         </div>
                       </div>
                     );
@@ -1042,7 +1033,7 @@ const ReportBuilder = (props) => {
 
         {/* Right Side Panels */}
         {selectedCategory && (
-          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1360,7 +1351,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats First Panel */}
         {showMemberStatsPanel && (
-          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1691,7 +1682,7 @@ const ReportBuilder = (props) => {
 
         {/* Save Query Panel */}
         {showSaveQueryPanel && (
-          <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-gray-200">
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
             <div className="border-b border-gray-200 bg-white px-6 py-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
