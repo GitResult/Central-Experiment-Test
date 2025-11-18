@@ -238,11 +238,16 @@ export const getSuggestionsForPhrase = (chips) => {
   if (lastChip.type === 'entity' && ENTITY_TYPES.some(et => et.label === lastChipText)) {
     return {
       current: [
+        { label: 'that are', icon: Filter, type: 'connector' },
         { label: 'that have been', icon: Clock, type: 'connector' },
         { label: 'that have', icon: ChevronRight, type: 'connector' },
+        { label: 'that', icon: ChevronRight, type: 'connector' },
+        { label: 'with', icon: Settings, type: 'connector' },
         { label: 'with status', icon: Check, type: 'connector' },
+        { label: 'with type', icon: Crown, type: 'connector' },
+        { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'in location', icon: MapPin, type: 'connector' },
-        { label: 'with type', icon: Crown, type: 'connector' }
+        { label: 'for', icon: Clock, type: 'connector' }
       ],
       next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
         label: a.label,
@@ -421,6 +426,196 @@ export const getSuggestionsForPhrase = (chips) => {
         label: m,
         preview: true
       }))
+    };
+  }
+
+  // After "that are" -> show membership types and statuses
+  if (lastChipText === 'that are') {
+    return {
+      current: FILTER_OPTIONS.membershipTypes.map(m => ({
+        label: m,
+        type: 'membershipType',
+        icon: Crown,
+        color: 'purple'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true },
+        { label: 'with status', preview: true }
+      ],
+      future: FILTER_OPTIONS.statuses.slice(0, 4).map(s => ({
+        label: s,
+        preview: true
+      }))
+    };
+  }
+
+  // After "with" -> show options for type, status, etc.
+  if (lastChipText === 'with') {
+    return {
+      current: [
+        { label: 'type', icon: Crown, type: 'subconnector' },
+        { label: 'status', icon: Check, type: 'subconnector' },
+        { label: 'attribute', icon: Star, type: 'subconnector' }
+      ],
+      next: FILTER_OPTIONS.membershipTypes.slice(0, 4).map(m => ({
+        label: m,
+        preview: true
+      })),
+      future: [
+        { label: 'and', icon: Plus, preview: true }
+      ]
+    };
+  }
+
+  // After "in" -> show options for location, timeframe, etc.
+  if (lastChipText === 'in') {
+    return {
+      current: [
+        { label: 'location', icon: MapPin, type: 'subconnector' },
+        { label: 'timeframe', icon: Calendar, type: 'subconnector' }
+      ],
+      next: FILTER_OPTIONS.locations.slice(0, 6).map(l => ({
+        label: l,
+        preview: true
+      })),
+      future: FILTER_OPTIONS.timeframes.slice(0, 4).map(t => ({
+        label: t,
+        preview: true
+      }))
+    };
+  }
+
+  // After "that" -> show general options
+  if (lastChipText === 'that') {
+    return {
+      current: [
+        { label: 'have', icon: ChevronRight, type: 'connector' },
+        { label: 'are', icon: Filter, type: 'connector' },
+        { label: 'renewed', icon: Calendar, type: 'action' },
+        { label: 'joined', icon: UserPlus, type: 'action' }
+      ],
+      next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+        label: a.label,
+        preview: true
+      })),
+      future: [
+        { label: 'in timeframe', preview: true }
+      ]
+    };
+  }
+
+  // After "for" (generic, not consecutive membership years context) -> show various time periods
+  if (lastChipText === 'for' && !chips.some(c => c.text === 'that have been')) {
+    return {
+      current: [
+        ...FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
+          label: t,
+          type: 'timePeriod',
+          icon: Clock,
+          color: 'blue'
+        })),
+        { label: 'custom period', type: 'customPeriod', icon: Calendar, color: 'orange' }
+      ],
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'with type', preview: true },
+        { label: 'in location', preview: true }
+      ]
+    };
+  }
+
+  // After "type" (subconnector from "with") -> show membership types
+  if (lastChipText === 'type' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.membershipTypes.map(m => ({
+        label: m,
+        type: 'membershipType',
+        icon: Crown,
+        color: 'purple'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'occupation is', preview: true },
+        { label: 'from province/state', preview: true }
+      ]
+    };
+  }
+
+  // After "status" (subconnector from "with") -> show statuses
+  if (lastChipText === 'status' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.statuses.map(s => ({
+        label: s,
+        type: 'status',
+        color: 'blue'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'that have', preview: true },
+        { label: 'in location', preview: true }
+      ]
+    };
+  }
+
+  // After "attribute" (subconnector from "with") -> show attributes
+  if (lastChipText === 'attribute' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.attributes.map(a => ({
+        label: a.label,
+        type: 'attribute',
+        icon: a.icon,
+        color: a.color
+      })),
+      next: [
+        { label: 'in timeframe', icon: Calendar, preview: true }
+      ],
+      future: [
+        { label: 'greater than', preview: true }
+      ]
+    };
+  }
+
+  // After "location" (subconnector from "in") -> show locations
+  if (lastChipText === 'location' && chips.some(c => c.text === 'in')) {
+    return {
+      current: FILTER_OPTIONS.locations.map(l => ({
+        label: l,
+        type: 'location',
+        icon: MapPin,
+        color: 'red'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'with status', preview: true },
+        { label: 'that have', preview: true }
+      ]
+    };
+  }
+
+  // After "timeframe" (subconnector from "in") -> show timeframes
+  if (lastChipText === 'timeframe' && chips.some(c => c.text === 'in')) {
+    return {
+      current: FILTER_OPTIONS.timeframes.map(t => ({
+        label: t,
+        type: 'timeframe',
+        icon: Calendar,
+        color: 'orange'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'that have', preview: true },
+        { label: 'in location', preview: true }
+      ]
     };
   }
 
