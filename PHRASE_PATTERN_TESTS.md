@@ -377,3 +377,246 @@ This document contains 20 test query patterns to verify the phrase format is mai
 - Multiple filters of same category use OR logic (when checkboxes used)
 - Edit functionality allows changing filter values
 - Delete removes individual filters without affecting others
+
+---
+
+## New Connectors Added
+
+### 6 Enhanced Connectors for Phrase Building
+
+The phrase building system now includes 6 additional connectors for more flexible query construction:
+
+#### 1. **"That are"** 🎯
+Shows membership types and statuses after entity selection.
+
+**Example Usage:**
+```
+[Current] [Members] [that are] [Professional]
+[All Contacts] [that are] [ECY1 - Member Early Career Year 1]
+```
+
+**Flow:**
+- Select entity (Current, New, Lapsed, etc.)
+- Select entity type (members, professionals, students)
+- Click "that are" → Shows membership types
+- Select type → Continue with "and" or other connectors
+
+---
+
+#### 2. **"With"** ⚙️
+Generic connector with sub-options for type, status, or attribute.
+
+**Example Usage:**
+```
+[Current] [Members] [with] [type] [Student]
+[Current] [Members] [with] [status] [Active]
+[Current] [Members] [with] [attribute] [orders]
+```
+
+**Sub-options:**
+- **type** → Shows membership types (ECY1, Professional, etc.)
+- **status** → Shows statuses (Active, Inactive, etc.)
+- **attribute** → Shows attributes (orders, events, donations)
+
+**Flow:**
+- Select "with" connector
+- Choose sub-option (type/status/attribute)
+- Select value from displayed options
+
+---
+
+#### 3. **"In"** 📍
+Generic connector with sub-options for location or timeframe.
+
+**Example Usage:**
+```
+[Current] [Members] [in] [location] [Toronto]
+[Current] [Members] [in] [timeframe] [Last 90 days]
+```
+
+**Sub-options:**
+- **location** → Shows cities/provinces (Toronto, BC, Ontario, etc.)
+- **timeframe** → Shows time periods (Last 30 days, This year, etc.)
+
+**Flow:**
+- Select "in" connector
+- Choose sub-option (location/timeframe)
+- Select value from displayed options
+
+---
+
+#### 4. **"That"** 🔗
+General purpose connector with multiple follow-up options.
+
+**Example Usage:**
+```
+[Current] [Members] [that] [have] [orders]
+[Current] [Members] [that] [are] [Professional]
+[Current] [Members] [that] [renewed] [in December]
+[Current] [Members] [that] [joined] [in 2023]
+```
+
+**Options after "that":**
+- **have** → Shows attributes (orders, events, donations, emails)
+- **are** → Shows membership types
+- **renewed** → Action for renewal date filters
+- **joined** → Action for join date filters
+
+**Flow:**
+- Select "that" connector
+- Choose action (have/are/renewed/joined)
+- Continue with specific values
+
+---
+
+#### 5. **"For"** ⏰
+Generic time period connector (distinct from consecutive membership years).
+
+**Example Usage:**
+```
+[Current] [Members] [for] [past 5 years]
+[Current] [Members] [for] [custom period]
+```
+
+**Shows:**
+- All consecutive membership year values
+- "custom period" option for user-defined ranges
+
+**Note:** This is a generic "for" connector that can be used outside the "that have been → members → for" flow.
+
+**Flow:**
+- Select "for" connector
+- Choose time period or custom period
+- Continue with "and" or other connectors
+
+---
+
+#### 6. **"That have been"** 🕐
+Existing connector maintained for consecutive membership years flow.
+
+**Example Usage:**
+```
+[Current] [Members] [that have been] [members] [for] [past 5 years]
+```
+
+**Flow:**
+- Select "that have been" connector
+- Select entity type (members, professionals, etc.)
+- Click "for" connector
+- Select consecutive membership years value
+
+---
+
+## Connector Usage Matrix
+
+| Connector | Context | Shows | Use Case |
+|-----------|---------|-------|----------|
+| **that are** | After entity | Membership types | Filter by member type |
+| **with** | After entity | type/status/attribute | Generic filtering |
+| **in** | After entity | location/timeframe | Spatial/temporal filters |
+| **that** | After entity | have/are/renewed/joined | Action-based queries |
+| **for** | After entity | Time periods | Duration filters |
+| **that have been** | After entity | Entity types → consecutive years | Tenure queries |
+
+---
+
+## Example Queries with New Connectors
+
+### Using "That are"
+```
+[Current] [Members] [that are] [Professional] [and] [occupation is] [Researcher]
+```
+
+### Using "With"
+```
+[Current] [Members] [with] [type] [Student] [and] [in] [location] [Toronto]
+```
+
+### Using "In"
+```
+[Current] [Members] [in] [location] [BC] [and] [with] [status] [Active]
+```
+
+### Using "That"
+```
+[Current] [Members] [that] [have] [orders] [in timeframe] [Last 90 days]
+```
+
+### Using "For"
+```
+[Current] [Members] [for] [past 3 years] [and] [occupation is] [Practitioner]
+```
+
+### Combining Multiple New Connectors
+```
+[Current] [Members] [that are] [Professional] [with] [status] [Active] [in] [location] [Ontario] [that] [have] [donations] [greater than] [$1,000]
+```
+
+---
+
+## Testing New Connectors
+
+### ✅ Checklist for Each Connector
+
+**"That are":**
+- [ ] Shows membership types after entity selection
+- [ ] Integrates with "and" connector
+- [ ] Maintains purple color theme for membership types
+
+**"With":**
+- [ ] Shows sub-options: type, status, attribute
+- [ ] Each sub-option displays appropriate values
+- [ ] Works with all entity types
+
+**"In":**
+- [ ] Shows sub-options: location, timeframe
+- [ ] Location shows cities and provinces
+- [ ] Timeframe shows date ranges
+
+**"That":**
+- [ ] Shows 4 options: have, are, renewed, joined
+- [ ] Each option leads to appropriate next steps
+- [ ] Works in various query contexts
+
+**"For":**
+- [ ] Shows time period values
+- [ ] Includes "custom period" option
+- [ ] Doesn't conflict with "that have been → for" flow
+
+**"That have been":**
+- [ ] Existing functionality maintained
+- [ ] Still triggers consecutive membership years flow
+- [ ] Backward compatible with all existing queries
+
+---
+
+## Progressive Suggestions
+
+All new connectors integrate with the 3-column progressive suggestion system:
+
+**Current Column:** Shows immediately available options
+**Next Column:** Shows preview of next step options
+**Future Column:** Shows potential future options
+
+Example flow with new connectors:
+1. Select "Current Members" → Shows entity types
+2. Select "members" → Shows **all 10 connectors** including new ones
+3. Select "with" → Shows sub-options (type/status/attribute)
+4. Select "type" → Shows membership types
+5. Select "ECY1" → Shows "and" connector and next suggestions
+
+---
+
+## Connector Icons
+
+| Connector | Icon | Color Context |
+|-----------|------|---------------|
+| that are | Filter | Purple (membership) |
+| with | Settings | Various |
+| in | MapPin | Red (location), Orange (time) |
+| that | ChevronRight | Contextual |
+| for | Clock | Blue (time) |
+| that have been | Clock | Blue (tenure) |
+
+All icons are from the lucide-react icon library.
+
