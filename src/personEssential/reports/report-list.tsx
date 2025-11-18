@@ -275,7 +275,8 @@ const COMBOS = {
 };
 
 const CATEGORIES = {
-  'Starting Data': ['Current', 'Previous', 'New', 'Lapsed', 'Members', 'Contacts', 'Other', 'Member Stats'],
+  'Starting Data': ['Members', 'Contacts', 'Other', 'Member Stats'],
+  'Status': ['Current', 'Previous', 'New', 'Lapsed'],
   'Location': ['Proximity', 'In City', 'In Region', 'In Country', 'Province/State'],
   'Membership': ['Member Type', 'Member Year', 'Code of Ethics', 'Primary Reason for Joining', 'Reason Not Full Member/Affiliate', 'Joined/Renewed', 'Renewal Month', 'Renewal Year'],
   'Demographics': ['Career Stage', 'Occupation', 'Workplace Setting', 'Education Received', 'Degree', 'Education Current', 'Area of Interest'],
