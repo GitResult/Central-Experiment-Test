@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2, FileUp } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -65,6 +65,7 @@ const ReportBuilder = (props) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedValue, setSelectedValue] = useState(null);
   const [valueSearchTerm, setValueSearchTerm] = useState('');
+  const [editingSelection, setEditingSelection] = useState(null);
   const [proximityLocation, setProximityLocation] = useState('');
   const [proximityRadius, setProximityRadius] = useState(25);
   const [dateRangeStart, setDateRangeStart] = useState('');
@@ -79,6 +80,11 @@ const ReportBuilder = (props) => {
   const [fieldsPanelTab, setFieldsPanelTab] = useState('fields');
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showSaveQueryPanel, setShowSaveQueryPanel] = useState(false);
+  const [showLoadQueryDropdown, setShowLoadQueryDropdown] = useState(false);
+  const [savedQueryName, setSavedQueryName] = useState('');
+  const [savedQueryDescription, setSavedQueryDescription] = useState('');
+  const [savedQueries, setSavedQueries] = useState([]);
 
 
   const [categories, setCategories] = useState({});
@@ -192,6 +198,16 @@ const ReportBuilder = (props) => {
     }
   }, [stage]);
 
+  // Memoize the record count calculation so it's consistent across all displays
+  // MUST be before any conditional returns to satisfy React Hooks rules
+  const estimatedRecordCount = useMemo(() => {
+    const activeFilters = selections.filter(s => s.type === 'filter');
+    if (activeFilters.length === 0) return 7100;
+    let result = 7100;
+    activeFilters.forEach(() => { result = Math.floor(result * (0.3 + Math.random() * 0.4)); });
+    return Math.max(50, result);
+  }, [selections]);
+
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
     return <AppReportPhrase />;
@@ -207,6 +223,7 @@ const ReportBuilder = (props) => {
   const handleCategorySelect = (category, section) => {
     const values = sampleValues[category] || [];
 
+    // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
       if (section === 'Starting Data') {
         addField(category, values[0]);
@@ -216,15 +233,37 @@ const ReportBuilder = (props) => {
       return;
     }
 
+    // Open panel for this category
     setSelectedCategory(category);
     setValueSearchTerm('');
   };
 
   const handleValueSelect = (category, value) => setSelectedValue({ category, value });
 
+  const handleEditSelection = (selection) => {
+    // Set the selection being edited
+    setEditingSelection(selection);
+    // Open the category panel for this selection's category
+    setSelectedCategory(selection.category);
+    setValueSearchTerm('');
+  };
+
   const addFilter = (category, value) => {
-    addSelection(category, value, 'filter');
-    showToast(`Filter added: ${value}`);
+    if (editingSelection) {
+      // Update existing selection, preserving its type
+      setSelections(selections.map(s =>
+        s.id === editingSelection.id
+          ? { ...s, category, value }
+          : s
+      ));
+      showToast(`Selection updated: ${value}`);
+      setEditingSelection(null);
+      setSelectedCategory(null);
+    } else {
+      // Add new selection
+      addSelection(category, value, 'filter');
+      showToast(`Filter added: ${value}`);
+    }
   };
 
   const addField = (category, value) => {
@@ -245,14 +284,6 @@ const ReportBuilder = (props) => {
       setProximityLocation('');
       setProximityRadius(25);
     }
-  };
-
-  const calculateFilterImpact = () => {
-    const activeFilters = selections.filter(s => s.type === 'filter');
-    if (activeFilters.length === 0) return 7100;
-    let result = 7100;
-    activeFilters.forEach(() => { result = Math.floor(result * (0.3 + Math.random() * 0.4)); });
-    return Math.max(50, result);
   };
 
   const getValueCount = (category, value) => {
@@ -424,8 +455,289 @@ const ReportBuilder = (props) => {
   }
 
   if (stage === 'browse') {
+    // Convert selections to natural language query
+    const buildNaturalLanguageQuery = () => {
+      if (selections.length === 0) return '';
+
+      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
+
+      let query = '';
+
+      // Find starting data (Member Year or Starting Data category)
+      const memberYearSel = selections.find(s => s.category === 'Member Year');
+      const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
+
+      if (memberYearSel) {
+        query = `${memberYearSel.value} members`;
+      } else if (startingDataSel) {
+        query = startingDataSel.category.toLowerCase();
+      }
+
+      // Process remaining filters with connectors
+      const filterSelections = selections.filter(s =>
+        s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
+      );
+
+      if (filterSelections.length > 0) {
+        const parts = [];
+        let i = 0;
+
+        // Helper function to get proper connector phrase for each category
+        const getConnectorPhrase = (category, value) => {
+          let val = value;
+          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+
+          if (category === 'Renewal Month') return `who renewed in ${val}`;
+          if (category === 'Renewal Year') return `who renewed in ${val}`;
+          if (category === 'Membership Type') return `that are member type ${val}`;
+          if (category === 'Tenure') return `that have been members for ${val}`;
+          if (category === 'Occupation') return `and occupation is ${val}`;
+          if (category === 'Degree') return `with a Degree: ${val}`;
+          if (category === 'Province/State') return `from province/state ${val}`;
+          return `with ${category.toLowerCase()} ${val}`;
+        };
+
+        while (i < filterSelections.length) {
+          const sel = filterSelections[i];
+          const nextSel = filterSelections[i + 1];
+
+          // Check if this is a BETWEEN scenario
+          if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
+            const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+              ? nextSel.value.split(' - ')[0]
+              : nextSel.value;
+
+            const phrase = getConnectorPhrase(sel.category, sel.value);
+            parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
+            i += 2;
+          } else {
+            // Check for OR connectors with same category
+            let j = i + 1;
+            const orValues = [sel.value];
+            while (j < filterSelections.length &&
+                   filterSelections[j].connector === 'OR' &&
+                   filterSelections[j].category === sel.category) {
+              orValues.push(filterSelections[j].value);
+              j++;
+            }
+
+            if (orValues.length > 1) {
+              // Multiple values with OR
+              const formattedValues = orValues.map(v =>
+                sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+              ).join(' or ');
+
+              const phrase = getConnectorPhrase(sel.category, sel.value);
+              parts.push(phrase.replace(sel.value, formattedValues));
+            } else {
+              // Single value
+              parts.push(getConnectorPhrase(sel.category, sel.value));
+            }
+
+            i = j;
+          }
+        }
+
+        if (parts.length > 0) {
+          // Join all parts with proper spacing
+          query += ' ' + parts.join(' ');
+        }
+      }
+
+      return query.trim();
+    };
+
+    // Get suggested next steps based on current selections
+    const getSuggestedNextSteps = () => {
+      // Check all selections regardless of type (field or filter)
+      const allSelections = selections;
+      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts', '2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'];
+
+      if (allSelections.length === 0) {
+        return {
+          title: "Start building your query",
+          suggestions: [
+            { category: "Current Members", section: "Starting Data", reason: "Most common starting point", icon: "Users" },
+            { category: "2024 Members", section: "Starting Data", reason: "Filter by specific year", icon: "Calendar" },
+            { category: "New Members", section: "Starting Data", reason: "Recent additions", icon: "UserPlus" }
+          ]
+        };
+      }
+
+      // Check if user has selected a starting data category (can be field or filter)
+      const hasStartingData = allSelections.some(s => startingDataCategories.includes(s.category));
+
+      // Stage 1: After selecting starting data, suggest refining filters
+      if (hasStartingData && allSelections.length === 1) {
+        return {
+          title: "Refine your selection",
+          suggestions: [
+            { category: "Membership Type", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Crown" },
+            { category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" },
+            { category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
+            { category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" }
+          ]
+        };
+      }
+
+      // Stage 2: After adding member type, suggest demographics
+      const hasMemberType = allSelections.some(s => s.category === 'Membership Type');
+      const hasOccupation = allSelections.some(s => s.category === 'Occupation');
+      const hasDegree = allSelections.some(s => s.category === 'Degree');
+      const hasProvince = allSelections.some(s => s.category === 'Province/State');
+      const hasTenure = allSelections.some(s => s.category === 'Tenure');
+
+      if (hasMemberType && !hasOccupation && !hasDegree) {
+        return {
+          title: "Common next filters",
+          suggestions: [
+            { category: "Occupation", section: "Demographics", reason: "Often combined with member type", icon: "Briefcase" },
+            { category: "Degree", section: "Demographics", reason: "Filter by education level", icon: "GraduationCap" },
+            { category: "Province/State", section: "Location", reason: "Add location filter", icon: "MapPin" }
+          ]
+        };
+      }
+
+      // Stage 3: After adding occupation, suggest degree and location
+      if (hasOccupation && !hasDegree && !hasProvince) {
+        return {
+          title: "Complete your demographic filters",
+          suggestions: [
+            { category: "Degree", section: "Demographics", reason: "Add education requirement", icon: "GraduationCap" },
+            { category: "Province/State", section: "Location", reason: "Add location requirement", icon: "MapPin" }
+          ]
+        };
+      }
+
+      // Stage 4: After degree, suggest location
+      if (hasDegree && !hasProvince) {
+        return {
+          title: "Add location filter",
+          suggestions: [
+            { category: "Province/State", section: "Location", reason: "Complete with location requirement", icon: "MapPin" }
+          ]
+        };
+      }
+
+      // Stage 5: For year-based cohorts, suggest renewal filters
+      const hasYearCohort = allSelections.some(s => ['2024 Members', '2023 Members', '2022 Members', '2021 Members', '2020 Members', '2019 Members'].includes(s.category));
+      const hasRenewalMonth = allSelections.some(s => s.category === 'Renewal Month');
+
+      if (hasYearCohort && !hasRenewalMonth && allSelections.length <= 2) {
+        return {
+          title: "Analyze renewal patterns",
+          suggestions: [
+            { category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" },
+            { category: "Renewal Year", section: "Membership", reason: "Filter by renewal year", icon: "Calendar" }
+          ]
+        };
+      }
+
+      // Default: Suggest additional filters that haven't been added
+      const suggestions = [];
+      if (!hasTenure && hasStartingData) {
+        suggestions.push({ category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
+      }
+      if (!hasMemberType) {
+        suggestions.push({ category: "Membership Type", section: "Membership", reason: "Filter by member type", icon: "Crown" });
+      }
+      if (!hasOccupation) {
+        suggestions.push({ category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" });
+      }
+      if (!hasDegree) {
+        suggestions.push({ category: "Degree", section: "Demographics", reason: "Filter by education", icon: "GraduationCap" });
+      }
+      if (!hasProvince) {
+        suggestions.push({ category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" });
+      }
+
+      if (suggestions.length > 0) {
+        return {
+          title: "Additional filters you can add",
+          suggestions: suggestions.slice(0, 4)
+        };
+      }
+
+      // Final stage: Always suggest additional categories not yet used
+      const hasCareerStage = allSelections.some(s => s.category === 'Career Stage');
+      const hasWorkplace = allSelections.some(s => s.category === 'Workplace Setting');
+      const hasEducationReceived = allSelections.some(s => s.category === 'Education Received');
+      const hasAreaOfInterest = allSelections.some(s => s.category === 'Area of Interest');
+      const hasCodeOfEthics = allSelections.some(s => s.category === 'Code of Ethics');
+      const hasPrimaryReason = allSelections.some(s => s.category === 'Primary Reason for Joining');
+
+      const additionalSuggestions = [];
+
+      if (!hasRenewalMonth && hasStartingData) {
+        additionalSuggestions.push({ category: "Renewal Month", section: "Membership", reason: "Filter by renewal timing", icon: "Calendar" });
+      }
+      if (!hasCareerStage) {
+        additionalSuggestions.push({ category: "Career Stage", section: "Demographics", reason: "Filter by career progression", icon: "TrendingUp" });
+      }
+      if (!hasWorkplace) {
+        additionalSuggestions.push({ category: "Workplace Setting", section: "Demographics", reason: "Filter by work environment", icon: "Building2" });
+      }
+      if (!hasEducationReceived) {
+        additionalSuggestions.push({ category: "Education Received", section: "Demographics", reason: "Filter by completed education", icon: "GraduationCap" });
+      }
+      if (!hasAreaOfInterest) {
+        additionalSuggestions.push({ category: "Area of Interest", section: "Demographics", reason: "Filter by specialization", icon: "Star" });
+      }
+      if (!hasCodeOfEthics) {
+        additionalSuggestions.push({ category: "Code of Ethics", section: "Membership", reason: "Filter by ethics compliance", icon: "Award" });
+      }
+      if (!hasPrimaryReason) {
+        additionalSuggestions.push({ category: "Primary Reason for Joining", section: "Membership", reason: "Filter by motivation", icon: "Target" });
+      }
+
+      return {
+        title: additionalSuggestions.length > 0 ? "Refine further with these filters" : "All common filters applied!",
+        suggestions: additionalSuggestions.length > 0 ? additionalSuggestions.slice(0, 4) : [
+          { category: "Career Stage", section: "Demographics", reason: "Add career stage filter", icon: "TrendingUp" },
+          { category: "Workplace Setting", section: "Demographics", reason: "Add workplace filter", icon: "Building2" }
+        ]
+      };
+    };
+
+    const suggestedSteps = getSuggestedNextSteps();
+
+    // Common query templates
+    const queryTemplates = [
+      {
+        name: "Current members for past 5 years",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Tenure", value: "Past 5 years" }
+        ]
+      },
+      {
+        name: "ECY1 members in BC",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Membership Type", value: "ECY1 - Member Early Career Year 1" },
+          { category: "Province/State", value: "BC" }
+        ]
+      },
+      {
+        name: "Practitioners with Masters in BC",
+        filters: [
+          { category: "Current Members", value: "All Current Members" },
+          { category: "Occupation", value: "Practitioner" },
+          { category: "Degree", value: "Masters" },
+          { category: "Province/State", value: "BC" }
+        ]
+      },
+      {
+        name: "2019 members who renewed in Dec-Jan",
+        filters: [
+          { category: "2019 Members", value: "All 2019 Members" },
+          { category: "Renewal Month", value: "December" }
+        ]
+      }
+    ];
+
     return (
-      <div className="max-h-[calc(100vh-115px)] overflow-y-auto bg-gray-50 flex flex-col">
+      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
         {/* {"[[BROWSE]]"} */}
         <AnimationStyles />
         {toast && (
@@ -434,6 +746,8 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-4">
             <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
@@ -441,6 +755,158 @@ const ReportBuilder = (props) => {
             <button onClick={() => setStage('select')} className="ml-4 text-sm text-gray-500 hover:text-blue-500">Try Select mode →</button>
           </div>
         </div>
+
+        {/* Query Builder Panel */}
+        {selections.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
+                  <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
+                  <button
+                    onClick={() => {
+                      setSelections([]);
+                      setEditingSelection(null);
+                      setSelectedCategory(null);
+                      setSelectedValue(null);
+                      showToast('All selections cleared');
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {selections.map((sel, idx) => {
+                    const Icon = sel.type === 'filter' ? Filter : Eye;
+                    const isEditing = editingSelection?.id === sel.id;
+                    return (
+                      <React.Fragment key={sel.id}>
+                        {/* Connector dropdown (shown before chips except the first) */}
+                        {idx > 0 && (
+                          <select
+                            value={sel.connector || 'AND'}
+                            onChange={(e) => {
+                              setSelections(selections.map(s =>
+                                s.id === sel.id ? { ...s, connector: e.target.value } : s
+                              ));
+                            }}
+                            className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          >
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                            <option value="BETWEEN">BETWEEN</option>
+                          </select>
+                        )}
+
+                        {/* Selection chip */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          isEditing
+                            ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                            : sel.type === 'filter'
+                              ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                              : 'bg-purple-100 text-purple-900 border border-purple-300'
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                          <span className="font-medium">{sel.category}</span>
+                          <span className="text-xs opacity-75">= {sel.value}</span>
+                          <div className="flex items-center gap-1 ml-1">
+                            <button
+                              onClick={() => handleEditSelection(sel)}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Edit selection value"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                removeSelection(sel.id);
+                                if (editingSelection?.id === sel.id) {
+                                  setEditingSelection(null);
+                                  setSelectedCategory(null);
+                                }
+                              }}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Remove"
+                            >
+                              <X className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{estimatedRecordCount.toLocaleString()}</div>
+                <div className="text-xs text-gray-600">estimated records</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Next Steps Panel - Hidden for now */}
+        {/* {selections.length > 0 && suggestedSteps.suggestions.length > 0 && (
+          <div className="bg-amber-50 border-b border-amber-200 px-8 py-4">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{suggestedSteps.title}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {suggestedSteps.suggestions.map((suggestion, idx) => {
+                    const SuggestionIcon = getIconComponent(suggestion.icon);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleCategorySelect(suggestion.category, suggestion.section)}
+                        className="flex items-start gap-2 p-3 bg-white rounded-lg hover:bg-amber-100 transition-colors border border-amber-200 text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <SuggestionIcon className="w-4 h-4 text-amber-700" strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-gray-900">{suggestion.category}</div>
+                          <div className="text-xs text-gray-600 mt-0.5">{suggestion.reason}</div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )} */}
+
+        {/* Query Templates Panel */}
+        {selections.length === 0 && (
+          <div className="bg-white border-b border-gray-200 px-8 py-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-gray-600" />
+              <h3 className="text-sm font-semibold text-gray-900">Quick Start Templates</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {queryTemplates.map((template, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    template.filters.forEach(filter => {
+                      addFilter(filter.category, filter.value);
+                    });
+                    showToast(`Applied template: ${template.name}`);
+                  }}
+                  className="p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group"
+                >
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1">{template.name}</div>
+                  <div className="text-xs text-gray-500">{template.filters.length} filters</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
@@ -454,21 +920,29 @@ const ReportBuilder = (props) => {
                 <div className={`px-8 pb-8 ${isStartingData ? 'flex flex-wrap gap-3' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
+                    const isSelected = selections.some(s => s.category === category);
 
                     if (isStartingData) {
                       return (
                         <button
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className="px-6 py-3 rounded-full transition-colors group relative"
-                          style={{ backgroundColor: '#f3f4f6' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; }}
+                          className={`px-6 py-3 rounded-full transition-colors group relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+                          style={{ backgroundColor: isSelected ? '#dbeafe' : '#f3f4f6' }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#dbeafe'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? '#dbeafe' : '#f3f4f6'; }}
                         >
-                          <span className="text-sm font-medium text-gray-900">{category}</span>
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
-                          </div>
+                          <span className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>{category}</span>
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-0.5">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          )}
+                          {!isSelected && (
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
+                            </div>
+                          )}
                         </button>
                       );
                     }
@@ -479,7 +953,7 @@ const ReportBuilder = (props) => {
                         <div
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className="flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group"
+                          className={`flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
@@ -490,9 +964,15 @@ const ReportBuilder = (props) => {
                             <div className="font-medium text-gray-900 text-sm">{category}</div>
                             <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
-                            <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
-                          </button>
+                          {isSelected ? (
+                            <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
+                              <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
+                            </button>
+                          )}
                         </div>
                       );
                     }
@@ -501,26 +981,33 @@ const ReportBuilder = (props) => {
                     const iconHoverColors = { 'Location': '#16a34a', 'Membership': '#9333ea', 'Demographics': '#ea580c', 'Commerce': '#059669', 'Communities': '#db2777', 'Communications': '#4f46e5' };
 
                     return (
-                      <div key={category} onClick={() => handleCategorySelect(category, section)} className="group cursor-pointer">
+                      <div key={category} onClick={() => handleCategorySelect(category, section)} className={`group cursor-pointer relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 rounded-lg' : ''}`}>
                         <div
                           className="aspect-square rounded-lg mb-3 relative overflow-hidden transition-all duration-200 flex items-center justify-center"
-                          style={{ backgroundColor: '#e5e7eb' }}
+                          style={{ backgroundColor: isSelected ? hoverColors[section] || '#dbeafe' : '#e5e7eb' }}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#e5e7eb'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? (hoverColors[section] || '#dbeafe') : '#e5e7eb'; }}
                         >
                           <CategoryIcon
                             className="w-12 h-12 text-gray-300 transition-all duration-200 group-hover:scale-110"
                             strokeWidth={1.5}
-                            style={{ color: '#d1d5db' }}
+                            style={{ color: isSelected ? (iconHoverColors[section] || '#3b82f6') : '#d1d5db' }}
                             onMouseEnter={(e) => { e.currentTarget.style.color = iconHoverColors[section] || '#3b82f6'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = isSelected ? (iconHoverColors[section] || '#3b82f6') : '#d1d5db'; }}
                           />
-                          <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white shadow-lg" title="Add as field">
-                            <Plus className="w-4 h-4 text-gray-700" strokeWidth={2} />
-                          </button>
+                          {isSelected && (
+                            <div className="absolute top-2 left-2 bg-blue-500 text-white rounded-full p-0.5">
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </div>
+                          )}
+                          {!isSelected && (
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="absolute bottom-2 right-2 p-1.5 bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white shadow-lg" title="Add as field">
+                              <Plus className="w-4 h-4 text-gray-700" strokeWidth={2} />
+                            </button>
+                          )}
                         </div>
                         <div>
-                          <div className="font-medium text-sm text-gray-900 group-hover:text-black transition-colors">{category}</div>
+                          <div className={`font-medium text-sm transition-colors ${isSelected ? 'text-blue-900 font-semibold' : 'text-gray-900 group-hover:text-black'}`}>{category}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
                         </div>
                       </div>
@@ -533,13 +1020,28 @@ const ReportBuilder = (props) => {
             );
           })}
         </div>
+        </div>
+        {/* End Main Content Area */}
 
+        {/* Right Side Panels */}
         {selectedCategory && (
-          <div style={{ position: 'absolute', top: 0, right: selectedValue ? '280px' : '0px', height: '100%', width: '480px', backgroundColor: 'white', borderLeft: '1px solid #E5E7EB', boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1)', zIndex: 40, transition: 'right 300ms ease-in-out', display: 'flex', flexDirection: 'column' }}>
+          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{selectedCategory}</h3>
-                <button onClick={() => { setSelectedCategory(null); setSelectedValue(null); }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedCategory}</h3>
+                  {editingSelection && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      <Edit2 className="w-3 h-3" strokeWidth={2} />
+                      Editing: {editingSelection.value}
+                    </p>
+                  )}
+                </div>
+                <button onClick={() => {
+                  setSelectedCategory(null);
+                  setSelectedValue(null);
+                  setEditingSelection(null);
+                }} className="text-gray-400 hover:text-gray-600 transition-colors">
                   <X className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               </div>
@@ -624,15 +1126,36 @@ const ReportBuilder = (props) => {
                     </button>
                   </div>
 
-                  {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => (
-                    <div key={i} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${selectedValue?.value === value ? 'bg-blue-50 border border-blue-200' : ''}`}>
-                      <input type="checkbox" className="rounded" onChange={(e) => { if (e.target.checked) addFilter(selectedCategory, value); }} />
-                      <button onClick={() => handleValueSelect(selectedCategory, value)} className="flex-1 text-sm text-left text-blue-600 hover:text-blue-700 hover:underline transition-all cursor-pointer">{value}</button>
-                      <button onClick={() => addField(selectedCategory, value)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Show as field">
-                        <Eye className="w-4 h-4 text-purple-500 hover:text-purple-600" strokeWidth={1.5} />
-                      </button>
-                    </div>
-                  ))}
+                  {(sampleValues[selectedCategory] || []).filter(val => !valueSearchTerm || val.toLowerCase().includes(valueSearchTerm.toLowerCase())).map((value, i) => {
+                    // Check if this is the value being edited
+                    const isEditingThisValue = editingSelection && editingSelection.value === value;
+
+                    return (
+                      <div key={`${selectedCategory}-${value}-${i}`} className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 group ${
+                        isEditingThisValue
+                          ? 'bg-amber-50 border-2 border-amber-400'
+                          : selectedValue?.value === value
+                            ? 'bg-blue-50 border border-blue-200'
+                            : ''
+                      }`}>
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={false}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Always add filter - allow duplicates for OR logic
+                              addFilter(selectedCategory, value);
+                            }
+                          }}
+                        />
+                        <button onClick={() => handleValueSelect(selectedCategory, value)} className="flex-1 text-sm text-left text-blue-600 hover:text-blue-700 hover:underline transition-all cursor-pointer">{value}</button>
+                        <button onClick={() => addField(selectedCategory, value)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Show as field">
+                          <Eye className="w-4 h-4 text-purple-500 hover:text-purple-600" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -640,7 +1163,7 @@ const ReportBuilder = (props) => {
         )}
 
         {selectedValue && (
-          <div className="absolute top-0 h-full flex flex-col" style={{ right: '0px', width: '320px', backgroundColor: '#F9FAFB', borderLeft: '2px solid #E5E7EB', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', zIndex: 50, animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
+          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '320px' }}>
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => setSelectedValue(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
@@ -713,20 +1236,94 @@ const ReportBuilder = (props) => {
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
                 </div>
-                <div>
+                <div className="flex-1 max-w-2xl">
                   <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
-                  <div className="text-xs text-gray-500">JD • {calculateFilterImpact().toLocaleString()} records</div>
+                  <div className="text-xs text-gray-500">JD • {estimatedRecordCount.toLocaleString()} records</div>
+                  {buildNaturalLanguageQuery() && (
+                    <div className="text-xs text-blue-700 mt-1 font-medium italic">
+                      "{buildNaturalLanguageQuery()}"
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Load Query Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowLoadQueryDropdown(!showLoadQueryDropdown)}
+                  className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group"
+                  title="Load Query"
+                >
+                  <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+                </button>
+
+                {/* Load Query Dropdown */}
+                {showLoadQueryDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowLoadQueryDropdown(false)} />
+                    <div className="absolute bottom-full left-0 mb-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-40 max-h-96 overflow-y-auto">
+                      <div className="p-3 border-b border-gray-200">
+                        <h3 className="text-sm font-semibold text-gray-900">Saved Queries</h3>
+                        <p className="text-xs text-gray-500 mt-1">Select a query to load</p>
+                      </div>
+                      <div className="p-2">
+                        {savedQueries.length > 0 ? (
+                          savedQueries.map((query) => (
+                            <button
+                              key={query.id}
+                              onClick={() => {
+                                setSelections(query.selections.map(sel => ({ ...sel, id: Date.now() + Math.random() })));
+                                setReportTitle(query.name);
+                                setShowLoadQueryDropdown(false);
+                                showToast(`Loaded: ${query.name}`);
+                              }}
+                              className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                                    {query.name}
+                                  </div>
+                                  {query.description && (
+                                    <div className="text-xs text-gray-500 mt-0.5">
+                                      {query.description}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    {query.selections.length} filter{query.selections.length !== 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0 mt-0.5" />
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-8 text-center">
+                            <p className="text-sm text-gray-500">No saved queries yet</p>
+                            <p className="text-xs text-gray-400 mt-1">Create a query and click Save</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export"><Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
               <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Schedule"><Calendar className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
               <button disabled={selections.length === 0} className={`p-4 rounded-full transition-all mx-2 ${selections.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} title="Run Report">
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
               </button>
-              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Save As"><Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
+              <button
+                onClick={() => setShowSaveQueryPanel(true)}
+                disabled={selections.length === 0}
+                className={`p-2.5 rounded-lg transition-colors group ${selections.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                title="Save Query"
+              >
+                <Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
               <button onClick={() => setActivePanel('more')} className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings"><Settings className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
             </div>
 
@@ -823,6 +1420,125 @@ const ReportBuilder = (props) => {
               </div>
             </div>
           </>
+        )}
+
+        {/* Save Query Panel */}
+        {showSaveQueryPanel && (
+          <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-gray-200">
+            <div className="border-b border-gray-200 bg-white px-6 py-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
+                <button
+                  onClick={() => setShowSaveQueryPanel(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Current Query Display */}
+              <div className="mb-6">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                  Current Query
+                </label>
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex flex-wrap gap-2">
+                    {selections.map((sel) => (
+                      <div
+                        key={sel.id}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                          sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-purple-100 text-purple-700'
+                        }`}
+                      >
+                        {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{sel.category}: {sel.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Name Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Query Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={savedQueryName}
+                  onChange={(e) => setSavedQueryName(e.target.value)}
+                  placeholder="e.g., 2019 Members - December Renewals"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Description Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+                </label>
+                <textarea
+                  value={savedQueryDescription}
+                  onChange={(e) => setSavedQueryDescription(e.target.value)}
+                  placeholder="Add a description for this saved query..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+              </div>
+
+              {/* Info Box */}
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-600">
+                  <strong>Tip:</strong> Saved queries can be quickly accessed from the Load Query button and reused across sessions.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="border-t border-gray-200 p-6">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowSaveQueryPanel(false);
+                    setSavedQueryName('');
+                    setSavedQueryDescription('');
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (savedQueryName.trim()) {
+                      const newQuery = {
+                        id: Date.now(),
+                        name: savedQueryName,
+                        description: savedQueryDescription,
+                        selections: selections.map(sel => ({ ...sel }))
+                      };
+                      setSavedQueries([...savedQueries, newQuery]);
+                      setShowSaveQueryPanel(false);
+                      setSavedQueryName('');
+                      setSavedQueryDescription('');
+                      showToast(`Query saved: ${savedQueryName}`);
+                    }
+                  }}
+                  disabled={!savedQueryName.trim()}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    savedQueryName.trim()
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Save Query
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );

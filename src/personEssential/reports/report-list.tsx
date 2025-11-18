@@ -18,10 +18,20 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock } from 'lucide-react';
 
-
-
+const getIconComponent = (iconName) => {
+  const iconMap = {
+    Database, Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play,
+    Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin,
+    Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash,
+    UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle,
+    TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt,
+    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper,
+    UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock
+  };
+  return iconMap[iconName] || Database;
+};
 
 interface SortableItemProps {
   id: string;
@@ -436,9 +446,70 @@ const ReportBuilder = ({
   const [showIslandActions, setShowIslandActions] = useState(false);
   const [filterRecordsContext, setFilterRecordsContext] = useState(null);
 
+  // Browse mode features
+  const [showSaveQueryPanel, setShowSaveQueryPanel] = useState(false);
+  const [showLoadQueryDropdown, setShowLoadQueryDropdown] = useState(false);
+  const [savedQueryName, setSavedQueryName] = useState('');
+  const [savedQueryDescription, setSavedQueryDescription] = useState('');
+  const [savedQueries, setSavedQueries] = useState([]);
+  const [editingSelection, setEditingSelection] = useState(null);
+
+  // Dynamic data from JSON
+  const [categories, setCategories] = useState(CATEGORIES);
+  const [sampleValues, setSampleValues] = useState(SAMPLE_VALUES);
+  const [categoryFields, setCategoryFields] = useState(CATEGORY_FIELDS);
+  const [defaultFields, setDefaultFields] = useState(DEFAULT_FIELDS);
+  const [sectionIcons, setSectionIcons] = useState(SECTION_ICONS);
+  const [categoryIcons, setCategoryIcons] = useState(CATEGORY_ICONS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load data from JSON file
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const jsonUrl = `${process.env.PUBLIC_URL}/data/reports/newReport.json`;
+        const response = await fetch(jsonUrl);
+        const data = await response.json();
+
+        const updatedSampleValues = { ...data.sample_values };
+        Object.entries(data.categories).forEach(([section, cats]) => {
+          cats.forEach(cat => {
+            if (!updatedSampleValues[cat]) {
+              updatedSampleValues[cat] = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5', 'Option 6'];
+            }
+          });
+        });
+
+        // Convert icon names to components
+        const convertedSectionIcons = {};
+        Object.entries(data.section_icons).forEach(([key, iconName]) => {
+          convertedSectionIcons[key] = getIconComponent(iconName);
+        });
+
+        const convertedCategoryIcons = {};
+        Object.entries(data.category_icons).forEach(([key, iconName]) => {
+          convertedCategoryIcons[key] = getIconComponent(iconName);
+        });
+
+        setCategories(data.categories);
+        setSampleValues(updatedSampleValues);
+        setCategoryFields(data.category_fields);
+        setDefaultFields(data.default_fields);
+        setSectionIcons(convertedSectionIcons);
+        setCategoryIcons(convertedCategoryIcons);
+      } catch (error) {
+        console.error('Error loading report data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const filteredFields = useMemo(() => {
-    const allFields = Object.entries(CATEGORIES).flatMap(([section, categories]) =>
-      categories.filter(cat => cat !== 'Combos').map(cat => ({ section, category: cat }))
+    const allFields = Object.entries(categories).flatMap(([section, cats]) =>
+      cats.filter(cat => cat !== 'Combos').map(cat => ({ section, category: cat }))
     );
 
     let filtered = allFields;
@@ -463,8 +534,99 @@ const ReportBuilder = ({
     }
 
     return filtered;
-  }, [sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
+  }, [categories, sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
 
+  // Natural language query builder (from Browse mode)
+  const buildNaturalLanguageQuery = () => {
+    if (selections.length === 0) return '';
+
+    const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
+
+    let query = '';
+
+    // Find starting data (Member Year or Starting Data category)
+    const memberYearSel = selections.find(s => s.category === 'Member Year');
+    const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
+
+    if (memberYearSel) {
+      query = `${memberYearSel.value} members`;
+    } else if (startingDataSel) {
+      query = startingDataSel.category.toLowerCase();
+    }
+
+    // Process remaining filters with connectors
+    const filterSelections = selections.filter(s =>
+      s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
+    );
+
+    if (filterSelections.length > 0) {
+      const parts = [];
+      let i = 0;
+
+      // Helper function to get proper connector phrase for each category
+      const getConnectorPhrase = (category, value) => {
+        let val = value;
+        if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+
+        if (category === 'Renewal Month') return `who renewed in ${val}`;
+        if (category === 'Renewal Year') return `who renewed in ${val}`;
+        if (category === 'Membership Type') return `that are member type ${val}`;
+        if (category === 'Tenure') return `that have been members for ${val}`;
+        if (category === 'Occupation') return `and occupation is ${val}`;
+        if (category === 'Degree') return `with a Degree: ${val}`;
+        if (category === 'Province/State') return `from province/state ${val}`;
+        return `with ${category.toLowerCase()} ${val}`;
+      };
+
+      while (i < filterSelections.length) {
+        const sel = filterSelections[i];
+        const nextSel = filterSelections[i + 1];
+
+        // Check if this is a BETWEEN scenario
+        if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
+          const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+            ? nextSel.value.split(' - ')[0]
+            : nextSel.value;
+
+          const phrase = getConnectorPhrase(sel.category, sel.value);
+          parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
+          i += 2;
+        } else {
+          // Check for OR connectors with same category
+          let j = i + 1;
+          const orValues = [sel.value];
+          while (j < filterSelections.length &&
+                 filterSelections[j].connector === 'OR' &&
+                 filterSelections[j].category === sel.category) {
+            orValues.push(filterSelections[j].value);
+            j++;
+          }
+
+          if (orValues.length > 1) {
+            // Multiple values with OR
+            const formattedValues = orValues.map(v =>
+              sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+            ).join(' or ');
+
+            const phrase = getConnectorPhrase(sel.category, sel.value);
+            parts.push(phrase.replace(sel.value, formattedValues));
+          } else {
+            // Single value
+            parts.push(getConnectorPhrase(sel.category, sel.value));
+          }
+
+          i = j;
+        }
+      }
+
+      if (parts.length > 0) {
+        // Join all parts with proper spacing
+        query += ' ' + parts.join(' ');
+      }
+    }
+
+    return query.trim();
+  };
 
   const getValueCount = (category, value) => {
     const hash = (category + value).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -472,7 +634,7 @@ const ReportBuilder = ({
   };
 
   const getCategoryTotal = (category) => {
-    const values = SAMPLE_VALUES[category] || [];
+    const values = sampleValues[category] || [];
     return values.reduce((sum, val) => sum + getValueCount(category, val), 0);
   };
 
@@ -616,7 +778,7 @@ const ReportBuilder = ({
       return;
     }
 
-    const values = SAMPLE_VALUES[category] || [];
+    const values = sampleValues[category] || [];
     if (values.length === 1) {
       if (section === 'Starting Data') {
         addField(category, values[0]);
@@ -710,7 +872,7 @@ const ReportBuilder = ({
       if (action === 'field') {
         addSelection(category, 'All Values', 'field');
       } else if (action === 'filter') {
-        const values = SAMPLE_VALUES[category] || [];
+        const values = sampleValues[category] || [];
         if (values.length > 0) {
           addSelection(category, values[0], 'filter');
         }
@@ -1049,7 +1211,7 @@ const ReportBuilder = ({
   );
 
   return (
-    <div className="max-h-[calc(100vh-115px)] overflow-y-auto bg-gray-50 flex flex-col">
+    <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
       <AnimationStyles />
 
       {filterRecordsContext && (
@@ -1197,6 +1359,8 @@ const ReportBuilder = ({
         </div>
       )}
 
+      {/* Main Content Area - Flex 1 */}
+      <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -1282,6 +1446,95 @@ const ReportBuilder = ({
         </div>
       </div>
 
+      {/* Query Builder Panel - Your Query Section */}
+      {selections.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
+                <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
+                <button
+                  onClick={clearAllSelections}
+                  className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center">
+                {selections.map((sel, idx) => {
+                  const Icon = sel.type === 'filter' ? Filter : Eye;
+                  const isEditing = editingSelection?.id === sel.id;
+                  return (
+                    <React.Fragment key={sel.id}>
+                      {/* Connector dropdown (shown before chips except the first) */}
+                      {idx > 0 && (
+                        <select
+                          value={sel.connector || 'AND'}
+                          onChange={(e) => {
+                            setSelections(selections.map(s =>
+                              s.id === sel.id ? { ...s, connector: e.target.value } : s
+                            ));
+                          }}
+                          className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="AND">AND</option>
+                          <option value="OR">OR</option>
+                          <option value="BETWEEN">BETWEEN</option>
+                        </select>
+                      )}
+
+                      {/* Selection chip */}
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        isEditing
+                          ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                          : sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                            : 'bg-purple-100 text-purple-900 border border-purple-300'
+                      }`}>
+                        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span className="font-medium">{sel.category}</span>
+                        <span className="text-xs opacity-75">= {sel.value}</span>
+                        <div className="flex items-center gap-1 ml-1">
+                          <button
+                            onClick={() => {
+                              // Edit functionality - open the category selection
+                              setEditingSelection(sel);
+                              // Would need to trigger the category panel here
+                            }}
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                            title="Edit selection value"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              removeSelection(sel.id);
+                              if (editingSelection?.id === sel.id) {
+                                setEditingSelection(null);
+                              }
+                            }}
+                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                            title="Remove"
+                          >
+                            <X className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{calculateFilterImpact(selections).toLocaleString()}</div>
+              <div className="text-xs text-gray-600">estimated records</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-gray-50 px-8 py-4">
         <div className="flex items-center gap-3">
           <button
@@ -1362,9 +1615,9 @@ const ReportBuilder = ({
               </div>
 
               <div className="space-y-1">
-                {Object.keys(CATEGORIES).map(section => {
+                {Object.keys(categories).map(section => {
                   const colors = SECTION_COLORS[section];
-                  const SectionIcon = SECTION_ICONS[section];
+                  const SectionIcon = sectionIcons[section];
                   const isActive = sectionFilters.includes(section);
 
                   return (
@@ -1391,16 +1644,16 @@ const ReportBuilder = ({
 
 
               {/* {filteredFields.map((field, idx) => {
-                const values = SAMPLE_VALUES[field.category] || [];
+                const values = sampleValues[field.category] || [];
                 const colors = SECTION_COLORS[field.section];
-                const CategoryIcon = CATEGORY_ICONS[field.category] || Database;
+                const CategoryIcon = categoryIcons[field.category] || Database;
                 const isExpanded = expandedCategories[field.category];
                 const displayValues = isExpanded ? values : values.slice(0, TOP_VALUES_DISPLAY);
                 const hasMore = values.length > TOP_VALUES_DISPLAY;
                 const isBulkSelected = bulkSelected.includes(field.category);
                 const totalCount = getCategoryTotal(field.category);
                 const isFlipped = flippedCards[field.category];
-                const categoryFields = CATEGORY_FIELDS[field.category] || DEFAULT_FIELDS;
+                const categoryFieldsList = categoryFields[field.category] || defaultFields;
                 const showDropLineBefore = dropLinePosition && dropLinePosition.index === idx && dropLinePosition.position === 'before';
                 const showDropLineAfter = dropLinePosition && dropLinePosition.index === idx && dropLinePosition.position === 'after';
 
@@ -1486,16 +1739,16 @@ const ReportBuilder = ({
                     {filteredFields.map((field, idx) => {
                       const itemId = `field-${idx}-${field.category}`;
 
-                      const values = SAMPLE_VALUES[field.category] || [];
+                      const values = sampleValues[field.category] || [];
                       const colors = SECTION_COLORS[field.section];
-                      const CategoryIcon = CATEGORY_ICONS[field.category] || Database;
+                      const CategoryIcon = categoryIcons[field.category] || Database;
                       const isExpanded = expandedCategories[field.category];
                       const displayValues = isExpanded ? values : values.slice(0, TOP_VALUES_DISPLAY);
                       const hasMore = values.length > TOP_VALUES_DISPLAY;
                       const isBulkSelected = bulkSelected.includes(field.category);
                       const totalCount = getCategoryTotal(field.category);
                       const isFlipped = flippedCards[field.category];
-                      const categoryFields = CATEGORY_FIELDS[field.category] || DEFAULT_FIELDS;
+                      const categoryFieldsList = categoryFields[field.category] || defaultFields;
 
                       return (
                         <SortableItem
@@ -1681,7 +1934,7 @@ const ReportBuilder = ({
                                           {field.category}
                                         </h4>
                                       </div>
-                                      <p className="text-xs text-gray-500 mt-1">{categoryFields.length} fields available</p>
+                                      <p className="text-xs text-gray-500 mt-1">{categoryFieldsList.length} fields available</p>
                                     </div>
                                     <button
                                       onClick={(e) => {
@@ -1698,7 +1951,7 @@ const ReportBuilder = ({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        categoryFields.forEach(fieldName => {
+                                        categoryFieldsList.forEach(fieldName => {
                                           const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                           if (!isAdded) {
                                             addSelection(field.category, fieldName, 'field');
@@ -1722,7 +1975,7 @@ const ReportBuilder = ({
                                     </h5>
                                   </div>
                                   <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
-                                    {categoryFields.map((fieldName, fIdx) => {
+                                    {categoryFieldsList.map((fieldName, fIdx) => {
                                       const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                       return (
                                         <div key={fIdx} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
@@ -1762,7 +2015,7 @@ const ReportBuilder = ({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        categoryFields.forEach(fieldName => {
+                                        categoryFieldsList.forEach(fieldName => {
                                           const isAdded = selections.some(s => s.type === 'field' && s.category === field.category && s.value === fieldName);
                                           if (!isAdded) {
                                             addSelection(field.category, fieldName, 'field');
@@ -1798,19 +2051,14 @@ const ReportBuilder = ({
           )}
         </div>
       </div>
+      </div>
+      {/* End Main Content Area */}
 
+      {/* Right Side Panels */}
       {selectedCombo && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: '0px',
-            width: '320px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 50,
-            animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '320px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
             <div className="flex items-center gap-2 mb-3">
@@ -1908,19 +2156,9 @@ const ReportBuilder = ({
       )}
 
       {selectedFieldDetail && (
-        <>
-          <div className="absolute inset-0 bg-black bg-opacity-10 z-40" onClick={() => { setSelectedFieldDetail(null); setSelectedSecondaryValue(null); setRecordSearchTerm(''); setSelectedRecords([]); }} />
           <div
-            className="absolute top-0 h-full flex flex-col"
-            style={{
-              right: selectedSecondaryValue ? '280px' : '0px',
-              width: '420px',
-              backgroundColor: '#F9FAFB',
-              borderLeft: '2px solid #E5E7EB',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              zIndex: 50,
-              transition: 'right 300ms ease-in-out'
-            }}
+            className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+            style={{ width: '420px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center gap-2 mb-3">
@@ -2135,22 +2373,12 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       {selectedSecondaryValue && (
-        <>
           <div
-            className="absolute top-0 h-full flex flex-col"
-            style={{
-              right: '0px',
-              width: '320px',
-              backgroundColor: '#F9FAFB',
-              borderLeft: '2px solid #E5E7EB',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              zIndex: 51,
-              animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-            }}
+            className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+            style={{ width: '320px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center gap-2 mb-3">
@@ -2342,28 +2570,19 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       {fieldsPanel && (
-        <>
-          <div className="absolute inset-0 bg-black bg-opacity-20 z-40" onClick={() => { setFieldsPanel(null); setSelectedFieldDetail(null); setSelectedSecondaryValue(null); setRecordSearchTerm(''); setSelectedRecords([]); }} />
-
           <div
-            className="absolute top-0 h-full bg-white border-l border-gray-200 shadow-2xl flex flex-col animate-slideInRight"
-            style={{
-              right: selectedFieldDetail ? (selectedSecondaryValue ? '620px' : '340px') : '0px',
-              width: '480px',
-              zIndex: 49,
-              transition: 'right 300ms ease-in-out'
-            }}
+            className="h-full bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-all duration-300 ease-in-out"
+            style={{ width: '480px' }}
           >
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0" style={{ backgroundColor: 'white' }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${SECTION_COLORS[fieldsPanel.section]?.bg || 'bg-gray-100'}`}>
                     {(() => {
-                      const Icon = CATEGORY_ICONS[fieldsPanel.category] || Database;
+                      const Icon = categoryIcons[fieldsPanel.category] || Database;
                       return <Icon className={`w-4 h-4 ${SECTION_COLORS[fieldsPanel.section]?.icon || 'text-gray-600'}`} strokeWidth={1.5} />;
                     })()}
                   </div>
@@ -2414,7 +2633,7 @@ const ReportBuilder = ({
             <div className="flex-1 overflow-auto p-6 bg-gray-50" style={{ minWidth: 0 }}>
               {fieldsPanelTab === 'fields' ? (
                 <div className="space-y-3">
-                  {(CATEGORY_FIELDS[fieldsPanel.category] || DEFAULT_FIELDS).map((fieldName, idx) => {
+                  {(categoryFields[fieldsPanel.category] || defaultFields).map((fieldName, idx) => {
                     const fieldKey = `${fieldsPanel.category}-field-${fieldName}`;
                     const settings = fieldSettings[fieldKey] || { visible: true, filtered: false, filterValue: '' };
 
@@ -2600,7 +2819,7 @@ const ReportBuilder = ({
                 <>
                   <button
                     onClick={() => {
-                      const fields = CATEGORY_FIELDS[fieldsPanel.category] || DEFAULT_FIELDS;
+                      const fields = categoryFields[fieldsPanel.category] || defaultFields;
                       fields.forEach(fieldName => {
                         addSelection(fieldsPanel.category, fieldName, 'field');
                       });
@@ -2642,7 +2861,6 @@ const ReportBuilder = ({
               )}
             </div>
           </div>
-        </>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
@@ -2656,9 +2874,14 @@ const ReportBuilder = ({
               <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
             </div>
 
-            <div>
+            <div className="flex-1 max-w-2xl">
               <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
               <div className="text-xs text-gray-500">JD • {calculateFilterImpact(selections).toLocaleString()} records</div>
+              {buildNaturalLanguageQuery() && (
+                <div className="text-xs text-blue-700 mt-1 font-medium italic">
+                  "{buildNaturalLanguageQuery()}"
+                </div>
+              )}
             </div>
 
             {selections.length > 0 && (
@@ -2673,6 +2896,68 @@ const ReportBuilder = ({
           </div>
 
           <div className="flex items-center gap-2" style={{ flex: '0 0 auto' }}>
+            {/* Load Query Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLoadQueryDropdown(!showLoadQueryDropdown)}
+                className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group"
+                title="Load Query"
+              >
+                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+
+              {/* Load Query Dropdown */}
+              {showLoadQueryDropdown && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowLoadQueryDropdown(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-40 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900">Saved Queries</h3>
+                      <p className="text-xs text-gray-500 mt-1">Select a query to load</p>
+                    </div>
+                    <div className="p-2">
+                      {savedQueries.length > 0 ? (
+                        savedQueries.map((query) => (
+                          <button
+                            key={query.id}
+                            onClick={() => {
+                              setSelections(query.selections.map(sel => ({ ...sel, id: Date.now() + Math.random() })));
+                              setReportTitle(query.name);
+                              setShowLoadQueryDropdown(false);
+                              showToast(`Loaded: ${query.name}`);
+                            }}
+                            className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                                  {query.name}
+                                </div>
+                                {query.description && (
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    {query.description}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {query.selections.length} filter{query.selections.length !== 1 ? 's' : ''}
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0 mt-0.5" />
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-8 text-center">
+                          <p className="text-sm text-gray-500">No saved queries yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Create a query and click Save</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
               <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
             </button>
@@ -2682,7 +2967,12 @@ const ReportBuilder = ({
             <button disabled={selections.length === 0} className={`p-4 rounded-full transition-all mx-2 ${selections.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} title="Run Report">
               <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
             </button>
-            <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Save As">
+            <button
+              onClick={() => setShowSaveQueryPanel(true)}
+              disabled={selections.length === 0}
+              className={`p-2.5 rounded-lg transition-colors group ${selections.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              title="Save Query"
+            >
               <Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
             </button>
             <button onClick={() => setActivePanel('more')} className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings">
@@ -2863,17 +3153,19 @@ const ReportBuilder = ({
                               <div key={sel.id}>
                                 {idx > 0 && sel.connector && (
                                   <div className="flex items-center py-2">
-                                    <button
-                                      onClick={() => {
-                                        const newSelections = selections.map(s =>
-                                          s.id === sel.id ? { ...s, connector: s.connector === 'AND' ? 'OR' : 'AND' } : s
-                                        );
-                                        setSelections(newSelections);
+                                    <select
+                                      value={sel.connector || 'AND'}
+                                      onChange={(e) => {
+                                        setSelections(selections.map(s =>
+                                          s.id === sel.id ? { ...s, connector: e.target.value } : s
+                                        ));
                                       }}
-                                      className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded"
+                                      className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
-                                      {sel.connector}
-                                    </button>
+                                      <option value="AND">AND</option>
+                                      <option value="OR">OR</option>
+                                      <option value="BETWEEN">BETWEEN</option>
+                                    </select>
                                   </div>
                                 )}
 
@@ -2887,7 +3179,7 @@ const ReportBuilder = ({
                                             category: sel.category,
                                             value: sel.value,
                                             filterIndex: idx,
-                                            values: SAMPLE_VALUES[sel.category] || []
+                                            values: sampleValues[sel.category] || []
                                           };
 
                                           if (!waterfallFromFilter || waterfallFromFilter.category !== sel.category) {
@@ -3176,16 +3468,8 @@ const ReportBuilder = ({
 
       {waterfallFromFilter && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: detailFromWaterfall ? '320px' : '0px',
-            width: '360px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 50,
-            transition: 'right 300ms ease-in-out'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '360px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
@@ -3315,16 +3599,8 @@ const ReportBuilder = ({
 
       {detailFromWaterfall && (
         <div
-          className="absolute top-0 h-full flex flex-col"
-          style={{
-            right: '0px',
-            width: '360px',
-            backgroundColor: '#F9FAFB',
-            borderLeft: '2px solid #E5E7EB',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            zIndex: 51,
-            animation: 'slideInRight 300ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-          }}
+          className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out"
+          style={{ width: '360px' }}
         >
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
@@ -3668,6 +3944,125 @@ const ReportBuilder = ({
             )}
           </div>
         </>
+      )}
+
+      {/* Save Query Panel */}
+      {showSaveQueryPanel && (
+        <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-gray-200">
+          <div className="border-b border-gray-200 bg-white px-6 py-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
+              <button
+                onClick={() => setShowSaveQueryPanel(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Current Query Display */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                Current Query
+              </label>
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex flex-wrap gap-2">
+                  {selections.map((sel) => (
+                    <div
+                      key={sel.id}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                        sel.type === 'filter'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{sel.category}: {sel.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Name Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Query Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={savedQueryName}
+                onChange={(e) => setSavedQueryName(e.target.value)}
+                placeholder="e.g., 2019 Members - December Renewals"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Description Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Description <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+              </label>
+              <textarea
+                value={savedQueryDescription}
+                onChange={(e) => setSavedQueryDescription(e.target.value)}
+                placeholder="Add a description for this saved query..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              />
+            </div>
+
+            {/* Info Box */}
+            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-600">
+                <strong>Tip:</strong> Saved queries can be quickly accessed from the Load Query button and reused across sessions.
+              </p>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t border-gray-200 p-6">
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSaveQueryPanel(false);
+                  setSavedQueryName('');
+                  setSavedQueryDescription('');
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (savedQueryName.trim()) {
+                    const newQuery = {
+                      id: Date.now(),
+                      name: savedQueryName,
+                      description: savedQueryDescription,
+                      selections: selections.map(sel => ({ ...sel }))
+                    };
+                    setSavedQueries([...savedQueries, newQuery]);
+                    setShowSaveQueryPanel(false);
+                    setSavedQueryName('');
+                    setSavedQueryDescription('');
+                    showToast(`Query saved: ${savedQueryName}`);
+                  }
+                }}
+                disabled={!savedQueryName.trim()}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  savedQueryName.trim()
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Save Query
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -11,20 +11,26 @@
             "Proximity",
             "In City",
             "In Region",
-            "In Country"
+            "In Country",
+            "Province/State"
         ],
         "Membership": [
             "Membership Type",
+            "Member Year",
+            "Tenure",
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
-            "Joined/Renewed"
+            "Joined/Renewed",
+            "Renewal Month",
+            "Renewal Year"
         ],
         "Demographics": [
             "Career Stage",
             "Occupation",
             "Workplace Setting",
             "Education Received",
+            "Degree",
             "Education Current",
             "Area of Interest"
         ],
@@ -106,13 +112,25 @@
     ],
     "sample_values": {
         "Membership Type": [
+            "ECY1 - Member Early Career Year 1",
+            "ECY2 - Member Early Career Year 2",
+            "ECY3 - Member Early Career Year 3",
+            "STU1 - Student Member Year 1",
+            "STU2 - Student Member Year 2",
+            "CORP1 - Corporate Member",
+            "PROF1 - Professional Member",
+            "PROF2 - Professional Member Level 2",
+            "Individual - Individual Member",
+            "Professional - Professional Member",
+            "Corporate - Corporate Member",
+            "Student - Student Member",
+            "Senior - Senior Member",
+            "Family - Family Member",
+            "Lifetime - Life Member",
+            "Honorary - Honorary Member",
             "Fellow",
             "Life Fellow",
-            "Life Member",
-            "Member",
             "International Affiliate",
-            "Member Early Career Year 1",
-            "Member Early Career Year 2",
             "Section Associate"
         ],
         "Career Stage": [
@@ -152,6 +170,83 @@
             "Administrator",
             "Student",
             "Other"
+        ],
+        "Tenure": [
+            "Past 1 year",
+            "Past 2 years",
+            "Past 3 years",
+            "Past 5 years",
+            "Past 10 years",
+            "Past 15 years",
+            "Past 20 years",
+            "More than 5 years"
+        ],
+        "Degree": [
+            "Masters",
+            "Bachelors",
+            "Doctorate",
+            "PhD",
+            "MBA",
+            "Certificate",
+            "Diploma",
+            "Associate"
+        ],
+        "Province/State": [
+            "ON",
+            "BC",
+            "AB",
+            "QC",
+            "MB",
+            "SK",
+            "NS",
+            "NB",
+            "PE",
+            "NL",
+            "YT",
+            "NT",
+            "NU",
+            "Ontario",
+            "British Columbia",
+            "Alberta",
+            "Quebec",
+            "Manitoba",
+            "Saskatchewan"
+        ],
+        "Renewal Month": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "Renewal Year": [
+            "2024",
+            "2023",
+            "2022",
+            "2021",
+            "2020",
+            "2019",
+            "2018",
+            "2017"
+        ],
+        "Member Year": [
+            "2024",
+            "2023",
+            "2022",
+            "2021",
+            "2020",
+            "2019",
+            "2018",
+            "2017",
+            "2016",
+            "2015"
         ]
     },
     "section_icons": {
@@ -218,6 +313,8 @@
         "In Region": "Map",
         "In Country": "Globe",
         "Membership Type": "Crown",
+        "Member Year": "Calendar",
+        "Tenure": "Clock",
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
@@ -244,6 +341,10 @@
         "CPA Member Benefit": "Gift",
         "Psychology in the News": "Newspaper",
         "Psynopsis Magazine": "BookOpen",
-        "Volunteer Availability": "UserCheck"
+        "Volunteer Availability": "UserCheck",
+        "Province/State": "MapPin",
+        "Degree": "GraduationCap",
+        "Renewal Month": "Calendar",
+        "Renewal Year": "Calendar"
     }
 }
