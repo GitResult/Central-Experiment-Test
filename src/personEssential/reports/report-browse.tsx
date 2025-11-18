@@ -226,6 +226,9 @@ const ReportBuilder = (props) => {
     return Math.max(50, result);
   }, [selections]);
 
+  // Calculate right panel width for push-style panel effect
+  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
+
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
     return <AppReportPhrase />;
@@ -764,8 +767,6 @@ const ReportBuilder = (props) => {
         ]
       }
     ];
-
-    const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
 
     return (
       <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex relative">
