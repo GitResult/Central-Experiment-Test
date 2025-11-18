@@ -1482,7 +1482,7 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
-        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 inset-x-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px' }}>
+        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
           <div className="h-full flex items-center justify-between px-4">
 
             <div className="flex items-center gap-4">
