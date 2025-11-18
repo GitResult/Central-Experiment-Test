@@ -18,23 +18,31 @@ export const STARTING_POINTS = [
     label: 'Current',
     icon: Users,
     color: 'blue',
-    type: 'entity',
+    type: 'cohort',
     description: 'Active members'
+  },
+  {
+    id: 'previous',
+    label: 'Previous',
+    icon: Clock,
+    color: 'orange',
+    type: 'cohort',
+    description: 'Previous period members'
   },
   {
     id: 'new',
     label: 'New',
     icon: Sparkles,
     color: 'green',
-    type: 'entity',
+    type: 'cohort',
     description: 'Recent additions'
   },
   {
     id: 'lapsed',
     label: 'Lapsed',
-    icon: X,
+    icon: UserMinus,
     color: 'red',
-    type: 'entity',
+    type: 'cohort',
     description: 'Inactive members'
   },
   {
@@ -192,12 +200,33 @@ export const getSuggestionsForPhrase = (chips) => {
   const lastChip = chips[chips.length - 1];
   const lastChipText = lastChip.text || lastChip.label;
 
+  // After selecting a cohort (Current, Previous, New, Lapsed)
+  if (lastChip.type === 'cohort') {
+    return {
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entity',
+        icon: et.icon,
+        color: et.color
+      })),
+      next: [
+        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
+        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
+        { label: 'with type', icon: Crown, type: 'connector', preview: true }
+      ],
+      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+        label: a.label,
+        preview: true
+      }))
+    };
+  }
+
   // After selecting a year cohort (2019, 2020, etc.)
   if (lastChip.type === 'yearCohort') {
     return {
       current: ENTITY_TYPES.map(et => ({
         label: et.label,
-        type: et.type,
+        type: 'entity',
         icon: et.icon,
         color: et.color
       })),
@@ -213,7 +242,7 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a starting point (Current, New, Lapsed, All Contacts)
+  // After selecting a starting point (All Contacts)
   if (lastChip.type === 'entity' && STARTING_POINTS.some(sp => sp.label === lastChipText)) {
     return {
       current: ENTITY_TYPES.map(et => ({

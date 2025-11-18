@@ -1,9 +1,11 @@
 {
     "categories": {
         "Starting Data": [
-            "Current Members",
-            "New Members",
-            "Lapsed Members",
+            "Current",
+            "Previous",
+            "New",
+            "Lapsed",
+            "Members",
             "Contacts",
             "Other",
             "Member Stats"
@@ -153,13 +155,20 @@
             "Hamilton",
             "Kitchener"
         ],
-        "Current Members": [
-            "All Current Members"
+        "Current": [
+            "Any Value (Current)"
         ],
-        "New Members": [
-            "Members joined in last 30 days",
-            "Members joined in last 90 days",
-            "Members joined this year"
+        "Previous": [
+            "Any Value (Previous)"
+        ],
+        "New": [
+            "Any Value (New)"
+        ],
+        "Lapsed": [
+            "Any Value (Lapsed)"
+        ],
+        "Members": [
+            "Any Value (Members)"
         ],
         "Member Stats": [
             "Consecutive Membership Years",
@@ -309,9 +318,11 @@
         }
     },
     "category_icons": {
-        "Current Members": "Users",
-        "New Members": "UserPlus",
-        "Lapsed Members": "UserMinus",
+        "Current": "Users",
+        "Previous": "Clock",
+        "New": "Sparkles",
+        "Lapsed": "UserMinus",
+        "Members": "Crown",
         "Contacts": "Mail",
         "Other": "Database",
         "Member Stats": "BarChart3",
