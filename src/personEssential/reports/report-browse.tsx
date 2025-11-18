@@ -90,6 +90,12 @@ const ReportBuilder = (props) => {
   const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
   const [customYearValue, setCustomYearValue] = useState('');
 
+  // Joined/Renewed date range state
+  const [fromMonth, setFromMonth] = useState('');
+  const [fromYear, setFromYear] = useState('');
+  const [toMonth, setToMonth] = useState('');
+  const [toYear, setToYear] = useState('');
+
 
   const [categories, setCategories] = useState({});
   const [sampleValues, setSampleValues] = useState({});
@@ -1093,16 +1099,137 @@ const ReportBuilder = (props) => {
                 </div>
               ) : selectedCategory === 'Joined/Renewed' ? (
                 <div className="space-y-4">
+                  {/* Year/Month Range Selection */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Date Range</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><label className="text-xs text-gray-500 mb-1 block">Start Date</label><input type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
-                      <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Year/Month Range</label>
+                    <p className="text-xs text-gray-500 mb-3">Select a date range for joined or renewed members</p>
+
+                    <div className="space-y-3">
+                      {/* From Date */}
+                      <div>
+                        <label className="text-xs text-gray-600 mb-1 block font-medium">From</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            value={fromMonth}
+                            onChange={(e) => setFromMonth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Month</option>
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
+                              <option key={month} value={month}>{month}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={fromYear}
+                            onChange={(e) => setFromYear(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Year</option>
+                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* To Date */}
+                      <div>
+                        <label className="text-xs text-gray-600 mb-1 block font-medium">To</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            value={toMonth}
+                            onChange={(e) => setToMonth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Month</option>
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
+                              <option key={month} value={month}>{month}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={toYear}
+                            onChange={(e) => setToYear(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Year</option>
+                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(fromMonth && fromYear && toMonth && toYear) && (
+                      <button
+                        onClick={() => {
+                          addFilter('Joined/Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`);
+                          setSelectedCategory(null);
+                          setFromMonth('');
+                          setFromYear('');
+                          setToMonth('');
+                          setToYear('');
+                        }}
+                        className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                      >
+                        Apply Range
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Relative to Renewal Opening Date */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Renewal Opening Date</h4>
+                    <p className="text-xs text-gray-500 mb-3">Time periods from when renewal window opens</p>
+
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {['First Week', 'First 2 Weeks'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['First Month', 'First 2 Months', 'First 3 Months'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
+                  {/* Relative to Period Start Date */}
                   <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Relative to Today</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Period Start Date</h4>
+                    <p className="text-xs text-gray-500 mb-3">Months relative to membership period start</p>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Starting Month - 1', 'Starting Month', 'Starting Month + 1', 'Starting Month + 2', 'Starting Month + 3'].map(period => (
+                        <button
+                          key={period}
+                          onClick={() => { addFilter('Joined/Renewed', `Period: ${period}`); setSelectedCategory(null); }}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors text-left"
+                        >
+                          {period}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Legacy: Relative to Today */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Today</h4>
+                    <p className="text-xs text-gray-500 mb-3">Recent activity based on current date</p>
                     <div className="grid grid-cols-3 gap-2">
                       {['last30', 'last60', 'last90'].map(type => (
                         <button key={type} onClick={() => applyDateRange(type)} className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors">
@@ -1112,20 +1239,18 @@ const ReportBuilder = (props) => {
                     </div>
                   </div>
 
+                  {/* Legacy: Custom Date Range */}
                   <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Relative to Membership</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['first30', 'first60', 'first90'].map(type => (
-                        <button key={type} onClick={() => applyDateRange(type)} className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors">
-                          {type === 'first30' ? 'First 30 days' : type === 'first60' ? 'First 60 days' : 'First 90 days'}
-                        </button>
-                      ))}
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Custom Date Range</h4>
+                    <p className="text-xs text-gray-500 mb-3">Exact dates for precise filtering</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><label className="text-xs text-gray-500 mb-1 block">Start Date</label><input type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
+                      <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
                     </div>
+                    {(dateRangeStart && dateRangeEnd) && (
+                      <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
+                    )}
                   </div>
-
-                  {(dateRangeStart && dateRangeEnd) && (
-                    <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
-                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
