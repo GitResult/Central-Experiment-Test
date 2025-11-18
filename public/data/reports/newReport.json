@@ -5,7 +5,8 @@
             "New Members",
             "Lapsed Members",
             "Contacts",
-            "Other"
+            "Other",
+            "Member Stats"
         ],
         "Location": [
             "Proximity",
@@ -23,12 +24,6 @@
             "Joined/Renewed",
             "Renewal Month",
             "Renewal Year"
-        ],
-        "Member Stats": [
-            "Consecutive Membership Years",
-            "Total Memberships",
-            "Engagement Score",
-            "Last Activity Date"
         ],
         "Demographics": [
             "Career Stage",
@@ -166,6 +161,12 @@
             "Members joined in last 90 days",
             "Members joined this year"
         ],
+        "Member Stats": [
+            "Consecutive Membership Years",
+            "Total Memberships",
+            "Engagement Score",
+            "Last Activity Date"
+        ],
         "Occupation": [
             "Researcher",
             "Practitioner",
@@ -258,7 +259,6 @@
         "Starting Data": "Database",
         "Location": "MapPin",
         "Membership": "Crown",
-        "Member Stats": "BarChart3",
         "Demographics": "Users",
         "Commerce": "DollarSign",
         "Communities": "Share2",
@@ -282,12 +282,6 @@
             "icon": "text-purple-400",
             "bg": "bg-purple-50",
             "border": "border-purple-200"
-        },
-        "Member Stats": {
-            "header": "text-cyan-700",
-            "icon": "text-cyan-400",
-            "bg": "bg-cyan-50",
-            "border": "border-cyan-200"
         },
         "Demographics": {
             "header": "text-orange-700",
@@ -320,6 +314,7 @@
         "Lapsed Members": "UserMinus",
         "Contacts": "Mail",
         "Other": "Database",
+        "Member Stats": "BarChart3",
         "Proximity": "MapPin",
         "In City": "Building2",
         "In Region": "Map",

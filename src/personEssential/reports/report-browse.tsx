@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2, FileUp } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2, FileUp, CalendarClock, BarChart3 } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -13,7 +13,8 @@ const getIconComponent = (iconName) => {
     Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash,
     UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle,
     TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt,
-    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck
+    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck,
+    CalendarClock, BarChart3, Clock
   };
   return iconMap[iconName] || Database;
 };
@@ -85,6 +86,9 @@ const ReportBuilder = (props) => {
   const [savedQueryName, setSavedQueryName] = useState('');
   const [savedQueryDescription, setSavedQueryDescription] = useState('');
   const [savedQueries, setSavedQueries] = useState([]);
+  const [showMemberStatsPanel, setShowMemberStatsPanel] = useState(false);
+  const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
+  const [customYearValue, setCustomYearValue] = useState('');
 
 
   const [categories, setCategories] = useState({});
@@ -221,6 +225,13 @@ const ReportBuilder = (props) => {
   const showToast = (message) => { setToast(message); setTimeout(() => setToast(null), 2000); };
 
   const handleCategorySelect = (category, section) => {
+    // Special handling for Member Stats
+    if (category === 'Member Stats') {
+      setShowMemberStatsPanel(true);
+      setSelectedCategory(null);
+      return;
+    }
+
     const values = sampleValues[category] || [];
 
     // If category only has one value, auto-select it
@@ -1215,6 +1226,137 @@ const ReportBuilder = (props) => {
                       <Eye className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
                       <span className="text-xs font-medium text-purple-900">Add as Field</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Member Stats First Panel */}
+        {showMemberStatsPanel && (
+          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
+            <div className="p-6 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Member Stats</h3>
+                  <p className="text-xs text-gray-500 mt-1">Select a stat field to filter by</p>
+                </div>
+                <button onClick={() => {
+                  setShowMemberStatsPanel(false);
+                  setSelectedMemberStatField(null);
+                }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-6 bg-white">
+              <div className="space-y-2">
+                {['Consecutive Membership Years', 'Total Memberships', 'Engagement Score', 'Last Activity Date'].map((statField) => (
+                  <button
+                    key={statField}
+                    onClick={() => {
+                      if (statField === 'Consecutive Membership Years') {
+                        setSelectedMemberStatField(statField);
+                      } else {
+                        showToast(`${statField} filter coming soon`);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all text-left group border border-gray-200"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                      {statField === 'Consecutive Membership Years' && <Clock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Total Memberships' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Engagement Score' && <TrendingUp className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Last Activity Date' && <CalendarClock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 text-sm">{statField}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {statField === 'Consecutive Membership Years' && 'Filter by years of membership'}
+                        {statField === 'Total Memberships' && 'Filter by number of memberships'}
+                        {statField === 'Engagement Score' && 'Filter by engagement level'}
+                        {statField === 'Last Activity Date' && 'Filter by last activity'}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" strokeWidth={1.5} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Member Stats Second Panel - Consecutive Membership Years */}
+        {selectedMemberStatField === 'Consecutive Membership Years' && (
+          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '400px' }}>
+            <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+              <div className="flex items-center gap-2 mb-3">
+                <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                  <ChevronRight className="w-5 h-5 rotate-180" strokeWidth={1.5} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900">Consecutive Membership Years</h3>
+                  <p className="text-xs text-gray-500">Select year range(s)</p>
+                </div>
+                <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4" style={{ backgroundColor: '#F9FAFB' }}>
+              <div className="space-y-2">
+                {(sampleValues['Consecutive Membership Years'] || []).map((yearRange, i) => {
+                  // Extract number from yearRange (e.g., "Past 5 years" -> "5")
+                  const yearMatch = yearRange.match(/\d+/);
+                  const yearValue = yearMatch ? yearMatch[0] : yearRange;
+
+                  return (
+                    <div key={`year-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white hover:bg-blue-50 group border border-gray-200">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
+                            showToast(`Filter added: ${yearRange}`);
+                          }
+                        }}
+                      />
+                      <span className="flex-1 text-sm text-gray-900">{yearRange}</span>
+                    </div>
+                  );
+                })}
+
+                {/* Custom Year Input */}
+                <div className="border-t border-gray-300 pt-3 mt-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-200">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      onChange={(e) => {
+                        if (e.target.checked && customYearValue) {
+                          addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
+                          showToast(`Filter added: ${customYearValue} years`);
+                          setCustomYearValue('');
+                        }
+                      }}
+                    />
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-sm text-gray-700">Custom:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={customYearValue}
+                        onChange={(e) => setCustomYearValue(e.target.value)}
+                        placeholder="Years"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="text-sm text-gray-500">years</span>
+                    </div>
                   </div>
                 </div>
               </div>
