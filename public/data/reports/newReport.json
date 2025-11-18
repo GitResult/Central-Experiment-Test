@@ -17,13 +17,18 @@
         "Membership": [
             "Membership Type",
             "Member Year",
-            "Consecutive Membership Years",
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
             "Joined/Renewed",
             "Renewal Month",
             "Renewal Year"
+        ],
+        "Member Stats": [
+            "Consecutive Membership Years",
+            "Total Memberships",
+            "Engagement Score",
+            "Last Activity Date"
         ],
         "Demographics": [
             "Career Stage",
@@ -253,6 +258,7 @@
         "Starting Data": "Database",
         "Location": "MapPin",
         "Membership": "Crown",
+        "Member Stats": "BarChart3",
         "Demographics": "Users",
         "Commerce": "DollarSign",
         "Communities": "Share2",
@@ -276,6 +282,12 @@
             "icon": "text-purple-400",
             "bg": "bg-purple-50",
             "border": "border-purple-200"
+        },
+        "Member Stats": {
+            "header": "text-cyan-700",
+            "icon": "text-cyan-400",
+            "bg": "bg-cyan-50",
+            "border": "border-cyan-200"
         },
         "Demographics": {
             "header": "text-orange-700",
@@ -345,6 +357,9 @@
         "Province/State": "MapPin",
         "Degree": "GraduationCap",
         "Renewal Month": "Calendar",
-        "Renewal Year": "Calendar"
+        "Renewal Year": "Calendar",
+        "Total Memberships": "Hash",
+        "Engagement Score": "TrendingUp",
+        "Last Activity Date": "CalendarClock"
     }
 }

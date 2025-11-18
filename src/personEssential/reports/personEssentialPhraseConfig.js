@@ -238,6 +238,7 @@ export const getSuggestionsForPhrase = (chips) => {
   if (lastChip.type === 'entity' && ENTITY_TYPES.some(et => et.label === lastChipText)) {
     return {
       current: [
+        { label: 'that have been', icon: Clock, type: 'connector' },
         { label: 'that have', icon: ChevronRight, type: 'connector' },
         { label: 'with status', icon: Check, type: 'connector' },
         { label: 'in location', icon: MapPin, type: 'connector' },
