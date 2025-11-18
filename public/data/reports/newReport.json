@@ -18,7 +18,7 @@
             "Province/State"
         ],
         "Membership": [
-            "Membership Type",
+            "Member Type",
             "Member Year",
             "Code of Ethics",
             "Primary Reason for Joining",
@@ -61,7 +61,7 @@
         ]
     },
     "category_fields": {
-        "Membership Type": [
+        "Member Type": [
             "Start Date",
             "End Date",
             "Renewal Date",
@@ -113,7 +113,7 @@
         "Notes"
     ],
     "sample_values": {
-        "Membership Type": [
+        "Member Type": [
             "ECY1 - Member Early Career Year 1",
             "ECY2 - Member Early Career Year 2",
             "ECY3 - Member Early Career Year 3",
@@ -330,7 +330,7 @@
         "In City": "Building2",
         "In Region": "Map",
         "In Country": "Globe",
-        "Membership Type": "Crown",
+        "Member Type": "Crown",
         "Member Year": "Calendar",
         "Consecutive Membership Years": "Clock",
         "Code of Ethics": "Award",

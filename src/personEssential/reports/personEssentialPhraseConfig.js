@@ -8,7 +8,8 @@
 import {
   Users, Crown, Award, Mail, Calendar, DollarSign, MapPin,
   TrendingUp, Check, Plus, ChevronRight, Sparkles, X, Clock,
-  GraduationCap, Briefcase, CalendarClock
+  GraduationCap, Briefcase, CalendarClock, UserMinus, Filter,
+  Settings, Star, UserPlus
 } from 'lucide-react';
 
 // Starting point cohorts for phrase building
