@@ -957,6 +957,7 @@ const ReportBuilder = (props) => {
 
                     if (isThreeColumn || isFourColumn) {
                       const hoverColors = { 'Starting Data': '#dbeafe', 'Status': '#ccfbf1', 'Location': '#dcfce7', 'Membership': '#f3e8ff', 'Demographics': '#fed7aa', 'Commerce': '#d1fae5', 'Communities': '#fce7f3', 'Communications': '#e0e7ff' };
+                      const sectionColor = sectionColors[section] || { bg: 'bg-blue-50', icon: 'text-blue-400' };
                       return (
                         <div
                           key={category}
@@ -965,8 +966,8 @@ const ReportBuilder = (props) => {
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColors[section]?.bg.replace('50', '100')}`}>
-                            <CategoryIcon className={`w-5 h-5 ${sectionColors[section]?.icon.replace('400', '600')}`} strokeWidth={1.5} />
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
+                            <CategoryIcon className={`w-5 h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 text-sm">{category}</div>
