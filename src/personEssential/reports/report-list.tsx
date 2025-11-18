@@ -350,6 +350,7 @@ Object.entries(CATEGORIES).forEach(([section, cats]) => {
 
 const SECTION_ICONS = {
   'Starting Data': Database,
+  'Status': Users,
   'Location': MapPin,
   'Membership': Crown,
   'Demographics': Users,
@@ -360,6 +361,7 @@ const SECTION_ICONS = {
 
 const SECTION_COLORS = {
   'Starting Data': { header: 'text-blue-700', icon: 'text-blue-400', bg: 'bg-blue-50', border: 'border-blue-200' },
+  'Status': { header: 'text-teal-700', icon: 'text-teal-400', bg: 'bg-teal-50', border: 'border-teal-200' },
   'Location': { header: 'text-green-700', icon: 'text-green-400', bg: 'bg-green-50', border: 'border-green-200' },
   'Membership': { header: 'text-purple-700', icon: 'text-purple-400', bg: 'bg-purple-50', border: 'border-purple-200' },
   'Demographics': { header: 'text-orange-700', icon: 'text-orange-400', bg: 'bg-orange-50', border: 'border-orange-200' },
