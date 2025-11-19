@@ -235,7 +235,24 @@ const ReportBuilder = (props) => {
   }
 
   const addSelection = (category, value, type = 'filter') => {
-    setSelections([...selections, { id: Date.now(), category, value, type, connector: selections.length > 0 ? 'AND' : null }]);
+    // Determine connector logic based on phrase patterns
+    let connector = null;
+
+    if (selections.length > 0) {
+      const firstSelection = selections[0];
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+      // No connector between Status (Current/Previous/New/Lapsed) and Members
+      if (selections.length === 1 &&
+          statusCategories.includes(firstSelection.category) &&
+          category === 'Members') {
+        connector = null;
+      } else {
+        connector = 'AND';
+      }
+    }
+
+    setSelections([...selections, { id: Date.now(), category, value, type, connector }]);
   };
 
   const removeSelection = (id) => setSelections(selections.filter(s => s.id !== id));
