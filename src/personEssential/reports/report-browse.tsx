@@ -266,14 +266,18 @@ const ReportBuilder = (props) => {
       return;
     }
 
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     const values = sampleValues[category] || [];
 
     // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
+      // For Status categories and Members, use category name as value
+      const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
+
       if (section === 'Starting Data' || section === 'Status') {
-        addField(category, values[0]);
+        addField(category, valueToUse);
       } else {
-        addFilter(category, values[0]);
+        addFilter(category, valueToUse);
       }
       return;
     }

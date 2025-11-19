@@ -909,13 +909,17 @@ const ReportBuilder = ({
   };
 
   const applyBulkAction = (action) => {
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
     bulkSelected.forEach(category => {
       if (action === 'field') {
-        addSelection(category, 'All Values', 'field');
+        const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : 'All Values';
+        addSelection(category, valueToUse, 'field');
       } else if (action === 'filter') {
         const values = sampleValues[category] || [];
         if (values.length > 0) {
-          addSelection(category, values[0], 'filter');
+          const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
+          addSelection(category, valueToUse, 'filter');
         }
       }
     });
@@ -1853,7 +1857,12 @@ const ReportBuilder = ({
                                     </button>
                                     {!bulkSelectMode && (
                                       <button
-                                        onClick={() => { addSelection(field.category, 'All Values', 'field'); showToast(`${field.category} added`); }}
+                                        onClick={() => {
+                                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                          const valueToUse = (statusCategories.includes(field.category) || field.category === 'Members') ? field.category : 'All Values';
+                                          addSelection(field.category, valueToUse, 'field');
+                                          showToast(`${field.category} added`);
+                                        }}
                                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                                         title="Add as field"
                                       >
