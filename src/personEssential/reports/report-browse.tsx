@@ -883,8 +883,8 @@ const ReportBuilder = (props) => {
                     const isEditing = editingSelection?.id === sel.id;
                     return (
                       <React.Fragment key={sel.id}>
-                        {/* Connector dropdown (shown before chips except the first) */}
-                        {idx > 0 && (
+                        {/* Connector dropdown (shown before chips except the first, and only if connector is not null) */}
+                        {idx > 0 && sel.connector !== null && (
                           <select
                             value={sel.connector || 'AND'}
                             onChange={(e) => {
