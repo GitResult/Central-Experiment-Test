@@ -25,7 +25,7 @@
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
-            "Joined/Renewed",
+            "Renewed",
             "Renewal Month",
             "Renewal Year",
             "Member Stats"
@@ -351,11 +351,13 @@
             "Retired Status",
             "Other"
         ],
-        "Joined/Renewed": [
-            "Joined in 2024",
-            "Renewed in 2024",
-            "Joined in 2023",
-            "Renewed in 2023"
+        "Renewed": [
+            "December 2024",
+            "January 2024",
+            "December 2023",
+            "January 2023",
+            "December 2022",
+            "January 2022"
         ],
         "Membership Benefits": [
             "Journal Subscriptions",
@@ -505,7 +507,7 @@
         "Code of Ethics": 6987,
         "Primary Reason for Joining": 6234,
         "Reason Not Full Member/Affiliate": 987,
-        "Joined/Renewed": 7089,
+        "Renewed": 7089,
         "Membership Benefits": 6845,
         "Membership Discounts": 4231,
         "Donation": 2145,
@@ -604,7 +606,7 @@
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
-        "Joined/Renewed": "Calendar",
+        "Renewed": "Calendar",
         "Career Stage": "TrendingUp",
         "Occupation": "Briefcase",
         "Workplace Setting": "Building2",

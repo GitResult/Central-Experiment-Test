@@ -90,7 +90,7 @@ const ReportBuilder = (props) => {
   const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
   const [customYearValue, setCustomYearValue] = useState('');
 
-  // Joined/Renewed date range state
+  // Renewed date range state
   const [fromMonth, setFromMonth] = useState('');
   const [fromYear, setFromYear] = useState('');
   const [toMonth, setToMonth] = useState('');
@@ -293,7 +293,7 @@ const ReportBuilder = (props) => {
     const values = sampleValues[category] || [];
 
     // If category only has one value, auto-select it
-    if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
+    if (values.length === 1 && category !== 'Proximity' && category !== 'Renewed') {
       // For Status categories and Members, use category name as value
       const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
 
@@ -355,7 +355,7 @@ const ReportBuilder = (props) => {
 
   const applyDateRange = (type) => {
     const labels = { last30: 'Last 30 days', last60: 'Last 60 days', last90: 'Last 90 days', first30: 'First 30 days of membership', first60: 'First 60 days of membership', first90: 'First 90 days of membership' };
-    addFilter('Joined/Renewed', labels[type]);
+    addFilter('Renewed', labels[type]);
     setSelectedCategory(null);
   };
 
@@ -624,7 +624,7 @@ const ReportBuilder = (props) => {
           // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
           if (category === 'Renewal Year') return `in ${val}`;
-          if (category === 'Joined/Renewed') return `that renewed in ${val}`;
+          if (category === 'Renewed') return `that renewed in ${val}`;
           if (category === 'Member Type') return `and member type ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
             // Extract the number from "Consecutive Membership Years= 5" format
@@ -1181,7 +1181,7 @@ const ReportBuilder = (props) => {
                 </button>
               </div>
 
-              {selectedCategory !== 'Proximity' && selectedCategory !== 'Joined/Renewed' && (
+              {selectedCategory !== 'Proximity' && selectedCategory !== 'Renewed' && (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" strokeWidth={1.5} />
                   <input type="text" value={valueSearchTerm} onChange={(e) => setValueSearchTerm(e.target.value)} placeholder="Search values..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
@@ -1215,7 +1215,7 @@ const ReportBuilder = (props) => {
 
                   <button onClick={applyProximityFilter} disabled={!proximityLocation} className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${proximityLocation ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>Apply Filter</button>
                 </div>
-              ) : selectedCategory === 'Joined/Renewed' ? (
+              ) : selectedCategory === 'Renewed' ? (
                 <div className="space-y-4">
                   {/* Year/Month Range Selection */}
                   <div>
@@ -1281,7 +1281,7 @@ const ReportBuilder = (props) => {
                     {(fromMonth && fromYear && toMonth && toYear) && (
                       <button
                         onClick={() => {
-                          addFilter('Joined/Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`);
+                          addFilter('Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`);
                           setSelectedCategory(null);
                           setFromMonth('');
                           setFromYear('');
@@ -1305,7 +1305,7 @@ const ReportBuilder = (props) => {
                         {['First Week', 'First 2 Weeks'].map(period => (
                           <button
                             key={period}
-                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            onClick={() => { addFilter('Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
                             className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
                           >
                             {period}
@@ -1316,7 +1316,7 @@ const ReportBuilder = (props) => {
                         {['First Month', 'First 2 Months', 'First 3 Months'].map(period => (
                           <button
                             key={period}
-                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            onClick={() => { addFilter('Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
                             className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
                           >
                             {period}
@@ -1335,7 +1335,7 @@ const ReportBuilder = (props) => {
                       {['Starting Month - 1', 'Starting Month', 'Starting Month + 1', 'Starting Month + 2', 'Starting Month + 3'].map(period => (
                         <button
                           key={period}
-                          onClick={() => { addFilter('Joined/Renewed', `Period: ${period}`); setSelectedCategory(null); }}
+                          onClick={() => { addFilter('Renewed', `Period: ${period}`); setSelectedCategory(null); }}
                           className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors text-left"
                         >
                           {period}
@@ -1366,7 +1366,7 @@ const ReportBuilder = (props) => {
                       <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
                     </div>
                     {(dateRangeStart && dateRangeEnd) && (
-                      <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
+                      <button onClick={() => { addFilter('Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
                     )}
                   </div>
                 </div>
