@@ -241,6 +241,7 @@ const ReportBuilder = (props) => {
 
     if (selections.length > 0) {
       const firstSelection = selections[0];
+      const secondSelection = selections.length > 1 ? selections[1] : null;
       const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
 
       // No connector between Status (Current/Previous/New/Lapsed) and Members
@@ -248,6 +249,13 @@ const ReportBuilder = (props) => {
           statusCategories.includes(firstSelection.category) &&
           category === 'Members') {
         connector = null;
+      }
+      // "that are" connector for Member Type after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Type') {
+        connector = 'that are';
       } else {
         connector = 'AND';
       }
@@ -563,7 +571,11 @@ const ReportBuilder = (props) => {
       }
 
       // Process remaining selections with connectors
-      const remainingSelections = selections.filter((s, idx) => !processedIndices.has(idx));
+      // Skip Member Type= Members as it's redundant with "Current members"
+      const remainingSelections = selections.filter((s, idx) =>
+        !processedIndices.has(idx) &&
+        !(s.category === 'Member Type' && s.value === 'Members')
+      );
 
       if (remainingSelections.length > 0) {
         const parts = [];
@@ -894,6 +906,7 @@ const ReportBuilder = (props) => {
                             }}
                             className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
+                            <option value="that are">that are</option>
                             <option value="AND">AND</option>
                             <option value="OR">OR</option>
                             <option value="BETWEEN">BETWEEN</option>
@@ -1314,8 +1327,18 @@ const ReportBuilder = (props) => {
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="flex-1 text-sm font-medium text-gray-700">Any value (no filter)</span>
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      onChange={(e) => {
+                        if (e.target.checked && selectedCategory === 'Member Type') {
+                          addFilter(selectedCategory, 'Members');
+                        }
+                      }}
+                    />
+                    <span className="flex-1 text-sm font-medium text-gray-700">
+                      {selectedCategory === 'Member Type' ? 'Members' : 'Any value (no filter)'}
+                    </span>
                     <button onClick={() => addField(selectedCategory)} className="opacity-70 hover:opacity-100 transition-opacity" title="Show as field">
                       <Eye className="w-4 h-4 text-purple-500" strokeWidth={1.5} />
                     </button>
