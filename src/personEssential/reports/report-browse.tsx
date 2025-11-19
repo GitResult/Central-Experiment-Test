@@ -227,7 +227,8 @@ const ReportBuilder = (props) => {
   }, [selections]);
 
   // Calculate right panel width for push-style panel effect
-  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
+  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ?
+    (selectedMemberStatField === 'Consecutive Membership Years' ? 880 : 480) : 0;
 
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
@@ -1470,7 +1471,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats Second Panel - Consecutive Membership Years */}
         {selectedMemberStatField === 'Consecutive Membership Years' && (
-          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '400px' }}>
+          <div className="fixed top-[115px] right-[480px] bottom-0 flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out z-30" style={{ width: '400px' }}>
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
