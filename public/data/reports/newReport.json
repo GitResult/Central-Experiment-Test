@@ -272,14 +272,14 @@
             "Sports Psychology"
         ],
         "Consecutive Membership Years": [
-            "Less than 1 year",
-            "1-2 years",
-            "3-5 years",
-            "6-10 years",
-            "11-15 years",
-            "16-20 years",
-            "21-30 years",
-            "Over 30 years"
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "10",
+            "15",
+            "20"
         ],
         "Province/State": [
             "Ontario",
