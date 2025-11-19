@@ -344,6 +344,11 @@ const ReportBuilder = (props) => {
       return sel.category;
     }
 
+    // For Member Type, use equals sign format
+    if (sel.category === 'Member Type') {
+      return `${sel.category}= ${sel.value}`;
+    }
+
     // For all other categories, display "Category: Value"
     return `${sel.category}: ${sel.value}`;
   };
@@ -594,8 +599,15 @@ const ReportBuilder = (props) => {
           if (category === 'Renewal Year') return `in ${val}`;
           if (category === 'Joined/Renewed') return `that renewed in ${val}`;
           if (category === 'Member Type') return `and member type ${val}`;
-          if (category === 'Member Stats' || category.includes('Consecutive Membership Years'))
+          if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
+            // Extract the number from "Consecutive Membership Years= 5" format
+            const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
+            if (yearMatch) {
+              const years = yearMatch[1];
+              return `that have been members for the past ${years} years`;
+            }
             return `that have been members for ${val}`;
+          }
           if (category === 'Occupation') return `and occupation is ${val}`;
           if (category === 'Degree') return `with a Degree: ${val}`;
           if (category === 'Province/State') return `from province/state ${val}`;
@@ -1527,7 +1539,7 @@ const ReportBuilder = (props) => {
                         className="rounded"
                         onChange={(e) => {
                           if (e.target.checked) {
-                            addSelection('Member Stats', yearRange, 'filter');
+                            addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
                             showToast(`Filter added: ${yearRange}`);
                           }
                         }}
@@ -1545,7 +1557,7 @@ const ReportBuilder = (props) => {
                       className="rounded"
                       onChange={(e) => {
                         if (e.target.checked && customYearValue) {
-                          addSelection('Member Stats', `${customYearValue} years`, 'filter');
+                          addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
                           showToast(`Filter added: ${customYearValue} years`);
                           setCustomYearValue('');
                         }
