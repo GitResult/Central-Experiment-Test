@@ -307,11 +307,17 @@ const ReportBuilder = (props) => {
   };
 
   const addFilter = (category, value) => {
+    // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
+    let displayValue = value;
+    if (category === 'Province/State' && value.includes('(')) {
+      displayValue = value.split(' (')[0];
+    }
+
     if (editingSelection) {
       // Update existing selection, preserving its type
       setSelections(selections.map(s =>
         s.id === editingSelection.id
-          ? { ...s, category, value }
+          ? { ...s, category, value: displayValue }
           : s
       ));
       showToast(`Selection updated: ${value}`);
@@ -319,7 +325,7 @@ const ReportBuilder = (props) => {
       setSelectedCategory(null);
     } else {
       // Add new selection
-      addSelection(category, value, 'filter');
+      addSelection(category, displayValue, 'filter');
       showToast(`Filter added: ${value}`);
     }
   };
@@ -1348,6 +1354,7 @@ const ReportBuilder = (props) => {
                     <input
                       type="checkbox"
                       className="rounded"
+                      checked={false}
                       onChange={(e) => {
                         if (e.target.checked && selectedCategory === 'Member Type') {
                           addFilter(selectedCategory, 'Members');
@@ -1377,7 +1384,15 @@ const ReportBuilder = (props) => {
                         <input
                           type="checkbox"
                           className="rounded"
-                          checked={false}
+                          checked={selections.some(s => {
+                            if (s.category !== selectedCategory) return false;
+                            // For Province/State, extract short code for comparison
+                            if (selectedCategory === 'Province/State' && value.includes('(')) {
+                              const shortCode = value.split(' (')[0];
+                              return s.value === shortCode;
+                            }
+                            return s.value === value;
+                          })}
                           onChange={(e) => {
                             if (e.target.checked) {
                               // Always add filter - allow duplicates for OR logic
