@@ -283,6 +283,10 @@ const ReportBuilder = (props) => {
                selections.some(s => s.category === 'Member Year') &&
                category === 'Renewed') {
         connector = 'that have';
+      }
+      // "for" connector for Member Year after Renewed
+      else if (selections.some(s => s.category === 'Renewed') && category === 'Member Year') {
+        connector = 'for';
       } else {
         connector = 'AND';
       }
@@ -638,6 +642,10 @@ const ReportBuilder = (props) => {
           if (category === 'Renewal Month') return `who renewed in ${val}`;
           if (category === 'Renewal Year') return `in ${val}`;
           if (category === 'Renewed') return `who renewed in ${val}`;
+          // Member Year after Renewed uses "for member year"
+          if (category === 'Member Year' && i > 0 && remainingSelections.slice(0, i).some(s => s.category === 'Renewed')) {
+            return `for member year ${val}`;
+          }
           if (category === 'Member Type') return `and member type ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
             // Extract the number from "Consecutive Membership Years= 5" format
