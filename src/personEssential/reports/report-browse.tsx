@@ -1476,6 +1476,27 @@ const ReportBuilder = (props) => {
                             if (e.target.checked) {
                               // Always add filter - allow duplicates for OR logic
                               addFilter(selectedCategory, value);
+                            } else {
+                              // Remove the selection when unchecked
+                              let valueToRemove = value;
+
+                              // Extract short code for Province/State and Member Type
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
+                                const match = value.match(/\(([^)]+)\)/);
+                                if (match) {
+                                  valueToRemove = match[1];
+                                }
+                              }
+
+                              // Find and remove the matching selection
+                              const selectionToRemove = selections.find(s =>
+                                s.category === selectedCategory && s.value === valueToRemove
+                              );
+
+                              if (selectionToRemove) {
+                                removeSelection(selectionToRemove.id);
+                                showToast(`Selection removed: ${value}`);
+                              }
                             }
                           }}
                         />
