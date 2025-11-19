@@ -541,6 +541,10 @@ const ReportBuilder = (props) => {
         query = `${statusSel.category} members`;
         processedIndices.add(selections.indexOf(statusSel));
         processedIndices.add(selections.indexOf(membersSel));
+      } else if (statusSel) {
+        // Pattern: [Current] only → "Current"
+        query = statusSel.category;
+        processedIndices.add(selections.indexOf(statusSel));
       } else if (memberYearSel) {
         // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members" or "Previous members for 2019"
         const prevSel = selections.find(s => s.category === 'Previous');
@@ -905,8 +909,7 @@ const ReportBuilder = (props) => {
                               : 'bg-purple-100 text-purple-900 border border-purple-300'
                         }`}>
                           <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                          <span className="font-medium">{sel.category}</span>
-                          <span className="text-xs opacity-75">= {sel.value}</span>
+                          <span className="font-medium">{getSelectionDisplayLabel(sel)}</span>
                           <div className="flex items-center gap-1 ml-1">
                             <button
                               onClick={() => handleEditSelection(sel)}
@@ -1416,7 +1419,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats First Panel */}
         {showMemberStatsPanel && (
-          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
+          <div className="fixed top-[115px] bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px', right: selectedMemberStatField === 'Consecutive Membership Years' ? '400px' : '0' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1471,7 +1474,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats Second Panel - Consecutive Membership Years */}
         {selectedMemberStatField === 'Consecutive Membership Years' && (
-          <div className="fixed top-[115px] right-[480px] bottom-0 flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out z-30" style={{ width: '400px' }}>
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out z-30" style={{ width: '400px' }}>
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
