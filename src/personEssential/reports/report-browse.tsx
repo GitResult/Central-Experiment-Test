@@ -508,79 +508,107 @@ const ReportBuilder = (props) => {
     const buildNaturalLanguageQuery = () => {
       if (selections.length === 0) return '';
 
-      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
-
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
       let query = '';
+      let processedIndices = new Set();
 
-      // Find starting data (Member Year or Starting Data category)
+      // Find status and members selections
+      const statusSel = selections.find(s => statusCategories.includes(s.category));
+      const membersSel = selections.find(s => s.category === 'Members');
       const memberYearSel = selections.find(s => s.category === 'Member Year');
-      const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
 
-      if (memberYearSel) {
-        query = `${memberYearSel.value} members`;
-      } else if (startingDataSel) {
-        query = startingDataSel.category.toLowerCase();
+      // Build the starting phrase
+      if (statusSel && membersSel) {
+        // Pattern: [Current][Members] → "Current members"
+        query = `${statusSel.category} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+      } else if (memberYearSel) {
+        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members" or "Previous members for 2019"
+        const prevSel = selections.find(s => s.category === 'Previous');
+        if (prevSel && membersSel) {
+          query = `${memberYearSel.value} members`;
+          processedIndices.add(selections.indexOf(prevSel));
+          processedIndices.add(selections.indexOf(membersSel));
+          processedIndices.add(selections.indexOf(memberYearSel));
+        } else {
+          query = `${memberYearSel.value} members`;
+          processedIndices.add(selections.indexOf(memberYearSel));
+        }
+      } else if (membersSel) {
+        query = 'Members';
+        processedIndices.add(selections.indexOf(membersSel));
       }
 
-      // Process remaining filters with connectors
-      const filterSelections = selections.filter(s =>
-        s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
-      );
+      // Process remaining selections with connectors
+      const remainingSelections = selections.filter((s, idx) => !processedIndices.has(idx));
 
-      if (filterSelections.length > 0) {
+      if (remainingSelections.length > 0) {
         const parts = [];
         let i = 0;
 
         // Helper function to get proper connector phrase for each category
-        const getConnectorPhrase = (category, value) => {
+        const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
-          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
+          // First filter after status/members uses "that are"
+          if (isFirst && category === 'Member Type') return `that are ${val}`;
+
+          // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
-          if (category === 'Renewal Year') return `who renewed in ${val}`;
-          if (category === 'Membership Type') return `that are member type ${val}`;
-          if (category === 'Consecutive Membership Years') return `that have been members for ${val}`;
+          if (category === 'Renewal Year') return `in ${val}`;
+          if (category === 'Joined/Renewed') return `that renewed in ${val}`;
+          if (category === 'Member Type') return `and member type ${val}`;
+          if (category === 'Member Stats' || category.includes('Consecutive Membership Years'))
+            return `that have been members for ${val}`;
           if (category === 'Occupation') return `and occupation is ${val}`;
           if (category === 'Degree') return `with a Degree: ${val}`;
           if (category === 'Province/State') return `from province/state ${val}`;
-          return `with ${category.toLowerCase()} ${val}`;
+          if (category === 'Career Stage') return `and career stage ${val}`;
+          if (category === 'Workplace Setting') return `and workplace setting ${val}`;
+          if (category === 'Education Received') return `with education ${val}`;
+          if (category === 'Area of Interest') return `and area of interest ${val}`;
+
+          return `and ${category.toLowerCase()} ${val}`;
         };
 
-        while (i < filterSelections.length) {
-          const sel = filterSelections[i];
-          const nextSel = filterSelections[i + 1];
+        while (i < remainingSelections.length) {
+          const sel = remainingSelections[i];
+          const nextSel = remainingSelections[i + 1];
+          const isFirst = i === 0;
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
-            const phrase = getConnectorPhrase(sel.category, sel.value);
+            const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
             parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
             i += 2;
           } else {
             // Check for OR connectors with same category
             let j = i + 1;
             const orValues = [sel.value];
-            while (j < filterSelections.length &&
-                   filterSelections[j].connector === 'OR' &&
-                   filterSelections[j].category === sel.category) {
-              orValues.push(filterSelections[j].value);
+            while (j < remainingSelections.length &&
+                   remainingSelections[j].connector === 'OR' &&
+                   remainingSelections[j].category === sel.category) {
+              orValues.push(remainingSelections[j].value);
               j++;
             }
 
             if (orValues.length > 1) {
               // Multiple values with OR
               const formattedValues = orValues.map(v =>
-                sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
-              const phrase = getConnectorPhrase(sel.category, sel.value);
+              const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
               parts.push(phrase.replace(sel.value, formattedValues));
             } else {
               // Single value
-              parts.push(getConnectorPhrase(sel.category, sel.value));
+              parts.push(getConnectorPhrase(sel.category, sel.value, isFirst));
             }
 
             i = j;
