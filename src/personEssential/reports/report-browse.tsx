@@ -637,7 +637,7 @@ const ReportBuilder = (props) => {
           // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
           if (category === 'Renewal Year') return `in ${val}`;
-          if (category === 'Renewed') return `renewed in ${val}`;
+          if (category === 'Renewed') return `who renewed in ${val}`;
           if (category === 'Member Type') return `and member type ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
             // Extract the number from "Consecutive Membership Years= 5" format
