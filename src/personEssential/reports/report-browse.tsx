@@ -97,6 +97,9 @@ const ReportBuilder = (props) => {
   const [toYear, setToYear] = useState('');
   const [renewedMode, setRenewedMode] = useState('from-to'); // 'from-to' or 'in'
   const [selectedRenewedMonths, setSelectedRenewedMonths] = useState([]);
+  // For "in" mode dynamic selection
+  const [currentRenewedMonth, setCurrentRenewedMonth] = useState('');
+  const [currentRenewedYear, setCurrentRenewedYear] = useState('');
 
 
   const [categories, setCategories] = useState({});
@@ -1327,34 +1330,82 @@ const ReportBuilder = (props) => {
                   ) : (
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-2 block">Select Month(s)/Year(s)</label>
-                      <p className="text-xs text-gray-500 mb-3">Select one or more months/years</p>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {(sampleValues['Renewed'] || []).map((monthYear, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 border border-gray-200">
-                            <input
-                              type="checkbox"
-                              className="rounded"
-                              checked={selectedRenewedMonths.includes(monthYear)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedRenewedMonths([...selectedRenewedMonths, monthYear]);
-                                } else {
-                                  setSelectedRenewedMonths(selectedRenewedMonths.filter(m => m !== monthYear));
-                                }
-                              }}
-                            />
-                            <span className="text-sm text-gray-900">{monthYear}</span>
-                          </div>
-                        ))}
+                      <p className="text-xs text-gray-500 mb-3">Select year and month, click + to add more</p>
+
+                      {/* Current selection dropdowns */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <select
+                          value={currentRenewedYear}
+                          onChange={(e) => setCurrentRenewedYear(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="">Year</option>
+                          {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                        <select
+                          value={currentRenewedMonth}
+                          onChange={(e) => setCurrentRenewedMonth(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="">Month</option>
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <button
+                          onClick={() => {
+                            if (currentRenewedMonth && currentRenewedYear) {
+                              const newSelection = `${currentRenewedMonth} ${currentRenewedYear}`;
+                              if (!selectedRenewedMonths.includes(newSelection)) {
+                                setSelectedRenewedMonths([...selectedRenewedMonths, newSelection]);
+                              }
+                              setCurrentRenewedMonth('');
+                              setCurrentRenewedYear('');
+                            }
+                          }}
+                          disabled={!currentRenewedMonth || !currentRenewedYear}
+                          className={`p-2 rounded-lg transition-colors ${
+                            currentRenewedMonth && currentRenewedYear
+                              ? 'bg-blue-500 text-white hover:bg-blue-600'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                          title="Add selection"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
                       </div>
+
+                      {/* List of added selections */}
                       {selectedRenewedMonths.length > 0 && (
-                        <button onClick={() => {
-                          const value = selectedRenewedMonths.join(' or ');
-                          addFilter('Renewed', value);
-                          setSelectedCategory(null);
-                          setSelectedRenewedMonths([]);
-                        }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600">
-                          Add {selectedRenewedMonths.length} Selection(s)
+                        <div className="space-y-2 mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                          <label className="text-xs font-medium text-gray-600 block mb-2">Added Selections:</label>
+                          {selectedRenewedMonths.map((monthYear, idx) => (
+                            <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white rounded border border-gray-200">
+                              <span className="text-sm text-gray-900">{monthYear}</span>
+                              <button
+                                onClick={() => setSelectedRenewedMonths(selectedRenewedMonths.filter(m => m !== monthYear))}
+                                className="p-1 hover:bg-red-50 rounded transition-colors"
+                                title="Remove"
+                              >
+                                <X className="w-4 h-4 text-red-500" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Final add button */}
+                      {selectedRenewedMonths.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const value = selectedRenewedMonths.join(' or ');
+                            addFilter('Renewed', value);
+                            setSelectedCategory(null);
+                            setSelectedRenewedMonths([]);
+                            setCurrentRenewedMonth('');
+                            setCurrentRenewedYear('');
+                          }}
+                          className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600"
+                        >
+                          Add {selectedRenewedMonths.length} Selection{selectedRenewedMonths.length !== 1 ? 's' : ''}
                         </button>
                       )}
                     </div>
