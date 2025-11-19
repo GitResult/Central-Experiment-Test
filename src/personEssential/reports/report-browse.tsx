@@ -576,11 +576,7 @@ const ReportBuilder = (props) => {
       }
 
       // Process remaining selections with connectors
-      // Skip Member Type= Members as it's redundant with "Current members"
-      const remainingSelections = selections.filter((s, idx) =>
-        !processedIndices.has(idx) &&
-        !(s.category === 'Member Type' && s.value === 'Members')
-      );
+      const remainingSelections = selections.filter((s, idx) => !processedIndices.has(idx));
 
       if (remainingSelections.length > 0) {
         const parts = [];
@@ -591,8 +587,13 @@ const ReportBuilder = (props) => {
           let val = value;
           if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
-          // First filter after status/members uses "that are"
-          if (isFirst && category === 'Member Type') return `that are ${val}`;
+          // First filter after status/members uses "that are" or "that have been members"
+          if (isFirst && category === 'Member Type') {
+            if (val === 'Members') {
+              return `that have been members`;
+            }
+            return `that are ${val}`;
+          }
 
           // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
@@ -604,6 +605,11 @@ const ReportBuilder = (props) => {
             const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
             if (yearMatch) {
               const years = yearMatch[1];
+              // Check if previous selection was "Member Type= Members"
+              if (i > 0 && remainingSelections[i - 1].category === 'Member Type' &&
+                  remainingSelections[i - 1].value === 'Members') {
+                return `for the past ${years} years`;
+              }
               return `that have been members for the past ${years} years`;
             }
             return `that have been members for ${val}`;
