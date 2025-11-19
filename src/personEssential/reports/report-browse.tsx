@@ -322,6 +322,19 @@ const ReportBuilder = (props) => {
     setSelectedCategory(null);
   };
 
+  // Helper function to format selection display label
+  const getSelectionDisplayLabel = (sel) => {
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+    // For Status categories and Members, display only the category name
+    if (statusCategories.includes(sel.category) || sel.category === 'Members') {
+      return sel.category;
+    }
+
+    // For all other categories, display "Category: Value"
+    return `${sel.category}: ${sel.value}`;
+  };
+
   const applyProximityFilter = () => {
     if (proximityLocation) {
       addFilter('Proximity', `Within ${proximityRadius} miles of ${proximityLocation}`);
@@ -1674,14 +1687,23 @@ const ReportBuilder = (props) => {
                       <div className="text-center py-8 text-gray-400"><Eye className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No fields selected</p></div>
                     ) : (
                       <div className="space-y-2">
-                        {selections.filter(s => s.type === 'field').map((sel) => (
-                          <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                            <div className="cursor-move text-gray-400">::</div>
-                            <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
-                            <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                            <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                          </div>
-                        ))}
+                        {selections.filter(s => s.type === 'field').map((sel) => {
+                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                          return (
+                            <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                              <div className="cursor-move text-gray-400">::</div>
+                              <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
+                              {isStatusOrMembers ? (
+                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
+                              ) : (
+                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                              )}
+                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1694,17 +1716,26 @@ const ReportBuilder = (props) => {
                       <div className="text-center py-8 text-gray-400"><Filter className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No filters applied</p></div>
                     ) : (
                       <div className="space-y-2">
-                        {selections.filter(s => s.type === 'filter').map((sel) => (
-                          <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 flex-1">
-                                <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                        {selections.filter(s => s.type === 'filter').map((sel) => {
+                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                          return (
+                            <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
+                                  {isStatusOrMembers ? (
+                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
+                                  ) : (
+                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                                  )}
+                                </div>
+                                <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
                               </div>
-                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1750,19 +1781,24 @@ const ReportBuilder = (props) => {
                 </label>
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex flex-wrap gap-2">
-                    {selections.map((sel) => (
-                      <div
-                        key={sel.id}
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
-                          sel.type === 'filter'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
-                        }`}
-                      >
-                        {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                        <span>{sel.category}: {sel.value}</span>
-                      </div>
-                    ))}
+                    {selections.map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                      return (
+                        <div
+                          key={sel.id}
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                            sel.type === 'filter'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}
+                        >
+                          {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{isStatusOrMembers ? sel.category : `${sel.category}: ${sel.value}`}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

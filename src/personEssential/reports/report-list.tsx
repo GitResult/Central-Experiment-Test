@@ -4010,19 +4010,24 @@ const ReportBuilder = ({
               </label>
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex flex-wrap gap-2">
-                  {selections.map((sel) => (
-                    <div
-                      key={sel.id}
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
-                        sel.type === 'filter'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
-                      }`}
-                    >
-                      {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      <span>{sel.category}: {sel.value}</span>
-                    </div>
-                  ))}
+                  {selections.map((sel) => {
+                    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                    const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                    return (
+                      <div
+                        key={sel.id}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                          sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-purple-100 text-purple-700'
+                        }`}
+                      >
+                        {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{isStatusOrMembers ? sel.category : `${sel.category}: ${sel.value}`}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
