@@ -139,7 +139,27 @@ const FILTER_OPTIONS = {
   ],
   amountValues: [
     '$100', '$500', '$1,000', '$2,500', '$5,000', '$10,000', '$25,000', '$50,000'
-  ]
+  ],
+  occupations: [
+    'Practitioner', 'Educator', 'Researcher', 'Administrator',
+    'Consultant', 'Manager', 'Director', 'Specialist', 'Coordinator'
+  ],
+  degrees: [
+    'Masters', 'Bachelors', 'Doctorate', 'PhD', 'MBA', 'Certificate', 'Diploma', 'Associate'
+  ],
+  consecutiveMembershipYearsValues: [
+    'past 1 year', 'past 2 years', 'past 3 years', 'past 5 years',
+    'past 10 years', 'past 15 years', 'past 20 years', 'more than 5 years'
+  ],
+  provinces: [
+    'ON', 'BC', 'AB', 'QC', 'MB', 'SK', 'NS', 'NB', 'PE', 'NL', 'YT', 'NT', 'NU',
+    'Ontario', 'British Columbia', 'Alberta', 'Quebec', 'Manitoba', 'Saskatchewan'
+  ],
+  renewalMonths: [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ],
+  renewalYears: ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017']
 };
 
 const PHRASE_TEMPLATES = [
@@ -538,7 +558,7 @@ const PhraseModeReport = (props) => {
     } else if (chip.text === 'from province/state') {
       showOptionsSelector('province', { ...newChip, type: 'province', icon: MapPin, color: 'red' });
     } else if (chip.text === 'for' && phraseChips.some(c => c.text === 'that have been')) {
-      showOptionsSelector('tenure', { ...newChip, type: 'tenure', icon: Clock, color: 'blue' });
+      showOptionsSelector('consecutiveMembershipYears', { ...newChip, type: 'consecutiveMembershipYears', icon: Clock, color: 'blue' });
     } else if (chip.text === 'who renewed in') {
       showOptionsSelector('renewalMonth', { ...newChip, type: 'renewalMonth', icon: Calendar, color: 'orange' });
     } else if (chip.type === 'location') {
@@ -608,9 +628,9 @@ const PhraseModeReport = (props) => {
         options = FILTER_OPTIONS.provinces;
         title = 'Select Province/State';
         break;
-      case 'tenure':
-        options = FILTER_OPTIONS.tenureValues;
-        title = 'Select Tenure';
+      case 'consecutiveMembershipYears':
+        options = FILTER_OPTIONS.consecutiveMembershipYearsValues;
+        title = 'Select Consecutive Membership Years';
         break;
       case 'renewalMonth':
         options = FILTER_OPTIONS.renewalMonths;
@@ -754,12 +774,12 @@ const PhraseModeReport = (props) => {
         icon: MapPin
       };
     }
-    // Handle tenure changes
-    else if (optionsModalData.type === 'tenure') {
+    // Handle consecutive membership years changes
+    else if (optionsModalData.type === 'consecutiveMembershipYears') {
       finalChip = {
         ...chip,
         text: option,
-        type: 'tenure',
+        type: 'consecutiveMembershipYears',
         color: 'blue',
         icon: Clock
       };
@@ -908,10 +928,10 @@ const PhraseModeReport = (props) => {
       showOptionsSelector('province', chip);
       return;
     }
-    // Tenure chips
-    else if (chip.type === 'tenure' || FILTER_OPTIONS.tenureValues.includes(chip.text)) {
-      optionType = 'tenure';
-      showOptionsSelector('tenure', chip);
+    // Consecutive Membership Years chips
+    else if (chip.type === 'consecutiveMembershipYears' || FILTER_OPTIONS.consecutiveMembershipYearsValues.includes(chip.text)) {
+      optionType = 'consecutiveMembershipYears';
+      showOptionsSelector('consecutiveMembershipYears', chip);
       return;
     }
     // Renewal month chips

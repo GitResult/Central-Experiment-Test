@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2, FileUp } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, ChevronUp, Lightbulb, Sparkles, Clock, Edit2, FileUp, CalendarClock, BarChart3 } from 'lucide-react';
 import { updateDemoState } from '../../redux/demo/actions';
 import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
@@ -13,7 +13,8 @@ const getIconComponent = (iconName) => {
     Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash,
     UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle,
     TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt,
-    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck
+    Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck,
+    CalendarClock, BarChart3, Clock
   };
   return iconMap[iconName] || Database;
 };
@@ -85,6 +86,15 @@ const ReportBuilder = (props) => {
   const [savedQueryName, setSavedQueryName] = useState('');
   const [savedQueryDescription, setSavedQueryDescription] = useState('');
   const [savedQueries, setSavedQueries] = useState([]);
+  const [showMemberStatsPanel, setShowMemberStatsPanel] = useState(false);
+  const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
+  const [customYearValue, setCustomYearValue] = useState('');
+
+  // Joined/Renewed date range state
+  const [fromMonth, setFromMonth] = useState('');
+  const [fromYear, setFromYear] = useState('');
+  const [toMonth, setToMonth] = useState('');
+  const [toYear, setToYear] = useState('');
 
 
   const [categories, setCategories] = useState({});
@@ -92,12 +102,19 @@ const ReportBuilder = (props) => {
   const [categoryFields, setCategoryFields] = useState({});
   const [defaultFields, setDefaultFields] = useState([]);
   const [sectionIcons, setSectionIcons] = useState({});
+  const [recordCounts, setRecordCounts] = useState({});
   const sectionColors = {
     "Starting Data": {
       "header": "text-blue-700",
       "icon": "text-blue-400",
       "bg": "bg-blue-50",
       "border": "border-blue-200"
+    },
+    "Status": {
+      "header": "text-teal-700",
+      "icon": "text-teal-400",
+      "bg": "bg-teal-50",
+      "border": "border-teal-200"
     },
     "Location": {
       "header": "text-green-700",
@@ -184,6 +201,7 @@ const ReportBuilder = (props) => {
       setDefaultFields(data.default_fields);
       setSectionIcons(data.section_icons);
       setCategoryIcons(data.category_icons);
+      setRecordCounts(data.record_counts || {});
       setIsLoading(false);
     };
     fetchData();
@@ -208,27 +226,58 @@ const ReportBuilder = (props) => {
     return Math.max(50, result);
   }, [selections]);
 
+  // Calculate right panel width for push-style panel effect
+  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
+
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
     return <AppReportPhrase />;
   }
 
   const addSelection = (category, value, type = 'filter') => {
-    setSelections([...selections, { id: Date.now(), category, value, type, connector: selections.length > 0 ? 'AND' : null }]);
+    // Determine connector logic based on phrase patterns
+    let connector = null;
+
+    if (selections.length > 0) {
+      const firstSelection = selections[0];
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+      // No connector between Status (Current/Previous/New/Lapsed) and Members
+      if (selections.length === 1 &&
+          statusCategories.includes(firstSelection.category) &&
+          category === 'Members') {
+        connector = null;
+      } else {
+        connector = 'AND';
+      }
+    }
+
+    setSelections([...selections, { id: Date.now(), category, value, type, connector }]);
   };
 
   const removeSelection = (id) => setSelections(selections.filter(s => s.id !== id));
   const showToast = (message) => { setToast(message); setTimeout(() => setToast(null), 2000); };
 
   const handleCategorySelect = (category, section) => {
+    // Special handling for Member Stats
+    if (category === 'Member Stats') {
+      setShowMemberStatsPanel(true);
+      setSelectedCategory(null);
+      return;
+    }
+
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     const values = sampleValues[category] || [];
 
     // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
-      if (section === 'Starting Data') {
-        addField(category, values[0]);
+      // For Status categories and Members, use category name as value
+      const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
+
+      if (section === 'Starting Data' || section === 'Status') {
+        addField(category, valueToUse);
       } else {
-        addFilter(category, values[0]);
+        addFilter(category, valueToUse);
       }
       return;
     }
@@ -275,6 +324,19 @@ const ReportBuilder = (props) => {
     const labels = { last30: 'Last 30 days', last60: 'Last 60 days', last90: 'Last 90 days', first30: 'First 30 days of membership', first60: 'First 60 days of membership', first90: 'First 90 days of membership' };
     addFilter('Joined/Renewed', labels[type]);
     setSelectedCategory(null);
+  };
+
+  // Helper function to format selection display label
+  const getSelectionDisplayLabel = (sel) => {
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+    // For Status categories and Members, display only the category name
+    if (statusCategories.includes(sel.category) || sel.category === 'Members') {
+      return sel.category;
+    }
+
+    // For all other categories, display "Category: Value"
+    return `${sel.category}: ${sel.value}`;
   };
 
   const applyProximityFilter = () => {
@@ -421,14 +483,14 @@ const ReportBuilder = (props) => {
           </svg>
         </div>
 
-        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out inset-x-0 bg-white border-t border-gray-200 shadow-2xl transition-all duration-700 z-20 ${showPanel ? 'translate-y-0' : 'translate-y-full'}`} style={{ height: '88px' }}>
-          <div className="flex h-full bg-white items-center justify-between px-6">
+        <div className={`fixed ease-in-out left-0 bg-white border-t border-gray-200 shadow-2xl transition-all duration-300 z-20 ${showPanel ? 'translate-y-0' : 'translate-y-full'}`} style={{ bottom: 0, height: showPreview ? '621px' : '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
+          <div className="flex bg-white items-center justify-between px-6" style={{ height: '88px' }}>
 
             <div className="flex items-center space-x-4">
               <ChevronUp
                 size={18}
                 onClick={() => setShowPreview(!showPreview)}
-                className={`cursor-pointer text-gray-400/50 ${showPreview ? 'rotate-180' : ''}`}
+                className={`cursor-pointer text-gray-400/50 transition-transform ${showPreview ? 'rotate-180' : ''}`}
               />
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -447,7 +509,11 @@ const ReportBuilder = (props) => {
           </div>
 
           {/* Report VIEW Content */}
-          <ReportViewComponent selections={selections} />
+          {showPreview && (
+            <div className="overflow-auto" style={{ height: 'calc(621px - 88px)' }}>
+              <ReportViewComponent selections={selections} />
+            </div>
+          )}
 
         </div>
       </div>
@@ -459,79 +525,107 @@ const ReportBuilder = (props) => {
     const buildNaturalLanguageQuery = () => {
       if (selections.length === 0) return '';
 
-      const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
-
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
       let query = '';
+      let processedIndices = new Set();
 
-      // Find starting data (Member Year or Starting Data category)
+      // Find status and members selections
+      const statusSel = selections.find(s => statusCategories.includes(s.category));
+      const membersSel = selections.find(s => s.category === 'Members');
       const memberYearSel = selections.find(s => s.category === 'Member Year');
-      const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
 
-      if (memberYearSel) {
-        query = `${memberYearSel.value} members`;
-      } else if (startingDataSel) {
-        query = startingDataSel.category.toLowerCase();
+      // Build the starting phrase
+      if (statusSel && membersSel) {
+        // Pattern: [Current][Members] → "Current members"
+        query = `${statusSel.category} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+      } else if (memberYearSel) {
+        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members" or "Previous members for 2019"
+        const prevSel = selections.find(s => s.category === 'Previous');
+        if (prevSel && membersSel) {
+          query = `${memberYearSel.value} members`;
+          processedIndices.add(selections.indexOf(prevSel));
+          processedIndices.add(selections.indexOf(membersSel));
+          processedIndices.add(selections.indexOf(memberYearSel));
+        } else {
+          query = `${memberYearSel.value} members`;
+          processedIndices.add(selections.indexOf(memberYearSel));
+        }
+      } else if (membersSel) {
+        query = 'Members';
+        processedIndices.add(selections.indexOf(membersSel));
       }
 
-      // Process remaining filters with connectors
-      const filterSelections = selections.filter(s =>
-        s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
-      );
+      // Process remaining selections with connectors
+      const remainingSelections = selections.filter((s, idx) => !processedIndices.has(idx));
 
-      if (filterSelections.length > 0) {
+      if (remainingSelections.length > 0) {
         const parts = [];
         let i = 0;
 
         // Helper function to get proper connector phrase for each category
-        const getConnectorPhrase = (category, value) => {
+        const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
-          if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
+          // First filter after status/members uses "that are"
+          if (isFirst && category === 'Member Type') return `that are ${val}`;
+
+          // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
-          if (category === 'Renewal Year') return `who renewed in ${val}`;
-          if (category === 'Membership Type') return `that are member type ${val}`;
-          if (category === 'Tenure') return `that have been members for ${val}`;
+          if (category === 'Renewal Year') return `in ${val}`;
+          if (category === 'Joined/Renewed') return `that renewed in ${val}`;
+          if (category === 'Member Type') return `and member type ${val}`;
+          if (category === 'Member Stats' || category.includes('Consecutive Membership Years'))
+            return `that have been members for ${val}`;
           if (category === 'Occupation') return `and occupation is ${val}`;
           if (category === 'Degree') return `with a Degree: ${val}`;
           if (category === 'Province/State') return `from province/state ${val}`;
-          return `with ${category.toLowerCase()} ${val}`;
+          if (category === 'Career Stage') return `and career stage ${val}`;
+          if (category === 'Workplace Setting') return `and workplace setting ${val}`;
+          if (category === 'Education Received') return `with education ${val}`;
+          if (category === 'Area of Interest') return `and area of interest ${val}`;
+
+          return `and ${category.toLowerCase()} ${val}`;
         };
 
-        while (i < filterSelections.length) {
-          const sel = filterSelections[i];
-          const nextSel = filterSelections[i + 1];
+        while (i < remainingSelections.length) {
+          const sel = remainingSelections[i];
+          const nextSel = remainingSelections[i + 1];
+          const isFirst = i === 0;
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
-            const phrase = getConnectorPhrase(sel.category, sel.value);
+            const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
             parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
             i += 2;
           } else {
             // Check for OR connectors with same category
             let j = i + 1;
             const orValues = [sel.value];
-            while (j < filterSelections.length &&
-                   filterSelections[j].connector === 'OR' &&
-                   filterSelections[j].category === sel.category) {
-              orValues.push(filterSelections[j].value);
+            while (j < remainingSelections.length &&
+                   remainingSelections[j].connector === 'OR' &&
+                   remainingSelections[j].category === sel.category) {
+              orValues.push(remainingSelections[j].value);
               j++;
             }
 
             if (orValues.length > 1) {
               // Multiple values with OR
               const formattedValues = orValues.map(v =>
-                sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
-              const phrase = getConnectorPhrase(sel.category, sel.value);
+              const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
               parts.push(phrase.replace(sel.value, formattedValues));
             } else {
               // Single value
-              parts.push(getConnectorPhrase(sel.category, sel.value));
+              parts.push(getConnectorPhrase(sel.category, sel.value, isFirst));
             }
 
             i = j;
@@ -574,7 +668,7 @@ const ReportBuilder = (props) => {
           suggestions: [
             { category: "Membership Type", section: "Membership", reason: "Filter by member type (ECY1, STU1, etc.)", icon: "Crown" },
             { category: "Province/State", section: "Location", reason: "Filter by location", icon: "MapPin" },
-            { category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
+            { category: "Consecutive Membership Years", section: "Membership", reason: "Filter by membership duration", icon: "Clock" },
             { category: "Occupation", section: "Demographics", reason: "Filter by occupation", icon: "Briefcase" }
           ]
         };
@@ -585,7 +679,7 @@ const ReportBuilder = (props) => {
       const hasOccupation = allSelections.some(s => s.category === 'Occupation');
       const hasDegree = allSelections.some(s => s.category === 'Degree');
       const hasProvince = allSelections.some(s => s.category === 'Province/State');
-      const hasTenure = allSelections.some(s => s.category === 'Tenure');
+      const hasConsecutiveMembershipYears = allSelections.some(s => s.category === 'Consecutive Membership Years');
 
       if (hasMemberType && !hasOccupation && !hasDegree) {
         return {
@@ -635,8 +729,8 @@ const ReportBuilder = (props) => {
 
       // Default: Suggest additional filters that haven't been added
       const suggestions = [];
-      if (!hasTenure && hasStartingData) {
-        suggestions.push({ category: "Tenure", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
+      if (!hasConsecutiveMembershipYears && hasStartingData) {
+        suggestions.push({ category: "Consecutive Membership Years", section: "Membership", reason: "Filter by membership duration", icon: "Clock" });
       }
       if (!hasMemberType) {
         suggestions.push({ category: "Membership Type", section: "Membership", reason: "Filter by member type", icon: "Crown" });
@@ -707,7 +801,7 @@ const ReportBuilder = (props) => {
         name: "Current members for past 5 years",
         filters: [
           { category: "Current Members", value: "All Current Members" },
-          { category: "Tenure", value: "Past 5 years" }
+          { category: "Consecutive Membership Years", value: "Past 5 years" }
         ]
       },
       {
@@ -737,7 +831,7 @@ const ReportBuilder = (props) => {
     ];
 
     return (
-      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex">
+      <div className="h-[calc(100vh-115px)] overflow-hidden bg-gray-50 flex relative">
         {/* {"[[BROWSE]]"} */}
         <AnimationStyles />
         {toast && (
@@ -747,7 +841,7 @@ const ReportBuilder = (props) => {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300">
+        <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300" style={{ marginRight: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-4">
             <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
@@ -910,45 +1004,23 @@ const ReportBuilder = (props) => {
 
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
-            const isStartingData = section === 'Starting Data';
             const isThreeColumn = categories.length >= 6;
+            const isFourColumn = categories.length === 4;
 
             return (
               <div key={section}>
                 <div className="px-8 py-4"><h2 className="text-xl font-semibold text-black">{section}</h2></div>
 
-                <div className={`px-8 pb-8 ${isStartingData ? 'flex flex-wrap gap-3' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
+                <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
                     const isSelected = selections.some(s => s.category === category);
+                    const recordCount = recordCounts[category] || 0;
+                    const formattedCount = recordCount.toLocaleString();
 
-                    if (isStartingData) {
-                      return (
-                        <button
-                          key={category}
-                          onClick={() => handleCategorySelect(category, section)}
-                          className={`px-6 py-3 rounded-full transition-colors group relative ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
-                          style={{ backgroundColor: isSelected ? '#dbeafe' : '#f3f4f6' }}
-                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#dbeafe'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? '#dbeafe' : '#f3f4f6'; }}
-                        >
-                          <span className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>{category}</span>
-                          {isSelected && (
-                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-0.5">
-                              <Check className="w-3 h-3" strokeWidth={3} />
-                            </div>
-                          )}
-                          {!isSelected && (
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-3 h-3 text-gray-600" strokeWidth={2} />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    }
-
-                    if (isThreeColumn) {
-                      const hoverColors = { 'Location': '#dcfce7', 'Membership': '#f3e8ff', 'Demographics': '#fed7aa', 'Commerce': '#d1fae5', 'Communities': '#fce7f3', 'Communications': '#e0e7ff' };
+                    if (isThreeColumn || isFourColumn) {
+                      const hoverColors = { 'Starting Data': '#dbeafe', 'Status': '#ccfbf1', 'Location': '#dcfce7', 'Membership': '#f3e8ff', 'Demographics': '#fed7aa', 'Commerce': '#d1fae5', 'Communities': '#fce7f3', 'Communications': '#e0e7ff' };
+                      const sectionColor = sectionColors[section] || { bg: 'bg-blue-50', icon: 'text-blue-400' };
                       return (
                         <div
                           key={category}
@@ -957,12 +1029,12 @@ const ReportBuilder = (props) => {
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColors[section]?.bg.replace('50', '100')}`}>
-                            <CategoryIcon className={`w-5 h-5 ${sectionColors[section]?.icon.replace('400', '600')}`} strokeWidth={1.5} />
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
+                            <CategoryIcon className={`w-5 h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 text-sm">{category}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                           </div>
                           {isSelected ? (
                             <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
@@ -1008,7 +1080,7 @@ const ReportBuilder = (props) => {
                         </div>
                         <div>
                           <div className={`font-medium text-sm transition-colors ${isSelected ? 'text-blue-900 font-semibold' : 'text-gray-900 group-hover:text-black'}`}>{category}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{sampleValues[category]?.length || 6} options</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                         </div>
                       </div>
                     );
@@ -1025,7 +1097,7 @@ const ReportBuilder = (props) => {
 
         {/* Right Side Panels */}
         {selectedCategory && (
-          <div className="h-full flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out" style={{ width: '480px' }}>
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1082,16 +1154,137 @@ const ReportBuilder = (props) => {
                 </div>
               ) : selectedCategory === 'Joined/Renewed' ? (
                 <div className="space-y-4">
+                  {/* Year/Month Range Selection */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Date Range</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><label className="text-xs text-gray-500 mb-1 block">Start Date</label><input type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
-                      <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Year/Month Range</label>
+                    <p className="text-xs text-gray-500 mb-3">Select a date range for joined or renewed members</p>
+
+                    <div className="space-y-3">
+                      {/* From Date */}
+                      <div>
+                        <label className="text-xs text-gray-600 mb-1 block font-medium">From</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            value={fromMonth}
+                            onChange={(e) => setFromMonth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Month</option>
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
+                              <option key={month} value={month}>{month}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={fromYear}
+                            onChange={(e) => setFromYear(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Year</option>
+                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* To Date */}
+                      <div>
+                        <label className="text-xs text-gray-600 mb-1 block font-medium">To</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            value={toMonth}
+                            onChange={(e) => setToMonth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Month</option>
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
+                              <option key={month} value={month}>{month}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={toYear}
+                            onChange={(e) => setToYear(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Year</option>
+                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(fromMonth && fromYear && toMonth && toYear) && (
+                      <button
+                        onClick={() => {
+                          addFilter('Joined/Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`);
+                          setSelectedCategory(null);
+                          setFromMonth('');
+                          setFromYear('');
+                          setToMonth('');
+                          setToYear('');
+                        }}
+                        className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                      >
+                        Apply Range
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Relative to Renewal Opening Date */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Renewal Opening Date</h4>
+                    <p className="text-xs text-gray-500 mb-3">Time periods from when renewal window opens</p>
+
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {['First Week', 'First 2 Weeks'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['First Month', 'First 2 Months', 'First 3 Months'].map(period => (
+                          <button
+                            key={period}
+                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
+                  {/* Relative to Period Start Date */}
                   <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Relative to Today</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Period Start Date</h4>
+                    <p className="text-xs text-gray-500 mb-3">Months relative to membership period start</p>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Starting Month - 1', 'Starting Month', 'Starting Month + 1', 'Starting Month + 2', 'Starting Month + 3'].map(period => (
+                        <button
+                          key={period}
+                          onClick={() => { addFilter('Joined/Renewed', `Period: ${period}`); setSelectedCategory(null); }}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors text-left"
+                        >
+                          {period}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Legacy: Relative to Today */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Today</h4>
+                    <p className="text-xs text-gray-500 mb-3">Recent activity based on current date</p>
                     <div className="grid grid-cols-3 gap-2">
                       {['last30', 'last60', 'last90'].map(type => (
                         <button key={type} onClick={() => applyDateRange(type)} className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors">
@@ -1101,20 +1294,18 @@ const ReportBuilder = (props) => {
                     </div>
                   </div>
 
+                  {/* Legacy: Custom Date Range */}
                   <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Relative to Membership</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['first30', 'first60', 'first90'].map(type => (
-                        <button key={type} onClick={() => applyDateRange(type)} className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors">
-                          {type === 'first30' ? 'First 30 days' : type === 'first60' ? 'First 60 days' : 'First 90 days'}
-                        </button>
-                      ))}
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Custom Date Range</h4>
+                    <p className="text-xs text-gray-500 mb-3">Exact dates for precise filtering</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><label className="text-xs text-gray-500 mb-1 block">Start Date</label><input type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
+                      <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
                     </div>
+                    {(dateRangeStart && dateRangeEnd) && (
+                      <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
+                    )}
                   </div>
-
-                  {(dateRangeStart && dateRangeEnd) && (
-                    <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
-                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1222,7 +1413,138 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
-        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 inset-x-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px' }}>
+        {/* Member Stats First Panel */}
+        {showMemberStatsPanel && (
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
+            <div className="p-6 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Member Stats</h3>
+                  <p className="text-xs text-gray-500 mt-1">Select a stat field to filter by</p>
+                </div>
+                <button onClick={() => {
+                  setShowMemberStatsPanel(false);
+                  setSelectedMemberStatField(null);
+                }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-6 bg-white">
+              <div className="space-y-2">
+                {['Consecutive Membership Years', 'Total Memberships', 'Engagement Score', 'Last Activity Date'].map((statField) => (
+                  <button
+                    key={statField}
+                    onClick={() => {
+                      if (statField === 'Consecutive Membership Years') {
+                        setSelectedMemberStatField(statField);
+                      } else {
+                        showToast(`${statField} filter coming soon`);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all text-left group border border-gray-200"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                      {statField === 'Consecutive Membership Years' && <Clock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Total Memberships' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Engagement Score' && <TrendingUp className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Last Activity Date' && <CalendarClock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 text-sm">{statField}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {statField === 'Consecutive Membership Years' && 'Filter by years of membership'}
+                        {statField === 'Total Memberships' && 'Filter by number of memberships'}
+                        {statField === 'Engagement Score' && 'Filter by engagement level'}
+                        {statField === 'Last Activity Date' && 'Filter by last activity'}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" strokeWidth={1.5} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Member Stats Second Panel - Consecutive Membership Years */}
+        {selectedMemberStatField === 'Consecutive Membership Years' && (
+          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '400px' }}>
+            <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+              <div className="flex items-center gap-2 mb-3">
+                <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                  <ChevronRight className="w-5 h-5 rotate-180" strokeWidth={1.5} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900">Consecutive Membership Years</h3>
+                  <p className="text-xs text-gray-500">Select year range(s)</p>
+                </div>
+                <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4" style={{ backgroundColor: '#F9FAFB' }}>
+              <div className="space-y-2">
+                {(sampleValues['Consecutive Membership Years'] || []).map((yearRange, i) => {
+                  // Extract number from yearRange (e.g., "Past 5 years" -> "5")
+                  const yearMatch = yearRange.match(/\d+/);
+                  const yearValue = yearMatch ? yearMatch[0] : yearRange;
+
+                  return (
+                    <div key={`year-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white hover:bg-blue-50 group border border-gray-200">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
+                            showToast(`Filter added: ${yearRange}`);
+                          }
+                        }}
+                      />
+                      <span className="flex-1 text-sm text-gray-900">{yearRange}</span>
+                    </div>
+                  );
+                })}
+
+                {/* Custom Year Input */}
+                <div className="border-t border-gray-300 pt-3 mt-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-200">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      onChange={(e) => {
+                        if (e.target.checked && customYearValue) {
+                          addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
+                          showToast(`Filter added: ${customYearValue} years`);
+                          setCustomYearValue('');
+                        }
+                      }}
+                    />
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-sm text-gray-700">Custom:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={customYearValue}
+                        onChange={(e) => setCustomYearValue(e.target.value)}
+                        placeholder="Years"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="text-sm text-gray-500">years</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
           <div className="h-full flex items-center justify-between px-4">
 
             <div className="flex items-center gap-4">
@@ -1369,14 +1691,23 @@ const ReportBuilder = (props) => {
                       <div className="text-center py-8 text-gray-400"><Eye className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No fields selected</p></div>
                     ) : (
                       <div className="space-y-2">
-                        {selections.filter(s => s.type === 'field').map((sel) => (
-                          <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                            <div className="cursor-move text-gray-400">::</div>
-                            <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
-                            <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                            <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                          </div>
-                        ))}
+                        {selections.filter(s => s.type === 'field').map((sel) => {
+                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                          return (
+                            <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                              <div className="cursor-move text-gray-400">::</div>
+                              <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
+                              {isStatusOrMembers ? (
+                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
+                              ) : (
+                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                              )}
+                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1389,17 +1720,26 @@ const ReportBuilder = (props) => {
                       <div className="text-center py-8 text-gray-400"><Filter className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No filters applied</p></div>
                     ) : (
                       <div className="space-y-2">
-                        {selections.filter(s => s.type === 'filter').map((sel) => (
-                          <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 flex-1">
-                                <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                        {selections.filter(s => s.type === 'filter').map((sel) => {
+                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                          return (
+                            <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
+                                  {isStatusOrMembers ? (
+                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
+                                  ) : (
+                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
+                                  )}
+                                </div>
+                                <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
                               </div>
-                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1424,7 +1764,7 @@ const ReportBuilder = (props) => {
 
         {/* Save Query Panel */}
         {showSaveQueryPanel && (
-          <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-xl z-50 flex flex-col border-l border-gray-200">
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
             <div className="border-b border-gray-200 bg-white px-6 py-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
@@ -1445,19 +1785,24 @@ const ReportBuilder = (props) => {
                 </label>
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex flex-wrap gap-2">
-                    {selections.map((sel) => (
-                      <div
-                        key={sel.id}
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
-                          sel.type === 'filter'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
-                        }`}
-                      >
-                        {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                        <span>{sel.category}: {sel.value}</span>
-                      </div>
-                    ))}
+                    {selections.map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                      return (
+                        <div
+                          key={sel.id}
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                            sel.type === 'filter'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}
+                        >
+                          {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{isStatusOrMembers ? sel.category : `${sel.category}: ${sel.value}`}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock } from 'lucide-react';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
@@ -28,7 +28,7 @@ const getIconComponent = (iconName) => {
     UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle,
     TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt,
     Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper,
-    UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock
+    UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock
   };
   return iconMap[iconName] || Database;
 };
@@ -246,7 +246,7 @@ const COMBOS = {
   },
   'Current Members Essentials': {
     description: 'Core member identification and status information',
-    fields: ['Member ID', 'Join / Renewed Date', 'Status', 'Membership Type', 'Expiry Date', 'New Member (Y/N)'],
+    fields: ['Member ID', 'Join / Renewed Date', 'Status', 'Member Type', 'Expiry Date', 'New Member (Y/N)'],
     filters: [{ category: 'Current Members', value: 'All Current Members' }],
     icon: Database,
     color: 'from-blue-500 to-cyan-500'
@@ -260,14 +260,14 @@ const COMBOS = {
   },
   'Current Members Email List': {
     description: 'Email contact information for communications and campaigns',
-    fields: ['Member ID', 'Membership Type', 'Communications', 'New Member (Y/N)'],
+    fields: ['Member ID', 'Member Type', 'Communications', 'New Member (Y/N)'],
     filters: [{ category: 'Current Members', value: 'All Current Members' }],
     icon: Mail,
     color: 'from-orange-500 to-red-500'
   },
   'Current Members Mailing List': {
     description: 'Physical mailing addresses for correspondence and materials',
-    fields: ['Member ID', 'Membership Type', 'Address Line 1', 'Address Line 2', 'City', 'Province / State', 'Country', 'Postal / Zip Code', 'Phone Number', 'Email Address', 'New Member (Y/N)'],
+    fields: ['Member ID', 'Member Type', 'Address Line 1', 'Address Line 2', 'City', 'Province / State', 'Country', 'Postal / Zip Code', 'Phone Number', 'Email Address', 'New Member (Y/N)'],
     filters: [{ category: 'Current Members', value: 'All Current Members' }],
     icon: MapPin,
     color: 'from-indigo-500 to-purple-500'
@@ -275,17 +275,18 @@ const COMBOS = {
 };
 
 const CATEGORIES = {
-  'Starting Data': ['Combos', 'New Members', 'Lapsed Members', 'Contacts', 'Other'],
-  'Location': ['Proximity', 'In City', 'In Region', 'In Country'],
-  'Membership': ['Membership Type', 'Code of Ethics', 'Primary Reason for Joining', 'Reason Not Full Member/Affiliate', 'Joined/Renewed'],
-  'Demographics': ['Career Stage', 'Occupation', 'Workplace Setting', 'Education Received', 'Education Current', 'Area of Interest'],
+  'Starting Data': ['Members', 'Contacts', 'Other', 'Member Stats'],
+  'Status': ['Current', 'Previous', 'New', 'Lapsed'],
+  'Location': ['Proximity', 'In City', 'In Region', 'In Country', 'Province/State'],
+  'Membership': ['Member Type', 'Member Year', 'Code of Ethics', 'Primary Reason for Joining', 'Reason Not Full Member/Affiliate', 'Joined/Renewed', 'Renewal Month', 'Renewal Year'],
+  'Demographics': ['Career Stage', 'Occupation', 'Workplace Setting', 'Education Received', 'Degree', 'Education Current', 'Area of Interest'],
   'Commerce': ['Membership Benefits', 'Membership Discounts', 'Donation', 'Invoices', 'Payments'],
   'Communities': ['Committees', 'Events', 'Sections', 'Regulatory Body', 'Professional Associations'],
   'Communications': ['Journals', 'Psygnature', 'CPA National Convention', 'CPA Member Benefit', 'Psychology in the News', 'Psynopsis Magazine', 'Volunteer Availability']
 };
 
 const CATEGORY_FIELDS = {
-  'Membership Type': ['Start Date', 'End Date', 'Renewal Date', 'Invoice ID', 'Payment Status', 'Member ID', 'Type Code'],
+  'Member Type': ['Start Date', 'End Date', 'Renewal Date', 'Invoice ID', 'Payment Status', 'Member ID', 'Type Code'],
   'Career Stage': ['Stage Start Date', 'Years in Stage', 'Previous Stage', 'Transition Date'],
   'In City': ['City Name', 'Province/State', 'Postal Code', 'Country', 'Latitude', 'Longitude'],
   'Current Members': ['Member ID', 'Join Date', 'Status', 'Type', 'Expiry Date'],
@@ -306,7 +307,7 @@ const CATEGORY_FIELDS = {
   'Payments': ['Payment ID', 'Date', 'Amount', 'Method', 'Transaction ID', 'Status'],
   'Committees': ['Committee Name', 'Role', 'Join Date', 'Term End', 'Status'],
   'Events': ['Event Name', 'Date', 'Registration Date', 'Attendance Status', 'Fee Paid'],
-  'Sections': ['Section Name', 'Membership Type', 'Join Date', 'Status'],
+  'Sections': ['Section Name', 'Member Type', 'Join Date', 'Status'],
   'Regulatory Body': ['Body Name', 'Registration Number', 'Registration Date', 'Status'],
   'Professional Associations': ['Association Name', 'Membership Number', 'Join Date', 'Status'],
   'Journals': ['Journal Name', 'Subscription Start', 'Subscription End', 'Format', 'Issues Received'],
@@ -321,12 +322,22 @@ const CATEGORY_FIELDS = {
 const DEFAULT_FIELDS = ['Record ID', 'Created Date', 'Updated Date', 'Status', 'Notes'];
 
 const SAMPLE_VALUES = {
-  'Membership Type': ['Fellow', 'Life Fellow', 'Life Member', 'Member', 'International Affiliate', 'Member Early Career Year 1', 'Member Early Career Year 2', 'Section Associate'],
+  'Member Type': ['ECY1 - Member Early Career Year 1', 'ECY2 - Member Early Career Year 2', 'ECY3 - Member Early Career Year 3', 'STU1 - Student Member Year 1', 'STU2 - Student Member Year 2', 'CORP1 - Corporate Member', 'PROF1 - Professional Member', 'PROF2 - Professional Member Level 2', 'Individual - Individual Member', 'Professional - Professional Member', 'Corporate - Corporate Member', 'Student - Student Member', 'Senior - Senior Member', 'Family - Family Member', 'Lifetime - Life Member', 'Honorary - Honorary Member', 'Fellow', 'Life Fellow', 'International Affiliate', 'Section Associate'],
   'Career Stage': ['Student', 'Early Career Year 1', 'Early Career Year 2', 'Early Career', 'Mid to Late Career', 'Late Career'],
   'In City': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener'],
-  'Current Members': ['All Current Members'],
-  'New Members': ['Members joined in last 30 days', 'Members joined in last 90 days', 'Members joined this year'],
-  'Occupation': ['Researcher', 'Practitioner', 'Educator/Supervisor', 'Consultant', 'Advocacy', 'Administrator', 'Student', 'Other']
+  'Current': ['Any Value (Current)'],
+  'Previous': ['Any Value (Previous)'],
+  'New': ['Any Value (New)'],
+  'Lapsed': ['Any Value (Lapsed)'],
+  'Members': ['Any Value (Members)'],
+  'Member Stats': ['Consecutive Membership Years', 'Total Memberships', 'Engagement Score', 'Last Activity Date'],
+  'Occupation': ['Researcher', 'Practitioner', 'Educator/Supervisor', 'Consultant', 'Advocacy', 'Administrator', 'Student', 'Other'],
+  'Consecutive Membership Years': ['Past 1 year', 'Past 2 years', 'Past 3 years', 'Past 5 years', 'Past 10 years', 'Past 15 years', 'Past 20 years', 'More than 5 years'],
+  'Degree': ['Masters', 'Bachelors', 'Doctorate', 'PhD', 'MBA', 'Certificate', 'Diploma', 'Associate'],
+  'Province/State': ['ON', 'BC', 'AB', 'QC', 'MB', 'SK', 'NS', 'NB', 'PE', 'NL', 'YT', 'NT', 'NU', 'Ontario', 'British Columbia', 'Alberta', 'Quebec', 'Manitoba', 'Saskatchewan'],
+  'Renewal Month': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  'Renewal Year': ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'],
+  'Member Year': ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015']
 };
 
 Object.entries(CATEGORIES).forEach(([section, cats]) => {
@@ -339,6 +350,7 @@ Object.entries(CATEGORIES).forEach(([section, cats]) => {
 
 const SECTION_ICONS = {
   'Starting Data': Database,
+  'Status': Users,
   'Location': MapPin,
   'Membership': Crown,
   'Demographics': Users,
@@ -349,6 +361,7 @@ const SECTION_ICONS = {
 
 const SECTION_COLORS = {
   'Starting Data': { header: 'text-blue-700', icon: 'text-blue-400', bg: 'bg-blue-50', border: 'border-blue-200' },
+  'Status': { header: 'text-teal-700', icon: 'text-teal-400', bg: 'bg-teal-50', border: 'border-teal-200' },
   'Location': { header: 'text-green-700', icon: 'text-green-400', bg: 'bg-green-50', border: 'border-green-200' },
   'Membership': { header: 'text-purple-700', icon: 'text-purple-400', bg: 'bg-purple-50', border: 'border-purple-200' },
   'Demographics': { header: 'text-orange-700', icon: 'text-orange-400', bg: 'bg-orange-50', border: 'border-orange-200' },
@@ -358,17 +371,21 @@ const SECTION_COLORS = {
 };
 
 const CATEGORY_ICONS = {
-  'Combos': Layers,
-  'Current Members': Users,
-  'New Members': UserPlus,
-  'Lapsed Members': UserMinus,
+  'Current': Users,
+  'Previous': Clock,
+  'New': Sparkles,
+  'Lapsed': UserMinus,
+  'Members': Crown,
   'Contacts': Mail,
   'Other': Database,
+  'Member Stats': BarChart3,
   'Proximity': MapPin,
   'In City': Building2,
   'In Region': Map,
   'In Country': Globe,
-  'Membership Type': Crown,
+  'Member Type': Crown,
+  'Member Year': Calendar,
+  'Consecutive Membership Years': Clock,
   'Code of Ethics': Award,
   'Primary Reason for Joining': Target,
   'Reason Not Full Member/Affiliate': HelpCircle,
@@ -377,6 +394,7 @@ const CATEGORY_ICONS = {
   'Occupation': Briefcase,
   'Workplace Setting': Building2,
   'Education Received': GraduationCap,
+  'Degree': GraduationCap,
   'Education Current': School,
   'Area of Interest': Star,
   'Membership Benefits': Gift,
@@ -395,7 +413,13 @@ const CATEGORY_ICONS = {
   'CPA Member Benefit': Gift,
   'Psychology in the News': Newspaper,
   'Psynopsis Magazine': BookOpen,
-  'Volunteer Availability': UserCheck
+  'Volunteer Availability': UserCheck,
+  'Province/State': MapPin,
+  'Renewal Month': Calendar,
+  'Renewal Year': Calendar,
+  'Total Memberships': Hash,
+  'Engagement Score': TrendingUp,
+  'Last Activity Date': CalendarClock
 };
 
 const ReportBuilder = ({
@@ -566,12 +590,12 @@ const ReportBuilder = ({
       // Helper function to get proper connector phrase for each category
       const getConnectorPhrase = (category, value) => {
         let val = value;
-        if (category === 'Membership Type' && val.includes(' - ')) val = val.split(' - ')[0];
+        if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
         if (category === 'Renewal Month') return `who renewed in ${val}`;
         if (category === 'Renewal Year') return `who renewed in ${val}`;
-        if (category === 'Membership Type') return `that are member type ${val}`;
-        if (category === 'Tenure') return `that have been members for ${val}`;
+        if (category === 'Member Type') return `that are member type ${val}`;
+        if (category === 'Consecutive Membership Years') return `that have been members for ${val}`;
         if (category === 'Occupation') return `and occupation is ${val}`;
         if (category === 'Degree') return `with a Degree: ${val}`;
         if (category === 'Province/State') return `from province/state ${val}`;
@@ -584,7 +608,7 @@ const ReportBuilder = ({
 
         // Check if this is a BETWEEN scenario
         if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-          const val2 = sel.category === 'Membership Type' && nextSel.value.includes(' - ')
+          const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
             ? nextSel.value.split(' - ')[0]
             : nextSel.value;
 
@@ -605,7 +629,7 @@ const ReportBuilder = ({
           if (orValues.length > 1) {
             // Multiple values with OR
             const formattedValues = orValues.map(v =>
-              sel.category === 'Membership Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+              sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
             ).join(' or ');
 
             const phrase = getConnectorPhrase(sel.category, sel.value);
@@ -710,12 +734,29 @@ const ReportBuilder = ({
   // }, [stopAutoScroll]);
 
   const addSelection = (category, value, type = 'filter') => {
+    // Determine connector logic based on phrase patterns
+    let connector = null;
+
+    if (selections.length > 0) {
+      const firstSelection = selections[0];
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+      // No connector between Status (Current/Previous/New/Lapsed) and Members
+      if (selections.length === 1 &&
+          statusCategories.includes(firstSelection.category) &&
+          category === 'Members') {
+        connector = null;
+      } else {
+        connector = 'AND';
+      }
+    }
+
     const newSelection = {
       id: Date.now(),
       category,
       value,
       type,
-      connector: selections.length > 0 ? 'AND' : null
+      connector
     };
     setSelections([...selections, newSelection]);
   };
@@ -868,13 +909,17 @@ const ReportBuilder = ({
   };
 
   const applyBulkAction = (action) => {
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
     bulkSelected.forEach(category => {
       if (action === 'field') {
-        addSelection(category, 'All Values', 'field');
+        const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : 'All Values';
+        addSelection(category, valueToUse, 'field');
       } else if (action === 'filter') {
         const values = sampleValues[category] || [];
         if (values.length > 0) {
-          addSelection(category, values[0], 'filter');
+          const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
+          addSelection(category, valueToUse, 'filter');
         }
       }
     });
@@ -1812,7 +1857,12 @@ const ReportBuilder = ({
                                     </button>
                                     {!bulkSelectMode && (
                                       <button
-                                        onClick={() => { addSelection(field.category, 'All Values', 'field'); showToast(`${field.category} added`); }}
+                                        onClick={() => {
+                                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                          const valueToUse = (statusCategories.includes(field.category) || field.category === 'Members') ? field.category : 'All Values';
+                                          addSelection(field.category, valueToUse, 'field');
+                                          showToast(`${field.category} added`);
+                                        }}
                                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                                         title="Add as field"
                                       >
@@ -3969,19 +4019,24 @@ const ReportBuilder = ({
               </label>
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex flex-wrap gap-2">
-                  {selections.map((sel) => (
-                    <div
-                      key={sel.id}
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
-                        sel.type === 'filter'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
-                      }`}
-                    >
-                      {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      <span>{sel.category}: {sel.value}</span>
-                    </div>
-                  ))}
+                  {selections.map((sel) => {
+                    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                    const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                    return (
+                      <div
+                        key={sel.id}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                          sel.type === 'filter'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-purple-100 text-purple-700'
+                        }`}
+                      >
+                        {sel.type === 'filter' ? <Filter className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{isStatusOrMembers ? sel.category : `${sel.category}: ${sel.value}`}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

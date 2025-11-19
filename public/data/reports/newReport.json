@@ -1,11 +1,16 @@
 {
     "categories": {
         "Starting Data": [
-            "Current Members",
-            "New Members",
-            "Lapsed Members",
+            "Members",
             "Contacts",
-            "Other"
+            "Other",
+            "Member Stats"
+        ],
+        "Status": [
+            "Current",
+            "Previous",
+            "New",
+            "Lapsed"
         ],
         "Location": [
             "Proximity",
@@ -15,9 +20,8 @@
             "Province/State"
         ],
         "Membership": [
-            "Membership Type",
+            "Member Type",
             "Member Year",
-            "Tenure",
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
@@ -59,7 +63,7 @@
         ]
     },
     "category_fields": {
-        "Membership Type": [
+        "Member Type": [
             "Start Date",
             "End Date",
             "Renewal Date",
@@ -82,18 +86,30 @@
             "Latitude",
             "Longitude"
         ],
-        "Current Members": [
+        "Current": [
             "Member ID",
             "Join Date",
             "Status",
             "Type",
             "Expiry Date"
         ],
-        "New Members": [
+        "Previous": [
+            "Member ID",
+            "End Date",
+            "Membership Duration",
+            "Last Type"
+        ],
+        "New": [
             "Join Date",
             "Registration Date",
             "Source",
             "Welcome Email Sent"
+        ],
+        "Lapsed": [
+            "Member ID",
+            "Lapse Date",
+            "Last Renewal",
+            "Reason"
         ],
         "Occupation": [
             "Job Title",
@@ -111,34 +127,24 @@
         "Notes"
     ],
     "sample_values": {
-        "Membership Type": [
-            "ECY1 - Member Early Career Year 1",
-            "ECY2 - Member Early Career Year 2",
-            "ECY3 - Member Early Career Year 3",
-            "STU1 - Student Member Year 1",
-            "STU2 - Student Member Year 2",
-            "CORP1 - Corporate Member",
-            "PROF1 - Professional Member",
-            "PROF2 - Professional Member Level 2",
-            "Individual - Individual Member",
-            "Professional - Professional Member",
-            "Corporate - Corporate Member",
-            "Student - Student Member",
-            "Senior - Senior Member",
-            "Family - Family Member",
-            "Lifetime - Life Member",
-            "Honorary - Honorary Member",
+        "Member Type": [
             "Fellow",
             "Life Fellow",
+            "Professional Member",
+            "Early Career Year 1",
+            "Early Career Year 2",
+            "Early Career Year 3",
+            "Student Member",
             "International Affiliate",
-            "Section Associate"
+            "Associate Member",
+            "Honorary Member"
         ],
         "Career Stage": [
             "Student",
             "Early Career Year 1",
             "Early Career Year 2",
-            "Early Career",
-            "Mid to Late Career",
+            "Early Career Year 3",
+            "Mid Career",
             "Late Career"
         ],
         "In City": [
@@ -153,64 +159,141 @@
             "Hamilton",
             "Kitchener"
         ],
-        "Current Members": [
-            "All Current Members"
+        "In Region": [
+            "Greater Toronto Area",
+            "Metro Vancouver",
+            "Greater Montreal",
+            "Calgary Region",
+            "National Capital Region",
+            "Edmonton Metro"
         ],
-        "New Members": [
-            "Members joined in last 30 days",
-            "Members joined in last 90 days",
-            "Members joined this year"
+        "In Country": [
+            "Canada",
+            "United States",
+            "United Kingdom",
+            "Australia",
+            "Other"
+        ],
+        "Current": [
+            "Active Members (6,845)"
+        ],
+        "Previous": [
+            "Former Members (2,156)"
+        ],
+        "New": [
+            "New This Year (892)",
+            "New Last 30 Days (147)",
+            "New Last 90 Days (376)"
+        ],
+        "Lapsed": [
+            "Lapsed This Year (234)",
+            "Lapsed Last Year (421)",
+            "Total Lapsed (1,789)"
+        ],
+        "Members": [
+            "All Members (7,089)"
+        ],
+        "Contacts": [
+            "Newsletter Subscribers (4,523)",
+            "Event Attendees (2,891)",
+            "Prospects (1,045)"
+        ],
+        "Other": [
+            "Archived Records (892)",
+            "Pending Approvals (34)",
+            "Incomplete Profiles (167)"
+        ],
+        "Member Stats": [
+            "Consecutive Membership Years",
+            "Total Memberships",
+            "Engagement Score",
+            "Last Activity Date"
         ],
         "Occupation": [
+            "Clinical Psychologist",
             "Researcher",
-            "Practitioner",
-            "Educator/Supervisor",
-            "Consultant",
-            "Advocacy",
-            "Administrator",
+            "Academic/Professor",
+            "School Psychologist",
+            "Counselling Psychologist",
+            "Industrial-Organizational Psychologist",
+            "Neuropsychologist",
+            "Child Psychologist",
+            "Forensic Psychologist",
+            "Health Psychologist",
             "Student",
             "Other"
         ],
-        "Tenure": [
-            "Past 1 year",
-            "Past 2 years",
-            "Past 3 years",
-            "Past 5 years",
-            "Past 10 years",
-            "Past 15 years",
-            "Past 20 years",
-            "More than 5 years"
+        "Workplace Setting": [
+            "Private Practice",
+            "Hospital/Healthcare",
+            "University/College",
+            "School/K-12",
+            "Government",
+            "Corporate/Business",
+            "Non-Profit",
+            "Research Institute",
+            "Other"
+        ],
+        "Education Received": [
+            "PhD in Psychology",
+            "PsyD",
+            "Master's in Psychology",
+            "Bachelor's in Psychology",
+            "Clinical Residency",
+            "Post-Doctoral Fellowship"
         ],
         "Degree": [
-            "Masters",
-            "Bachelors",
-            "Doctorate",
             "PhD",
-            "MBA",
-            "Certificate",
-            "Diploma",
-            "Associate"
+            "PsyD",
+            "Master's",
+            "Bachelor's",
+            "Post-Doctoral",
+            "Certificate"
+        ],
+        "Education Current": [
+            "PhD Program",
+            "Master's Program",
+            "Undergraduate",
+            "Post-Doctoral Training",
+            "Continuing Education",
+            "Not Currently Enrolled"
+        ],
+        "Area of Interest": [
+            "Clinical Psychology",
+            "Cognitive Psychology",
+            "Developmental Psychology",
+            "Social Psychology",
+            "Neuropsychology",
+            "Industrial-Organizational",
+            "Educational Psychology",
+            "Health Psychology",
+            "Forensic Psychology",
+            "Sports Psychology"
+        ],
+        "Consecutive Membership Years": [
+            "Less than 1 year",
+            "1-2 years",
+            "3-5 years",
+            "6-10 years",
+            "11-15 years",
+            "16-20 years",
+            "21-30 years",
+            "Over 30 years"
         ],
         "Province/State": [
-            "ON",
-            "BC",
-            "AB",
-            "QC",
-            "MB",
-            "SK",
-            "NS",
-            "NB",
-            "PE",
-            "NL",
-            "YT",
-            "NT",
-            "NU",
             "Ontario",
             "British Columbia",
             "Alberta",
             "Quebec",
             "Manitoba",
-            "Saskatchewan"
+            "Saskatchewan",
+            "Nova Scotia",
+            "New Brunswick",
+            "Prince Edward Island",
+            "Newfoundland and Labrador",
+            "Yukon",
+            "Northwest Territories",
+            "Nunavut"
         ],
         "Renewal Month": [
             "January",
@@ -232,9 +315,7 @@
             "2022",
             "2021",
             "2020",
-            "2019",
-            "2018",
-            "2017"
+            "2019"
         ],
         "Member Year": [
             "2024",
@@ -244,13 +325,208 @@
             "2020",
             "2019",
             "2018",
-            "2017",
-            "2016",
-            "2015"
+            "2017"
+        ],
+        "Code of Ethics": [
+            "Accepted and Signed",
+            "Pending Review",
+            "Needs Renewal",
+            "Not Applicable"
+        ],
+        "Primary Reason for Joining": [
+            "Professional Development",
+            "Networking",
+            "Research Opportunities",
+            "Continuing Education",
+            "Advocacy",
+            "Publications Access",
+            "Career Advancement",
+            "Required for Practice"
+        ],
+        "Reason Not Full Member/Affiliate": [
+            "Student Status",
+            "International Location",
+            "Pending Credentials",
+            "Retired Status",
+            "Other"
+        ],
+        "Joined/Renewed": [
+            "Joined in 2024",
+            "Renewed in 2024",
+            "Joined in 2023",
+            "Renewed in 2023"
+        ],
+        "Membership Benefits": [
+            "Journal Subscriptions",
+            "Conference Discounts",
+            "Networking Events",
+            "CE Credits",
+            "Job Board Access",
+            "Practice Resources"
+        ],
+        "Membership Discounts": [
+            "Conference - 25% Off",
+            "Publications - 20% Off",
+            "CE Courses - 15% Off",
+            "Student Rate - 50% Off"
+        ],
+        "Donation": [
+            "Under $100",
+            "$100-$500",
+            "$501-$1,000",
+            "$1,001-$5,000",
+            "Over $5,000"
+        ],
+        "Invoices": [
+            "Paid",
+            "Pending",
+            "Overdue",
+            "Cancelled"
+        ],
+        "Payments": [
+            "Credit Card",
+            "Bank Transfer",
+            "Cheque",
+            "PayPal",
+            "Other"
+        ],
+        "Committees": [
+            "Ethics Committee",
+            "Education Committee",
+            "Research Committee",
+            "Membership Committee",
+            "Public Affairs Committee",
+            "Student Affairs Committee"
+        ],
+        "Events": [
+            "Annual Convention",
+            "Regional Workshops",
+            "Webinar Series",
+            "Networking Mixers",
+            "Research Symposium",
+            "Student Events"
+        ],
+        "Sections": [
+            "Clinical Section",
+            "Educational Section",
+            "I-O Section",
+            "Social Section",
+            "Neuropsychology Section",
+            "Student Section"
+        ],
+        "Regulatory Body": [
+            "College of Psychologists of Ontario",
+            "College of Psychologists of BC",
+            "Ordre des psychologues du Québec",
+            "College of Alberta Psychologists",
+            "Not Regulated"
+        ],
+        "Professional Associations": [
+            "APA Member",
+            "CPA Member Only",
+            "CAPS Member",
+            "Regional Association",
+            "Multiple Memberships"
+        ],
+        "Journals": [
+            "Canadian Psychology",
+            "Psychology Research Journal",
+            "Applied Psychology Quarterly",
+            "No Subscription"
+        ],
+        "Psygnature": [
+            "Email Delivery",
+            "Print Delivery",
+            "Both",
+            "Opted Out"
+        ],
+        "CPA National Convention": [
+            "Attended 2024",
+            "Attended 2023",
+            "Registered 2024",
+            "Never Attended"
+        ],
+        "CPA Member Benefit": [
+            "Active User",
+            "Occasional User",
+            "Never Used",
+            "Not Aware"
+        ],
+        "Psychology in the News": [
+            "Subscribed",
+            "Unsubscribed"
+        ],
+        "Psynopsis Magazine": [
+            "Print Subscriber",
+            "Digital Subscriber",
+            "Both",
+            "No Subscription"
+        ],
+        "Volunteer Availability": [
+            "Available",
+            "Limited Availability",
+            "Not Available",
+            "Interested in Future"
+        ],
+        "Proximity": [
+            "Within 10 km",
+            "Within 25 km",
+            "Within 50 km",
+            "Within 100 km",
+            "Over 100 km"
         ]
+    },
+    "record_counts": {
+        "Member Type": 7089,
+        "Career Stage": 7089,
+        "In City": 6543,
+        "In Region": 6890,
+        "In Country": 7089,
+        "Current": 6845,
+        "Previous": 2156,
+        "New": 892,
+        "Lapsed": 1789,
+        "Members": 7089,
+        "Contacts": 4523,
+        "Other": 1093,
+        "Member Stats": 7089,
+        "Occupation": 6892,
+        "Workplace Setting": 6421,
+        "Education Received": 6789,
+        "Degree": 6789,
+        "Education Current": 2341,
+        "Area of Interest": 6954,
+        "Consecutive Membership Years": 7089,
+        "Province/State": 6890,
+        "Renewal Month": 6845,
+        "Renewal Year": 6845,
+        "Member Year": 7089,
+        "Code of Ethics": 6987,
+        "Primary Reason for Joining": 6234,
+        "Reason Not Full Member/Affiliate": 987,
+        "Joined/Renewed": 7089,
+        "Membership Benefits": 6845,
+        "Membership Discounts": 4231,
+        "Donation": 2145,
+        "Invoices": 6945,
+        "Payments": 6845,
+        "Committees": 1234,
+        "Events": 3892,
+        "Sections": 2987,
+        "Regulatory Body": 5432,
+        "Professional Associations": 3214,
+        "Journals": 5234,
+        "Psygnature": 6845,
+        "CPA National Convention": 2456,
+        "CPA Member Benefit": 6845,
+        "Psychology in the News": 6234,
+        "Psynopsis Magazine": 5987,
+        "Volunteer Availability": 4123,
+        "Proximity": 6543
     },
     "section_icons": {
         "Starting Data": "Database",
+        "Status": "Activity",
         "Location": "MapPin",
         "Membership": "Crown",
         "Demographics": "Users",
@@ -264,6 +540,12 @@
             "icon": "text-blue-400",
             "bg": "bg-blue-50",
             "border": "border-blue-200"
+        },
+        "Status": {
+            "header": "text-teal-700",
+            "icon": "text-teal-400",
+            "bg": "bg-teal-50",
+            "border": "border-teal-200"
         },
         "Location": {
             "header": "text-green-700",
@@ -303,18 +585,21 @@
         }
     },
     "category_icons": {
-        "Current Members": "Users",
-        "New Members": "UserPlus",
-        "Lapsed Members": "UserMinus",
+        "Current": "Users",
+        "Previous": "Clock",
+        "New": "Sparkles",
+        "Lapsed": "UserMinus",
+        "Members": "Crown",
         "Contacts": "Mail",
         "Other": "Database",
+        "Member Stats": "BarChart3",
         "Proximity": "MapPin",
         "In City": "Building2",
         "In Region": "Map",
         "In Country": "Globe",
-        "Membership Type": "Crown",
+        "Member Type": "Crown",
         "Member Year": "Calendar",
-        "Tenure": "Clock",
+        "Consecutive Membership Years": "Clock",
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
@@ -345,6 +630,9 @@
         "Province/State": "MapPin",
         "Degree": "GraduationCap",
         "Renewal Month": "Calendar",
-        "Renewal Year": "Calendar"
+        "Renewal Year": "Calendar",
+        "Total Memberships": "Hash",
+        "Engagement Score": "TrendingUp",
+        "Last Activity Date": "CalendarClock"
     }
 }

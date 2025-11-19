@@ -57,13 +57,13 @@ const UnifiedContactListing = () => {
     {
       id: 2,
       name: 'Long-term Professionals',
-      description: 'Professionals with 5+ years tenure',
+      description: 'Professionals with 5+ years consecutive membership',
       chips: [
         { id: 1, text: 'All Contacts', type: 'cohort', icon: Users, color: 'gray' },
         { id: 2, text: 'professionals', type: 'entityType', icon: Sparkles, color: 'purple' },
         { id: 3, text: 'for', type: 'connector', icon: Clock },
-        { id: 4, text: '5 years', type: 'value', valueType: 'tenure' },
-        { id: 5, text: 'or more', type: 'value', valueType: 'tenureComparison' }
+        { id: 4, text: '5 years', type: 'value', valueType: 'consecutiveMembershipYears' },
+        { id: 5, text: 'or more', type: 'value', valueType: 'consecutiveMembershipYearsComparison' }
       ]
     },
     {

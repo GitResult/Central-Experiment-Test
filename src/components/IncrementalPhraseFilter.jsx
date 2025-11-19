@@ -278,8 +278,8 @@ const FILTER_OPTIONS = {
   provinces: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 'Nova Scotia', 'New Brunswick', 'Newfoundland and Labrador', 'Prince Edward Island'],
   cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener'],
   membershipLevels: ['Premium', 'Professional', 'Student', 'Senior', 'Family', 'Corporate'],
-  tenureValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years', '20 years'],
-  tenureComparisons: ['or more', 'or less', 'exactly'],
+  consecutiveMembershipYearsValues: ['1 year', '2 years', '3 years', '5 years', '10 years', '15 years', '20 years'],
+  consecutiveMembershipYearsComparisons: ['or more', 'or less', 'exactly'],
   statuses: ['Active', 'Inactive', 'Pending', 'Suspended', 'Honorary'],
   educationLevels: ['High School', 'College Diploma', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Professional Certification'],
   donationStatus: ['Regular Donor', 'Major Donor', 'Monthly Donor', 'Legacy Donor', 'First-time Donor', 'Lapsed Donor'],
@@ -349,9 +349,9 @@ const CONTEXTUAL_SUGGESTIONS = {
     next: []
   },
 
-  // After "for" -> show tenure values
+  // After "for" -> show consecutive membership years values
   'for': {
-    needsValue: 'tenure',
+    needsValue: 'consecutiveMembershipYears',
     next: []
   },
 
@@ -603,9 +603,9 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
         options = FILTER_OPTIONS.membershipLevels;
         title = 'Select Membership Level';
         break;
-      case 'tenure':
-        options = FILTER_OPTIONS.tenureValues;
-        title = 'Select Tenure';
+      case 'consecutiveMembershipYears':
+        options = FILTER_OPTIONS.consecutiveMembershipYearsValues;
+        title = 'Select Consecutive Membership Years';
         break;
       case 'status':
         options = FILTER_OPTIONS.statuses;
@@ -679,13 +679,13 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
       return;
     }
 
-    // Handle tenure comparison (or more, or less, exactly)
-    if (valueType === 'tenureComparison') {
+    // Handle consecutive membership years comparison (or more, or less, exactly)
+    if (valueType === 'consecutiveMembershipYearsComparison') {
       const comparisonChip = {
         id: Date.now(),
         text: value,
         type: 'value',
-        valueType: 'tenureComparison',
+        valueType: 'consecutiveMembershipYearsComparison',
         color: 'blue',
         hasValue: true
       };
@@ -736,13 +736,13 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
 
     setPhraseChips([...updatedChips, valueChip]);
 
-    // If tenure, need comparison
-    if (valueType === 'tenure') {
+    // If consecutive membership years, need comparison
+    if (valueType === 'consecutiveMembershipYears') {
       setTimeout(() => {
         setOptionsModalData({
           title: 'Select Comparison',
-          options: FILTER_OPTIONS.tenureComparisons,
-          valueType: 'tenureComparison',
+          options: FILTER_OPTIONS.consecutiveMembershipYearsComparisons,
+          valueType: 'consecutiveMembershipYearsComparison',
           valueChip: valueChip
         });
         setShowOptionsModal(true);
@@ -755,8 +755,8 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
       province: 'red',
       city: 'orange',
       membershipLevel: 'purple',
-      tenure: 'blue',
-      tenureComparison: 'blue',
+      consecutiveMembershipYears: 'blue',
+      consecutiveMembershipYearsComparison: 'blue',
       status: 'emerald',
       educationLevel: 'indigo',
       donationStatus: 'green',
@@ -773,7 +773,7 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
       province: MapPin,
       city: MapPin,
       membershipLevel: Award,
-      tenure: Clock,
+      consecutiveMembershipYears: Clock,
       status: Check,
       educationLevel: Award,
       donationStatus: Award,
@@ -821,9 +821,9 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
           options = FILTER_OPTIONS.membershipLevels;
           title = 'Edit Membership Level';
           break;
-        case 'tenure':
-          options = FILTER_OPTIONS.tenureValues;
-          title = 'Edit Tenure';
+        case 'consecutiveMembershipYears':
+          options = FILTER_OPTIONS.consecutiveMembershipYearsValues;
+          title = 'Edit Consecutive Membership Years';
           break;
         case 'status':
           options = FILTER_OPTIONS.statuses;
@@ -853,8 +853,8 @@ const IncrementalPhraseFilter = ({ onApply, onClear, className = '' }) => {
           options = FILTER_OPTIONS.awards;
           title = 'Edit Award';
           break;
-        case 'tenureComparison':
-          options = FILTER_OPTIONS.tenureComparisons;
+        case 'consecutiveMembershipYearsComparison':
+          options = FILTER_OPTIONS.consecutiveMembershipYearsComparisons;
           title = 'Edit Comparison';
           break;
         default:
@@ -1169,13 +1169,13 @@ function phraseChipsToFilters(chips) {
           value: chip.text,
           label: `Award: ${chip.text}`
         });
-      } else if (chip.valueType === 'tenure') {
+      } else if (chip.valueType === 'consecutiveMembershipYears') {
         // Next chip should be comparison
         const comparisonChip = chips[i + 1];
         const years = parseInt(chip.text.split(' ')[0]);
         let operator = 'gte';
 
-        if (comparisonChip && comparisonChip.valueType === 'tenureComparison') {
+        if (comparisonChip && comparisonChip.valueType === 'consecutiveMembershipYearsComparison') {
           if (comparisonChip.text === 'or less') operator = 'lte';
           else if (comparisonChip.text === 'exactly') operator = 'eq';
           i++; // Skip comparison chip
@@ -1183,10 +1183,10 @@ function phraseChipsToFilters(chips) {
 
         const opSymbol = operator === 'gte' ? '≥' : operator === 'lte' ? '≤' : '=';
         filters.push({
-          field: 'tenureYears',
+          field: 'consecutiveMembershipYears',
           operator,
           value: years,
-          label: `Tenure: ${opSymbol} ${years} years`
+          label: `Consecutive Membership Years: ${opSymbol} ${years} years`
         });
       }
     }

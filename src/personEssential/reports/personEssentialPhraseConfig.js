@@ -8,7 +8,8 @@
 import {
   Users, Crown, Award, Mail, Calendar, DollarSign, MapPin,
   TrendingUp, Check, Plus, ChevronRight, Sparkles, X, Clock,
-  GraduationCap, Briefcase, CalendarClock
+  GraduationCap, Briefcase, CalendarClock, UserMinus, Filter,
+  Settings, Star, UserPlus
 } from 'lucide-react';
 
 // Starting point cohorts for phrase building
@@ -18,23 +19,31 @@ export const STARTING_POINTS = [
     label: 'Current',
     icon: Users,
     color: 'blue',
-    type: 'entity',
+    type: 'cohort',
     description: 'Active members'
+  },
+  {
+    id: 'previous',
+    label: 'Previous',
+    icon: Clock,
+    color: 'orange',
+    type: 'cohort',
+    description: 'Previous period members'
   },
   {
     id: 'new',
     label: 'New',
     icon: Sparkles,
     color: 'green',
-    type: 'entity',
+    type: 'cohort',
     description: 'Recent additions'
   },
   {
     id: 'lapsed',
     label: 'Lapsed',
-    icon: X,
+    icon: UserMinus,
     color: 'red',
-    type: 'entity',
+    type: 'cohort',
     description: 'Inactive members'
   },
   {
@@ -138,7 +147,7 @@ export const FILTER_OPTIONS = {
   degrees: [
     'Masters', 'Bachelors', 'Doctorate', 'PhD', 'MBA', 'Certificate', 'Diploma', 'Associate'
   ],
-  tenureValues: [
+  consecutiveMembershipYearsValues: [
     'past 1 year', 'past 2 years', 'past 3 years', 'past 5 years',
     'past 10 years', 'past 15 years', 'past 20 years', 'more than 5 years'
   ],
@@ -192,12 +201,33 @@ export const getSuggestionsForPhrase = (chips) => {
   const lastChip = chips[chips.length - 1];
   const lastChipText = lastChip.text || lastChip.label;
 
+  // After selecting a cohort (Current, Previous, New, Lapsed)
+  if (lastChip.type === 'cohort') {
+    return {
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entity',
+        icon: et.icon,
+        color: et.color
+      })),
+      next: [
+        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
+        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
+        { label: 'with type', icon: Crown, type: 'connector', preview: true }
+      ],
+      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+        label: a.label,
+        preview: true
+      }))
+    };
+  }
+
   // After selecting a year cohort (2019, 2020, etc.)
   if (lastChip.type === 'yearCohort') {
     return {
       current: ENTITY_TYPES.map(et => ({
         label: et.label,
-        type: et.type,
+        type: 'entity',
         icon: et.icon,
         color: et.color
       })),
@@ -213,7 +243,7 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a starting point (Current, New, Lapsed, All Contacts)
+  // After selecting a starting point (All Contacts)
   if (lastChip.type === 'entity' && STARTING_POINTS.some(sp => sp.label === lastChipText)) {
     return {
       current: ENTITY_TYPES.map(et => ({
@@ -238,10 +268,16 @@ export const getSuggestionsForPhrase = (chips) => {
   if (lastChip.type === 'entity' && ENTITY_TYPES.some(et => et.label === lastChipText)) {
     return {
       current: [
+        { label: 'that are', icon: Filter, type: 'connector' },
+        { label: 'that have been', icon: Clock, type: 'connector' },
         { label: 'that have', icon: ChevronRight, type: 'connector' },
+        { label: 'that', icon: ChevronRight, type: 'connector' },
+        { label: 'with', icon: Settings, type: 'connector' },
         { label: 'with status', icon: Check, type: 'connector' },
+        { label: 'with type', icon: Crown, type: 'connector' },
+        { label: 'in', icon: MapPin, type: 'connector' },
         { label: 'in location', icon: MapPin, type: 'connector' },
-        { label: 'with type', icon: Crown, type: 'connector' }
+        { label: 'for', icon: Clock, type: 'connector' }
       ],
       next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
         label: a.label,
@@ -363,7 +399,7 @@ export const getSuggestionsForPhrase = (chips) => {
       next: [
         { label: 'for', icon: Clock, type: 'connector', preview: true }
       ],
-      future: FILTER_OPTIONS.tenureValues.slice(0, 4).map(t => ({
+      future: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 4).map(t => ({
         label: t,
         preview: true
       }))
@@ -376,7 +412,7 @@ export const getSuggestionsForPhrase = (chips) => {
       current: [
         { label: 'for', icon: Clock, type: 'connector' }
       ],
-      next: FILTER_OPTIONS.tenureValues.slice(0, 6).map(t => ({
+      next: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 6).map(t => ({
         label: t,
         preview: true
       })),
@@ -386,12 +422,12 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After "for" (in tenure context) -> show tenure values
+  // After "for" (in consecutive membership years context) -> show consecutive membership years values
   if (lastChipText === 'for' && chips.some(c => c.text === 'that have been')) {
     return {
-      current: FILTER_OPTIONS.tenureValues.map(t => ({
+      current: FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
         label: t,
-        type: 'tenure',
+        type: 'consecutiveMembershipYears',
         icon: Clock,
         color: 'blue'
       })),
@@ -405,8 +441,8 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After tenure value
-  if (lastChip.type === 'tenure') {
+  // After consecutive membership years value
+  if (lastChip.type === 'consecutiveMembershipYears') {
     return {
       current: [
         { label: 'and', icon: Plus, type: 'connector' }
@@ -420,6 +456,196 @@ export const getSuggestionsForPhrase = (chips) => {
         label: m,
         preview: true
       }))
+    };
+  }
+
+  // After "that are" -> show membership types and statuses
+  if (lastChipText === 'that are') {
+    return {
+      current: FILTER_OPTIONS.membershipTypes.map(m => ({
+        label: m,
+        type: 'membershipType',
+        icon: Crown,
+        color: 'purple'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true },
+        { label: 'with status', preview: true }
+      ],
+      future: FILTER_OPTIONS.statuses.slice(0, 4).map(s => ({
+        label: s,
+        preview: true
+      }))
+    };
+  }
+
+  // After "with" -> show options for type, status, etc.
+  if (lastChipText === 'with') {
+    return {
+      current: [
+        { label: 'type', icon: Crown, type: 'subconnector' },
+        { label: 'status', icon: Check, type: 'subconnector' },
+        { label: 'attribute', icon: Star, type: 'subconnector' }
+      ],
+      next: FILTER_OPTIONS.membershipTypes.slice(0, 4).map(m => ({
+        label: m,
+        preview: true
+      })),
+      future: [
+        { label: 'and', icon: Plus, preview: true }
+      ]
+    };
+  }
+
+  // After "in" -> show options for location, timeframe, etc.
+  if (lastChipText === 'in') {
+    return {
+      current: [
+        { label: 'location', icon: MapPin, type: 'subconnector' },
+        { label: 'timeframe', icon: Calendar, type: 'subconnector' }
+      ],
+      next: FILTER_OPTIONS.locations.slice(0, 6).map(l => ({
+        label: l,
+        preview: true
+      })),
+      future: FILTER_OPTIONS.timeframes.slice(0, 4).map(t => ({
+        label: t,
+        preview: true
+      }))
+    };
+  }
+
+  // After "that" -> show general options
+  if (lastChipText === 'that') {
+    return {
+      current: [
+        { label: 'have', icon: ChevronRight, type: 'connector' },
+        { label: 'are', icon: Filter, type: 'connector' },
+        { label: 'renewed', icon: Calendar, type: 'action' },
+        { label: 'joined', icon: UserPlus, type: 'action' }
+      ],
+      next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+        label: a.label,
+        preview: true
+      })),
+      future: [
+        { label: 'in timeframe', preview: true }
+      ]
+    };
+  }
+
+  // After "for" (generic, not consecutive membership years context) -> show various time periods
+  if (lastChipText === 'for' && !chips.some(c => c.text === 'that have been')) {
+    return {
+      current: [
+        ...FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
+          label: t,
+          type: 'timePeriod',
+          icon: Clock,
+          color: 'blue'
+        })),
+        { label: 'custom period', type: 'customPeriod', icon: Calendar, color: 'orange' }
+      ],
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'with type', preview: true },
+        { label: 'in location', preview: true }
+      ]
+    };
+  }
+
+  // After "type" (subconnector from "with") -> show membership types
+  if (lastChipText === 'type' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.membershipTypes.map(m => ({
+        label: m,
+        type: 'membershipType',
+        icon: Crown,
+        color: 'purple'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'occupation is', preview: true },
+        { label: 'from province/state', preview: true }
+      ]
+    };
+  }
+
+  // After "status" (subconnector from "with") -> show statuses
+  if (lastChipText === 'status' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.statuses.map(s => ({
+        label: s,
+        type: 'status',
+        color: 'blue'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'that have', preview: true },
+        { label: 'in location', preview: true }
+      ]
+    };
+  }
+
+  // After "attribute" (subconnector from "with") -> show attributes
+  if (lastChipText === 'attribute' && chips.some(c => c.text === 'with')) {
+    return {
+      current: FILTER_OPTIONS.attributes.map(a => ({
+        label: a.label,
+        type: 'attribute',
+        icon: a.icon,
+        color: a.color
+      })),
+      next: [
+        { label: 'in timeframe', icon: Calendar, preview: true }
+      ],
+      future: [
+        { label: 'greater than', preview: true }
+      ]
+    };
+  }
+
+  // After "location" (subconnector from "in") -> show locations
+  if (lastChipText === 'location' && chips.some(c => c.text === 'in')) {
+    return {
+      current: FILTER_OPTIONS.locations.map(l => ({
+        label: l,
+        type: 'location',
+        icon: MapPin,
+        color: 'red'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'with status', preview: true },
+        { label: 'that have', preview: true }
+      ]
+    };
+  }
+
+  // After "timeframe" (subconnector from "in") -> show timeframes
+  if (lastChipText === 'timeframe' && chips.some(c => c.text === 'in')) {
+    return {
+      current: FILTER_OPTIONS.timeframes.map(t => ({
+        label: t,
+        type: 'timeframe',
+        icon: Calendar,
+        color: 'orange'
+      })),
+      next: [
+        { label: 'and', icon: Plus, preview: true }
+      ],
+      future: [
+        { label: 'that have', preview: true },
+        { label: 'in location', preview: true }
+      ]
     };
   }
 
@@ -619,8 +845,8 @@ export const getSuggestionsForPhrase = (chips) => {
     };
   }
 
-  // After timeframe, location, status, membershipType, value, tenure, occupation, degree, province, renewalMonth, or renewalYear
-  if (['timeframe', 'location', 'status', 'membershipType', 'value', 'tenure', 'occupation', 'degree', 'province'].includes(lastChip.type)) {
+  // After timeframe, location, status, membershipType, value, consecutiveMembershipYears, occupation, degree, province, renewalMonth, or renewalYear
+  if (['timeframe', 'location', 'status', 'membershipType', 'value', 'consecutiveMembershipYears', 'occupation', 'degree', 'province'].includes(lastChip.type)) {
     return {
       current: [
         { label: 'and', icon: Plus, type: 'connector' },
