@@ -1358,7 +1358,7 @@ const ReportBuilder = (props) => {
                     <input
                       type="checkbox"
                       className="rounded"
-                      checked={false}
+                      checked={selectedCategory === 'Member Type' && selections.some(s => s.category === 'Member Type' && s.value === 'All')}
                       onChange={(e) => {
                         if (e.target.checked && selectedCategory === 'Member Type') {
                           addFilter(selectedCategory, 'All');
