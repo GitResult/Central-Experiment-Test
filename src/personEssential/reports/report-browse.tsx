@@ -1453,17 +1453,25 @@ const ReportBuilder = (props) => {
                         <input
                           type="checkbox"
                           className="rounded"
-                          checked={selections.some(s => {
-                            if (s.category !== selectedCategory) return false;
-                            // For Province/State and Member Type, extract short code for comparison
-                            if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
-                              const match = value.match(/\(([^)]+)\)/);
-                              if (match) {
-                                return s.value === match[1];
-                              }
+                          checked={(() => {
+                            // Special handling for Member Year - only show checked when explicitly editing
+                            if (selectedCategory === 'Member Year') {
+                              return editingSelection && editingSelection.category === 'Member Year' && editingSelection.value === value;
                             }
-                            return s.value === value;
-                          })}
+
+                            // Default behavior for other categories
+                            return selections.some(s => {
+                              if (s.category !== selectedCategory) return false;
+                              // For Province/State and Member Type, extract short code for comparison
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
+                                const match = value.match(/\(([^)]+)\)/);
+                                if (match) {
+                                  return s.value === match[1];
+                                }
+                              }
+                              return s.value === value;
+                            });
+                          })()}
                           onChange={(e) => {
                             if (e.target.checked) {
                               // Always add filter - allow duplicates for OR logic
