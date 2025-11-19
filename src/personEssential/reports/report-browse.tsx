@@ -256,6 +256,13 @@ const ReportBuilder = (props) => {
                secondSelection?.category === 'Members' &&
                category === 'Member Type') {
         connector = 'that are';
+      }
+      // "that have" connector for Member Stats after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Stats') {
+        connector = 'that have';
       } else {
         connector = 'AND';
       }
@@ -935,6 +942,7 @@ const ReportBuilder = (props) => {
                             className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
                             <option value="that are">that are</option>
+                            <option value="that have">that have</option>
                             <option value="AND">AND</option>
                             <option value="OR">OR</option>
                             <option value="BETWEEN">BETWEEN</option>
