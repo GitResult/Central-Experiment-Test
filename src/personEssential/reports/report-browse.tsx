@@ -308,9 +308,13 @@ const ReportBuilder = (props) => {
 
   const addFilter = (category, value) => {
     // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
+    // Extract short code for Member Type (e.g., "Early Career Year 1 (ECY1)" -> "ECY1")
     let displayValue = value;
-    if (category === 'Province/State' && value.includes('(')) {
-      displayValue = value.split(' (')[0];
+    if ((category === 'Province/State' || category === 'Member Type') && value.includes('(')) {
+      const match = value.match(/\(([^)]+)\)/);
+      if (match) {
+        displayValue = match[1]; // Extract content within parentheses
+      }
     }
 
     if (editingSelection) {
@@ -595,7 +599,7 @@ const ReportBuilder = (props) => {
 
           // First filter after status/members uses "that are" or "that have been members"
           if (isFirst && category === 'Member Type') {
-            if (val === 'Members') {
+            if (val === 'Members' || val === 'All') {
               return `that have been members`;
             }
             return `that are ${val}`;
@@ -611,9 +615,9 @@ const ReportBuilder = (props) => {
             const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
             if (yearMatch) {
               const years = yearMatch[1];
-              // Check if previous selection was "Member Type= Members"
+              // Check if previous selection was "Member Type= Members" or "Member Type= All"
               if (i > 0 && remainingSelections[i - 1].category === 'Member Type' &&
-                  remainingSelections[i - 1].value === 'Members') {
+                  (remainingSelections[i - 1].value === 'Members' || remainingSelections[i - 1].value === 'All')) {
                 return `for the past ${years} years`;
               }
               return `that have been members for the past ${years} years`;
@@ -1357,13 +1361,11 @@ const ReportBuilder = (props) => {
                       checked={false}
                       onChange={(e) => {
                         if (e.target.checked && selectedCategory === 'Member Type') {
-                          addFilter(selectedCategory, 'Members');
+                          addFilter(selectedCategory, 'All');
                         }
                       }}
                     />
-                    <span className="flex-1 text-sm font-medium text-gray-700">
-                      {selectedCategory === 'Member Type' ? 'Members' : 'Any value (no filter)'}
-                    </span>
+                    <span className="flex-1 text-sm font-medium text-gray-700">Any value (no filter)</span>
                     <button onClick={() => addField(selectedCategory)} className="opacity-70 hover:opacity-100 transition-opacity" title="Show as field">
                       <Eye className="w-4 h-4 text-purple-500" strokeWidth={1.5} />
                     </button>
@@ -1386,10 +1388,12 @@ const ReportBuilder = (props) => {
                           className="rounded"
                           checked={selections.some(s => {
                             if (s.category !== selectedCategory) return false;
-                            // For Province/State, extract short code for comparison
-                            if (selectedCategory === 'Province/State' && value.includes('(')) {
-                              const shortCode = value.split(' (')[0];
-                              return s.value === shortCode;
+                            // For Province/State and Member Type, extract short code for comparison
+                            if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
+                              const match = value.match(/\(([^)]+)\)/);
+                              if (match) {
+                                return s.value === match[1];
+                              }
                             }
                             return s.value === value;
                           })}
