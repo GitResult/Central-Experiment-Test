@@ -95,6 +95,8 @@ const ReportBuilder = (props) => {
   const [fromYear, setFromYear] = useState('');
   const [toMonth, setToMonth] = useState('');
   const [toYear, setToYear] = useState('');
+  const [renewedMode, setRenewedMode] = useState('from-to'); // 'from-to' or 'in'
+  const [selectedRenewedMonths, setSelectedRenewedMonths] = useState([]);
 
 
   const [categories, setCategories] = useState({});
@@ -270,6 +272,14 @@ const ReportBuilder = (props) => {
                secondSelection?.category === 'Members' &&
                category === 'Member Year') {
         connector = 'for';
+      }
+      // "that have" connector for Renewed after Status + Members + Member Year
+      else if (selections.length === 3 &&
+               selections.some(s => statusCategories.includes(s.category)) &&
+               selections.some(s => s.category === 'Members') &&
+               selections.some(s => s.category === 'Member Year') &&
+               category === 'Renewed') {
+        connector = 'that have';
       } else {
         connector = 'AND';
       }
