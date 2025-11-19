@@ -263,6 +263,13 @@ const ReportBuilder = (props) => {
                secondSelection?.category === 'Members' &&
                category === 'Member Stats') {
         connector = 'that have';
+      }
+      // "for" connector for Member Year after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Year') {
+        connector = 'for';
       } else {
         connector = 'AND';
       }
@@ -361,8 +368,8 @@ const ReportBuilder = (props) => {
       return sel.category;
     }
 
-    // For Member Type, use equals sign format
-    if (sel.category === 'Member Type') {
+    // For Member Type and Member Year, use equals sign format
+    if (sel.category === 'Member Type' || sel.category === 'Member Year') {
       return `${sel.category}= ${sel.value}`;
     }
 
@@ -566,7 +573,13 @@ const ReportBuilder = (props) => {
       const memberYearSel = selections.find(s => s.category === 'Member Year');
 
       // Build the starting phrase
-      if (statusSel && membersSel) {
+      if (statusSel && membersSel && memberYearSel) {
+        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+        processedIndices.add(selections.indexOf(memberYearSel));
+      } else if (statusSel && membersSel) {
         // Pattern: [Current][Members] → "Current members"
         query = `${statusSel.category} members`;
         processedIndices.add(selections.indexOf(statusSel));
@@ -575,18 +588,14 @@ const ReportBuilder = (props) => {
         // Pattern: [Current] only → "Current"
         query = statusSel.category;
         processedIndices.add(selections.indexOf(statusSel));
+      } else if (memberYearSel && membersSel) {
+        // Pattern: [Member Year = 2019][Members] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
+        processedIndices.add(selections.indexOf(membersSel));
       } else if (memberYearSel) {
-        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members" or "Previous members for 2019"
-        const prevSel = selections.find(s => s.category === 'Previous');
-        if (prevSel && membersSel) {
-          query = `${memberYearSel.value} members`;
-          processedIndices.add(selections.indexOf(prevSel));
-          processedIndices.add(selections.indexOf(membersSel));
-          processedIndices.add(selections.indexOf(memberYearSel));
-        } else {
-          query = `${memberYearSel.value} members`;
-          processedIndices.add(selections.indexOf(memberYearSel));
-        }
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
       } else if (membersSel) {
         query = 'Members';
         processedIndices.add(selections.indexOf(membersSel));
@@ -943,6 +952,7 @@ const ReportBuilder = (props) => {
                           >
                             <option value="that are">that are</option>
                             <option value="that have">that have</option>
+                            <option value="for">for</option>
                             <option value="AND">AND</option>
                             <option value="OR">OR</option>
                             <option value="BETWEEN">BETWEEN</option>
