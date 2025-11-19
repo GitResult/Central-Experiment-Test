@@ -1504,7 +1504,7 @@ const ReportBuilder = (props) => {
                         className="rounded"
                         onChange={(e) => {
                           if (e.target.checked) {
-                            addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
+                            addSelection('Member Stats', yearRange, 'filter');
                             showToast(`Filter added: ${yearRange}`);
                           }
                         }}
@@ -1522,7 +1522,7 @@ const ReportBuilder = (props) => {
                       className="rounded"
                       onChange={(e) => {
                         if (e.target.checked && customYearValue) {
-                          addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
+                          addSelection('Member Stats', `${customYearValue} years`, 'filter');
                           showToast(`Filter added: ${customYearValue} years`);
                           setCustomYearValue('');
                         }
