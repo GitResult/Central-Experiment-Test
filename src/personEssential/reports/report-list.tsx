@@ -1749,6 +1749,30 @@ const ReportBuilder = ({
                 {selections.map((sel, idx) => {
                   const Icon = sel.type === 'filter' ? Filter : Eye;
                   const isEditing = editingSelection?.id === sel.id;
+
+                  // Check if this is part of a Renewed OR group
+                  const isRenewedORGroup = sel.category === 'Renewed' &&
+                    (idx < selections.length - 1 && selections[idx + 1].connector === 'OR' && selections[idx + 1].category === 'Renewed');
+                  const isPreviousRenewedOR = idx > 0 && sel.connector === 'OR' && sel.category === 'Renewed' && selections[idx - 1].category === 'Renewed';
+
+                  // If this is a continuation of a Renewed OR group, skip rendering (it's included in the first one)
+                  if (isPreviousRenewedOR) {
+                    return null;
+                  }
+
+                  // Collect all consecutive Renewed values with OR connectors
+                  const renewedGroupValues = [];
+                  if (sel.category === 'Renewed') {
+                    renewedGroupValues.push(sel.value);
+                    let j = idx + 1;
+                    while (j < selections.length &&
+                           selections[j].connector === 'OR' &&
+                           selections[j].category === 'Renewed') {
+                      renewedGroupValues.push(selections[j].value);
+                      j++;
+                    }
+                  }
+
                   return (
                     <React.Fragment key={sel.id}>
                       {/* Connector dropdown (shown before chips except the first, and only if connector is not null) */}
@@ -1776,20 +1800,20 @@ const ReportBuilder = ({
                         <>
                           {/* "renewed" keyword chip */}
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
-                            <span className="font-medium">renewed</span>
+                            <span className="font-medium">Renewed</span>
                           </div>
                           {/* "in" keyword chip */}
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
                             <span className="font-medium">in</span>
                           </div>
-                          {/* Value chip with edit/remove buttons */}
+                          {/* Value chip(s) - combine if multiple OR values */}
                           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
                             isEditing
                               ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                               : 'bg-blue-100 text-blue-900 border border-blue-300'
                           }`}>
                             <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                            <span className="font-medium">{sel.value}</span>
+                            <span className="font-medium">{renewedGroupValues.join(' or ')}</span>
                             <div className="flex items-center gap-1 ml-1">
                               <button
                                 onClick={() => {
@@ -1802,8 +1826,18 @@ const ReportBuilder = ({
                               </button>
                               <button
                                 onClick={() => {
-                                  removeSelection(sel.id);
-                                  if (editingSelection?.id === sel.id) {
+                                  // Remove all items in the group
+                                  const idsToRemove = [];
+                                  idsToRemove.push(sel.id);
+                                  let j = idx + 1;
+                                  while (j < selections.length &&
+                                         selections[j].connector === 'OR' &&
+                                         selections[j].category === 'Renewed') {
+                                    idsToRemove.push(selections[j].id);
+                                    j++;
+                                  }
+                                  setSelections(selections.filter(s => !idsToRemove.includes(s.id)));
+                                  if (editingSelection && idsToRemove.includes(editingSelection.id)) {
                                     setEditingSelection(null);
                                   }
                                 }}
