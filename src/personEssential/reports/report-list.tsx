@@ -497,6 +497,12 @@ const ReportBuilder = ({
   const [categoryIcons, setCategoryIcons] = useState(CATEGORY_ICONS);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Structured Query Builder state
+  const [enabledFilters, setEnabledFilters] = useState({});
+  const [filterValues, setFilterValues] = useState({});
+  const [filterSearchTerm, setFilterSearchTerm] = useState('');
+  const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
+
   // Load data from JSON file
   useEffect(() => {
     const fetchData = async () => {
@@ -1338,7 +1344,84 @@ const ReportBuilder = ({
 
   const clearAllSelections = () => {
     setSelections([]);
+    setEnabledFilters({});
+    setFilterValues({});
+    setSelectedStartingData({ status: null, entity: null });
     showToast('All selections cleared');
+  };
+
+  // Structured Query Builder helpers
+  const toggleFilter = (category) => {
+    setEnabledFilters(prev => {
+      const newState = { ...prev, [category]: !prev[category] };
+      if (!newState[category]) {
+        // Remove from filterValues if disabled
+        const newValues = { ...filterValues };
+        delete newValues[category];
+        setFilterValues(newValues);
+        // Remove from selections
+        setSelections(prevSel => prevSel.filter(s => s.category !== category));
+      }
+      return newState;
+    });
+  };
+
+  const setFilterValue = (category, value, addAsOR = false) => {
+    const existingValues = filterValues[category] || [];
+    let newValues;
+
+    if (addAsOR) {
+      newValues = [...existingValues, value];
+    } else {
+      newValues = [value];
+    }
+
+    setFilterValues(prev => ({ ...prev, [category]: newValues }));
+
+    // Update selections
+    if (addAsOR && existingValues.length > 0) {
+      addSelection(category, value, 'filter');
+      // Set connector to OR for the new selection
+      setSelections(prev => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0) {
+          updated[lastIndex].connector = 'OR';
+        }
+        return updated;
+      });
+    } else {
+      // Remove existing selections for this category
+      setSelections(prev => prev.filter(s => s.category !== category));
+      addSelection(category, value, 'filter');
+    }
+  };
+
+  const handleStartingDataChange = (type, value) => {
+    setSelectedStartingData(prev => ({ ...prev, [type]: value }));
+
+    // Auto-add to selections
+    if (type === 'entity' && value === 'Members') {
+      // Check if status is selected
+      const hasStatus = selectedStartingData.status !== null;
+
+      if (!hasStatus) {
+        // Auto-select Current
+        setSelectedStartingData(prev => ({ ...prev, status: 'Current' }));
+        setSelections([
+          { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+          { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+        ]);
+      } else {
+        addSelection('Members', 'Members', 'field');
+      }
+    } else if (type === 'status') {
+      // Remove existing status from selections
+      setSelections(prev => prev.filter(s => !['Current', 'Previous', 'New', 'Lapsed'].includes(s.category)));
+      addSelection(value, value, 'field');
+    } else {
+      addSelection(value, value, 'field');
+    }
   };
 
   const clearFields = () => {
@@ -1848,7 +1931,195 @@ const ReportBuilder = ({
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-8 pb-32">
+        {/* New Structured Query Builder */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Column: Starting Data */}
+          <div className="w-80 border-r border-gray-200 bg-white overflow-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">1. Starting Data</h3>
+              <p className="text-xs text-gray-500">Select your starting point</p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Status Selection */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+                <div className="space-y-2">
+                  {['Current', 'Previous', 'New', 'Lapsed'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => handleStartingDataChange('status', status)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedStartingData.status === status
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Entity Selection */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Entity Type</label>
+                <div className="space-y-2">
+                  {['Members', 'Contacts', 'Invoices', 'Other'].map(entity => (
+                    <button
+                      key={entity}
+                      onClick={() => handleStartingDataChange('entity', entity)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedStartingData.entity === entity
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      {entity}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Filters */}
+          <div className="flex-1 overflow-auto bg-gray-50">
+            <div className="p-6 border-b border-gray-200 bg-white">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">2. Filters & Criteria</h3>
+              <p className="text-xs text-gray-500 mb-4">Add filters to refine your query</p>
+
+              {/* Search Filters */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search filters..."
+                  value={filterSearchTerm}
+                  onChange={(e) => setFilterSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 space-y-3">
+              {Object.entries(categories).map(([section, cats]) => {
+                if (section === 'Starting Data') return null;
+
+                return cats
+                  .filter(cat => {
+                    if (!filterSearchTerm) return true;
+                    return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
+                  })
+                  .map(category => {
+                    const isEnabled = enabledFilters[category];
+                    const values = sampleValues[category] || [];
+                    const CategoryIcon = categoryIcons[category] || Database;
+                    const selectedValues = filterValues[category] || [];
+
+                    return (
+                      <div key={category} className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isEnabled || false}
+                            onChange={() => toggleFilter(category)}
+                            className="mt-1 rounded"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CategoryIcon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                              <span className="text-sm font-medium text-gray-900">{category}</span>
+                            </div>
+
+                            {isEnabled && (
+                              <div className="space-y-2">
+                                {selectedValues.map((val, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <select
+                                      value={val}
+                                      onChange={(e) => {
+                                        const newVals = [...selectedValues];
+                                        newVals[idx] = e.target.value;
+                                        setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                        // Update selection
+                                        setSelections(prev => {
+                                          const filtered = prev.filter(s => s.category !== category || s.value === val);
+                                          return filtered.map(s => {
+                                            if (s.category === category && s.value === val) {
+                                              return { ...s, value: e.target.value };
+                                            }
+                                            return s;
+                                          });
+                                        });
+                                      }}
+                                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                      <option value="">Select...</option>
+                                      {values.map(v => (
+                                        <option key={v} value={v}>{v}</option>
+                                      ))}
+                                    </select>
+                                    {selectedValues.length > 1 && (
+                                      <button
+                                        onClick={() => {
+                                          const newVals = selectedValues.filter((_, i) => i !== idx);
+                                          setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                          // Remove from selections
+                                          setSelections(prev => prev.filter(s => !(s.category === category && s.value === val)));
+                                        }}
+                                        className="text-red-600 hover:text-red-700"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {selectedValues.length === 0 && (
+                                  <select
+                                    onChange={(e) => {
+                                      if (e.target.value) {
+                                        setFilterValue(category, e.target.value);
+                                      }
+                                    }}
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  >
+                                    <option value="">Select...</option>
+                                    {values.map(v => (
+                                      <option key={v} value={v}>{v}</option>
+                                    ))}
+                                  </select>
+                                )}
+
+                                {selectedValues.length > 0 && selectedValues[selectedValues.length - 1] !== '' && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const newVals = [...selectedValues, ''];
+                                        setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                      }}
+                                      className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                      OR
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Old Card Grid Layout (Hidden for now) */}
+        <div className="flex-1 overflow-auto p-8 pb-32" style={{ display: 'none' }}>
           {filteredFields.length === 0 ? (
             <div className="text-center py-16">
               <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" strokeWidth={1} />
