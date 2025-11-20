@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock, GripVertical, RefreshCw } from 'lucide-react';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
@@ -1975,6 +1975,12 @@ const ReportBuilder = ({
                         <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
                           <div className="p-4 border-b border-gray-100">
                             <div className="flex items-start gap-3">
+                              <button
+                                className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                title="Drag to reorder"
+                              >
+                                <GripVertical className="w-4 h-4" />
+                              </button>
                               <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
                                 <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
                               </div>
@@ -1988,8 +1994,25 @@ const ReportBuilder = ({
                                   setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
                                 }}
                                 className="text-gray-400 hover:text-gray-600"
+                                title="Flip card"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Add all values from this category
+                                  values.forEach(value => {
+                                    if (!selectedValues.includes(value)) {
+                                      addSelection(value, value, 'field');
+                                    }
+                                  });
+                                  showToast(`Added all ${category} items`);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Add all items"
+                              >
+                                <Plus className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
@@ -2182,6 +2205,12 @@ const ReportBuilder = ({
                             <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
                               <div className="p-4 border-b border-gray-100">
                                 <div className="flex items-start gap-3">
+                                  <button
+                                    className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                    title="Drag to reorder"
+                                  >
+                                    <GripVertical className="w-4 h-4" />
+                                  </button>
                                   <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
                                     <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
                                   </div>
@@ -2195,8 +2224,25 @@ const ReportBuilder = ({
                                       setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
                                     }}
                                     className="text-gray-400 hover:text-gray-600"
+                                    title="Flip card"
                                   >
-                                    <Edit2 className="w-4 h-4" />
+                                    <RefreshCw className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Add all values from this category
+                                      values.forEach(value => {
+                                        if (!selectedValues.includes(value)) {
+                                          addSelection(category, value, 'field');
+                                        }
+                                      });
+                                      showToast(`Added all ${category} items`);
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                    title="Add all items"
+                                  >
+                                    <Plus className="w-4 h-4" />
                                   </button>
                                 </div>
                               </div>
