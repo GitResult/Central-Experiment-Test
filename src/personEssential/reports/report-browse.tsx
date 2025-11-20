@@ -303,11 +303,11 @@ const ReportBuilder = (props) => {
     const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     const values = sampleValues[category] || [];
 
-    // Special handling for Members: auto-select Current if not already selected
+    // Special handling for Members: auto-select Current if not already selected at the start
     if (category === 'Members') {
-      const hasStatusSelected = selections.some(s => statusCategories.includes(s.category));
+      const hasCurrentSelected = selections.some(s => s.category === 'Current');
 
-      if (!hasStatusSelected) {
+      if (!hasCurrentSelected) {
         // Auto-select Current first
         addField('Current', 'Current');
       }
