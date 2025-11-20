@@ -115,12 +115,6 @@ const ReportBuilder = (props) => {
       "bg": "bg-blue-50",
       "border": "border-blue-200"
     },
-    "Status": {
-      "header": "text-teal-700",
-      "icon": "text-teal-400",
-      "bg": "bg-teal-50",
-      "border": "border-teal-200"
-    },
     "Location": {
       "header": "text-green-700",
       "icon": "text-green-400",
@@ -308,6 +302,20 @@ const ReportBuilder = (props) => {
 
     const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     const values = sampleValues[category] || [];
+
+    // Special handling for Members: auto-select Current if not already selected
+    if (category === 'Members') {
+      const hasStatusSelected = selections.some(s => statusCategories.includes(s.category));
+
+      if (!hasStatusSelected) {
+        // Auto-select Current first
+        addField('Current', 'Current');
+      }
+
+      // Then select Members
+      addField('Members', 'Members');
+      return;
+    }
 
     // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Renewed') {
@@ -1138,7 +1146,7 @@ const ReportBuilder = (props) => {
 
             return (
               <div key={section}>
-                <div className="px-8 py-4"><h2 className="text-xl font-semibold text-black">{section}</h2></div>
+                <div className="px-8 py-4"><h2 className="text-base text-black">{section}</h2></div>
 
                 <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
@@ -1593,7 +1601,7 @@ const ReportBuilder = (props) => {
 
             <div className="flex-1 overflow-auto p-6 bg-white">
               <div className="space-y-2">
-                {['Consecutive Membership Years', 'Total Memberships', 'Engagement Score', 'Last Activity Date'].map((statField) => (
+                {['Consecutive Membership Years', 'Total Membership Years', 'Engagement Score', 'Last Activity Date'].map((statField) => (
                   <button
                     key={statField}
                     onClick={() => {
@@ -1607,7 +1615,7 @@ const ReportBuilder = (props) => {
                   >
                     <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
                       {statField === 'Consecutive Membership Years' && <Clock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
-                      {statField === 'Total Memberships' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Total Membership Years' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                       {statField === 'Engagement Score' && <TrendingUp className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                       {statField === 'Last Activity Date' && <CalendarClock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                     </div>
@@ -1615,7 +1623,7 @@ const ReportBuilder = (props) => {
                       <div className="font-medium text-gray-900 text-sm">{statField}</div>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {statField === 'Consecutive Membership Years' && 'Filter by years of membership'}
-                        {statField === 'Total Memberships' && 'Filter by number of memberships'}
+                        {statField === 'Total Membership Years' && 'Filter by total membership years'}
                         {statField === 'Engagement Score' && 'Filter by engagement level'}
                         {statField === 'Last Activity Date' && 'Filter by last activity'}
                       </div>

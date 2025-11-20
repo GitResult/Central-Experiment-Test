@@ -1,16 +1,14 @@
 {
     "categories": {
         "Starting Data": [
-            "Members",
-            "Contacts",
-            "Other",
-            "Member Stats"
-        ],
-        "Status": [
             "Current",
             "Previous",
             "New",
-            "Lapsed"
+            "Lapsed",
+            "Members",
+            "Contacts",
+            "Invoices",
+            "Other"
         ],
         "Location": [
             "Proximity",
@@ -27,8 +25,7 @@
             "Reason Not Full Member/Affiliate",
             "Renewed",
             "Renewal Month",
-            "Renewal Year",
-            "Member Stats"
+            "Renewal Year"
         ],
         "Demographics": [
             "Career Stage",
@@ -206,7 +203,7 @@
         ],
         "Member Stats": [
             "Consecutive Membership Years",
-            "Total Memberships",
+            "Total Membership Years",
             "Engagement Score",
             "Last Activity Date"
         ],
@@ -529,7 +526,6 @@
     },
     "section_icons": {
         "Starting Data": "Database",
-        "Status": "Activity",
         "Location": "MapPin",
         "Membership": "Crown",
         "Demographics": "Users",
@@ -543,12 +539,6 @@
             "icon": "text-blue-400",
             "bg": "bg-blue-50",
             "border": "border-blue-200"
-        },
-        "Status": {
-            "header": "text-teal-700",
-            "icon": "text-teal-400",
-            "bg": "bg-teal-50",
-            "border": "border-teal-200"
         },
         "Location": {
             "header": "text-green-700",
@@ -634,7 +624,7 @@
         "Degree": "GraduationCap",
         "Renewal Month": "Calendar",
         "Renewal Year": "Calendar",
-        "Total Memberships": "Hash",
+        "Total Membership Years": "Hash",
         "Engagement Score": "TrendingUp",
         "Last Activity Date": "CalendarClock"
     }
