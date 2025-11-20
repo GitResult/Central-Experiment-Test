@@ -1935,61 +1935,11 @@ const ReportBuilder = ({
 
         {/* New Structured Query Builder */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Column: Starting Data */}
-          <div className="w-80 border-r border-gray-200 bg-white overflow-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900 mb-1">1. Starting Data</h3>
-              <p className="text-xs text-gray-500">Select your starting point</p>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Status Selection */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
-                <div className="space-y-2">
-                  {['Current', 'Previous', 'New', 'Lapsed'].map(status => (
-                    <button
-                      key={status}
-                      onClick={() => handleStartingDataChange('status', status)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedStartingData.status === status
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Entity Selection */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Entity Type</label>
-                <div className="space-y-2">
-                  {['Members', 'Contacts', 'Invoices', 'Other'].map(entity => (
-                    <button
-                      key={entity}
-                      onClick={() => handleStartingDataChange('entity', entity)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedStartingData.entity === entity
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      {entity}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Filter Cards */}
+          {/* Full Width: Filter Cards */}
           <div className="flex-1 overflow-auto bg-gray-50">
             <div className="p-6 border-b border-gray-200 bg-white">
-              <h3 className="text-base font-semibold text-gray-900 mb-1">2. Filters & Criteria</h3>
-              <p className="text-xs text-gray-500 mb-4">Add filters to refine your query</p>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Query Builder</h3>
+              <p className="text-xs text-gray-500 mb-4">Build your query by selecting filters</p>
 
               {/* Search Filters */}
               <div className="relative">
@@ -2005,9 +1955,8 @@ const ReportBuilder = ({
             </div>
 
             {/* Card Grid */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {Object.entries(categories).map(([section, cats]) => {
-                if (section === 'Starting Data') return null;
 
                 return cats
                   .filter(cat => {
@@ -2015,7 +1964,6 @@ const ReportBuilder = ({
                     return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
                   })
                   .map(category => {
-                    const isEnabled = enabledFilters[category];
                     const values = sampleValues[category] || [];
                     const CategoryIcon = categoryIcons[category] || Database;
                     const selectedValues = filterValues[category] || [];
@@ -2023,21 +1971,16 @@ const ReportBuilder = ({
                     const isFlipped = flippedCards[category];
                     const categoryFieldsList = categoryFields[category] || defaultFields;
                     const count = recordCounts[category] || 0;
+                    const displayCount = Math.min(values.length, 8);
 
                     return (
                       <div key={category} className="card-flip-container">
                         <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
                           {/* Card Front */}
                           <div className="card-flip-front">
-                            <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all">
-                              <div className="p-4">
-                                <div className="flex items-start gap-3 mb-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={isEnabled || false}
-                                    onChange={() => toggleFilter(category)}
-                                    className="mt-1 rounded"
-                                  />
+                            <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                              <div className="p-4 border-b border-gray-100">
+                                <div className="flex items-start gap-3">
                                   <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
                                     <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
                                   </div>
@@ -2055,74 +1998,74 @@ const ReportBuilder = ({
                                     <Edit2 className="w-4 h-4" />
                                   </button>
                                 </div>
+                              </div>
 
-                                {isEnabled && (
-                                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                                    {values.slice(0, 8).map((value, vIdx) => {
-                                      const valCount = recordCounts[`${category}:${value}`] || count;
-                                      const isSelected = selectedValues.includes(value);
+                              <div className="p-4">
+                                <div className="space-y-1.5">
+                                  {values.slice(0, 8).map((value, vIdx) => {
+                                    const valCount = recordCounts[`${category}:${value}`] || count;
+                                    const isSelected = selectedValues.includes(value);
 
-                                      return (
-                                        <div key={vIdx} className="group">
-                                          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                    return (
+                                      <div key={vIdx} className="group">
+                                        <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                          <button
+                                            onClick={() => {
+                                              if (isSelected) {
+                                                // Remove from selected
+                                                const newVals = selectedValues.filter(v => v !== value);
+                                                setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                              } else {
+                                                // Add to selected
+                                                setFilterValue(category, value, selectedValues.length > 0);
+                                              }
+                                            }}
+                                            className="flex-1 text-left min-w-0"
+                                          >
+                                            <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                              {value}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                              <div className="text-xs font-medium text-gray-500">
+                                                {valCount.toLocaleString()}
+                                              </div>
+                                            </div>
+                                          </button>
+                                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                              onClick={() => {
+                                              onClick={(e) => {
+                                                e.stopPropagation();
                                                 if (isSelected) {
-                                                  // Remove from selected
                                                   const newVals = selectedValues.filter(v => v !== value);
                                                   setFilterValues(prev => ({ ...prev, [category]: newVals }));
                                                   setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
                                                 } else {
-                                                  // Add to selected
                                                   setFilterValue(category, value, selectedValues.length > 0);
                                                 }
                                               }}
-                                              className="flex-1 text-left min-w-0"
+                                              className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                              title={isSelected ? "Remove filter" : "Add filter"}
                                             >
-                                              <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
-                                                {value}
-                                              </div>
-                                              <div className="flex items-center gap-2 mt-0.5">
-                                                <div className="text-xs font-medium text-gray-500">
-                                                  {valCount.toLocaleString()}
-                                                </div>
-                                              </div>
+                                              {isSelected ? (
+                                                <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                              ) : (
+                                                <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                              )}
                                             </button>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  if (isSelected) {
-                                                    const newVals = selectedValues.filter(v => v !== value);
-                                                    setFilterValues(prev => ({ ...prev, [category]: newVals }));
-                                                    setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
-                                                  } else {
-                                                    setFilterValue(category, value, selectedValues.length > 0);
-                                                  }
-                                                }}
-                                                className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
-                                                title={isSelected ? "Remove filter" : "Add filter"}
-                                              >
-                                                {isSelected ? (
-                                                  <X className="w-3 h-3 text-red-600" strokeWidth={2} />
-                                                ) : (
-                                                  <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
-                                                )}
-                                              </button>
-                                            </div>
                                           </div>
                                         </div>
-                                      );
-                                    })}
-                                    {values.length > 8 && (
-                                      <button
-                                        className="w-full text-center py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 rounded-lg transition-colors"
-                                      >
-                                        View all {values.length} options →
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
+                                      </div>
+                                    );
+                                  })}
+                                  {values.length > 8 && (
+                                    <button
+                                      className="w-full text-center py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 rounded-lg transition-colors"
+                                    >
+                                      View all {values.length} options →
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
