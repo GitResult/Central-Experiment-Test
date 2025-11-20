@@ -1955,7 +1955,7 @@ const ReportBuilder = ({
             </div>
 
             {/* Card Grid */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start" style={{ gridAutoFlow: 'dense' }}>
               {/* Status Card */}
               {(() => {
                 const category = 'Status';
