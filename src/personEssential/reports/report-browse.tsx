@@ -960,6 +960,8 @@ const ReportBuilder = (props) => {
                       setEditingSelection(null);
                       setSelectedCategory(null);
                       setSelectedValue(null);
+                      setShowMemberStatsPanel(false);
+                      setSelectedMemberStatField(null);
                       showToast('All selections cleared');
                     }}
                     className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
