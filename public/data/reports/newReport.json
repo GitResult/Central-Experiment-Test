@@ -25,9 +25,10 @@
             "Code of Ethics",
             "Primary Reason for Joining",
             "Reason Not Full Member/Affiliate",
-            "Joined/Renewed",
+            "Renewed",
             "Renewal Month",
-            "Renewal Year"
+            "Renewal Year",
+            "Member Stats"
         ],
         "Demographics": [
             "Career Stage",
@@ -131,9 +132,9 @@
             "Fellow",
             "Life Fellow",
             "Professional Member",
-            "Early Career Year 1",
-            "Early Career Year 2",
-            "Early Career Year 3",
+            "Early Career Year 1 (ECY1)",
+            "Early Career Year 2 (ECY2)",
+            "Early Career Year 3 (ECY3)",
             "Student Member",
             "International Affiliate",
             "Associate Member",
@@ -271,29 +272,29 @@
             "Sports Psychology"
         ],
         "Consecutive Membership Years": [
-            "Less than 1 year",
-            "1-2 years",
-            "3-5 years",
-            "6-10 years",
-            "11-15 years",
-            "16-20 years",
-            "21-30 years",
-            "Over 30 years"
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "10",
+            "15",
+            "20"
         ],
         "Province/State": [
-            "Ontario",
-            "British Columbia",
-            "Alberta",
-            "Quebec",
-            "Manitoba",
-            "Saskatchewan",
-            "Nova Scotia",
-            "New Brunswick",
-            "Prince Edward Island",
-            "Newfoundland and Labrador",
-            "Yukon",
-            "Northwest Territories",
-            "Nunavut"
+            "ON (Ontario)",
+            "BC (British Columbia)",
+            "AB (Alberta)",
+            "QC (Quebec)",
+            "MB (Manitoba)",
+            "SK (Saskatchewan)",
+            "NS (Nova Scotia)",
+            "NB (New Brunswick)",
+            "PE (Prince Edward Island)",
+            "NL (Newfoundland and Labrador)",
+            "YT (Yukon)",
+            "NT (Northwest Territories)",
+            "NU (Nunavut)"
         ],
         "Renewal Month": [
             "January",
@@ -350,11 +351,13 @@
             "Retired Status",
             "Other"
         ],
-        "Joined/Renewed": [
-            "Joined in 2024",
-            "Renewed in 2024",
-            "Joined in 2023",
-            "Renewed in 2023"
+        "Renewed": [
+            "December 2024",
+            "January 2024",
+            "December 2023",
+            "January 2023",
+            "December 2022",
+            "January 2022"
         ],
         "Membership Benefits": [
             "Journal Subscriptions",
@@ -504,7 +507,7 @@
         "Code of Ethics": 6987,
         "Primary Reason for Joining": 6234,
         "Reason Not Full Member/Affiliate": 987,
-        "Joined/Renewed": 7089,
+        "Renewed": 7089,
         "Membership Benefits": 6845,
         "Membership Discounts": 4231,
         "Donation": 2145,
@@ -603,7 +606,7 @@
         "Code of Ethics": "Award",
         "Primary Reason for Joining": "Target",
         "Reason Not Full Member/Affiliate": "HelpCircle",
-        "Joined/Renewed": "Calendar",
+        "Renewed": "Calendar",
         "Career Stage": "TrendingUp",
         "Occupation": "Briefcase",
         "Workplace Setting": "Building2",

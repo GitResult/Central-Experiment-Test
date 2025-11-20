@@ -90,11 +90,16 @@ const ReportBuilder = (props) => {
   const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
   const [customYearValue, setCustomYearValue] = useState('');
 
-  // Joined/Renewed date range state
+  // Renewed date range state
   const [fromMonth, setFromMonth] = useState('');
   const [fromYear, setFromYear] = useState('');
   const [toMonth, setToMonth] = useState('');
   const [toYear, setToYear] = useState('');
+  const [renewedMode, setRenewedMode] = useState('from-to'); // 'from-to' or 'in'
+  const [selectedRenewedMonths, setSelectedRenewedMonths] = useState([]);
+  // For "in" mode dynamic selection
+  const [currentRenewedMonth, setCurrentRenewedMonth] = useState('');
+  const [currentRenewedYear, setCurrentRenewedYear] = useState('');
 
 
   const [categories, setCategories] = useState({});
@@ -227,7 +232,8 @@ const ReportBuilder = (props) => {
   }, [selections]);
 
   // Calculate right panel width for push-style panel effect
-  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ? 480 : 0;
+  const rightPanelWidth = selectedCategory || showMemberStatsPanel || showSaveQueryPanel ?
+    (selectedMemberStatField === 'Consecutive Membership Years' ? 880 : 480) : 0;
 
   // Render AppReportPhrase when phrase mode is active
   if (isPhraseActive) {
@@ -240,6 +246,7 @@ const ReportBuilder = (props) => {
 
     if (selections.length > 0) {
       const firstSelection = selections[0];
+      const secondSelection = selections.length > 1 ? selections[1] : null;
       const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
 
       // No connector between Status (Current/Previous/New/Lapsed) and Members
@@ -247,6 +254,39 @@ const ReportBuilder = (props) => {
           statusCategories.includes(firstSelection.category) &&
           category === 'Members') {
         connector = null;
+      }
+      // "that are" connector for Member Type after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Type') {
+        connector = 'that are';
+      }
+      // "that have" connector for Member Stats after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Stats') {
+        connector = 'that have';
+      }
+      // "for" connector for Member Year after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Year') {
+        connector = 'for';
+      }
+      // "that have" connector for Renewed after Status + Members + Member Year
+      else if (selections.length === 3 &&
+               selections.some(s => statusCategories.includes(s.category)) &&
+               selections.some(s => s.category === 'Members') &&
+               selections.some(s => s.category === 'Member Year') &&
+               category === 'Renewed') {
+        connector = 'that have';
+      }
+      // "for" connector for Member Year after Renewed
+      else if (selections.some(s => s.category === 'Renewed') && category === 'Member Year') {
+        connector = 'for';
       } else {
         connector = 'AND';
       }
@@ -270,7 +310,7 @@ const ReportBuilder = (props) => {
     const values = sampleValues[category] || [];
 
     // If category only has one value, auto-select it
-    if (values.length === 1 && category !== 'Proximity' && category !== 'Joined/Renewed') {
+    if (values.length === 1 && category !== 'Proximity' && category !== 'Renewed') {
       // For Status categories and Members, use category name as value
       const valueToUse = (statusCategories.includes(category) || category === 'Members') ? category : values[0];
 
@@ -298,11 +338,21 @@ const ReportBuilder = (props) => {
   };
 
   const addFilter = (category, value) => {
+    // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
+    // Extract short code for Member Type (e.g., "Early Career Year 1 (ECY1)" -> "ECY1")
+    let displayValue = value;
+    if ((category === 'Province/State' || category === 'Member Type') && value.includes('(')) {
+      const match = value.match(/\(([^)]+)\)/);
+      if (match) {
+        displayValue = match[1]; // Extract content within parentheses
+      }
+    }
+
     if (editingSelection) {
       // Update existing selection, preserving its type
       setSelections(selections.map(s =>
         s.id === editingSelection.id
-          ? { ...s, category, value }
+          ? { ...s, category, value: displayValue }
           : s
       ));
       showToast(`Selection updated: ${value}`);
@@ -310,7 +360,7 @@ const ReportBuilder = (props) => {
       setSelectedCategory(null);
     } else {
       // Add new selection
-      addSelection(category, value, 'filter');
+      addSelection(category, displayValue, 'filter');
       showToast(`Filter added: ${value}`);
     }
   };
@@ -322,7 +372,7 @@ const ReportBuilder = (props) => {
 
   const applyDateRange = (type) => {
     const labels = { last30: 'Last 30 days', last60: 'Last 60 days', last90: 'Last 90 days', first30: 'First 30 days of membership', first60: 'First 60 days of membership', first90: 'First 90 days of membership' };
-    addFilter('Joined/Renewed', labels[type]);
+    addFilter('Renewed', labels[type]);
     setSelectedCategory(null);
   };
 
@@ -333,6 +383,11 @@ const ReportBuilder = (props) => {
     // For Status categories and Members, display only the category name
     if (statusCategories.includes(sel.category) || sel.category === 'Members') {
       return sel.category;
+    }
+
+    // For Member Type and Member Year, use equals sign format
+    if (sel.category === 'Member Type' || sel.category === 'Member Year') {
+      return `${sel.category}= ${sel.value}`;
     }
 
     // For all other categories, display "Category: Value"
@@ -535,23 +590,29 @@ const ReportBuilder = (props) => {
       const memberYearSel = selections.find(s => s.category === 'Member Year');
 
       // Build the starting phrase
-      if (statusSel && membersSel) {
+      if (statusSel && membersSel && memberYearSel) {
+        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+        processedIndices.add(selections.indexOf(memberYearSel));
+      } else if (statusSel && membersSel) {
         // Pattern: [Current][Members] → "Current members"
         query = `${statusSel.category} members`;
         processedIndices.add(selections.indexOf(statusSel));
         processedIndices.add(selections.indexOf(membersSel));
+      } else if (statusSel) {
+        // Pattern: [Current] only → "Current"
+        query = statusSel.category;
+        processedIndices.add(selections.indexOf(statusSel));
+      } else if (memberYearSel && membersSel) {
+        // Pattern: [Member Year = 2019][Members] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
+        processedIndices.add(selections.indexOf(membersSel));
       } else if (memberYearSel) {
-        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members" or "Previous members for 2019"
-        const prevSel = selections.find(s => s.category === 'Previous');
-        if (prevSel && membersSel) {
-          query = `${memberYearSel.value} members`;
-          processedIndices.add(selections.indexOf(prevSel));
-          processedIndices.add(selections.indexOf(membersSel));
-          processedIndices.add(selections.indexOf(memberYearSel));
-        } else {
-          query = `${memberYearSel.value} members`;
-          processedIndices.add(selections.indexOf(memberYearSel));
-        }
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
       } else if (membersSel) {
         query = 'Members';
         processedIndices.add(selections.indexOf(membersSel));
@@ -569,16 +630,37 @@ const ReportBuilder = (props) => {
           let val = value;
           if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
-          // First filter after status/members uses "that are"
-          if (isFirst && category === 'Member Type') return `that are ${val}`;
+          // First filter after status/members uses "that are" or "that have been members"
+          if (isFirst && category === 'Member Type') {
+            if (val === 'Members' || val === 'All') {
+              return `that have been members`;
+            }
+            return `that are ${val}`;
+          }
 
           // Special handling for different categories based on phrase patterns
           if (category === 'Renewal Month') return `who renewed in ${val}`;
           if (category === 'Renewal Year') return `in ${val}`;
-          if (category === 'Joined/Renewed') return `that renewed in ${val}`;
+          if (category === 'Renewed') return `who renewed in ${val}`;
+          // Member Year after Renewed uses "for member year"
+          if (category === 'Member Year' && i > 0 && remainingSelections.slice(0, i).some(s => s.category === 'Renewed')) {
+            return `for member year ${val}`;
+          }
           if (category === 'Member Type') return `and member type ${val}`;
-          if (category === 'Member Stats' || category.includes('Consecutive Membership Years'))
+          if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
+            // Extract the number from "Consecutive Membership Years= 5" format
+            const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
+            if (yearMatch) {
+              const years = yearMatch[1];
+              // Check if previous selection was "Member Type= Members" or "Member Type= All"
+              if (i > 0 && remainingSelections[i - 1].category === 'Member Type' &&
+                  (remainingSelections[i - 1].value === 'Members' || remainingSelections[i - 1].value === 'All')) {
+                return `for the past ${years} years`;
+              }
+              return `that have been members for the past ${years} years`;
+            }
             return `that have been members for ${val}`;
+          }
           if (category === 'Occupation') return `and occupation is ${val}`;
           if (category === 'Degree') return `with a Degree: ${val}`;
           if (category === 'Province/State') return `from province/state ${val}`;
@@ -878,8 +960,8 @@ const ReportBuilder = (props) => {
                     const isEditing = editingSelection?.id === sel.id;
                     return (
                       <React.Fragment key={sel.id}>
-                        {/* Connector dropdown (shown before chips except the first) */}
-                        {idx > 0 && (
+                        {/* Connector dropdown (shown before chips except the first, and only if connector is not null) */}
+                        {idx > 0 && sel.connector !== null && (
                           <select
                             value={sel.connector || 'AND'}
                             onChange={(e) => {
@@ -889,46 +971,93 @@ const ReportBuilder = (props) => {
                             }}
                             className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
+                            <option value="that are">that are</option>
+                            <option value="that have">that have</option>
+                            <option value="for">for</option>
                             <option value="AND">AND</option>
                             <option value="OR">OR</option>
                             <option value="BETWEEN">BETWEEN</option>
                           </select>
                         )}
 
-                        {/* Selection chip */}
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                          isEditing
-                            ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
-                            : sel.type === 'filter'
-                              ? 'bg-blue-100 text-blue-900 border border-blue-300'
-                              : 'bg-purple-100 text-purple-900 border border-purple-300'
-                        }`}>
-                          <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                          <span className="font-medium">{sel.category}</span>
-                          <span className="text-xs opacity-75">= {sel.value}</span>
-                          <div className="flex items-center gap-1 ml-1">
-                            <button
-                              onClick={() => handleEditSelection(sel)}
-                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                              title="Edit selection value"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                removeSelection(sel.id);
-                                if (editingSelection?.id === sel.id) {
-                                  setEditingSelection(null);
-                                  setSelectedCategory(null);
-                                }
-                              }}
-                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                              title="Remove"
-                            >
-                              <X className="w-3.5 h-3.5" strokeWidth={2} />
-                            </button>
+                        {/* Selection chip - Special handling for Renewed category */}
+                        {sel.category === 'Renewed' ? (
+                          <>
+                            {/* "renewed" keyword chip */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                              <span className="font-medium">renewed</span>
+                            </div>
+                            {/* "in" keyword chip */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                              <span className="font-medium">in</span>
+                            </div>
+                            {/* Value chip with edit/remove buttons */}
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                              isEditing
+                                ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                                : 'bg-blue-100 text-blue-900 border border-blue-300'
+                            }`}>
+                              <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                              <span className="font-medium">{sel.value}</span>
+                              <div className="flex items-center gap-1 ml-1">
+                                <button
+                                  onClick={() => handleEditSelection(sel)}
+                                  className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                  title="Edit selection value"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    removeSelection(sel.id);
+                                    if (editingSelection?.id === sel.id) {
+                                      setEditingSelection(null);
+                                      setSelectedCategory(null);
+                                    }
+                                  }}
+                                  className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                  title="Remove"
+                                >
+                                  <X className="w-3.5 h-3.5" strokeWidth={2} />
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          /* Regular chip for all other categories */
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                            isEditing
+                              ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                              : sel.type === 'filter'
+                                ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                                : 'bg-purple-100 text-purple-900 border border-purple-300'
+                          }`}>
+                            <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                            <span className="font-medium">{getSelectionDisplayLabel(sel)}</span>
+                            <div className="flex items-center gap-1 ml-1">
+                              <button
+                                onClick={() => handleEditSelection(sel)}
+                                className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                title="Edit selection value"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  removeSelection(sel.id);
+                                  if (editingSelection?.id === sel.id) {
+                                    setEditingSelection(null);
+                                    setSelectedCategory(null);
+                                  }
+                                }}
+                                className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                title="Remove"
+                              >
+                                <X className="w-3.5 h-3.5" strokeWidth={2} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </React.Fragment>
                     );
                   })}
@@ -1118,7 +1247,7 @@ const ReportBuilder = (props) => {
                 </button>
               </div>
 
-              {selectedCategory !== 'Proximity' && selectedCategory !== 'Joined/Renewed' && (
+              {selectedCategory !== 'Proximity' && selectedCategory !== 'Renewed' && (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" strokeWidth={1.5} />
                   <input type="text" value={valueSearchTerm} onChange={(e) => setValueSearchTerm(e.target.value)} placeholder="Search values..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
@@ -1152,165 +1281,157 @@ const ReportBuilder = (props) => {
 
                   <button onClick={applyProximityFilter} disabled={!proximityLocation} className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${proximityLocation ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>Apply Filter</button>
                 </div>
-              ) : selectedCategory === 'Joined/Renewed' ? (
+              ) : selectedCategory === 'Renewed' ? (
                 <div className="space-y-4">
-                  {/* Year/Month Range Selection */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Year/Month Range</label>
-                    <p className="text-xs text-gray-500 mb-3">Select a date range for joined or renewed members</p>
-
-                    <div className="space-y-3">
-                      {/* From Date */}
-                      <div>
-                        <label className="text-xs text-gray-600 mb-1 block font-medium">From</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <select
-                            value={fromMonth}
-                            onChange={(e) => setFromMonth(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                          >
-                            <option value="">Month</option>
-                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
-                              <option key={month} value={month}>{month}</option>
-                            ))}
-                          </select>
-                          <select
-                            value={fromYear}
-                            onChange={(e) => setFromYear(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                          >
-                            <option value="">Year</option>
-                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
-                              <option key={year} value={year}>{year}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* To Date */}
-                      <div>
-                        <label className="text-xs text-gray-600 mb-1 block font-medium">To</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <select
-                            value={toMonth}
-                            onChange={(e) => setToMonth(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                          >
-                            <option value="">Month</option>
-                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
-                              <option key={month} value={month}>{month}</option>
-                            ))}
-                          </select>
-                          <select
-                            value={toYear}
-                            onChange={(e) => setToYear(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                          >
-                            <option value="">Year</option>
-                            {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map(year => (
-                              <option key={year} value={year}>{year}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {(fromMonth && fromYear && toMonth && toYear) && (
-                      <button
-                        onClick={() => {
-                          addFilter('Joined/Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`);
-                          setSelectedCategory(null);
-                          setFromMonth('');
-                          setFromYear('');
-                          setToMonth('');
-                          setToYear('');
-                        }}
-                        className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
-                      >
-                        Apply Range
-                      </button>
-                    )}
+                  {/* Mode Toggle */}
+                  <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                    <button
+                      onClick={() => setRenewedMode('from-to')}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${renewedMode === 'from-to' ? 'bg-white text-blue-600 shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      From...To
+                    </button>
+                    <button
+                      onClick={() => setRenewedMode('in')}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${renewedMode === 'in' ? 'bg-white text-blue-600 shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      In (Multi-select)
+                    </button>
                   </div>
 
-                  {/* Relative to Renewal Opening Date */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Renewal Opening Date</h4>
-                    <p className="text-xs text-gray-500 mb-3">Time periods from when renewal window opens</p>
-
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {['First Week', 'First 2 Weeks'].map(period => (
-                          <button
-                            key={period}
-                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
-                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
-                          >
-                            {period}
-                          </button>
-                        ))}
+                  {renewedMode === 'from-to' ? (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Year/Month Range</label>
+                      <p className="text-xs text-gray-500 mb-3">Select from and to dates</p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs text-gray-600 mb-1 block font-medium">From</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                              <option value="">Month</option>
+                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                            <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                              <option value="">Year</option>
+                              {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 mb-1 block font-medium">To</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                              <option value="">Month</option>
+                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                            <select value={toYear} onChange={(e) => setToYear(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                              <option value="">Year</option>
+                              {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {['First Month', 'First 2 Months', 'First 3 Months'].map(period => (
-                          <button
-                            key={period}
-                            onClick={() => { addFilter('Joined/Renewed', `Renewal: ${period}`); setSelectedCategory(null); }}
-                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-500 transition-colors text-left"
-                          >
-                            {period}
-                          </button>
-                        ))}
-                      </div>
+                      {(fromMonth && fromYear && toMonth && toYear) && (
+                        <button onClick={() => {addFilter('Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`); setSelectedCategory(null); setFromMonth(''); setFromYear(''); setToMonth(''); setToYear('');}} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600">Apply Range</button>
+                      )}
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Select Month(s)/Year(s)</label>
+                      <p className="text-xs text-gray-500 mb-3">Select year and month, click + to add more</p>
 
-                  {/* Relative to Period Start Date */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Period Start Date</h4>
-                    <p className="text-xs text-gray-500 mb-3">Months relative to membership period start</p>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {['Starting Month - 1', 'Starting Month', 'Starting Month + 1', 'Starting Month + 2', 'Starting Month + 3'].map(period => (
-                        <button
-                          key={period}
-                          onClick={() => { addFilter('Joined/Renewed', `Period: ${period}`); setSelectedCategory(null); }}
-                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-colors text-left"
+                      {/* Current selection dropdowns */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <select
+                          value={currentRenewedYear}
+                          onChange={(e) => setCurrentRenewedYear(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                         >
-                          {period}
+                          <option value="">Year</option>
+                          {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                        <select
+                          value={currentRenewedMonth}
+                          onChange={(e) => setCurrentRenewedMonth(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="">Month</option>
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <button
+                          onClick={() => {
+                            if (currentRenewedMonth && currentRenewedYear) {
+                              const newSelection = `${currentRenewedMonth} ${currentRenewedYear}`;
+                              if (!selectedRenewedMonths.includes(newSelection)) {
+                                setSelectedRenewedMonths([...selectedRenewedMonths, newSelection]);
+                              }
+                              setCurrentRenewedMonth('');
+                              setCurrentRenewedYear('');
+                            }
+                          }}
+                          disabled={!currentRenewedMonth || !currentRenewedYear}
+                          className={`p-2 rounded-lg transition-colors ${
+                            currentRenewedMonth && currentRenewedYear
+                              ? 'bg-blue-500 text-white hover:bg-blue-600'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                          title="Add selection"
+                        >
+                          <Plus className="w-5 h-5" />
                         </button>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
 
-                  {/* Legacy: Relative to Today */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Relative to Today</h4>
-                    <p className="text-xs text-gray-500 mb-3">Recent activity based on current date</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['last30', 'last60', 'last90'].map(type => (
-                        <button key={type} onClick={() => applyDateRange(type)} className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors">
-                          {type === 'last30' ? 'Last 30 days' : type === 'last60' ? 'Last 60 days' : 'Last 90 days'}
+                      {/* List of added selections */}
+                      {selectedRenewedMonths.length > 0 && (
+                        <div className="space-y-2 mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                          <label className="text-xs font-medium text-gray-600 block mb-2">Added Selections:</label>
+                          {selectedRenewedMonths.map((monthYear, idx) => (
+                            <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white rounded border border-gray-200">
+                              <span className="text-sm text-gray-900">{monthYear}</span>
+                              <button
+                                onClick={() => setSelectedRenewedMonths(selectedRenewedMonths.filter(m => m !== monthYear))}
+                                className="p-1 hover:bg-red-50 rounded transition-colors"
+                                title="Remove"
+                              >
+                                <X className="w-4 h-4 text-red-500" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Final add button */}
+                      {selectedRenewedMonths.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const value = selectedRenewedMonths.join(' or ');
+                            addFilter('Renewed', value);
+                            setSelectedCategory(null);
+                            setSelectedRenewedMonths([]);
+                            setCurrentRenewedMonth('');
+                            setCurrentRenewedYear('');
+                          }}
+                          className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600"
+                        >
+                          Add {selectedRenewedMonths.length} Selection{selectedRenewedMonths.length !== 1 ? 's' : ''}
                         </button>
-                      ))}
+                      )}
                     </div>
-                  </div>
-
-                  {/* Legacy: Custom Date Range */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">Custom Date Range</h4>
-                    <p className="text-xs text-gray-500 mb-3">Exact dates for precise filtering</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><label className="text-xs text-gray-500 mb-1 block">Start Date</label><input type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
-                      <div><label className="text-xs text-gray-500 mb-1 block">End Date</label><input type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" /></div>
-                    </div>
-                    {(dateRangeStart && dateRangeEnd) && (
-                      <button onClick={() => { addFilter('Joined/Renewed', `${dateRangeStart} to ${dateRangeEnd}`); setSelectedCategory(null); setDateRangeStart(''); setDateRangeEnd(''); }} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">Apply Custom Range</button>
-                    )}
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={selectedCategory === 'Member Type' && selections.some(s => s.category === 'Member Type' && s.value === 'All')}
+                      onChange={(e) => {
+                        if (e.target.checked && selectedCategory === 'Member Type') {
+                          addFilter(selectedCategory, 'All');
+                        }
+                      }}
+                    />
                     <span className="flex-1 text-sm font-medium text-gray-700">Any value (no filter)</span>
                     <button onClick={() => addField(selectedCategory)} className="opacity-70 hover:opacity-100 transition-opacity" title="Show as field">
                       <Eye className="w-4 h-4 text-purple-500" strokeWidth={1.5} />
@@ -1332,11 +1453,50 @@ const ReportBuilder = (props) => {
                         <input
                           type="checkbox"
                           className="rounded"
-                          checked={false}
+                          checked={(() => {
+                            // Special handling for Member Year - only show checked when explicitly editing
+                            if (selectedCategory === 'Member Year') {
+                              return editingSelection && editingSelection.category === 'Member Year' && editingSelection.value === value;
+                            }
+
+                            // Default behavior for other categories
+                            return selections.some(s => {
+                              if (s.category !== selectedCategory) return false;
+                              // For Province/State and Member Type, extract short code for comparison
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
+                                const match = value.match(/\(([^)]+)\)/);
+                                if (match) {
+                                  return s.value === match[1];
+                                }
+                              }
+                              return s.value === value;
+                            });
+                          })()}
                           onChange={(e) => {
                             if (e.target.checked) {
                               // Always add filter - allow duplicates for OR logic
                               addFilter(selectedCategory, value);
+                            } else {
+                              // Remove the selection when unchecked
+                              let valueToRemove = value;
+
+                              // Extract short code for Province/State and Member Type
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
+                                const match = value.match(/\(([^)]+)\)/);
+                                if (match) {
+                                  valueToRemove = match[1];
+                                }
+                              }
+
+                              // Find and remove the matching selection
+                              const selectionToRemove = selections.find(s =>
+                                s.category === selectedCategory && s.value === valueToRemove
+                              );
+
+                              if (selectionToRemove) {
+                                removeSelection(selectionToRemove.id);
+                                showToast(`Selection removed: ${value}`);
+                              }
                             }
                           }}
                         />
@@ -1415,7 +1575,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats First Panel */}
         {showMemberStatsPanel && (
-          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px' }}>
+          <div className="fixed top-[115px] bottom-0 flex flex-col bg-white border-l border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-30" style={{ width: '480px', right: selectedMemberStatField === 'Consecutive Membership Years' ? '400px' : '0' }}>
             <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1470,7 +1630,7 @@ const ReportBuilder = (props) => {
 
         {/* Member Stats Second Panel - Consecutive Membership Years */}
         {selectedMemberStatField === 'Consecutive Membership Years' && (
-          <div className="h-full flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out" style={{ width: '400px' }}>
+          <div className="fixed top-[115px] right-0 bottom-0 flex flex-col bg-gray-50 border-l-2 border-gray-200 shadow-2xl transition-all duration-300 ease-in-out z-30" style={{ width: '400px' }}>
             <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => setSelectedMemberStatField(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">

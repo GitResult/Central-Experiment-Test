@@ -478,6 +478,16 @@ const ReportBuilder = ({
   const [savedQueries, setSavedQueries] = useState([]);
   const [editingSelection, setEditingSelection] = useState(null);
 
+  // Renewed date range state (for Browse mode features)
+  const [fromMonth, setFromMonth] = useState('');
+  const [fromYear, setFromYear] = useState('');
+  const [toMonth, setToMonth] = useState('');
+  const [toYear, setToYear] = useState('');
+  const [renewedMode, setRenewedMode] = useState('from-to'); // 'from-to' or 'in'
+  const [selectedRenewedMonths, setSelectedRenewedMonths] = useState([]);
+  const [currentRenewedMonth, setCurrentRenewedMonth] = useState('');
+  const [currentRenewedYear, setCurrentRenewedYear] = useState('');
+
   // Dynamic data from JSON
   const [categories, setCategories] = useState(CATEGORIES);
   const [sampleValues, setSampleValues] = useState(SAMPLE_VALUES);
@@ -561,96 +571,151 @@ const ReportBuilder = ({
   }, [categories, sectionFilters, searchTerm, cardOrder, activeView]); // Dependencies that affect the result
 
   // Natural language query builder (from Browse mode)
-  const buildNaturalLanguageQuery = () => {
-    if (selections.length === 0) return '';
+    const buildNaturalLanguageQuery = () => {
+      if (selections.length === 0) return '';
 
-    const startingDataCategories = ['Current Members', 'New Members', 'Lapsed Members', 'Contacts'];
+      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+      let query = '';
+      let processedIndices = new Set();
 
-    let query = '';
+      // Find status and members selections
+      const statusSel = selections.find(s => statusCategories.includes(s.category));
+      const membersSel = selections.find(s => s.category === 'Members');
+      const memberYearSel = selections.find(s => s.category === 'Member Year');
 
-    // Find starting data (Member Year or Starting Data category)
-    const memberYearSel = selections.find(s => s.category === 'Member Year');
-    const startingDataSel = selections.find(s => startingDataCategories.includes(s.category));
+      // Build the starting phrase
+      if (statusSel && membersSel && memberYearSel) {
+        // Pattern: [Previous][Members][for][Member Year = 2019] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+        processedIndices.add(selections.indexOf(memberYearSel));
+      } else if (statusSel && membersSel) {
+        // Pattern: [Current][Members] → "Current members"
+        query = `${statusSel.category} members`;
+        processedIndices.add(selections.indexOf(statusSel));
+        processedIndices.add(selections.indexOf(membersSel));
+      } else if (statusSel) {
+        // Pattern: [Current] only → "Current"
+        query = statusSel.category;
+        processedIndices.add(selections.indexOf(statusSel));
+      } else if (memberYearSel && membersSel) {
+        // Pattern: [Member Year = 2019][Members] → "2019 members"
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
+        processedIndices.add(selections.indexOf(membersSel));
+      } else if (memberYearSel) {
+        query = `${memberYearSel.value} members`;
+        processedIndices.add(selections.indexOf(memberYearSel));
+      } else if (membersSel) {
+        query = 'Members';
+        processedIndices.add(selections.indexOf(membersSel));
+      }
 
-    if (memberYearSel) {
-      query = `${memberYearSel.value} members`;
-    } else if (startingDataSel) {
-      query = startingDataSel.category.toLowerCase();
-    }
+      // Process remaining selections with connectors
+      const remainingSelections = selections.filter((s, idx) => !processedIndices.has(idx));
 
-    // Process remaining filters with connectors
-    const filterSelections = selections.filter(s =>
-      s.category !== 'Member Year' && !startingDataCategories.includes(s.category)
-    );
+      if (remainingSelections.length > 0) {
+        const parts = [];
+        let i = 0;
 
-    if (filterSelections.length > 0) {
-      const parts = [];
-      let i = 0;
+        // Helper function to get proper connector phrase for each category
+        const getConnectorPhrase = (category, value, isFirst) => {
+          let val = value;
+          if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
 
-      // Helper function to get proper connector phrase for each category
-      const getConnectorPhrase = (category, value) => {
-        let val = value;
-        if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
-
-        if (category === 'Renewal Month') return `who renewed in ${val}`;
-        if (category === 'Renewal Year') return `who renewed in ${val}`;
-        if (category === 'Member Type') return `that are member type ${val}`;
-        if (category === 'Consecutive Membership Years') return `that have been members for ${val}`;
-        if (category === 'Occupation') return `and occupation is ${val}`;
-        if (category === 'Degree') return `with a Degree: ${val}`;
-        if (category === 'Province/State') return `from province/state ${val}`;
-        return `with ${category.toLowerCase()} ${val}`;
-      };
-
-      while (i < filterSelections.length) {
-        const sel = filterSelections[i];
-        const nextSel = filterSelections[i + 1];
-
-        // Check if this is a BETWEEN scenario
-        if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-          const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
-            ? nextSel.value.split(' - ')[0]
-            : nextSel.value;
-
-          const phrase = getConnectorPhrase(sel.category, sel.value);
-          parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
-          i += 2;
-        } else {
-          // Check for OR connectors with same category
-          let j = i + 1;
-          const orValues = [sel.value];
-          while (j < filterSelections.length &&
-                 filterSelections[j].connector === 'OR' &&
-                 filterSelections[j].category === sel.category) {
-            orValues.push(filterSelections[j].value);
-            j++;
+          // First filter after status/members uses "that are" or "that have been members"
+          if (isFirst && category === 'Member Type') {
+            if (val === 'Members' || val === 'All') {
+              return `that have been members`;
+            }
+            return `that are ${val}`;
           }
 
-          if (orValues.length > 1) {
-            // Multiple values with OR
-            const formattedValues = orValues.map(v =>
-              sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
-            ).join(' or ');
+          // Special handling for different categories based on phrase patterns
+          if (category === 'Renewal Month') return `who renewed in ${val}`;
+          if (category === 'Renewal Year') return `in ${val}`;
+          if (category === 'Renewed') return `who renewed in ${val}`;
+          // Member Year after Renewed uses "for member year"
+          if (category === 'Member Year' && i > 0 && remainingSelections.slice(0, i).some(s => s.category === 'Renewed')) {
+            return `for member year ${val}`;
+          }
+          if (category === 'Member Type') return `and member type ${val}`;
+          if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
+            // Extract the number from "Consecutive Membership Years= 5" format
+            const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
+            if (yearMatch) {
+              const years = yearMatch[1];
+              // Check if previous selection was "Member Type= Members" or "Member Type= All"
+              if (i > 0 && remainingSelections[i - 1].category === 'Member Type' &&
+                  (remainingSelections[i - 1].value === 'Members' || remainingSelections[i - 1].value === 'All')) {
+                return `for the past ${years} years`;
+              }
+              return `that have been members for the past ${years} years`;
+            }
+            return `that have been members for ${val}`;
+          }
+          if (category === 'Occupation') return `and occupation is ${val}`;
+          if (category === 'Degree') return `with a Degree: ${val}`;
+          if (category === 'Province/State') return `from province/state ${val}`;
+          if (category === 'Career Stage') return `and career stage ${val}`;
+          if (category === 'Workplace Setting') return `and workplace setting ${val}`;
+          if (category === 'Education Received') return `with education ${val}`;
+          if (category === 'Area of Interest') return `and area of interest ${val}`;
 
-            const phrase = getConnectorPhrase(sel.category, sel.value);
-            parts.push(phrase.replace(sel.value, formattedValues));
+          return `and ${category.toLowerCase()} ${val}`;
+        };
+
+        while (i < remainingSelections.length) {
+          const sel = remainingSelections[i];
+          const nextSel = remainingSelections[i + 1];
+          const isFirst = i === 0;
+
+          // Check if this is a BETWEEN scenario
+          if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
+            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
+              ? nextSel.value.split(' - ')[0]
+              : nextSel.value;
+
+            const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
+            parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
+            i += 2;
           } else {
-            // Single value
-            parts.push(getConnectorPhrase(sel.category, sel.value));
-          }
+            // Check for OR connectors with same category
+            let j = i + 1;
+            const orValues = [sel.value];
+            while (j < remainingSelections.length &&
+                   remainingSelections[j].connector === 'OR' &&
+                   remainingSelections[j].category === sel.category) {
+              orValues.push(remainingSelections[j].value);
+              j++;
+            }
 
-          i = j;
+            if (orValues.length > 1) {
+              // Multiple values with OR
+              const formattedValues = orValues.map(v =>
+                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+              ).join(' or ');
+
+              const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
+              parts.push(phrase.replace(sel.value, formattedValues));
+            } else {
+              // Single value
+              parts.push(getConnectorPhrase(sel.category, sel.value, isFirst));
+            }
+
+            i = j;
+          }
+        }
+
+        if (parts.length > 0) {
+          // Join all parts with proper spacing
+          query += ' ' + parts.join(' ');
         }
       }
 
-      if (parts.length > 0) {
-        // Join all parts with proper spacing
-        query += ' ' + parts.join(' ');
-      }
-    }
-
-    return query.trim();
-  };
+      return query.trim();
+    };
 
   const getValueCount = (category, value) => {
     const hash = (category + value).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -734,11 +799,12 @@ const ReportBuilder = ({
   // }, [stopAutoScroll]);
 
   const addSelection = (category, value, type = 'filter') => {
-    // Determine connector logic based on phrase patterns
+    // Determine connector logic based on phrase patterns (from Browse mode)
     let connector = null;
 
     if (selections.length > 0) {
       const firstSelection = selections[0];
+      const secondSelection = selections.length > 1 ? selections[1] : null;
       const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
 
       // No connector between Status (Current/Previous/New/Lapsed) and Members
@@ -746,19 +812,45 @@ const ReportBuilder = ({
           statusCategories.includes(firstSelection.category) &&
           category === 'Members') {
         connector = null;
+      }
+      // "that are" connector for Member Type after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Type') {
+        connector = 'that are';
+      }
+      // "that have" connector for Member Stats after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Stats') {
+        connector = 'that have';
+      }
+      // "for" connector for Member Year after Status + Members
+      else if (selections.length === 2 &&
+               statusCategories.includes(firstSelection.category) &&
+               secondSelection?.category === 'Members' &&
+               category === 'Member Year') {
+        connector = 'for';
+      }
+      // "that have" connector for Renewed after Status + Members + Member Year
+      else if (selections.length === 3 &&
+               selections.some(s => statusCategories.includes(s.category)) &&
+               selections.some(s => s.category === 'Members') &&
+               selections.some(s => s.category === 'Member Year') &&
+               category === 'Renewed') {
+        connector = 'that have';
+      }
+      // "for" connector for Member Year after Renewed
+      else if (selections.some(s => s.category === 'Renewed') && category === 'Member Year') {
+        connector = 'for';
       } else {
         connector = 'AND';
       }
     }
 
-    const newSelection = {
-      id: Date.now(),
-      category,
-      value,
-      type,
-      connector
-    };
-    setSelections([...selections, newSelection]);
+    setSelections([...selections, { id: Date.now(), category, value, type, connector }]);
   };
 
   const removeSelection = (id) => {
@@ -834,17 +926,31 @@ const ReportBuilder = ({
   };
 
   const addFilter = (category, value) => {
-    const newSelection = {
-      id: Date.now(),
-      category,
-      value,
-      type: 'filter',
-      connector: selections.length > 0 ? 'AND' : null
-    };
-    const updatedSelections = [...selections, newSelection];
-    setSelections(updatedSelections);
-    setCurrentDescription(generateReportDescription(updatedSelections));
-    showToast(`Filter added: ${value}`);
+    // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
+    // Extract short code for Member Type (e.g., "Early Career Year 1 (ECY1)" -> "ECY1")
+    let displayValue = value;
+    if ((category === 'Province/State' || category === 'Member Type') && value.includes('(')) {
+      const match = value.match(/\(([^)]+)\)/);
+      if (match) {
+        displayValue = match[1]; // Extract content within parentheses
+      }
+    }
+
+    if (editingSelection) {
+      // Update existing selection, preserving its type
+      setSelections(selections.map(s =>
+        s.id === editingSelection.id
+          ? { ...s, category, value: displayValue }
+          : s
+      ));
+      showToast(`Selection updated: ${value}`);
+      setEditingSelection(null);
+      setSelectedCategory(null);
+    } else {
+      // Add new selection
+      addSelection(category, displayValue, 'filter');
+      showToast(`Filter added: ${value}`);
+    }
   };
 
   const addField = (category, value) => {
@@ -859,6 +965,24 @@ const ReportBuilder = ({
     setSelections(updatedSelections);
     setCurrentDescription(generateReportDescription(updatedSelections));
     showToast(`Field added: ${category}`);
+  };
+
+  // Helper function to format selection display label (from Browse mode)
+  const getSelectionDisplayLabel = (sel) => {
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+
+    // For Status categories and Members, display only the category name
+    if (statusCategories.includes(sel.category) || sel.category === 'Members') {
+      return sel.category;
+    }
+
+    // For Member Type and Member Year, use equals sign format
+    if (sel.category === 'Member Type' || sel.category === 'Member Year') {
+      return `${sel.category}= ${sel.value}`;
+    }
+
+    // For all other categories, display "Category: Value"
+    return `${sel.category}: ${sel.value}`;
   };
 
   const addComboFields = (comboName) => {
@@ -1513,8 +1637,8 @@ const ReportBuilder = ({
                   const isEditing = editingSelection?.id === sel.id;
                   return (
                     <React.Fragment key={sel.id}>
-                      {/* Connector dropdown (shown before chips except the first) */}
-                      {idx > 0 && (
+                      {/* Connector dropdown (shown before chips except the first, and only if connector is not null) */}
+                      {idx > 0 && sel.connector !== null && (
                         <select
                           value={sel.connector || 'AND'}
                           onChange={(e) => {
@@ -1524,49 +1648,95 @@ const ReportBuilder = ({
                           }}
                           className="px-2 py-1 text-xs font-semibold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         >
+                          <option value="that are">that are</option>
+                          <option value="that have">that have</option>
+                          <option value="for">for</option>
                           <option value="AND">AND</option>
                           <option value="OR">OR</option>
                           <option value="BETWEEN">BETWEEN</option>
                         </select>
                       )}
 
-                      {/* Selection chip */}
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        isEditing
-                          ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
-                          : sel.type === 'filter'
-                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
-                            : 'bg-purple-100 text-purple-900 border border-purple-300'
-                      }`}>
-                        <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                        <span className="font-medium">{sel.category}</span>
-                        <span className="text-xs opacity-75">= {sel.value}</span>
-                        <div className="flex items-center gap-1 ml-1">
-                          <button
-                            onClick={() => {
-                              // Edit functionality - open the category selection
-                              setEditingSelection(sel);
-                              // Would need to trigger the category panel here
-                            }}
-                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                            title="Edit selection value"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              removeSelection(sel.id);
-                              if (editingSelection?.id === sel.id) {
-                                setEditingSelection(null);
-                              }
-                            }}
-                            className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
-                            title="Remove"
-                          >
-                            <X className="w-3.5 h-3.5" strokeWidth={2} />
-                          </button>
+                      {/* Selection chip - Special handling for Renewed category */}
+                      {sel.category === 'Renewed' ? (
+                        <>
+                          {/* "renewed" keyword chip */}
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <span className="font-medium">renewed</span>
+                          </div>
+                          {/* "in" keyword chip */}
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <span className="font-medium">in</span>
+                          </div>
+                          {/* Value chip with edit/remove buttons */}
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                            isEditing
+                              ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                              : 'bg-blue-100 text-blue-900 border border-blue-300'
+                          }`}>
+                            <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                            <span className="font-medium">{sel.value}</span>
+                            <div className="flex items-center gap-1 ml-1">
+                              <button
+                                onClick={() => {
+                                  setEditingSelection(sel);
+                                }}
+                                className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                title="Edit selection value"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  removeSelection(sel.id);
+                                  if (editingSelection?.id === sel.id) {
+                                    setEditingSelection(null);
+                                  }
+                                }}
+                                className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                                title="Remove"
+                              >
+                                <X className="w-3.5 h-3.5" strokeWidth={2} />
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Regular chip for all other categories */
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          isEditing
+                            ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
+                            : sel.type === 'filter'
+                              ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                              : 'bg-purple-100 text-purple-900 border border-purple-300'
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                          <span className="font-medium">{getSelectionDisplayLabel(sel)}</span>
+                          <div className="flex items-center gap-1 ml-1">
+                            <button
+                              onClick={() => {
+                                setEditingSelection(sel);
+                              }}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Edit selection value"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                removeSelection(sel.id);
+                                if (editingSelection?.id === sel.id) {
+                                  setEditingSelection(null);
+                                }
+                              }}
+                              className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
+                              title="Remove"
+                            >
+                              <X className="w-3.5 h-3.5" strokeWidth={2} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </React.Fragment>
                   );
                 })}
