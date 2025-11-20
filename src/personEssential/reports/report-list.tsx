@@ -503,6 +503,7 @@ const ReportBuilder = ({
   const [filterValues, setFilterValues] = useState({});
   const [filterSearchTerm, setFilterSearchTerm] = useState('');
   const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
+  const [expandedValues, setExpandedValues] = useState({}); // Track expanded nested values
 
   // Load data from JSON file
   useEffect(() => {
@@ -2252,56 +2253,130 @@ const ReportBuilder = ({
                                   {values.map((value, vIdx) => {
                                     const valCount = recordCounts[`${category}:${value}`] || count;
                                     const isSelected = selectedValues.includes(value);
+                                    const hasNestedOptions = sampleValues[value] && sampleValues[value].length > 0;
+                                    const isExpanded = expandedValues[`${category}:${value}`];
 
                                     return (
                                       <div key={vIdx} className="group">
                                         <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                                           <button
                                             onClick={() => {
-                                              if (isSelected) {
-                                                // Remove from selected
-                                                const newVals = selectedValues.filter(v => v !== value);
-                                                setFilterValues(prev => ({ ...prev, [category]: newVals }));
-                                                setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                              if (hasNestedOptions) {
+                                                // Toggle expansion for nested options
+                                                setExpandedValues(prev => ({
+                                                  ...prev,
+                                                  [`${category}:${value}`]: !prev[`${category}:${value}`]
+                                                }));
                                               } else {
-                                                // Add to selected
-                                                setFilterValue(category, value, selectedValues.length > 0);
-                                              }
-                                            }}
-                                            className="flex-1 text-left min-w-0"
-                                          >
-                                            <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
-                                              {value}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                              <div className="text-xs font-medium text-gray-500">
-                                                {valCount.toLocaleString()}
-                                              </div>
-                                            </div>
-                                          </button>
-                                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
                                                 if (isSelected) {
+                                                  // Remove from selected
                                                   const newVals = selectedValues.filter(v => v !== value);
                                                   setFilterValues(prev => ({ ...prev, [category]: newVals }));
                                                   setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
                                                 } else {
+                                                  // Add to selected
                                                   setFilterValue(category, value, selectedValues.length > 0);
                                                 }
-                                              }}
-                                              className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
-                                              title={isSelected ? "Remove filter" : "Add filter"}
-                                            >
-                                              {isSelected ? (
-                                                <X className="w-3 h-3 text-red-600" strokeWidth={2} />
-                                              ) : (
-                                                <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                              }
+                                            }}
+                                            className="flex-1 text-left min-w-0"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              {hasNestedOptions && (
+                                                <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                                               )}
-                                            </button>
-                                          </div>
+                                              <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                                {value}
+                                              </div>
+                                            </div>
+                                            {!hasNestedOptions && (
+                                              <div className="flex items-center gap-2 mt-0.5">
+                                                <div className="text-xs font-medium text-gray-500">
+                                                  {valCount.toLocaleString()}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </button>
+                                          {!hasNestedOptions && (
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (isSelected) {
+                                                    const newVals = selectedValues.filter(v => v !== value);
+                                                    setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                    setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                                  } else {
+                                                    setFilterValue(category, value, selectedValues.length > 0);
+                                                  }
+                                                }}
+                                                className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                title={isSelected ? "Remove filter" : "Add filter"}
+                                              >
+                                                {isSelected ? (
+                                                  <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                ) : (
+                                                  <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                )}
+                                              </button>
+                                            </div>
+                                          )}
                                         </div>
+
+                                        {/* Nested Options */}
+                                        {hasNestedOptions && isExpanded && (
+                                          <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                                            {sampleValues[value].map((nestedValue, nIdx) => {
+                                              const nestedKey = `${value}=${nestedValue}`;
+                                              const isNestedSelected = selectedValues.includes(nestedKey);
+
+                                              return (
+                                                <div key={nIdx} className="group/nested">
+                                                  <div className="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50 transition-colors">
+                                                    <button
+                                                      onClick={() => {
+                                                        if (isNestedSelected) {
+                                                          const newVals = selectedValues.filter(v => v !== nestedKey);
+                                                          setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                          setSelections(prev => prev.filter(s => !(s.category === category && s.value === nestedKey)));
+                                                        } else {
+                                                          setFilterValue(category, nestedKey, selectedValues.length > 0);
+                                                        }
+                                                      }}
+                                                      className="flex-1 text-left"
+                                                    >
+                                                      <div className={`text-sm ${isNestedSelected ? 'text-blue-600 font-medium' : 'text-gray-700 hover:text-blue-600'} transition-colors`}>
+                                                        {nestedValue} {nestedValue.match(/^\d+$/) ? 'years' : ''}
+                                                      </div>
+                                                    </button>
+                                                    <div className="flex gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity">
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          if (isNestedSelected) {
+                                                            const newVals = selectedValues.filter(v => v !== nestedKey);
+                                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                            setSelections(prev => prev.filter(s => !(s.category === category && s.value === nestedKey)));
+                                                          } else {
+                                                            setFilterValue(category, nestedKey, selectedValues.length > 0);
+                                                          }
+                                                        }}
+                                                        className={`p-1 rounded transition-colors ${isNestedSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                        title={isNestedSelected ? "Remove" : "Add"}
+                                                      >
+                                                        {isNestedSelected ? (
+                                                          <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                        ) : (
+                                                          <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                        )}
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
                                       </div>
                                     );
                                   })}
