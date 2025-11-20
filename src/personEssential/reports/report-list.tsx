@@ -631,7 +631,10 @@ const ReportBuilder = ({
         // Helper function to get proper connector phrase for each category
         const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
+          // Extract short form for Member Type (e.g., ECY1, ECY2, ECY3)
           if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          // Extract short form for Province/State (e.g., ON, BC, AB)
+          if (category === 'Province/State' && val.includes(' - ')) val = val.split(' - ')[0];
 
           // First filter after status/members uses "that are" or "that have been members"
           if (isFirst && category === 'Member Type') {
@@ -649,7 +652,7 @@ const ReportBuilder = ({
           if (category === 'Member Year' && i > 0 && remainingSelections.slice(0, i).some(s => s.category === 'Renewed')) {
             return `for member year ${val}`;
           }
-          if (category === 'Member Type') return `and member type ${val}`;
+          if (category === 'Member Type') return `that are ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
             // Extract the number from "Consecutive Membership Years= 5" format
             const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
@@ -682,7 +685,7 @@ const ReportBuilder = ({
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
+            const val2 = (sel.category === 'Member Type' || sel.category === 'Province/State') && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
@@ -702,9 +705,13 @@ const ReportBuilder = ({
 
             if (orValues.length > 1) {
               // Multiple values with OR
-              const formattedValues = orValues.map(v =>
-                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
-              ).join(' or ');
+              const formattedValues = orValues.map(v => {
+                // Extract short form for Member Type and Province/State
+                if ((sel.category === 'Member Type' || sel.category === 'Province/State') && v.includes(' - ')) {
+                  return v.split(' - ')[0];
+                }
+                return v;
+              }).join(' or ');
 
               const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
               parts.push(phrase.replace(sel.value, formattedValues));
@@ -987,7 +994,21 @@ const ReportBuilder = ({
 
     // For Member Type and Member Year, use equals sign format
     if (sel.category === 'Member Type' || sel.category === 'Member Year') {
-      return `${sel.category}= ${sel.value}`;
+      let displayValue = sel.value;
+      // Extract short form for ECY1, ECY2, ECY3
+      if (sel.category === 'Member Type' && displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}= ${displayValue}`;
+    }
+
+    // For Province/State, extract short form
+    if (sel.category === 'Province/State') {
+      let displayValue = sel.value;
+      if (displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}: ${displayValue}`;
     }
 
     // For all other categories, display "Category: Value"
