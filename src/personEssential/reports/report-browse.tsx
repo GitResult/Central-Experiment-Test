@@ -1142,7 +1142,7 @@ const ReportBuilder = (props) => {
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
             const isThreeColumn = categories.length >= 6;
-            const isFourColumn = categories.length === 4;
+            const isFourColumn = categories.length === 4 || section === 'Starting Data';
 
             return (
               <div key={section}>
