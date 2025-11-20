@@ -1995,7 +1995,7 @@ const ReportBuilder = ({
                           </div>
 
                           <div className="p-4">
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                               {values.map((value, vIdx) => {
                                 const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
                                 const isSelected = selectedValues.includes(value);
@@ -2132,7 +2132,7 @@ const ReportBuilder = ({
                           </div>
 
                           <div className="p-4">
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                               {values.map((value, vIdx) => {
                                 const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
                                 const isSelected = selectedValues.includes(value);
@@ -2328,8 +2328,8 @@ const ReportBuilder = ({
                               </div>
 
                               <div className="p-4">
-                                <div className="space-y-1.5">
-                                  {values.slice(0, 8).map((value, vIdx) => {
+                                <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
+                                  {values.map((value, vIdx) => {
                                     const valCount = recordCounts[`${category}:${value}`] || count;
                                     const isSelected = selectedValues.includes(value);
 
@@ -2385,13 +2385,6 @@ const ReportBuilder = ({
                                       </div>
                                     );
                                   })}
-                                  {values.length > 8 && (
-                                    <button
-                                      className="w-full text-center py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 rounded-lg transition-colors"
-                                    >
-                                      View all {values.length} options →
-                                    </button>
-                                  )}
                                 </div>
                               </div>
                             </div>
