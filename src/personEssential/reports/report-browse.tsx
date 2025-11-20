@@ -1478,10 +1478,10 @@ const ReportBuilder = (props) => {
                             return selections.some(s => {
                               if (s.category !== selectedCategory) return false;
                               // For Province/State and Member Type, extract short code for comparison
-                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
-                                const match = value.match(/\(([^)]+)\)/);
-                                if (match) {
-                                  return s.value === match[1];
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes(' - ')) {
+                                const parts = value.split(' - ');
+                                if (parts.length > 0) {
+                                  return s.value === parts[0];
                                 }
                               }
                               return s.value === value;
@@ -1496,10 +1496,10 @@ const ReportBuilder = (props) => {
                               let valueToRemove = value;
 
                               // Extract short code for Province/State and Member Type
-                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
-                                const match = value.match(/\(([^)]+)\)/);
-                                if (match) {
-                                  valueToRemove = match[1];
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes(' - ')) {
+                                const parts = value.split(' - ');
+                                if (parts.length > 0) {
+                                  valueToRemove = parts[0];
                                 }
                               }
 
