@@ -1412,12 +1412,16 @@ const ReportBuilder = ({
     // Update selections
     if (addAsOR && existingValues.length > 0) {
       addSelection(category, value, 'filter');
-      // Set connector to OR for the new selection
+      // Set connector to OR for the new selection, but only if a special connector wasn't already set
       setSelections(prev => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
         if (lastIndex >= 0) {
-          updated[lastIndex].connector = 'OR';
+          // Don't override special connectors like 'for' (Member Year after Renewed)
+          // Only set to OR if the connector is AND (default)
+          if (updated[lastIndex].connector === 'AND') {
+            updated[lastIndex].connector = 'OR';
+          }
         }
         return updated;
       });
