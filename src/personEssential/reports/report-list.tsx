@@ -1956,10 +1956,290 @@ const ReportBuilder = ({
 
             {/* Card Grid */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {/* Status Card */}
+              {(() => {
+                const category = 'Status';
+                const values = ['Current', 'Previous', 'New', 'Lapsed'];
+                const CategoryIcon = Database;
+                const selectedValues = filterValues[category] || [];
+                const colors = SECTION_COLORS['Starting Data'];
+                const isFlipped = flippedCards[category];
+                const categoryFieldsList = defaultFields;
+                const count = recordCounts[category] || 0;
+
+                return (
+                  <div key={category} className="card-flip-container">
+                    <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                      {/* Card Front */}
+                      <div className="card-flip-front">
+                        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                          <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                <p className="text-xs text-gray-500">{values.length} options</p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-4">
+                            <div className="space-y-1.5">
+                              {values.map((value, vIdx) => {
+                                const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
+                                const isSelected = selectedValues.includes(value);
+
+                                return (
+                                  <div key={vIdx} className="group">
+                                    <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                      <button
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            const newVals = selectedValues.filter(v => v !== value);
+                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                            setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                          } else {
+                                            setFilterValue(category, value, selectedValues.length > 0);
+                                          }
+                                        }}
+                                        className="flex-1 text-left min-w-0"
+                                      >
+                                        <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                          {value}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          <div className="text-xs font-medium text-gray-500">
+                                            {valCount.toLocaleString()}
+                                          </div>
+                                        </div>
+                                      </button>
+                                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (isSelected) {
+                                              const newVals = selectedValues.filter(v => v !== value);
+                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                            } else {
+                                              setFilterValue(category, value, selectedValues.length > 0);
+                                            }
+                                          }}
+                                          className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                          title={isSelected ? "Remove filter" : "Add filter"}
+                                        >
+                                          {isSelected ? (
+                                            <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                          ) : (
+                                            <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Back - Show Fields */}
+                      <div className="card-flip-back">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {categoryFieldsList.map((field, idx) => (
+                                <div
+                                  key={idx}
+                                  className="text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                >
+                                  {field}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Entity Type Card */}
+              {(() => {
+                const category = 'Entity Type';
+                const values = ['Members', 'Contacts', 'Invoices', 'Other'];
+                const CategoryIcon = Database;
+                const selectedValues = filterValues[category] || [];
+                const colors = SECTION_COLORS['Starting Data'];
+                const isFlipped = flippedCards[category];
+                const categoryFieldsList = defaultFields;
+                const count = recordCounts[category] || 0;
+
+                return (
+                  <div key={category} className="card-flip-container">
+                    <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                      {/* Card Front */}
+                      <div className="card-flip-front">
+                        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                          <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                <p className="text-xs text-gray-500">{values.length} options</p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-4">
+                            <div className="space-y-1.5">
+                              {values.map((value, vIdx) => {
+                                const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
+                                const isSelected = selectedValues.includes(value);
+
+                                return (
+                                  <div key={vIdx} className="group">
+                                    <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                      <button
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            const newVals = selectedValues.filter(v => v !== value);
+                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                            setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                          } else {
+                                            setFilterValue(category, value, selectedValues.length > 0);
+                                          }
+                                        }}
+                                        className="flex-1 text-left min-w-0"
+                                      >
+                                        <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                          {value}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          <div className="text-xs font-medium text-gray-500">
+                                            {valCount.toLocaleString()}
+                                          </div>
+                                        </div>
+                                      </button>
+                                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (isSelected) {
+                                              const newVals = selectedValues.filter(v => v !== value);
+                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                            } else {
+                                              setFilterValue(category, value, selectedValues.length > 0);
+                                            }
+                                          }}
+                                          className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                          title={isSelected ? "Remove filter" : "Add filter"}
+                                        >
+                                          {isSelected ? (
+                                            <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                          ) : (
+                                            <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Back - Show Fields */}
+                      <div className="card-flip-back">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {categoryFieldsList.map((field, idx) => (
+                                <div
+                                  key={idx}
+                                  className="text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                >
+                                  {field}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Regular Category Cards */}
               {Object.entries(categories).map(([section, cats]) => {
+                const startingDataItems = ['Current', 'Previous', 'New', 'Lapsed', 'Members', 'Contacts', 'Invoices', 'Other'];
 
                 return cats
                   .filter(cat => {
+                    // Skip Starting Data items that are now in Status/Entity Type cards
+                    if (section === 'Starting Data' && startingDataItems.includes(cat)) {
+                      return false;
+                    }
                     if (!filterSearchTerm) return true;
                     return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
                   })
