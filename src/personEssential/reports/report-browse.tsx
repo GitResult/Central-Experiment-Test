@@ -308,12 +308,17 @@ const ReportBuilder = (props) => {
       const hasAnyStatusSelected = selections.some(s => statusCategories.includes(s.category));
 
       if (!hasAnyStatusSelected) {
-        // Auto-select Current first (only if no status category selected)
-        addField('Current', 'Current');
+        // Auto-select both Current and Members at once
+        setSelections([
+          ...selections,
+          { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+          { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+        ]);
+        showToast('Added: Current Members');
+      } else {
+        // Just add Members
+        addField('Members', 'Members');
       }
-
-      // Then select Members
-      addField('Members', 'Members');
       return;
     }
 
