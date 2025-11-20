@@ -351,13 +351,13 @@ const ReportBuilder = (props) => {
   };
 
   const addFilter = (category, value) => {
-    // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
-    // Extract short code for Member Type (e.g., "Early Career Year 1 (ECY1)" -> "ECY1")
+    // Extract short code for Province/State (e.g., "BC - British Columbia" -> "BC")
+    // Extract short code for Member Type (e.g., "ECY1 - Early Career Year 1" -> "ECY1")
     let displayValue = value;
-    if ((category === 'Province/State' || category === 'Member Type') && value.includes('(')) {
-      const match = value.match(/\(([^)]+)\)/);
-      if (match) {
-        displayValue = match[1]; // Extract content within parentheses
+    if ((category === 'Province/State' || category === 'Member Type') && value.includes(' - ')) {
+      const parts = value.split(' - ');
+      if (parts.length > 0) {
+        displayValue = parts[0]; // Extract content before " - "
       }
     }
 
@@ -641,7 +641,7 @@ const ReportBuilder = (props) => {
         // Helper function to get proper connector phrase for each category
         const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
-          if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          if ((category === 'Member Type' || category === 'Province/State') && val.includes(' - ')) val = val.split(' - ')[0];
 
           // First filter after status/members uses "that are" or "that have been members"
           if (isFirst && category === 'Member Type') {
@@ -692,7 +692,7 @@ const ReportBuilder = (props) => {
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
+            const val2 = (sel.category === 'Member Type' || sel.category === 'Province/State') && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
@@ -713,7 +713,7 @@ const ReportBuilder = (props) => {
             if (orValues.length > 1) {
               // Multiple values with OR
               const formattedValues = orValues.map(v =>
-                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+                (sel.category === 'Member Type' || sel.category === 'Province/State') && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
               const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
