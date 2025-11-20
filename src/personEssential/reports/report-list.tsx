@@ -2057,82 +2057,69 @@ const ReportBuilder = ({
                                 </div>
 
                                 {isEnabled && (
-                                  <div className="space-y-2">
-                                    {selectedValues.map((val, idx) => (
-                                      <div key={idx} className="flex items-center gap-2">
-                                        <select
-                                          value={val}
-                                          onChange={(e) => {
-                                            const newVals = [...selectedValues];
-                                            newVals[idx] = e.target.value;
-                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
-                                            setSelections(prev => {
-                                              const filtered = prev.filter(s => s.category !== category || s.value === val);
-                                              return filtered.map(s => {
-                                                if (s.category === category && s.value === val) {
-                                                  return { ...s, value: e.target.value };
+                                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                                    {values.slice(0, 8).map((value, vIdx) => {
+                                      const valCount = recordCounts[`${category}:${value}`] || count;
+                                      const isSelected = selectedValues.includes(value);
+
+                                      return (
+                                        <div key={vIdx} className="group">
+                                          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <button
+                                              onClick={() => {
+                                                if (isSelected) {
+                                                  // Remove from selected
+                                                  const newVals = selectedValues.filter(v => v !== value);
+                                                  setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                  setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                                } else {
+                                                  // Add to selected
+                                                  setFilterValue(category, value, selectedValues.length > 0);
                                                 }
-                                                return s;
-                                              });
-                                            });
-                                          }}
-                                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                          <option value="">Select...</option>
-                                          {values.map(v => {
-                                            const valCount = recordCounts[`${category}:${v}`] || count;
-                                            return (
-                                              <option key={v} value={v}>{v} ({valCount})</option>
-                                            );
-                                          })}
-                                        </select>
-                                        {selectedValues.length > 1 && (
-                                          <button
-                                            onClick={() => {
-                                              const newVals = selectedValues.filter((_, i) => i !== idx);
-                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
-                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === val)));
-                                            }}
-                                            className="text-red-600 hover:text-red-700"
-                                          >
-                                            <X className="w-4 h-4" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    ))}
-
-                                    {selectedValues.length === 0 && (
-                                      <select
-                                        onChange={(e) => {
-                                          if (e.target.value) {
-                                            setFilterValue(category, e.target.value);
-                                          }
-                                        }}
-                                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                              }}
+                                              className="flex-1 text-left min-w-0"
+                                            >
+                                              <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                                {value}
+                                              </div>
+                                              <div className="flex items-center gap-2 mt-0.5">
+                                                <div className="text-xs font-medium text-gray-500">
+                                                  {valCount.toLocaleString()}
+                                                </div>
+                                              </div>
+                                            </button>
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (isSelected) {
+                                                    const newVals = selectedValues.filter(v => v !== value);
+                                                    setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                    setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                                  } else {
+                                                    setFilterValue(category, value, selectedValues.length > 0);
+                                                  }
+                                                }}
+                                                className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                title={isSelected ? "Remove filter" : "Add filter"}
+                                              >
+                                                {isSelected ? (
+                                                  <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                ) : (
+                                                  <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                )}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                    {values.length > 8 && (
+                                      <button
+                                        className="w-full text-center py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 rounded-lg transition-colors"
                                       >
-                                        <option value="">Select...</option>
-                                        {values.map(v => {
-                                          const valCount = recordCounts[`${category}:${v}`] || count;
-                                          return (
-                                            <option key={v} value={v}>{v} ({valCount})</option>
-                                          );
-                                        })}
-                                      </select>
-                                    )}
-
-                                    {selectedValues.length > 0 && selectedValues[selectedValues.length - 1] !== '' && (
-                                      <div className="flex gap-2">
-                                        <button
-                                          onClick={() => {
-                                            const newVals = [...selectedValues, ''];
-                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
-                                          }}
-                                          className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                                        >
-                                          <Plus className="w-3 h-3" />
-                                          OR
-                                        </button>
-                                      </div>
+                                        View all {values.length} options →
+                                      </button>
                                     )}
                                   </div>
                                 )}
