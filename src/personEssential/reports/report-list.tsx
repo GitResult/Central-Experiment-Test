@@ -504,6 +504,8 @@ const ReportBuilder = ({
   const [filterSearchTerm, setFilterSearchTerm] = useState('');
   const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
   const [expandedValues, setExpandedValues] = useState({}); // Track expanded nested values
+  const [renewedExpandedYears, setRenewedExpandedYears] = useState({ '2024': true, '2023': true }); // Track expanded years for Renewed category
+  const [renewedLoadedYears, setRenewedLoadedYears] = useState(5); // Track how many years to display (default: 5)
 
   // Load data from JSON file
   useEffect(() => {
@@ -2501,6 +2503,233 @@ const ReportBuilder = ({
                     const count = recordCounts[category] || 0;
                     const displayCount = Math.min(values.length, 8);
 
+                    // Special handling for "Renewed" category with year sections
+                    if (category === 'Renewed') {
+                      // Organize data by year
+                      const yearData = {};
+                      values.forEach(value => {
+                        const match = value.match(/^(.*)\s(\d{4})$/);
+                        if (match) {
+                          const month = match[1];
+                          const year = match[2];
+                          if (!yearData[year]) {
+                            yearData[year] = [];
+                          }
+                          yearData[year].push(value);
+                        }
+                      });
+
+                      // Sort years descending
+                      const sortedYears = Object.keys(yearData).sort((a, b) => parseInt(b) - parseInt(a));
+                      const yearsToDisplay = sortedYears.slice(0, renewedLoadedYears);
+                      const hasMoreYears = sortedYears.length > renewedLoadedYears;
+
+                      return (
+                        <div key={category} className="card-flip-container">
+                          <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                            {/* Card Front */}
+                            <div className="card-flip-front">
+                              <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                                <div className="p-4 border-b border-gray-100">
+                                  <div className="flex items-start gap-3">
+                                    <button
+                                      className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                      title="Drag to reorder"
+                                    >
+                                      <GripVertical className="w-4 h-4" />
+                                    </button>
+                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                      <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                      <p className="text-xs text-gray-500">{yearsToDisplay.length} years loaded</p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                      }}
+                                      className="text-gray-400 hover:text-gray-600"
+                                      title="Flip card"
+                                    >
+                                      <RefreshCw className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="p-4">
+                                  <div className="space-y-2 max-h-[320px] overflow-y-auto">
+                                    {yearsToDisplay.map((year) => {
+                                      const isYearExpanded = renewedExpandedYears[year];
+                                      const months = yearData[year] || [];
+                                      const maxCount = 7100;
+
+                                      return (
+                                        <div key={year} className="border border-gray-200 rounded-lg">
+                                          {/* Year Header */}
+                                          <button
+                                            onClick={() => {
+                                              setRenewedExpandedYears(prev => ({
+                                                ...prev,
+                                                [year]: !prev[year]
+                                              }));
+                                            }}
+                                            className="w-full flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-lg transition-colors"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              {isYearExpanded ? (
+                                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                                              ) : (
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                              )}
+                                              <span className="font-medium text-sm text-gray-900">{year}</span>
+                                              <span className="text-xs text-gray-500">({months.length} months)</span>
+                                            </div>
+                                          </button>
+
+                                          {/* Months List */}
+                                          {isYearExpanded && (
+                                            <div className="border-t border-gray-200 p-2 space-y-1">
+                                              {months.map((monthYear, idx) => {
+                                                const valCount = recordCounts[`${category}:${monthYear}`] || 0;
+                                                const isSelected = selectedValues.includes(monthYear);
+                                                const percentage = maxCount > 0 ? Math.round((valCount / maxCount) * 100) : 0;
+
+                                                return (
+                                                  <div key={idx} className="group">
+                                                    <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                                      <button
+                                                        onClick={() => {
+                                                          if (isSelected) {
+                                                            const newVals = selectedValues.filter(v => v !== monthYear);
+                                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                            setSelections(prev => prev.filter(s => !(s.category === category && s.value === monthYear)));
+                                                          } else {
+                                                            setFilterValue(category, monthYear, selectedValues.length > 0);
+                                                          }
+                                                        }}
+                                                        className="flex-1 text-left min-w-0"
+                                                      >
+                                                        <div className={`text-sm truncate mb-1 ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                                          {monthYear}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                          <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                                            {valCount.toLocaleString()}
+                                                          </div>
+                                                          <div className="flex-1 flex items-center gap-2">
+                                                            <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                              <div
+                                                                className="h-full bg-blue-300 rounded-full transition-all"
+                                                                style={{ width: `${percentage}%` }}
+                                                              />
+                                                            </div>
+                                                            <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                              {percentage}%
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </button>
+                                                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isSelected) {
+                                                              const newVals = selectedValues.filter(v => v !== monthYear);
+                                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === monthYear)));
+                                                            } else {
+                                                              setFilterValue(category, monthYear, selectedValues.length > 0);
+                                                            }
+                                                          }}
+                                                          className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                          title={isSelected ? "Remove filter" : "Add filter"}
+                                                        >
+                                                          {isSelected ? (
+                                                            <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                          ) : (
+                                                            <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                          )}
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Load More Years Button */}
+                                    {hasMoreYears && (
+                                      <button
+                                        onClick={() => {
+                                          setRenewedLoadedYears(prev => prev + 5);
+                                        }}
+                                        className="w-full mt-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                      >
+                                        <Plus className="w-4 h-4" />
+                                        Load More Years
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card Back - Show Fields */}
+                            <div className="card-flip-back">
+                              <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                                <div className="p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                      <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                      }}
+                                      className="text-gray-400 hover:text-gray-600"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                    {categoryFieldsList.map((field, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                      >
+                                        <span className="flex-1">{field}</span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            addSelection(category, field, 'field');
+                                            showToast(`Added field: ${field}`);
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                          title="Add field"
+                                        >
+                                          <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Regular card rendering for all other categories
                     return (
                       <div key={category} className="card-flip-container">
                         <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
