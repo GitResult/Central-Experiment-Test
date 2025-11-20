@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock } from 'lucide-react';
+import { Plus, X, Eye, EyeOff, Search, ChevronRight, Settings, Play, Download, Calendar, Save, Grid3x3, List, Filter, Users, Mail, MapPin, Database, Crown, DollarSign, Share2, ChevronDown, Check, ArrowUpDown, Hash, UserPlus, UserMinus, Building2, Map, Globe, Award, Target, HelpCircle, TrendingUp, Briefcase, GraduationCap, School, Star, Gift, Receipt, Heart, FileText, CreditCard, Users2, Megaphone, BookOpen, Newspaper, UserCheck, Layers, Sparkles, MoveLeft, FileUp, Edit2, Clock, BarChart3, CalendarClock, GripVertical, RefreshCw } from 'lucide-react';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
@@ -496,6 +496,14 @@ const ReportBuilder = ({
   const [sectionIcons, setSectionIcons] = useState(SECTION_ICONS);
   const [categoryIcons, setCategoryIcons] = useState(CATEGORY_ICONS);
   const [isLoading, setIsLoading] = useState(false);
+  const [recordCounts, setRecordCounts] = useState({});
+
+  // Structured Query Builder state
+  const [enabledFilters, setEnabledFilters] = useState({});
+  const [filterValues, setFilterValues] = useState({});
+  const [filterSearchTerm, setFilterSearchTerm] = useState('');
+  const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
+  const [expandedValues, setExpandedValues] = useState({}); // Track expanded nested values
 
   // Load data from JSON file
   useEffect(() => {
@@ -532,6 +540,7 @@ const ReportBuilder = ({
         setDefaultFields(data.default_fields);
         setSectionIcons(convertedSectionIcons);
         setCategoryIcons(convertedCategoryIcons);
+        setRecordCounts(data.record_counts || {});
       } catch (error) {
         console.error('Error loading report data:', error);
       } finally {
@@ -1338,7 +1347,84 @@ const ReportBuilder = ({
 
   const clearAllSelections = () => {
     setSelections([]);
+    setEnabledFilters({});
+    setFilterValues({});
+    setSelectedStartingData({ status: null, entity: null });
     showToast('All selections cleared');
+  };
+
+  // Structured Query Builder helpers
+  const toggleFilter = (category) => {
+    setEnabledFilters(prev => {
+      const newState = { ...prev, [category]: !prev[category] };
+      if (!newState[category]) {
+        // Remove from filterValues if disabled
+        const newValues = { ...filterValues };
+        delete newValues[category];
+        setFilterValues(newValues);
+        // Remove from selections
+        setSelections(prevSel => prevSel.filter(s => s.category !== category));
+      }
+      return newState;
+    });
+  };
+
+  const setFilterValue = (category, value, addAsOR = false) => {
+    const existingValues = filterValues[category] || [];
+    let newValues;
+
+    if (addAsOR) {
+      newValues = [...existingValues, value];
+    } else {
+      newValues = [value];
+    }
+
+    setFilterValues(prev => ({ ...prev, [category]: newValues }));
+
+    // Update selections
+    if (addAsOR && existingValues.length > 0) {
+      addSelection(category, value, 'filter');
+      // Set connector to OR for the new selection
+      setSelections(prev => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0) {
+          updated[lastIndex].connector = 'OR';
+        }
+        return updated;
+      });
+    } else {
+      // Remove existing selections for this category
+      setSelections(prev => prev.filter(s => s.category !== category));
+      addSelection(category, value, 'filter');
+    }
+  };
+
+  const handleStartingDataChange = (type, value) => {
+    setSelectedStartingData(prev => ({ ...prev, [type]: value }));
+
+    // Auto-add to selections
+    if (type === 'entity' && value === 'Members') {
+      // Check if status is selected
+      const hasStatus = selectedStartingData.status !== null;
+
+      if (!hasStatus) {
+        // Auto-select Current
+        setSelectedStartingData(prev => ({ ...prev, status: 'Current' }));
+        setSelections([
+          { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+          { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+        ]);
+      } else {
+        addSelection('Members', 'Members', 'field');
+      }
+    } else if (type === 'status') {
+      // Remove existing status from selections
+      setSelections(prev => prev.filter(s => !['Current', 'Previous', 'New', 'Lapsed'].includes(s.category)));
+      addSelection(value, value, 'field');
+    } else {
+      addSelection(value, value, 'field');
+    }
   };
 
   const clearFields = () => {
@@ -1848,7 +1934,561 @@ const ReportBuilder = ({
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-8 pb-32">
+        {/* New Structured Query Builder */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Full Width: Filter Cards */}
+          <div className="flex-1 overflow-auto bg-gray-50">
+            <div className="p-6 border-b border-gray-200 bg-white">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Query Builder</h3>
+              <p className="text-xs text-gray-500 mb-4">Build your query by selecting filters</p>
+
+              {/* Search Filters */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search filters..."
+                  value={filterSearchTerm}
+                  onChange={(e) => setFilterSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Card Grid */}
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start" style={{ gridAutoFlow: 'dense' }}>
+              {/* Starting Data Card */}
+              {(() => {
+                const category = 'Starting Data';
+                const values = ['Current', 'Previous', 'New', 'Lapsed', 'Members', 'Contacts', 'Invoices', 'Other'];
+                const CategoryIcon = Database;
+                const selectedValues = filterValues[category] || [];
+                const colors = SECTION_COLORS['Starting Data'];
+                const isFlipped = flippedCards[category];
+                const categoryFieldsList = defaultFields;
+                const count = recordCounts[category] || 0;
+
+                return (
+                  <div key={category} className="card-flip-container">
+                    <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                      {/* Card Front */}
+                      <div className="card-flip-front">
+                        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                          <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-start gap-3">
+                              <button
+                                className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                title="Drag to reorder"
+                              >
+                                <GripVertical className="w-4 h-4" />
+                              </button>
+                              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                <p className="text-xs text-gray-500">{values.length} options</p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Flip card"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Add all values from this category
+                                  values.forEach(value => {
+                                    if (!selectedValues.includes(value)) {
+                                      addSelection(value, value, 'field');
+                                    }
+                                  });
+                                  showToast(`Added all ${category} items`);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Add all items"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-4">
+                            <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
+                              {(() => {
+                                // Calculate max count for percentage calculation
+                                const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || recordCounts[v] || count));
+
+                                return values.map((value, vIdx) => {
+                                  const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
+                                  const isSelected = selectedValues.includes(value);
+                                  const percentage = maxCount > 0 ? Math.round((valCount / maxCount) * 100) : 0;
+
+                                  return (
+                                    <div key={vIdx} className="group">
+                                      <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <button
+                                          onClick={() => {
+                                            // Special logic for Members - auto-select Current if no status selected
+                                            if (value === 'Members' && !isSelected) {
+                                              const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                              const hasAnyStatusSelected = selectedValues.some(v => statusCategories.includes(v));
+
+                                              if (!hasAnyStatusSelected) {
+                                                // Auto-add Current + Members atomically
+                                                setFilterValues(prev => ({
+                                                  ...prev,
+                                                  [category]: [...selectedValues, 'Current', 'Members']
+                                                }));
+                                                setSelections([
+                                                  ...selections,
+                                                  { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+                                                  { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+                                                ]);
+                                                showToast('Added: Current Members');
+                                                return;
+                                              }
+                                            }
+
+                                            if (isSelected) {
+                                              const newVals = selectedValues.filter(v => v !== value);
+                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                              setSelections(prev => prev.filter(s => !(s.category === value && s.value === value)));
+                                            } else {
+                                              const newVals = [...selectedValues, value];
+                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                              addSelection(value, value, 'field');
+                                            }
+                                          }}
+                                          className="flex-1 text-left min-w-0"
+                                        >
+                                          <div className={`text-sm truncate mb-1 ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                            {value}
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                              {valCount.toLocaleString()}
+                                            </div>
+                                            <div className="flex-1 flex items-center gap-2">
+                                              <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                <div
+                                                  className="h-full bg-blue-300 rounded-full transition-all"
+                                                  style={{ width: `${percentage}%` }}
+                                                />
+                                              </div>
+                                              <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                {percentage}%
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </button>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+
+                                              // Special logic for Members - auto-select Current if no status selected
+                                              if (value === 'Members' && !isSelected) {
+                                                const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                                const hasAnyStatusSelected = selectedValues.some(v => statusCategories.includes(v));
+
+                                                if (!hasAnyStatusSelected) {
+                                                  // Auto-add Current + Members atomically
+                                                  setFilterValues(prev => ({
+                                                    ...prev,
+                                                    [category]: [...selectedValues, 'Current', 'Members']
+                                                  }));
+                                                  setSelections([
+                                                    ...selections,
+                                                    { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+                                                    { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+                                                  ]);
+                                                  showToast('Added: Current Members');
+                                                  return;
+                                                }
+                                              }
+
+                                              if (isSelected) {
+                                                const newVals = selectedValues.filter(v => v !== value);
+                                                setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                setSelections(prev => prev.filter(s => !(s.category === value && s.value === value)));
+                                              } else {
+                                                const newVals = [...selectedValues, value];
+                                                setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                addSelection(value, value, 'field');
+                                              }
+                                            }}
+                                            className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                            title={isSelected ? "Remove filter" : "Add filter"}
+                                          >
+                                            {isSelected ? (
+                                              <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                            ) : (
+                                              <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                            )}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Back - Show Fields */}
+                      <div className="card-flip-back">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {categoryFieldsList.map((field, idx) => (
+                                <div
+                                  key={idx}
+                                  className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                >
+                                  <span className="flex-1">{field}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addSelection(category, field, 'field');
+                                      showToast(`Added field: ${field}`);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                    title="Add field"
+                                  >
+                                    <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Regular Category Cards */}
+              {Object.entries(categories).map(([section, cats]) => {
+                const startingDataItems = ['Current', 'Previous', 'New', 'Lapsed', 'Members', 'Contacts', 'Invoices', 'Other'];
+
+                return cats
+                  .filter(cat => {
+                    // Skip Starting Data items that are now in Status/Entity Type cards
+                    if (section === 'Starting Data' && startingDataItems.includes(cat)) {
+                      return false;
+                    }
+                    if (!filterSearchTerm) return true;
+                    return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
+                  })
+                  .map(category => {
+                    const values = sampleValues[category] || [];
+                    const CategoryIcon = categoryIcons[category] || Database;
+                    const selectedValues = filterValues[category] || [];
+                    const colors = SECTION_COLORS[section] || SECTION_COLORS['Demographics'];
+                    const isFlipped = flippedCards[category];
+                    const categoryFieldsList = categoryFields[category] || defaultFields;
+                    const count = recordCounts[category] || 0;
+                    const displayCount = Math.min(values.length, 8);
+
+                    return (
+                      <div key={category} className="card-flip-container">
+                        <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                          {/* Card Front */}
+                          <div className="card-flip-front">
+                            <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                              <div className="p-4 border-b border-gray-100">
+                                <div className="flex items-start gap-3">
+                                  <button
+                                    className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                    title="Drag to reorder"
+                                  >
+                                    <GripVertical className="w-4 h-4" />
+                                  </button>
+                                  <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                    <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                    <p className="text-xs text-gray-500">{values.length} options</p>
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                    title="Flip card"
+                                  >
+                                    <RefreshCw className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Add all values from this category
+                                      values.forEach(value => {
+                                        if (!selectedValues.includes(value)) {
+                                          addSelection(category, value, 'field');
+                                        }
+                                      });
+                                      showToast(`Added all ${category} items`);
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                    title="Add all items"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="p-4">
+                                <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
+                                  {(() => {
+                                    // Calculate max count for percentage calculation
+                                    const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || count));
+
+                                    return values.map((value, vIdx) => {
+                                      const valCount = recordCounts[`${category}:${value}`] || count;
+                                      const isSelected = selectedValues.includes(value);
+                                      const hasNestedOptions = sampleValues[value] && sampleValues[value].length > 0;
+                                      const isExpanded = expandedValues[`${category}:${value}`];
+                                      const percentage = maxCount > 0 ? Math.round((valCount / maxCount) * 100) : 0;
+
+                                      return (
+                                        <div key={vIdx} className="group">
+                                          <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <button
+                                              onClick={() => {
+                                                if (hasNestedOptions) {
+                                                  // Toggle expansion for nested options
+                                                  setExpandedValues(prev => ({
+                                                    ...prev,
+                                                    [`${category}:${value}`]: !prev[`${category}:${value}`]
+                                                  }));
+                                                } else {
+                                                  if (isSelected) {
+                                                    // Remove from selected
+                                                    const newVals = selectedValues.filter(v => v !== value);
+                                                    setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                    setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                                  } else {
+                                                    // Add to selected
+                                                    setFilterValue(category, value, selectedValues.length > 0);
+                                                  }
+                                                }
+                                              }}
+                                              className="flex-1 text-left min-w-0"
+                                            >
+                                              <div className="flex items-center gap-2 mb-1">
+                                                {hasNestedOptions && (
+                                                  <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                                )}
+                                                <div className={`text-sm truncate ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                                  {value}
+                                                </div>
+                                              </div>
+                                              {!hasNestedOptions && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                  <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                                    {valCount.toLocaleString()}
+                                                  </div>
+                                                  <div className="flex-1 flex items-center gap-2">
+                                                    <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                      <div
+                                                        className="h-full bg-blue-300 rounded-full transition-all"
+                                                        style={{ width: `${percentage}%` }}
+                                                      />
+                                                    </div>
+                                                    <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                      {percentage}%
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </button>
+                                            {!hasNestedOptions && (
+                                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (isSelected) {
+                                                      const newVals = selectedValues.filter(v => v !== value);
+                                                      setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                      setSelections(prev => prev.filter(s => !(s.category === category && s.value === value)));
+                                                    } else {
+                                                      setFilterValue(category, value, selectedValues.length > 0);
+                                                    }
+                                                  }}
+                                                  className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                  title={isSelected ? "Remove filter" : "Add filter"}
+                                                >
+                                                  {isSelected ? (
+                                                    <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                  ) : (
+                                                    <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                  )}
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Nested Options */}
+                                          {hasNestedOptions && isExpanded && (
+                                            <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                                              {(() => {
+                                                // Calculate max count for nested values
+                                                const nestedCounts = sampleValues[value].map(nv =>
+                                                  recordCounts[`${value}:${nv}`] || Math.floor(Math.random() * 1000) + 100
+                                                );
+                                                const maxNestedCount = Math.max(...nestedCounts);
+
+                                                return sampleValues[value].map((nestedValue, nIdx) => {
+                                                  const nestedKey = `${value}=${nestedValue}`;
+                                                  const isNestedSelected = selectedValues.includes(nestedKey);
+                                                  const nestedCount = recordCounts[`${value}:${nestedValue}`] || nestedCounts[nIdx];
+                                                  const nestedPercentage = maxNestedCount > 0 ? Math.round((nestedCount / maxNestedCount) * 100) : 0;
+
+                                                  return (
+                                                    <div key={nIdx} className="group/nested">
+                                                      <div className="flex items-start gap-2 p-1.5 rounded hover:bg-gray-50 transition-colors">
+                                                        <button
+                                                          onClick={() => {
+                                                            if (isNestedSelected) {
+                                                              const newVals = selectedValues.filter(v => v !== nestedKey);
+                                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === nestedKey)));
+                                                            } else {
+                                                              setFilterValue(category, nestedKey, selectedValues.length > 0);
+                                                            }
+                                                          }}
+                                                          className="flex-1 text-left"
+                                                        >
+                                                          <div className={`text-sm ${isNestedSelected ? 'text-blue-600 font-medium' : 'text-gray-700 hover:text-blue-600'} transition-colors mb-1`}>
+                                                            {nestedValue} {nestedValue.match(/^\d+$/) ? 'years' : ''}
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                            <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                                              {nestedCount.toLocaleString()}
+                                                            </div>
+                                                            <div className="flex-1 flex items-center gap-2">
+                                                              <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                                <div
+                                                                  className="h-full bg-blue-300 rounded-full transition-all"
+                                                                  style={{ width: `${nestedPercentage}%` }}
+                                                                />
+                                                              </div>
+                                                              <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                                {nestedPercentage}%
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                        </button>
+                                                        <div className="flex gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity mt-1">
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              if (isNestedSelected) {
+                                                                const newVals = selectedValues.filter(v => v !== nestedKey);
+                                                                setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                                setSelections(prev => prev.filter(s => !(s.category === category && s.value === nestedKey)));
+                                                              } else {
+                                                                setFilterValue(category, nestedKey, selectedValues.length > 0);
+                                                              }
+                                                            }}
+                                                            className={`p-1 rounded transition-colors ${isNestedSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                            title={isNestedSelected ? "Remove" : "Add"}
+                                                          >
+                                                            {isNestedSelected ? (
+                                                              <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                            ) : (
+                                                              <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                            )}
+                                                          </button>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                });
+                                              })()}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Back - Show Fields */}
+                          <div className="card-flip-back">
+                            <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                              <div className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                    <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                  {categoryFieldsList.map((field, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                    >
+                                      {field}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Old Card Grid Layout (Hidden for now) */}
+        <div className="flex-1 overflow-auto p-8 pb-32" style={{ display: 'none' }}>
           {filteredFields.length === 0 ? (
             <div className="text-center py-16">
               <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" strokeWidth={1} />

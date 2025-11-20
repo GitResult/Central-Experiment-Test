@@ -1,16 +1,14 @@
 {
     "categories": {
         "Starting Data": [
-            "Members",
-            "Contacts",
-            "Other",
-            "Member Stats"
-        ],
-        "Status": [
             "Current",
             "Previous",
             "New",
-            "Lapsed"
+            "Lapsed",
+            "Members",
+            "Contacts",
+            "Invoices",
+            "Other"
         ],
         "Location": [
             "Proximity",
@@ -132,9 +130,9 @@
             "Fellow",
             "Life Fellow",
             "Professional Member",
-            "Early Career Year 1 (ECY1)",
-            "Early Career Year 2 (ECY2)",
-            "Early Career Year 3 (ECY3)",
+            "ECY1 - Early Career Year 1",
+            "ECY2 - Early Career Year 2",
+            "ECY3 - Early Career Year 3",
             "Student Member",
             "International Affiliate",
             "Associate Member",
@@ -206,13 +204,14 @@
         ],
         "Member Stats": [
             "Consecutive Membership Years",
-            "Total Memberships",
+            "Total Membership Years",
             "Engagement Score",
             "Last Activity Date"
         ],
         "Occupation": [
-            "Clinical Psychologist",
+            "Practitioner",
             "Researcher",
+            "Clinical Psychologist",
             "Academic/Professor",
             "School Psychologist",
             "Counselling Psychologist",
@@ -246,8 +245,8 @@
         "Degree": [
             "PhD",
             "PsyD",
-            "Master's",
-            "Bachelor's",
+            "Masters",
+            "Bachelors",
             "Post-Doctoral",
             "Certificate"
         ],
@@ -282,19 +281,19 @@
             "20"
         ],
         "Province/State": [
-            "ON (Ontario)",
-            "BC (British Columbia)",
-            "AB (Alberta)",
-            "QC (Quebec)",
-            "MB (Manitoba)",
-            "SK (Saskatchewan)",
-            "NS (Nova Scotia)",
-            "NB (New Brunswick)",
-            "PE (Prince Edward Island)",
-            "NL (Newfoundland and Labrador)",
-            "YT (Yukon)",
-            "NT (Northwest Territories)",
-            "NU (Nunavut)"
+            "ON - Ontario",
+            "BC - British Columbia",
+            "AB - Alberta",
+            "QC - Quebec",
+            "MB - Manitoba",
+            "SK - Saskatchewan",
+            "NS - Nova Scotia",
+            "NB - New Brunswick",
+            "PE - Prince Edward Island",
+            "NL - Newfoundland and Labrador",
+            "YT - Yukon",
+            "NT - Northwest Territories",
+            "NU - Nunavut"
         ],
         "Renewal Month": [
             "January",
@@ -529,7 +528,6 @@
     },
     "section_icons": {
         "Starting Data": "Database",
-        "Status": "Activity",
         "Location": "MapPin",
         "Membership": "Crown",
         "Demographics": "Users",
@@ -543,12 +541,6 @@
             "icon": "text-blue-400",
             "bg": "bg-blue-50",
             "border": "border-blue-200"
-        },
-        "Status": {
-            "header": "text-teal-700",
-            "icon": "text-teal-400",
-            "bg": "bg-teal-50",
-            "border": "border-teal-200"
         },
         "Location": {
             "header": "text-green-700",
@@ -634,7 +626,7 @@
         "Degree": "GraduationCap",
         "Renewal Month": "Calendar",
         "Renewal Year": "Calendar",
-        "Total Memberships": "Hash",
+        "Total Membership Years": "Hash",
         "Engagement Score": "TrendingUp",
         "Last Activity Date": "CalendarClock"
     }

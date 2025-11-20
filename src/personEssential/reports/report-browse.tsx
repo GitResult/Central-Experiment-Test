@@ -115,12 +115,6 @@ const ReportBuilder = (props) => {
       "bg": "bg-blue-50",
       "border": "border-blue-200"
     },
-    "Status": {
-      "header": "text-teal-700",
-      "icon": "text-teal-400",
-      "bg": "bg-teal-50",
-      "border": "border-teal-200"
-    },
     "Location": {
       "header": "text-green-700",
       "icon": "text-green-400",
@@ -309,6 +303,25 @@ const ReportBuilder = (props) => {
     const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     const values = sampleValues[category] || [];
 
+    // Special handling for Members: auto-select Current if no status category selected yet
+    if (category === 'Members') {
+      const hasAnyStatusSelected = selections.some(s => statusCategories.includes(s.category));
+
+      if (!hasAnyStatusSelected) {
+        // Auto-select both Current and Members at once
+        setSelections([
+          ...selections,
+          { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+          { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+        ]);
+        showToast('Added: Current Members');
+      } else {
+        // Just add Members
+        addField('Members', 'Members');
+      }
+      return;
+    }
+
     // If category only has one value, auto-select it
     if (values.length === 1 && category !== 'Proximity' && category !== 'Renewed') {
       // For Status categories and Members, use category name as value
@@ -338,13 +351,13 @@ const ReportBuilder = (props) => {
   };
 
   const addFilter = (category, value) => {
-    // Extract short code for Province/State (e.g., "ON (Ontario)" -> "ON")
-    // Extract short code for Member Type (e.g., "Early Career Year 1 (ECY1)" -> "ECY1")
+    // Extract short code for Province/State (e.g., "BC - British Columbia" -> "BC")
+    // Extract short code for Member Type (e.g., "ECY1 - Early Career Year 1" -> "ECY1")
     let displayValue = value;
-    if ((category === 'Province/State' || category === 'Member Type') && value.includes('(')) {
-      const match = value.match(/\(([^)]+)\)/);
-      if (match) {
-        displayValue = match[1]; // Extract content within parentheses
+    if ((category === 'Province/State' || category === 'Member Type') && value.includes(' - ')) {
+      const parts = value.split(' - ');
+      if (parts.length > 0) {
+        displayValue = parts[0]; // Extract content before " - "
       }
     }
 
@@ -628,7 +641,7 @@ const ReportBuilder = (props) => {
         // Helper function to get proper connector phrase for each category
         const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
-          if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          if ((category === 'Member Type' || category === 'Province/State') && val.includes(' - ')) val = val.split(' - ')[0];
 
           // First filter after status/members uses "that are" or "that have been members"
           if (isFirst && category === 'Member Type') {
@@ -679,7 +692,7 @@ const ReportBuilder = (props) => {
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
+            const val2 = (sel.category === 'Member Type' || sel.category === 'Province/State') && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
@@ -700,7 +713,7 @@ const ReportBuilder = (props) => {
             if (orValues.length > 1) {
               // Multiple values with OR
               const formattedValues = orValues.map(v =>
-                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
+                (sel.category === 'Member Type' || sel.category === 'Province/State') && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
               const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
@@ -947,6 +960,8 @@ const ReportBuilder = (props) => {
                       setEditingSelection(null);
                       setSelectedCategory(null);
                       setSelectedValue(null);
+                      setShowMemberStatsPanel(false);
+                      setSelectedMemberStatField(null);
                       showToast('All selections cleared');
                     }}
                     className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
@@ -1134,11 +1149,11 @@ const ReportBuilder = (props) => {
         <div className="flex-1 overflow-auto pb-32 bg-white">
           {Object.entries(categories).map(([section, categories], sectionIdx) => {
             const isThreeColumn = categories.length >= 6;
-            const isFourColumn = categories.length === 4;
+            const isFourColumn = categories.length === 4 || section === 'Starting Data';
 
             return (
               <div key={section}>
-                <div className="px-8 py-4"><h2 className="text-xl font-semibold text-black">{section}</h2></div>
+                <div className="px-8 py-4"><h2 className="text-base text-black">{section}</h2></div>
 
                 <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
                   {categories.map((category) => {
@@ -1463,10 +1478,10 @@ const ReportBuilder = (props) => {
                             return selections.some(s => {
                               if (s.category !== selectedCategory) return false;
                               // For Province/State and Member Type, extract short code for comparison
-                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
-                                const match = value.match(/\(([^)]+)\)/);
-                                if (match) {
-                                  return s.value === match[1];
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes(' - ')) {
+                                const parts = value.split(' - ');
+                                if (parts.length > 0) {
+                                  return s.value === parts[0];
                                 }
                               }
                               return s.value === value;
@@ -1481,10 +1496,10 @@ const ReportBuilder = (props) => {
                               let valueToRemove = value;
 
                               // Extract short code for Province/State and Member Type
-                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes('(')) {
-                                const match = value.match(/\(([^)]+)\)/);
-                                if (match) {
-                                  valueToRemove = match[1];
+                              if ((selectedCategory === 'Province/State' || selectedCategory === 'Member Type') && value.includes(' - ')) {
+                                const parts = value.split(' - ');
+                                if (parts.length > 0) {
+                                  valueToRemove = parts[0];
                                 }
                               }
 
@@ -1593,7 +1608,7 @@ const ReportBuilder = (props) => {
 
             <div className="flex-1 overflow-auto p-6 bg-white">
               <div className="space-y-2">
-                {['Consecutive Membership Years', 'Total Memberships', 'Engagement Score', 'Last Activity Date'].map((statField) => (
+                {['Consecutive Membership Years', 'Total Membership Years', 'Engagement Score', 'Last Activity Date'].map((statField) => (
                   <button
                     key={statField}
                     onClick={() => {
@@ -1607,7 +1622,7 @@ const ReportBuilder = (props) => {
                   >
                     <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
                       {statField === 'Consecutive Membership Years' && <Clock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
-                      {statField === 'Total Memberships' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
+                      {statField === 'Total Membership Years' && <Hash className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                       {statField === 'Engagement Score' && <TrendingUp className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                       {statField === 'Last Activity Date' && <CalendarClock className="w-5 h-5 text-cyan-600" strokeWidth={1.5} />}
                     </div>
@@ -1615,7 +1630,7 @@ const ReportBuilder = (props) => {
                       <div className="font-medium text-gray-900 text-sm">{statField}</div>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {statField === 'Consecutive Membership Years' && 'Filter by years of membership'}
-                        {statField === 'Total Memberships' && 'Filter by number of memberships'}
+                        {statField === 'Total Membership Years' && 'Filter by total membership years'}
                         {statField === 'Engagement Score' && 'Filter by engagement level'}
                         {statField === 'Last Activity Date' && 'Filter by last activity'}
                       </div>
