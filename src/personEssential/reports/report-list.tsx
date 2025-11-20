@@ -2079,9 +2079,20 @@ const ReportBuilder = ({
                               {categoryFieldsList.map((field, idx) => (
                                 <div
                                   key={idx}
-                                  className="text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                  className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
                                 >
-                                  {field}
+                                  <span className="flex-1">{field}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addSelection(category, field, 'field');
+                                      showToast(`Added field: ${field}`);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                    title="Add field"
+                                  >
+                                    <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                  </button>
                                 </div>
                               ))}
                             </div>
@@ -2263,9 +2274,20 @@ const ReportBuilder = ({
                               {categoryFieldsList.map((field, idx) => (
                                 <div
                                   key={idx}
-                                  className="text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                  className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
                                 >
-                                  {field}
+                                  <span className="flex-1">{field}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addSelection(category, field, 'field');
+                                      showToast(`Added field: ${field}`);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                    title="Add field"
+                                  >
+                                    <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                  </button>
                                 </div>
                               ))}
                             </div>
