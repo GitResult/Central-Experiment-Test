@@ -501,7 +501,6 @@ const ReportBuilder = ({
   // Structured Query Builder state
   const [enabledFilters, setEnabledFilters] = useState({});
   const [filterValues, setFilterValues] = useState({});
-  const [filterSearchTerm, setFilterSearchTerm] = useState('');
   const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
   const [expandedValues, setExpandedValues] = useState({}); // Track expanded nested values
   const [renewedExpandedYears, setRenewedExpandedYears] = useState({ '2024': true, '2023': true }); // Track expanded years for Renewed category
@@ -563,10 +562,16 @@ const ReportBuilder = ({
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(f =>
-        f.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.section.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(f => {
+        // Search in category name
+        if (f.category.toLowerCase().includes(lowerSearch)) return true;
+        // Search in section name
+        if (f.section.toLowerCase().includes(lowerSearch)) return true;
+        // Search in values/options within the category
+        const values = sampleValues[f.category] || [];
+        return values.some(value => value.toLowerCase().includes(lowerSearch));
+      });
     }
 
     const currentOrder = cardOrder[activeView] || {};
@@ -1961,23 +1966,6 @@ const ReportBuilder = ({
         <div className="flex-1 flex overflow-hidden">
           {/* Full Width: Filter Cards */}
           <div className="flex-1 overflow-auto bg-gray-50">
-            <div className="p-6 border-b border-gray-200 bg-white">
-              <h3 className="text-base font-semibold text-gray-900 mb-1">Query Builder</h3>
-              <p className="text-xs text-gray-500 mb-4">Build your query by selecting filters</p>
-
-              {/* Search Filters */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search filters..."
-                  value={filterSearchTerm}
-                  onChange={(e) => setFilterSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
             {/* Card Grid */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start" style={{ gridAutoFlow: 'dense' }}>
               {/* Starting Data Card */}
@@ -2490,8 +2478,12 @@ const ReportBuilder = ({
                     if (section === 'Starting Data' && startingDataItems.includes(cat)) {
                       return false;
                     }
-                    if (!filterSearchTerm) return true;
-                    return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
+                    if (!searchTerm) return true;
+                    // Search in category name and values
+                    const lowerSearch = searchTerm.toLowerCase();
+                    if (cat.toLowerCase().includes(lowerSearch)) return true;
+                    const values = sampleValues[cat] || [];
+                    return values.some(value => value.toLowerCase().includes(lowerSearch));
                   })
                   .map(category => {
                     const values = sampleValues[category] || [];
