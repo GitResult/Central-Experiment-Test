@@ -2142,6 +2142,29 @@ const ReportBuilder = ({
                                     <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                                       <button
                                         onClick={() => {
+                                          // Special logic for Members - auto-select Current if no status selected
+                                          if (value === 'Members' && !isSelected) {
+                                            const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                            const statusValues = filterValues['Status'] || [];
+                                            const hasAnyStatusSelected = statusValues.length > 0;
+
+                                            if (!hasAnyStatusSelected) {
+                                              // Auto-add Current + Members atomically
+                                              setFilterValues(prev => ({
+                                                ...prev,
+                                                'Status': ['Current'],
+                                                [category]: [value]
+                                              }));
+                                              setSelections([
+                                                ...selections,
+                                                { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+                                                { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+                                              ]);
+                                              showToast('Added: Current Members');
+                                              return;
+                                            }
+                                          }
+
                                           if (isSelected) {
                                             const newVals = selectedValues.filter(v => v !== value);
                                             setFilterValues(prev => ({ ...prev, [category]: newVals }));
@@ -2165,6 +2188,30 @@ const ReportBuilder = ({
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
+
+                                            // Special logic for Members - auto-select Current if no status selected
+                                            if (value === 'Members' && !isSelected) {
+                                              const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                                              const statusValues = filterValues['Status'] || [];
+                                              const hasAnyStatusSelected = statusValues.length > 0;
+
+                                              if (!hasAnyStatusSelected) {
+                                                // Auto-add Current + Members atomically
+                                                setFilterValues(prev => ({
+                                                  ...prev,
+                                                  'Status': ['Current'],
+                                                  [category]: [value]
+                                                }));
+                                                setSelections([
+                                                  ...selections,
+                                                  { id: Date.now(), category: 'Current', value: 'Current', type: 'field', connector: null },
+                                                  { id: Date.now() + 1, category: 'Members', value: 'Members', type: 'field', connector: null }
+                                                ]);
+                                                showToast('Added: Current Members');
+                                                return;
+                                              }
+                                            }
+
                                             if (isSelected) {
                                               const newVals = selectedValues.filter(v => v !== value);
                                               setFilterValues(prev => ({ ...prev, [category]: newVals }));
