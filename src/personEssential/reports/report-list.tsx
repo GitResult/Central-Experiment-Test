@@ -2021,8 +2021,8 @@ const ReportBuilder = ({
                           <div className="p-4">
                             <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                               {(() => {
-                                // Calculate max count for percentage calculation
-                                const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || recordCounts[v] || count));
+                                // Calculate percentage relative to 7100 as 100%
+                                const maxCount = 7100;
 
                                 return values.map((value, vIdx) => {
                                   const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
@@ -2533,8 +2533,8 @@ const ReportBuilder = ({
                               <div className="p-4">
                                 <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                                   {(() => {
-                                    // Calculate max count for percentage calculation
-                                    const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || count));
+                                    // Calculate percentage relative to 7100 as 100%
+                                    const maxCount = 7100;
 
                                     return values.map((value, vIdx) => {
                                       const valCount = recordCounts[`${category}:${value}`] || count;
@@ -2625,11 +2625,11 @@ const ReportBuilder = ({
                                           {hasNestedOptions && isExpanded && (
                                             <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
                                               {(() => {
-                                                // Calculate max count for nested values
+                                                // Calculate percentage relative to 7100 as 100%
+                                                const maxNestedCount = 7100;
                                                 const nestedCounts = sampleValues[value].map(nv =>
                                                   recordCounts[`${value}:${nv}`] || Math.floor(Math.random() * 1000) + 100
                                                 );
-                                                const maxNestedCount = Math.max(...nestedCounts);
 
                                                 return sampleValues[value].map((nestedValue, nIdx) => {
                                                   const nestedKey = `${value}=${nestedValue}`;
