@@ -3008,8 +3008,8 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
-        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: 'auto', minHeight: '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-2 sm:px-4 py-2 sm:py-0 sm:h-[88px] gap-2 sm:gap-0">
+        <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30 ${showPreview ? 'h-[621px]' : 'h-[130px] sm:h-[88px]'}`} style={{ right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-2 sm:px-4 py-2 sm:py-0 sm:h-[88px] gap-2 sm:gap-0 overflow-hidden">
 
             {/* Main info section - responsive layout */}
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -3181,7 +3181,12 @@ const ReportBuilder = (props) => {
 
 
           {/* Report VIEW Content */}
-          <ReportViewComponent selections={selections} />
+          {showPreview && (
+            <div className="overflow-auto" style={{ height: showPreview ? 'calc(533px - 88px)' : '0' }}>
+              <ReportViewComponent selections={selections} />
+            </div>
+          )}
+
         </div>
 
         <ResponsivePanel
