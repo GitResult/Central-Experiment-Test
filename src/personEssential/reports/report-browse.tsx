@@ -3009,24 +3009,32 @@ const ReportBuilder = (props) => {
         )}
 
         <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
-          <div className="h-full flex items-center justify-between px-2 sm:px-4">
+          <div className="h-full flex items-center justify-between px-2 sm:px-4 gap-1 sm:gap-2">
 
-            <div className="flex items-center gap-2 sm:gap-4">
+            {/* Left section - Info */}
+            <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0 overflow-hidden">
               <ChevronUp
                 size={18}
                 onClick={() => setShowPreview(!showPreview)}
-                className={`cursor-pointer text-gray-400/50 ${showPreview ? 'rotate-180' : ''}`}
+                className={`cursor-pointer text-gray-400/50 flex-shrink-0 ${showPreview ? 'rotate-180' : ''}`}
               />
 
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center">
+              <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
                   <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
                 </div>
-                <div className="flex-1 max-w-2xl">
-                  <div className="text-xs sm:text-sm font-semibold text-gray-900 break-words">{reportTitle}</div>
-                  <div className="text-[10px] sm:text-xs text-gray-500">JD • {estimatedRecordCount.toLocaleString()} records</div>
+
+                {/* Text content - stacked on mobile, inline on desktop */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
+                  {/* Title and meta - inline */}
+                  <div className="flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{reportTitle}</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">JD • {estimatedRecordCount.toLocaleString()} records</span>
+                  </div>
+
+                  {/* Natural query - separate line, truncated */}
                   {buildNaturalLanguageQuery() && (
-                    <div className="text-[10px] sm:text-xs text-blue-700 mt-0.5 sm:mt-1 font-medium italic line-clamp-1">
+                    <div className="text-[9px] sm:text-xs text-blue-700 font-medium italic truncate leading-tight mt-0.5">
                       "{buildNaturalLanguageQuery()}"
                     </div>
                   )}
@@ -3034,7 +3042,8 @@ const ReportBuilder = (props) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right section - Actions (desktop only, critical on mobile) */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
               {/* Load Query Button */}
               <div className="relative">
                 <button
@@ -3113,7 +3122,8 @@ const ReportBuilder = (props) => {
               <button onClick={() => setActivePanel('more')} className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings"><Settings className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Desktop: Fields/Filters buttons group */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
               <button onClick={() => setActivePanel('fields')} className="relative p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Fields">
                 <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
                 {selections.filter(s => s.type === 'field').length > 0 && (
@@ -3126,6 +3136,27 @@ const ReportBuilder = (props) => {
                 {selections.filter(s => s.type === 'filter').length > 0 && (
                   <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{selections.filter(s => s.type === 'filter').length}</div>
                 )}
+              </button>
+            </div>
+
+            {/* Mobile: Compact critical buttons */}
+            <div className="flex sm:hidden items-center gap-0.5 flex-shrink-0">
+              <button onClick={() => setActivePanel('fields')} className="relative p-1.5 rounded active:bg-gray-100" title="Fields">
+                <Eye className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+                {selections.filter(s => s.type === 'field').length > 0 && (
+                  <div className="absolute -top-0.5 -right-0.5 bg-purple-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">{selections.filter(s => s.type === 'field').length}</div>
+                )}
+              </button>
+
+              <button onClick={() => setActivePanel('filters')} className="relative p-1.5 rounded active:bg-gray-100" title="Filters">
+                <Filter className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+                {selections.filter(s => s.type === 'filter').length > 0 && (
+                  <div className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">{selections.filter(s => s.type === 'filter').length}</div>
+                )}
+              </button>
+
+              <button disabled={selections.length === 0} className={`p-2 rounded-full ml-0.5 ${selections.length > 0 ? 'bg-blue-500 text-white active:bg-blue-600' : 'bg-gray-200 text-gray-400'}`} title="Run">
+                <Play className="w-4 h-4" strokeWidth={1.5} fill="currentColor" />
               </button>
             </div>
           </div>
