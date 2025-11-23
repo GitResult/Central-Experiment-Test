@@ -972,32 +972,38 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <h1 className="text-5xl font-light mb-12 text-gray-900">New Report</h1>
-          <p className="text-xl text-gray-600 mb-16 text-center max-w-2xl">Browse, select or use the phrase experience to tailor your results.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
+          <h1 className="text-3xl sm:text-5xl font-light mb-8 sm:mb-12 text-gray-900 text-center">New Report</h1>
+          <p className="text-base sm:text-xl text-gray-600 mb-8 sm:mb-16 text-center max-w-2xl px-4">Browse, select or use the phrase experience to tailor your results.</p>
 
-          <div className="grid grid-cols-3 gap-8 mb-12 max-w-4xl w-full">
-            <button onClick={() => setStage('browse')} className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white">
-              <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Browse</h3>
-              <p className="text-sm text-gray-500">Categories to select</p>
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mb-12 max-w-4xl w-full px-4">
+            <ResponsiveCard
+              icon={Grid3x3}
+              iconColor="blue"
+              title="Browse"
+              description="Categories to select"
+              onClick={() => setStage('browse')}
+              variant="default"
+            />
 
-            <button onClick={() => setStage('select')} className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white">
-              <List className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Select</h3>
-              <p className="text-sm text-gray-500">From a list of fields</p>
-            </button>
+            <ResponsiveCard
+              icon={List}
+              iconColor="purple"
+              title="Select"
+              description="From a list of fields"
+              onClick={() => setStage('select')}
+              variant="default"
+            />
 
-            <button
-              onClick={() => {
-                updateDemoStateAction({ isPhraseActive: !isPhraseActive })
-              }}
-              className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white focus-visible:outline-none">
-              <Search className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Phrase</h3>
-              <p className="text-sm text-gray-500">Based on terms to use</p>
-            </button>
+            <ResponsiveCard
+              icon={Search}
+              iconColor="green"
+              title="Phrase"
+              description="Based on terms to use"
+              onClick={() => updateDemoStateAction({ isPhraseActive: !isPhraseActive })}
+              variant="default"
+              className="sm:col-span-2 lg:col-span-1"
+            />
           </div>
         </div>
 
@@ -3103,96 +3109,125 @@ const ReportBuilder = (props) => {
           <ReportViewComponent selections={selections} />
         </div>
 
-        {activePanel && (
-          <>
-            <div className="absolute inset-0 bg-black bg-opacity-20 z-40" onClick={() => setActivePanel(null)} />
-
-            <div className="absolute right-0 top-0 h-full w-[390px] bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col animate-slideInRight">
-              <div className="p-6 border-b border-gray-200 bg-white flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{activePanel === 'fields' ? 'Fields Configuration' : activePanel === 'filters' ? 'Filters Builder' : 'More Options'}</h3>
-                  <button onClick={() => setActivePanel(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X className="w-5 h-5" strokeWidth={1.5} /></button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#F9FAFB' }}>
-                {activePanel === 'fields' && (
+        <ResponsivePanel
+          isOpen={!!activePanel}
+          onClose={() => setActivePanel(null)}
+          title={
+            activePanel === 'fields' ? 'Fields Configuration' :
+            activePanel === 'filters' ? 'Filters Builder' :
+            'More Options'
+          }
+          variant="auto"
+          size="md"
+        >
+          <div className="p-4 sm:p-6" style={{ backgroundColor: '#F9FAFB', minHeight: '300px' }}>
+            {activePanel === 'fields' && (
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">Manage which fields appear in your report output. Drag to reorder.</p>
-                    {selections.filter(s => s.type === 'field').length === 0 ? (
-                      <div className="text-center py-8 text-gray-400"><Eye className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No fields selected</p></div>
-                    ) : (
-                      <div className="space-y-2">
-                        {selections.filter(s => s.type === 'field').map((sel) => {
-                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
-                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
-
-                          return (
-                            <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                              <div className="cursor-move text-gray-400">::</div>
-                              <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
-                              {isStatusOrMembers ? (
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
-                              ) : (
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                              )}
-                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                <p className="text-sm text-gray-600 mb-4">Manage which fields appear in your report output. Drag to reorder.</p>
+                {selections.filter(s => s.type === 'field').length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Eye className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} />
+                    <p className="text-sm">No fields selected</p>
                   </div>
-                )}
-
-                {activePanel === 'filters' && (
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">Build complex filter logic with AND/OR conditions.</p>
-                    {selections.filter(s => s.type === 'filter').length === 0 ? (
-                      <div className="text-center py-8 text-gray-400"><Filter className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No filters applied</p></div>
-                    ) : (
-                      <div className="space-y-2">
-                        {selections.filter(s => s.type === 'filter').map((sel) => {
-                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
-                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
-
-                          return (
-                            <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
-                                  {isStatusOrMembers ? (
-                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
-                                  ) : (
-                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                                  )}
-                                </div>
-                                <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activePanel === 'more' && (
+                ) : (
                   <div className="space-y-2">
-                    <button className="w-full flex items-center gap-3 p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left">
-                      <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
-                      <div><div className="text-sm font-medium text-gray-900">Settings</div><div className="text-xs text-gray-500">Report name and configuration</div></div>
-                    </button>
-                    <button className="w-full flex items-center gap-3 p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left">
-                      <Download className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
-                      <div><div className="text-sm font-medium text-gray-900">Export</div><div className="text-xs text-gray-500">Download as CSV, Excel, or PDF</div></div>
-                    </button>
+                    {selections.filter(s => s.type === 'field').map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                      return (
+                        <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200 min-h-[56px]">
+                          <div className="cursor-move text-gray-400 hidden sm:block">::</div>
+                          <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
+                          {isStatusOrMembers ? (
+                            <div className="flex-1">
+                              <div className="text-sm sm:text-base font-semibold text-gray-900">{sel.category}</div>
+                            </div>
+                          ) : (
+                            <div className="flex-1">
+                              <div className="text-sm sm:text-base font-semibold text-gray-900">{sel.category}</div>
+                              <div className="text-xs sm:text-sm text-gray-600">{sel.value}</div>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => removeSelection(sel.id)}
+                            className="text-gray-400 hover:text-red-500 p-2"
+                          >
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.5} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            </div>
-          </>
-        )}
+            )}
+
+            {activePanel === 'filters' && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Build complex filter logic with AND/OR conditions.</p>
+                {selections.filter(s => s.type === 'filter').length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Filter className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} />
+                    <p className="text-sm">No filters applied</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selections.filter(s => s.type === 'filter').map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                      return (
+                        <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200 min-h-[56px]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
+                              {isStatusOrMembers ? (
+                                <div className="flex-1">
+                                  <div className="text-sm sm:text-base font-semibold text-gray-900">{sel.category}</div>
+                                </div>
+                              ) : (
+                                <div className="flex-1">
+                                  <div className="text-sm sm:text-base font-semibold text-gray-900">{sel.category}</div>
+                                  <div className="text-xs sm:text-sm text-gray-600">{sel.value}</div>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => removeSelection(sel.id)}
+                              className="text-gray-400 hover:text-red-500 p-2"
+                            >
+                              <X className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activePanel === 'more' && (
+              <div className="space-y-2">
+                <button className="w-full flex items-center gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left min-h-[56px]">
+                  <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm sm:text-base font-medium text-gray-900">Settings</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Report name and configuration</div>
+                  </div>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left min-h-[56px]">
+                  <Download className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm sm:text-base font-medium text-gray-900">Export</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Download as CSV, Excel, or PDF</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        </ResponsivePanel>
 
         {/* Save Query Panel */}
         {showSaveQueryPanel && (
