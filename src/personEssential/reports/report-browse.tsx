@@ -1443,10 +1443,10 @@ const ReportBuilder = (props) => {
 
         {/* Query Builder Panel */}
         {selections.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-4 sm:px-8 py-3 sm:py-4">
+            <div className="flex items-start gap-2 sm:gap-4 flex-col sm:flex-row">
+              <div className="flex-1 w-full min-w-0">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <Sparkles className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
                   <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
@@ -1460,12 +1460,12 @@ const ReportBuilder = (props) => {
                       setSelectedMemberStatField(null);
                       showToast('All selections cleared');
                     }}
-                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-auto sm:ml-2"
                   >
                     Clear
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center w-full">
                   {selections.map((sel, idx) => {
                     const Icon = sel.type === 'filter' ? Filter : Eye;
                     const isEditing = editingSelection?.id === sel.id;
@@ -1495,15 +1495,15 @@ const ReportBuilder = (props) => {
                         {sel.category === 'Renewed' ? (
                           <>
                             {/* "renewed" keyword chip */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm bg-green-100 text-green-900 border border-green-300">
                               <span className="font-medium">renewed</span>
                             </div>
                             {/* "in" keyword chip */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm bg-green-100 text-green-900 border border-green-300">
                               <span className="font-medium">in</span>
                             </div>
                             {/* Value chip with edit/remove buttons */}
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                            <div className={`flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm transition-all ${
                               isEditing
                                 ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                                 : 'bg-blue-100 text-blue-900 border border-blue-300'
@@ -1536,16 +1536,16 @@ const ReportBuilder = (props) => {
                           </>
                         ) : (
                           /* Regular chip for all other categories */
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          <div className={`flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm transition-all ${
                             isEditing
                               ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                               : sel.type === 'filter'
                                 ? 'bg-blue-100 text-blue-900 border border-blue-300'
                                 : 'bg-purple-100 text-purple-900 border border-purple-300'
                           }`}>
-                            <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                            <span className="font-medium">{getSelectionDisplayLabel(sel)}</span>
-                            <div className="flex items-center gap-1 ml-1">
+                            <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={2} />
+                            <span className="font-medium break-words max-w-[200px] sm:max-w-none">{getSelectionDisplayLabel(sel)}</span>
+                            <div className="flex items-center gap-0.5 sm:gap-1 ml-1">
                               <button
                                 onClick={() => handleEditSelection(sel)}
                                 className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
@@ -1617,12 +1617,12 @@ const ReportBuilder = (props) => {
 
         {/* Query Templates Panel */}
         {selections.length === 0 && (
-          <div className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 sm:py-4">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-4 h-4 text-gray-600" />
               <h3 className="text-sm font-semibold text-gray-900">Quick Start Templates</h3>
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {queryTemplates.map((template, idx) => (
                 <button
                   key={idx}
@@ -1632,9 +1632,9 @@ const ReportBuilder = (props) => {
                     });
                     showToast(`Applied template: ${template.name}`);
                   }}
-                  className="p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group"
+                  className="p-3 sm:p-4 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group min-h-[56px]"
                 >
-                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1">{template.name}</div>
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1 line-clamp-2">{template.name}</div>
                   <div className="text-xs text-gray-500">{template.filters.length} filters</div>
                 </button>
               ))}
@@ -1647,11 +1647,20 @@ const ReportBuilder = (props) => {
             const isThreeColumn = categories.length >= 6;
             const isFourColumn = categories.length === 4 || section === 'Starting Data';
 
+            // Responsive grid classes based on category count
+            const gridClasses = isFourColumn
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'
+              : isThreeColumn
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
+                : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6';
+
             return (
               <div key={section}>
-                <div className="px-8 py-4"><h2 className="text-base text-black">{section}</h2></div>
+                <div className="px-4 sm:px-8 py-3 sm:py-4">
+                  <h2 className="text-base font-semibold text-black">{section}</h2>
+                </div>
 
-                <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
+                <div className={`px-4 sm:px-8 pb-6 sm:pb-8 ${gridClasses}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
                     const isSelected = selections.some(s => s.category === category);
@@ -1665,23 +1674,23 @@ const ReportBuilder = (props) => {
                         <div
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className={`flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                          className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative min-h-[72px] ${isSelected ? 'ring-2 ring-blue-500' : 'border border-gray-100'}`}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
-                            <CategoryIcon className={`w-5 h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
+                          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
+                            <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 text-sm">{category}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
+                            <div className="font-medium text-gray-900 text-sm sm:text-base break-words leading-tight">{category}</div>
+                            <div className="text-xs text-gray-500 mt-0.5 sm:mt-1">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                           </div>
                           {isSelected ? (
                             <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
-                              <Check className="w-3 h-3" strokeWidth={3} />
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
                             </div>
                           ) : (
-                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 sm:p-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" title="Add as field">
                               <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
                             </button>
                           )}
