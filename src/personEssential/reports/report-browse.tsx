@@ -579,13 +579,23 @@ const ReportBuilder = (props) => {
     if (renewedViewMode === 'day' && fromDay && toDay) {
       addFilter('Renewed', `${monthNames[fromDay.month]} ${String(fromDay.day).padStart(2, '0')}, ${fromDay.year} to ${monthNames[toDay.month]} ${String(toDay.day).padStart(2, '0')}, ${toDay.year}`);
     } else if (renewedViewMode === 'week' && fromWeek && toWeek) {
-      addFilter('Renewed', `Week ${fromWeek.weekNum} ${fromWeek.year} to Week ${toWeek.weekNum} ${toWeek.year}`);
+      // Format: June 23, 2020 to July 15, 2020
+      addFilter('Renewed', `${monthNames[fromWeek.startMonth]} ${String(fromWeek.startDay).padStart(2, '0')}, ${fromWeek.year} to ${monthNames[toWeek.endMonth]} ${String(toWeek.endDay).padStart(2, '0')}, ${toWeek.year}`);
     } else if (renewedViewMode === 'month' && fromYear && fromMonth !== null && toYear && toMonth !== null) {
-      addFilter('Renewed', `${monthNames[fromMonth]} ${fromYear} to ${monthNames[toMonth]} ${toYear}`);
+      // Format: January 01, 2020 to June 30, 2021
+      const fromDate = new Date(parseInt(fromYear), fromMonth, 1);
+      const toDate = new Date(parseInt(toYear), toMonth + 1, 0);
+      addFilter('Renewed', `${monthNames[fromMonth]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromYear} to ${monthNames[toMonth]} ${String(toDate.getDate()).padStart(2, '0')}, ${toYear}`);
     } else if (renewedViewMode === 'quarter' && fromQuarter !== null && toQuarter !== null) {
-      addFilter('Renewed', `Q${fromQuarter} ${fromQuarterYear} to Q${toQuarter} ${toQuarterYear}`);
+      // Format: January 01, 2020 to September 30, 2021
+      const fromMonthIdx = (fromQuarter - 1) * 3;
+      const toMonthIdx = (toQuarter - 1) * 3 + 2;
+      const fromDate = new Date(parseInt(fromQuarterYear), fromMonthIdx, 1);
+      const toDate = new Date(parseInt(toQuarterYear), toMonthIdx + 1, 0);
+      addFilter('Renewed', `${monthNames[fromMonthIdx]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromQuarterYear} to ${monthNames[toMonthIdx]} ${String(toDate.getDate()).padStart(2, '0')}, ${toQuarterYear}`);
     } else if (renewedViewMode === 'year' && fromYearOnly && toYearOnly) {
-      addFilter('Renewed', `${fromYearOnly} to ${toYearOnly}`);
+      // Format: January 01, 2020 to December 31, 2021
+      addFilter('Renewed', `January 01, ${fromYearOnly} to December 31, ${toYearOnly}`);
     }
 
     setSelectedCategory(null);
