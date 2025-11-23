@@ -2619,7 +2619,7 @@ const ReportBuilder = (props) => {
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                         >
                           <option value="">Year</option>
-                          {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
+                          {['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                         <select
                           value={currentRenewedMonth}
@@ -2632,7 +2632,11 @@ const ReportBuilder = (props) => {
                         <button
                           onClick={() => {
                             if (currentRenewedMonth && currentRenewedYear) {
-                              const newSelection = `${currentRenewedMonth} ${currentRenewedYear}`;
+                              // Format: January 01, 2020 to January 31, 2020
+                              const monthIndex = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(currentRenewedMonth);
+                              const fromDate = new Date(parseInt(currentRenewedYear), monthIndex, 1);
+                              const toDate = new Date(parseInt(currentRenewedYear), monthIndex + 1, 0);
+                              const newSelection = `${currentRenewedMonth} ${String(fromDate.getDate()).padStart(2, '0')}, ${currentRenewedYear} to ${currentRenewedMonth} ${String(toDate.getDate()).padStart(2, '0')}, ${currentRenewedYear}`;
                               if (!selectedRenewedMonths.includes(newSelection)) {
                                 setSelectedRenewedMonths([...selectedRenewedMonths, newSelection]);
                               }
