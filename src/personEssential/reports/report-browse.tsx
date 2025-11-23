@@ -104,6 +104,32 @@ const ReportBuilder = (props) => {
   const [renewedViewYear, setRenewedViewYear] = useState('2024');
   const [renewedSelectionState, setRenewedSelectionState] = useState('none'); // none, start, complete
   const [showRenewedYearDropdown, setShowRenewedYearDropdown] = useState(false);
+  const [renewedViewMode, setRenewedViewMode] = useState('month'); // day, week, month, quarter, year
+  // Day view states
+  const [fromDay, setFromDay] = useState(null);
+  const [toDay, setToDay] = useState(null);
+  const [viewMonth1, setViewMonth1] = useState(new Date().getMonth());
+  const [viewYear1, setViewYear1] = useState(new Date().getFullYear());
+  const [viewMonth2, setViewMonth2] = useState(new Date().getMonth() + 1);
+  const [viewYear2, setViewYear2] = useState(new Date().getFullYear());
+  const [showYearDropdown1, setShowYearDropdown1] = useState(false);
+  const [showYearDropdown2, setShowYearDropdown2] = useState(false);
+  // Week view states
+  const [fromWeek, setFromWeek] = useState(null);
+  const [toWeek, setToWeek] = useState(null);
+  const [weekViewYear, setWeekViewYear] = useState('2024');
+  const [weekViewQuarter, setWeekViewQuarter] = useState(1);
+  const [showWeekYearDropdown, setShowWeekYearDropdown] = useState(false);
+  // Quarter view states
+  const [fromQuarter, setFromQuarter] = useState(null);
+  const [fromQuarterYear, setFromQuarterYear] = useState(null);
+  const [toQuarter, setToQuarter] = useState(null);
+  const [toQuarterYear, setToQuarterYear] = useState(null);
+  const [quarterViewStartYear, setQuarterViewStartYear] = useState('2024');
+  // Year view states
+  const [fromYearOnly, setFromYearOnly] = useState(null);
+  const [toYearOnly, setToYearOnly] = useState(null);
+  const [yearDecadeStart, setYearDecadeStart] = useState('2021');
 
 
   const [categories, setCategories] = useState({});
@@ -469,13 +495,50 @@ const ReportBuilder = (props) => {
   };
 
   const formatRenewedDateRange = () => {
-    if (fromYear && fromMonth !== null && toYear && toMonth !== null) {
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      const fromDate = new Date(parseInt(fromYear), fromMonth, 1);
-      const toDate = new Date(parseInt(toYear), toMonth + 1, 0);
-      return `${monthNames[fromMonth]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromYear} to ${monthNames[toMonth]} ${String(toDate.getDate()).padStart(2, '0')}, ${toYear}`;
-    } else if (fromYear && fromMonth !== null) {
-      return `${renewedMonths[fromMonth]} 01, ${fromYear} - Select end date`;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    if (renewedViewMode === 'day') {
+      if (fromDay && toDay) {
+        return `${monthNames[fromDay.month]} ${String(fromDay.day).padStart(2, '0')}, ${fromDay.year} to ${monthNames[toDay.month]} ${String(toDay.day).padStart(2, '0')}, ${toDay.year}`;
+      } else if (fromDay) {
+        return `${monthNames[fromDay.month]} ${String(fromDay.day).padStart(2, '0')}, ${fromDay.year} - Select end date`;
+      }
+      return 'Select start date';
+    } else if (renewedViewMode === 'week') {
+      if (fromWeek && toWeek) {
+        return `${monthNames[fromWeek.startMonth]} ${String(fromWeek.startDay).padStart(2, '0')}, ${fromWeek.year} to ${monthNames[toWeek.endMonth]} ${String(toWeek.endDay).padStart(2, '0')}, ${toWeek.year}`;
+      } else if (fromWeek) {
+        return `${monthNames[fromWeek.startMonth]} ${String(fromWeek.startDay).padStart(2, '0')}, ${fromWeek.year} - Select end week`;
+      }
+      return 'Select start week';
+    } else if (renewedViewMode === 'month') {
+      if (fromYear && fromMonth !== null && toYear && toMonth !== null) {
+        const fromDate = new Date(parseInt(fromYear), fromMonth, 1);
+        const toDate = new Date(parseInt(toYear), toMonth + 1, 0);
+        return `${monthNames[fromMonth]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromYear} to ${monthNames[toMonth]} ${String(toDate.getDate()).padStart(2, '0')}, ${toYear}`;
+      } else if (fromYear && fromMonth !== null) {
+        return `${renewedMonths[fromMonth]} 01, ${fromYear} - Select end date`;
+      }
+      return 'Select start date';
+    } else if (renewedViewMode === 'quarter') {
+      if (fromQuarter !== null && toQuarter !== null) {
+        const fromMonthIdx = (fromQuarter - 1) * 3;
+        const toMonthIdx = (toQuarter - 1) * 3 + 2;
+        const fromDate = new Date(parseInt(fromQuarterYear), fromMonthIdx, 1);
+        const toDate = new Date(parseInt(toQuarterYear), toMonthIdx + 1, 0);
+        return `${monthNames[fromMonthIdx]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromQuarterYear} to ${monthNames[toMonthIdx]} ${String(toDate.getDate()).padStart(2, '0')}, ${toQuarterYear}`;
+      } else if (fromQuarter !== null) {
+        const fromMonthIdx = (fromQuarter - 1) * 3;
+        return `${monthNames[fromMonthIdx]} 01, ${fromQuarterYear} - Select end quarter`;
+      }
+      return 'Select start quarter';
+    } else if (renewedViewMode === 'year') {
+      if (fromYearOnly && toYearOnly) {
+        return `January 01, ${fromYearOnly} to December 31, ${toYearOnly}`;
+      } else if (fromYearOnly) {
+        return `${fromYearOnly} - Select end year`;
+      }
+      return 'Select start year';
     }
     return 'Select start date';
   };
@@ -497,15 +560,322 @@ const ReportBuilder = (props) => {
     setFromYear(null);
     setToMonth(null);
     setToYear(null);
+    setFromDay(null);
+    setToDay(null);
+    setFromQuarter(null);
+    setFromQuarterYear(null);
+    setToQuarter(null);
+    setToQuarterYear(null);
+    setFromYearOnly(null);
+    setToYearOnly(null);
+    setFromWeek(null);
+    setToWeek(null);
     setRenewedSelectionState('none');
   };
 
   const applyRenewedRange = () => {
-    if (fromYear && fromMonth !== null && toYear && toMonth !== null) {
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    if (renewedViewMode === 'day' && fromDay && toDay) {
+      addFilter('Renewed', `${monthNames[fromDay.month]} ${String(fromDay.day).padStart(2, '0')}, ${fromDay.year} to ${monthNames[toDay.month]} ${String(toDay.day).padStart(2, '0')}, ${toDay.year}`);
+    } else if (renewedViewMode === 'week' && fromWeek && toWeek) {
+      addFilter('Renewed', `Week ${fromWeek.weekNum} ${fromWeek.year} to Week ${toWeek.weekNum} ${toWeek.year}`);
+    } else if (renewedViewMode === 'month' && fromYear && fromMonth !== null && toYear && toMonth !== null) {
       addFilter('Renewed', `${monthNames[fromMonth]} ${fromYear} to ${monthNames[toMonth]} ${toYear}`);
-      setSelectedCategory(null);
-      handleRenewedClear();
+    } else if (renewedViewMode === 'quarter' && fromQuarter !== null && toQuarter !== null) {
+      addFilter('Renewed', `Q${fromQuarter} ${fromQuarterYear} to Q${toQuarter} ${toQuarterYear}`);
+    } else if (renewedViewMode === 'year' && fromYearOnly && toYearOnly) {
+      addFilter('Renewed', `${fromYearOnly} to ${toYearOnly}`);
+    }
+
+    setSelectedCategory(null);
+    handleRenewedClear();
+  };
+
+  const handleRenewedViewModeChange = (mode) => {
+    setRenewedViewMode(mode);
+    handleRenewedClear();
+  };
+
+  // Day view helper functions
+  const getDaysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month, year) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const isDayInRange = (day, month, year) => {
+    if (!fromDay || !toDay) return false;
+    const currentDate = new Date(year, month, day);
+    const startDate = new Date(fromDay.year, fromDay.month, fromDay.day);
+    const endDate = new Date(toDay.year, toDay.month, toDay.day);
+    return currentDate >= startDate && currentDate <= endDate;
+  };
+
+  const isDayStart = (day, month, year) => {
+    return fromDay && fromDay.day === day && fromDay.month === month && fromDay.year === year;
+  };
+
+  const isDayEnd = (day, month, year) => {
+    return toDay && toDay.day === day && toDay.month === month && toDay.year === year;
+  };
+
+  const handlePrevMonth1 = () => {
+    if (viewMonth1 === 0) {
+      setViewMonth1(11);
+      setViewYear1(viewYear1 - 1);
+      setViewMonth2(0);
+      setViewYear2(viewYear1);
+    } else {
+      setViewMonth1(viewMonth1 - 1);
+      setViewMonth2(viewMonth1);
+      setViewYear2(viewYear1);
+    }
+  };
+
+  const handleNextMonth2 = () => {
+    if (viewMonth2 === 11) {
+      setViewMonth2(0);
+      setViewYear2(viewYear2 + 1);
+      setViewMonth1(11);
+      setViewYear1(viewYear2);
+    } else {
+      setViewMonth2(viewMonth2 + 1);
+      setViewMonth1(viewMonth2);
+      setViewYear1(viewYear2);
+    }
+  };
+
+  const handleQuickSelectDays = (daysToAdd) => {
+    if (fromDay) {
+      const startDate = new Date(fromDay.year, fromDay.month, fromDay.day);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + daysToAdd);
+
+      setToDay({
+        day: endDate.getDate(),
+        month: endDate.getMonth(),
+        year: endDate.getFullYear()
+      });
+      setRenewedSelectionState('complete');
+    }
+  };
+
+  const handleYearSelect1 = (year) => {
+    setViewYear1(parseInt(year));
+    setShowYearDropdown1(false);
+  };
+
+  const handleYearSelect2 = (year) => {
+    setViewYear2(parseInt(year));
+    setShowYearDropdown2(false);
+  };
+
+  const scrollToYear = (year, dropdownElement) => {
+    if (dropdownElement) {
+      const yearButton = dropdownElement.querySelector(`[data-year="${year}"]`);
+      if (yearButton) {
+        yearButton.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+    }
+  };
+
+  // Week view helper functions
+  const getWeeksInYear = (year) => {
+    const weeks = [];
+    const jan1 = new Date(year, 0, 1);
+    let currentDate = new Date(jan1);
+    const dayOfWeek = currentDate.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    currentDate.setDate(currentDate.getDate() + daysToMonday);
+
+    let weekNum = 1;
+    for (let i = 0; i < 52; i++) {
+      const monday = new Date(currentDate);
+      const sunday = new Date(currentDate);
+      sunday.setDate(sunday.getDate() + 6);
+
+      weeks.push({
+        weekNum: weekNum,
+        year: year,
+        startDay: monday.getDate(),
+        startMonth: monday.getMonth(),
+        startYear: monday.getFullYear(),
+        endDay: sunday.getDate(),
+        endMonth: sunday.getMonth(),
+        endYear: sunday.getFullYear()
+      });
+
+      currentDate.setDate(currentDate.getDate() + 7);
+      weekNum++;
+    }
+    return weeks;
+  };
+
+  const isWeekInRange = (week) => {
+    if (!fromWeek || !toWeek) return false;
+    const fromVal = parseInt(fromWeek.year) * 53 + fromWeek.weekNum;
+    const toVal = parseInt(toWeek.year) * 53 + toWeek.weekNum;
+    const currentVal = parseInt(week.year) * 53 + week.weekNum;
+    return currentVal >= fromVal && currentVal <= toVal;
+  };
+
+  const isWeekStart = (week) => {
+    return fromWeek && fromWeek.weekNum === week.weekNum && fromWeek.year === week.year;
+  };
+
+  const isWeekEnd = (week) => {
+    return toWeek && toWeek.weekNum === week.weekNum && toWeek.year === week.year;
+  };
+
+  const handlePrevWeekYear = () => {
+    if (weekViewQuarter === 3) {
+      setWeekViewQuarter(1);
+    } else {
+      const idx = renewedExtendedYears.indexOf(weekViewYear);
+      if (idx > 0) {
+        setWeekViewYear(renewedExtendedYears[idx - 1]);
+        setWeekViewQuarter(3);
+      }
+    }
+  };
+
+  const handleNextWeekYear = () => {
+    if (weekViewQuarter === 1) {
+      setWeekViewQuarter(3);
+    } else {
+      const idx = renewedExtendedYears.indexOf(weekViewYear);
+      if (idx < renewedExtendedYears.length - 1) {
+        setWeekViewYear(renewedExtendedYears[idx + 1]);
+        setWeekViewQuarter(1);
+      }
+    }
+  };
+
+  const getWeeksForQuarters = (year, startQuarter) => {
+    const allWeeks = getWeeksInYear(parseInt(year));
+    if (startQuarter === 1) {
+      return allWeeks.slice(0, 26);
+    } else {
+      return allWeeks.slice(26, 52);
+    }
+  };
+
+  const handleQuickSelectWeeks = (weeksToAdd) => {
+    if (fromWeek) {
+      const year1Weeks = getWeeksInYear(parseInt(weekViewYear));
+      const year2Weeks = getWeeksInYear(parseInt(weekViewYear) + 1);
+      const allWeeks = [...year1Weeks, ...year2Weeks];
+
+      const fromIdx = allWeeks.findIndex(w =>
+        w.weekNum === fromWeek.weekNum &&
+        w.year === fromWeek.year
+      );
+
+      if (fromIdx !== -1 && fromIdx + weeksToAdd < allWeeks.length) {
+        setToWeek(allWeeks[fromIdx + weeksToAdd]);
+        setRenewedSelectionState('complete');
+      }
+    }
+  };
+
+  const handleWeekYearSelect = (year) => {
+    setWeekViewYear(year);
+    setShowWeekYearDropdown(false);
+  };
+
+  // Quarter view helper functions
+  const isQuarterInRange = (quarter, year) => {
+    if (fromQuarter === null || toQuarter === null) return false;
+    const currentVal = parseInt(year) * 4 + quarter;
+    const startVal = parseInt(fromQuarterYear) * 4 + fromQuarter;
+    const endVal = parseInt(toQuarterYear) * 4 + toQuarter;
+    return currentVal >= startVal && currentVal <= endVal;
+  };
+
+  const isQuarterStart = (quarter, year) => {
+    return quarter === fromQuarter && year === fromQuarterYear;
+  };
+
+  const isQuarterEnd = (quarter, year) => {
+    return quarter === toQuarter && year === toQuarterYear;
+  };
+
+  const handlePrevQuarterYear = () => {
+    const currentYear = parseInt(quarterViewStartYear);
+    if (currentYear > 2010) {
+      setQuarterViewStartYear((currentYear - 4).toString());
+    }
+  };
+
+  const handleNextQuarterYear = () => {
+    const currentYear = parseInt(quarterViewStartYear);
+    if (currentYear < 2027) {
+      setQuarterViewStartYear((currentYear + 4).toString());
+    }
+  };
+
+  const handleQuickSelectQuarters = (quartersToAdd) => {
+    if (fromQuarter !== null && fromQuarterYear) {
+      const fromVal = parseInt(fromQuarterYear) * 4 + fromQuarter;
+      const toVal = fromVal + quartersToAdd;
+
+      const toYear = Math.floor((toVal - 1) / 4);
+      const toQ = ((toVal - 1) % 4) + 1;
+
+      setToQuarter(toQ);
+      setToQuarterYear(toYear.toString());
+      setRenewedSelectionState('complete');
+    }
+  };
+
+  // Year view helper functions
+  const isYearInRange = (year) => {
+    if (!fromYearOnly || !toYearOnly) return false;
+    return parseInt(year) >= parseInt(fromYearOnly) && parseInt(year) <= parseInt(toYearOnly);
+  };
+
+  const isYearStart = (year) => {
+    return year === fromYearOnly;
+  };
+
+  const isYearEnd = (year) => {
+    return year === toYearOnly;
+  };
+
+  const getDecadeYears = () => {
+    const startYear = parseInt(yearDecadeStart);
+    return Array.from({ length: 10 }, (_, i) => (startYear + i).toString());
+  };
+
+  const handlePrevDecade = () => {
+    const currentStart = parseInt(yearDecadeStart);
+    if (currentStart > 2010) {
+      setYearDecadeStart((currentStart - 10).toString());
+    }
+  };
+
+  const handleNextDecade = () => {
+    const currentStart = parseInt(yearDecadeStart);
+    if (currentStart < 2021) {
+      setYearDecadeStart((currentStart + 10).toString());
+    }
+  };
+
+  const getDecadeLabel = () => {
+    const start = parseInt(yearDecadeStart);
+    return `${start} - ${start + 9}`;
+  };
+
+  const handleQuickSelectYears = (yearsToAdd) => {
+    if (fromYearOnly) {
+      const toYear = (parseInt(fromYearOnly) + yearsToAdd).toString();
+      if (renewedExtendedYears.includes(toYear)) {
+        setToYearOnly(toYear);
+        setRenewedSelectionState('complete');
+      }
     }
   };
 
@@ -1411,7 +1781,7 @@ const ReportBuilder = (props) => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-gray-700">Date Range</label>
-                        {(fromMonth !== null || toMonth !== null) && (
+                        {(fromMonth !== null || toMonth !== null || fromDay || fromWeek || fromQuarter !== null || fromYearOnly) && (
                           <button
                             onClick={handleRenewedClear}
                             className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors"
@@ -1421,20 +1791,42 @@ const ReportBuilder = (props) => {
                         )}
                       </div>
 
-                      <div className="mb-2 text-xs text-gray-500 text-center">
-                        {renewedSelectionState === 'none' && 'Click to select start date'}
-                        {renewedSelectionState === 'start' && 'Click to select end date'}
-                        {renewedSelectionState === 'complete' && 'Click any month to reset and start new selection'}
+                      {/* View Mode Selector */}
+                      <div className="flex gap-1 mb-2 justify-center">
+                        {['day', 'week', 'month', 'quarter', 'year'].map((mode) => (
+                          <button
+                            key={mode}
+                            onClick={() => handleRenewedViewModeChange(mode)}
+                            className={`
+                              px-2 py-1 rounded-md text-xs font-medium transition-all capitalize
+                              ${renewedViewMode === mode
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }
+                            `}
+                          >
+                            {mode}
+                          </button>
+                        ))}
                       </div>
 
-                      <div className="mb-3 flex items-center justify-center gap-3">
-                        <button
-                          onClick={handleRenewedPrevYear}
-                          disabled={renewedExtendedYears.indexOf(renewedViewYear) === 0}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronLeft size={16} className="text-gray-700" />
-                        </button>
+                      <div className="mb-2 text-xs text-gray-500 text-center">
+                        {renewedSelectionState === 'none' && `Click to select start ${renewedViewMode === 'week' ? 'week' : renewedViewMode === 'quarter' ? 'quarter' : renewedViewMode === 'year' ? 'year' : 'date'}`}
+                        {renewedSelectionState === 'start' && `Click to select end ${renewedViewMode === 'week' ? 'week' : renewedViewMode === 'quarter' ? 'quarter' : renewedViewMode === 'year' ? 'year' : 'date'}`}
+                        {renewedSelectionState === 'complete' && `Click any ${renewedViewMode === 'week' ? 'week' : renewedViewMode === 'quarter' ? 'quarter' : renewedViewMode === 'year' ? 'year' : renewedViewMode} to reset and start new selection`}
+                      </div>
+
+                      {/* MONTH VIEW */}
+                      {renewedViewMode === 'month' && (
+                        <>
+                          <div className="mb-3 flex items-center justify-center gap-3">
+                            <button
+                              onClick={handleRenewedPrevYear}
+                              disabled={renewedExtendedYears.indexOf(renewedViewYear) === 0}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronLeft size={16} className="text-gray-700" />
+                            </button>
 
                         <div className="relative">
                           <button
@@ -1566,13 +1958,275 @@ const ReportBuilder = (props) => {
                         {formatRenewedDateRange()}
                       </div>
 
-                      {renewedSelectionState === 'complete' && (
-                        <button
-                          onClick={applyRenewedRange}
-                          className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
-                        >
-                          Apply Range
-                        </button>
+                          {renewedSelectionState === 'complete' && (
+                            <button
+                              onClick={applyRenewedRange}
+                              className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                            >
+                              Apply Range
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* DAY VIEW */}
+                      {renewedViewMode === 'day' && (
+                        <>
+                          <div className="flex gap-2 mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1.5 px-1">
+                                <button onClick={handlePrevMonth1} className="p-1 hover:bg-gray-100 rounded">
+                                  <ChevronLeft size={14} className="text-gray-700" />
+                                </button>
+                                <div className="relative">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowYearDropdown1(!showYearDropdown1);
+                                      setShowYearDropdown2(false);
+                                    }}
+                                    className="text-center font-semibold text-xs text-gray-800 px-2 py-0.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                  >
+                                    {renewedMonths[viewMonth1]} {viewYear1}
+                                  </button>
+                                  {showYearDropdown1 && (
+                                    <div
+                                      className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-24"
+                                      onClick={(e) => e.stopPropagation()}
+                                      ref={(el) => {
+                                        if (el) scrollToYear(viewYear1, el);
+                                      }}
+                                    >
+                                      <div className="max-h-32 overflow-y-auto py-1">
+                                        {getRenewedYearOptions().map((year) => (
+                                          <button
+                                            key={year}
+                                            data-year={year}
+                                            onClick={() => handleYearSelect1(year)}
+                                            className={`
+                                              block w-full px-2 py-1 text-xs text-left hover:bg-blue-50 transition-colors
+                                              ${year === viewYear1 ? 'bg-blue-500 text-white font-semibold' : 'text-gray-700'}
+                                            `}
+                                          >
+                                            {year}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="w-5"></div>
+                              </div>
+                              {/* Calendar Grid for Month 1 */}
+                              <div>
+                                <div className="grid grid-cols-7 gap-0.5 mb-0.5">
+                                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                                    <div key={i} className="text-xs text-gray-500 text-center font-medium h-5 flex items-center justify-center">
+                                      {d}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-0.5">
+                                  {(() => {
+                                    const daysInMonth = getDaysInMonth(viewMonth1, viewYear1);
+                                    const firstDay = getFirstDayOfMonth(viewMonth1, viewYear1);
+                                    const days = [];
+                                    for (let i = 0; i < firstDay; i++) {
+                                      days.push(<div key={`empty-${i}`} className="h-6"></div>);
+                                    }
+                                    for (let day = 1; day <= daysInMonth; day++) {
+                                      const isInRange = isDayInRange(day, viewMonth1, viewYear1);
+                                      const isStart = isDayStart(day, viewMonth1, viewYear1);
+                                      const isEnd = isDayEnd(day, viewMonth1, viewYear1);
+                                      days.push(
+                                        <button
+                                          key={day}
+                                          onClick={() => {
+                                            const clickedDay = { day, month: viewMonth1, year: viewYear1 };
+                                            if (renewedSelectionState === 'none') {
+                                              setFromDay(clickedDay);
+                                              setToDay(null);
+                                              setRenewedSelectionState('start');
+                                            } else if (renewedSelectionState === 'start') {
+                                              const startDate = new Date(fromDay.year, fromDay.month, fromDay.day);
+                                              const clickedDate = new Date(clickedDay.year, clickedDay.month, clickedDay.day);
+                                              if (clickedDate >= startDate) {
+                                                setToDay(clickedDay);
+                                                setRenewedSelectionState('complete');
+                                              } else {
+                                                setFromDay(clickedDay);
+                                              }
+                                            } else {
+                                              setFromDay(clickedDay);
+                                              setToDay(null);
+                                              setRenewedSelectionState('start');
+                                            }
+                                          }}
+                                          className={`
+                                            h-6 rounded text-xs font-medium transition-all
+                                            ${isInRange ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}
+                                            ${isStart || isEnd ? 'ring-1 ring-blue-600 ring-offset-0.5' : ''}
+                                          `}
+                                        >
+                                          {day}
+                                        </button>
+                                      );
+                                    }
+                                    return days;
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1.5 px-1">
+                                <div className="w-5"></div>
+                                <div className="relative">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowYearDropdown2(!showYearDropdown2);
+                                      setShowYearDropdown1(false);
+                                    }}
+                                    className="text-center font-semibold text-xs text-gray-800 px-2 py-0.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                  >
+                                    {renewedMonths[viewMonth2]} {viewYear2}
+                                  </button>
+                                  {showYearDropdown2 && (
+                                    <div
+                                      className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-24"
+                                      onClick={(e) => e.stopPropagation()}
+                                      ref={(el) => {
+                                        if (el) scrollToYear(viewYear2, el);
+                                      }}
+                                    >
+                                      <div className="max-h-32 overflow-y-auto py-1">
+                                        {getRenewedYearOptions().map((year) => (
+                                          <button
+                                            key={year}
+                                            data-year={year}
+                                            onClick={() => handleYearSelect2(year)}
+                                            className={`
+                                              block w-full px-2 py-1 text-xs text-left hover:bg-blue-50 transition-colors
+                                              ${year === viewYear2 ? 'bg-blue-500 text-white font-semibold' : 'text-gray-700'}
+                                            `}
+                                          >
+                                            {year}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <button onClick={handleNextMonth2} className="p-1 hover:bg-gray-100 rounded">
+                                  <ChevronRight size={14} className="text-gray-700" />
+                                </button>
+                              </div>
+                              {/* Calendar Grid for Month 2 */}
+                              <div>
+                                <div className="grid grid-cols-7 gap-0.5 mb-0.5">
+                                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                                    <div key={i} className="text-xs text-gray-500 text-center font-medium h-5 flex items-center justify-center">
+                                      {d}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-0.5">
+                                  {(() => {
+                                    const daysInMonth = getDaysInMonth(viewMonth2, viewYear2);
+                                    const firstDay = getFirstDayOfMonth(viewMonth2, viewYear2);
+                                    const days = [];
+                                    for (let i = 0; i < firstDay; i++) {
+                                      days.push(<div key={`empty-${i}`} className="h-6"></div>);
+                                    }
+                                    for (let day = 1; day <= daysInMonth; day++) {
+                                      const isInRange = isDayInRange(day, viewMonth2, viewYear2);
+                                      const isStart = isDayStart(day, viewMonth2, viewYear2);
+                                      const isEnd = isDayEnd(day, viewMonth2, viewYear2);
+                                      days.push(
+                                        <button
+                                          key={day}
+                                          onClick={() => {
+                                            const clickedDay = { day, month: viewMonth2, year: viewYear2 };
+                                            if (renewedSelectionState === 'none') {
+                                              setFromDay(clickedDay);
+                                              setToDay(null);
+                                              setRenewedSelectionState('start');
+                                            } else if (renewedSelectionState === 'start') {
+                                              const startDate = new Date(fromDay.year, fromDay.month, fromDay.day);
+                                              const clickedDate = new Date(clickedDay.year, clickedDay.month, clickedDay.day);
+                                              if (clickedDate >= startDate) {
+                                                setToDay(clickedDay);
+                                                setRenewedSelectionState('complete');
+                                              } else {
+                                                setFromDay(clickedDay);
+                                              }
+                                            } else {
+                                              setFromDay(clickedDay);
+                                              setToDay(null);
+                                              setRenewedSelectionState('start');
+                                            }
+                                          }}
+                                          className={`
+                                            h-6 rounded text-xs font-medium transition-all
+                                            ${isInRange ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}
+                                            ${isStart || isEnd ? 'ring-1 ring-blue-600 ring-offset-0.5' : ''}
+                                          `}
+                                        >
+                                          {day}
+                                        </button>
+                                      );
+                                    }
+                                    return days;
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {renewedSelectionState === 'start' && fromDay && (
+                            <div className="mb-2 flex justify-center gap-1.5">
+                              <button
+                                onClick={() => handleQuickSelectDays(1)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +1 day
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectDays(2)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +2 days
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectDays(7)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +7 days
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="text-center text-xs text-gray-600 bg-gray-50 py-2 rounded-lg mb-2">
+                            {formatRenewedDateRange()}
+                          </div>
+
+                          {renewedSelectionState === 'complete' && (
+                            <button
+                              onClick={applyRenewedRange}
+                              className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                            >
+                              Apply Range
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* WEEK, QUARTER, YEAR VIEWS - Placeholder */}
+                      {(renewedViewMode === 'week' || renewedViewMode === 'quarter' || renewedViewMode === 'year') && (
+                        <div className="text-center text-sm text-gray-500 py-8">
+                          {renewedViewMode.charAt(0).toUpperCase() + renewedViewMode.slice(1)} view - Implementation in progress
+                        </div>
                       )}
                     </div>
                   ) : (
