@@ -91,15 +91,19 @@ const ReportBuilder = (props) => {
   const [customYearValue, setCustomYearValue] = useState('');
 
   // Renewed date range state
-  const [fromMonth, setFromMonth] = useState('');
-  const [fromYear, setFromYear] = useState('');
-  const [toMonth, setToMonth] = useState('');
-  const [toYear, setToYear] = useState('');
+  const [fromMonth, setFromMonth] = useState(null);
+  const [fromYear, setFromYear] = useState(null);
+  const [toMonth, setToMonth] = useState(null);
+  const [toYear, setToYear] = useState(null);
   const [renewedMode, setRenewedMode] = useState('from-to'); // 'from-to' or 'in'
   const [selectedRenewedMonths, setSelectedRenewedMonths] = useState([]);
   // For "in" mode dynamic selection
   const [currentRenewedMonth, setCurrentRenewedMonth] = useState('');
   const [currentRenewedYear, setCurrentRenewedYear] = useState('');
+  // For month grid in from-to mode
+  const [renewedViewYear, setRenewedViewYear] = useState('2024');
+  const [renewedSelectionState, setRenewedSelectionState] = useState('none'); // none, start, complete
+  const [showRenewedYearDropdown, setShowRenewedYearDropdown] = useState(false);
 
 
   const [categories, setCategories] = useState({});
@@ -413,6 +417,95 @@ const ReportBuilder = (props) => {
       setSelectedCategory(null);
       setProximityLocation('');
       setProximityRadius(25);
+    }
+  };
+
+  // Helper functions for Renewed Month Grid
+  const renewedMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const renewedExtendedYears = Array.from({ length: 21 }, (_, i) => (2010 + i).toString());
+
+  const handleRenewedPrevYear = () => {
+    const idx = renewedExtendedYears.indexOf(renewedViewYear);
+    if (idx > 0) setRenewedViewYear(renewedExtendedYears[idx - 1]);
+  };
+
+  const handleRenewedNextYear = () => {
+    const idx = renewedExtendedYears.indexOf(renewedViewYear);
+    if (idx < renewedExtendedYears.length - 1) setRenewedViewYear(renewedExtendedYears[idx + 1]);
+  };
+
+  const handleRenewedYearSelect = (year) => {
+    setRenewedViewYear(year);
+    setShowRenewedYearDropdown(false);
+  };
+
+  const getRenewedYearOptions = () => {
+    return Array.from({ length: 21 }, (_, i) => 2010 + i);
+  };
+
+  const scrollToRenewedYear = (year, dropdownElement) => {
+    if (dropdownElement) {
+      const yearButton = dropdownElement.querySelector(`[data-year="${year}"]`);
+      if (yearButton) {
+        yearButton.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+    }
+  };
+
+  const isRenewedInRange = (monthIdx, year) => {
+    if (fromYear === null || toYear === null || fromMonth === null || toMonth === null) return false;
+    const fromDate = new Date(parseInt(fromYear), fromMonth);
+    const toDate = new Date(parseInt(toYear), toMonth);
+    const currentDate = new Date(parseInt(year), monthIdx);
+    return currentDate >= fromDate && currentDate <= toDate;
+  };
+
+  const isRenewedStartPoint = (monthIdx, year) => {
+    return monthIdx === fromMonth && year === fromYear;
+  };
+
+  const isRenewedEndPoint = (monthIdx, year) => {
+    return monthIdx === toMonth && year === toYear;
+  };
+
+  const formatRenewedDateRange = () => {
+    if (fromYear && fromMonth !== null && toYear && toMonth !== null) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const fromDate = new Date(parseInt(fromYear), fromMonth, 1);
+      const toDate = new Date(parseInt(toYear), toMonth + 1, 0);
+      return `${monthNames[fromMonth]} ${String(fromDate.getDate()).padStart(2, '0')}, ${fromYear} to ${monthNames[toMonth]} ${String(toDate.getDate()).padStart(2, '0')}, ${toYear}`;
+    } else if (fromYear && fromMonth !== null) {
+      return `${renewedMonths[fromMonth]} 01, ${fromYear} - Select end date`;
+    }
+    return 'Select start date';
+  };
+
+  const handleRenewedQuickSelect = (monthsToAdd) => {
+    if (fromYear && fromMonth !== null) {
+      const startDate = new Date(parseInt(fromYear), fromMonth);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + monthsToAdd);
+
+      setToMonth(endDate.getMonth());
+      setToYear(endDate.getFullYear().toString());
+      setRenewedSelectionState('complete');
+    }
+  };
+
+  const handleRenewedClear = () => {
+    setFromMonth(null);
+    setFromYear(null);
+    setToMonth(null);
+    setToYear(null);
+    setRenewedSelectionState('none');
+  };
+
+  const applyRenewedRange = () => {
+    if (fromYear && fromMonth !== null && toYear && toMonth !== null) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      addFilter('Renewed', `${monthNames[fromMonth]} ${fromYear} to ${monthNames[toMonth]} ${toYear}`);
+      setSelectedCategory(null);
+      handleRenewedClear();
     }
   };
 
@@ -1316,38 +1409,170 @@ const ReportBuilder = (props) => {
 
                   {renewedMode === 'from-to' ? (
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Year/Month Range</label>
-                      <p className="text-xs text-gray-500 mb-3">Select from and to dates</p>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs text-gray-600 mb-1 block font-medium">From</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                              <option value="">Month</option>
-                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                              <option value="">Year</option>
-                              {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-600 mb-1 block font-medium">To</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                              <option value="">Month</option>
-                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <select value={toYear} onChange={(e) => setToYear(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                              <option value="">Year</option>
-                              {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'].map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">Date Range</label>
+                        {(fromMonth !== null || toMonth !== null) && (
+                          <button
+                            onClick={handleRenewedClear}
+                            className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                          >
+                            Clear
+                          </button>
+                        )}
                       </div>
-                      {(fromMonth && fromYear && toMonth && toYear) && (
-                        <button onClick={() => {addFilter('Renewed', `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`); setSelectedCategory(null); setFromMonth(''); setFromYear(''); setToMonth(''); setToYear('');}} className="w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600">Apply Range</button>
+
+                      <div className="mb-2 text-xs text-gray-500 text-center">
+                        {renewedSelectionState === 'none' && 'Click to select start date'}
+                        {renewedSelectionState === 'start' && 'Click to select end date'}
+                        {renewedSelectionState === 'complete' && 'Click any month to reset and start new selection'}
+                      </div>
+
+                      <div className="mb-3 flex items-center justify-center gap-3">
+                        <button
+                          onClick={handleRenewedPrevYear}
+                          disabled={renewedExtendedYears.indexOf(renewedViewYear) === 0}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeft size={16} className="text-gray-700" />
+                        </button>
+
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowRenewedYearDropdown(!showRenewedYearDropdown);
+                            }}
+                            className="px-4 py-1.5 rounded-lg bg-gray-100 font-semibold text-gray-800 text-sm min-w-[100px] text-center hover:bg-gray-200 transition-colors cursor-pointer"
+                          >
+                            {renewedViewYear} - {parseInt(renewedViewYear) + 1}
+                          </button>
+                          {showRenewedYearDropdown && (
+                            <div
+                              className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-28"
+                              onClick={(e) => e.stopPropagation()}
+                              ref={(el) => {
+                                if (el) scrollToRenewedYear(parseInt(renewedViewYear), el);
+                              }}
+                            >
+                              <div className="max-h-48 overflow-y-auto py-1">
+                                {getRenewedYearOptions().map((year) => (
+                                  <button
+                                    key={year}
+                                    data-year={year}
+                                    onClick={() => handleRenewedYearSelect(year.toString())}
+                                    className={`
+                                      block w-full px-3 py-1.5 text-xs text-left hover:bg-blue-50 transition-colors
+                                      ${year === parseInt(renewedViewYear) ? 'bg-blue-500 text-white font-semibold' : 'text-gray-700'}
+                                    `}
+                                  >
+                                    {year}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={handleRenewedNextYear}
+                          disabled={renewedExtendedYears.indexOf(renewedViewYear) === renewedExtendedYears.length - 1}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronRight size={16} className="text-gray-700" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-6 gap-1.5 mb-2">
+                        {[0, 1].map((yearOffset) => {
+                          const year = (parseInt(renewedViewYear) + yearOffset).toString();
+                          return renewedMonths.map((month, idx) => {
+                            const selected = isRenewedInRange(idx, year);
+                            const isStart = isRenewedStartPoint(idx, year);
+                            const isEnd = isRenewedEndPoint(idx, year);
+
+                            return (
+                              <button
+                                key={`${year}-${month}`}
+                                onClick={() => {
+                                  const clickedYear = year;
+                                  if (renewedSelectionState === 'none') {
+                                    setFromMonth(idx);
+                                    setFromYear(clickedYear);
+                                    setToMonth(null);
+                                    setToYear(null);
+                                    setRenewedSelectionState('start');
+                                  } else if (renewedSelectionState === 'start') {
+                                    const startDate = new Date(parseInt(fromYear), fromMonth);
+                                    const clickedDate = new Date(parseInt(clickedYear), idx);
+                                    if (clickedDate >= startDate) {
+                                      setToMonth(idx);
+                                      setToYear(clickedYear);
+                                      setRenewedSelectionState('complete');
+                                    } else {
+                                      setFromMonth(idx);
+                                      setFromYear(clickedYear);
+                                    }
+                                  } else {
+                                    setFromMonth(idx);
+                                    setFromYear(clickedYear);
+                                    setToMonth(null);
+                                    setToYear(null);
+                                    setRenewedSelectionState('start');
+                                  }
+                                }}
+                                className={`
+                                  px-1.5 py-1.5 rounded-lg text-xs font-medium transition-all
+                                  ${selected
+                                    ? 'bg-blue-500 text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }
+                                  ${isStart || isEnd ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                                `}
+                              >
+                                <div className="flex flex-col items-center">
+                                  <span className="font-semibold text-xs">{month}</span>
+                                  <span className="opacity-80 text-xs">{year.slice(-2)}</span>
+                                </div>
+                              </button>
+                            );
+                          });
+                        }).flat()}
+                      </div>
+
+                      {renewedSelectionState === 'start' && fromMonth !== null && (
+                        <div className="mb-2 flex justify-center gap-1.5">
+                          <button
+                            onClick={() => handleRenewedQuickSelect(1)}
+                            className="px-2.5 py-1 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                          >
+                            +1 mo
+                          </button>
+                          <button
+                            onClick={() => handleRenewedQuickSelect(2)}
+                            className="px-2.5 py-1 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                          >
+                            +2 mo
+                          </button>
+                          <button
+                            onClick={() => handleRenewedQuickSelect(3)}
+                            className="px-2.5 py-1 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                          >
+                            +3 mo
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="text-center text-xs text-gray-600 bg-gray-50 py-2 rounded-lg mb-2">
+                        {formatRenewedDateRange()}
+                      </div>
+
+                      {renewedSelectionState === 'complete' && (
+                        <button
+                          onClick={applyRenewedRange}
+                          className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                        >
+                          Apply Range
+                        </button>
                       )}
                     </div>
                   ) : (
