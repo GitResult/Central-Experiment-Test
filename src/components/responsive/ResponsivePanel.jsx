@@ -128,13 +128,15 @@ const ResponsivePanel = ({
       case 'sheet':
         return {
           container: 'items-end sm:items-center',
-          panel: `w-full sm:${sizeClasses[size]} rounded-t-2xl sm:rounded-2xl max-h-[85vh] flex flex-col`,
+          // Reduced max-height on mobile to avoid bottom panel overlap (120px = bottom panel height + margin)
+          panel: `w-full sm:${sizeClasses[size]} rounded-t-2xl sm:rounded-2xl max-h-[calc(100vh-140px)] sm:max-h-[85vh] flex flex-col`,
           animation: 'animate-slideUp',
         };
       case 'drawer':
         return {
           container: 'items-stretch justify-end',
-          panel: 'w-full max-w-md h-full flex flex-col',
+          // Adjusted height on mobile to avoid bottom panel overlap
+          panel: 'w-full max-w-md max-h-[calc(100vh-140px)] sm:h-full flex flex-col',
           animation: 'animate-slideInRight',
         };
       case 'modal':
@@ -183,15 +185,15 @@ const ResponsivePanel = ({
 
       {/* Header */}
       {showHeader && (
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <div className="flex items-center gap-2">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 min-w-0 break-words">{title}</h3>
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {headerActions}
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
                   aria-label="Close panel"
                 >
                   <X className="w-5 h-5 text-gray-600" />
