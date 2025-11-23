@@ -501,9 +501,10 @@ const ReportBuilder = ({
   // Structured Query Builder state
   const [enabledFilters, setEnabledFilters] = useState({});
   const [filterValues, setFilterValues] = useState({});
-  const [filterSearchTerm, setFilterSearchTerm] = useState('');
   const [selectedStartingData, setSelectedStartingData] = useState({ status: null, entity: null });
   const [expandedValues, setExpandedValues] = useState({}); // Track expanded nested values
+  const [renewedExpandedYears, setRenewedExpandedYears] = useState({ '2024': true, '2023': true }); // Track expanded years for Renewed category
+  const [renewedLoadedYears, setRenewedLoadedYears] = useState(5); // Track how many years to display (default: 5)
 
   // Load data from JSON file
   useEffect(() => {
@@ -561,10 +562,16 @@ const ReportBuilder = ({
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(f =>
-        f.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.section.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(f => {
+        // Search in category name
+        if (f.category.toLowerCase().includes(lowerSearch)) return true;
+        // Search in section name
+        if (f.section.toLowerCase().includes(lowerSearch)) return true;
+        // Search in values/options within the category
+        const values = sampleValues[f.category] || [];
+        return values.some(value => value.toLowerCase().includes(lowerSearch));
+      });
     }
 
     const currentOrder = cardOrder[activeView] || {};
@@ -631,7 +638,10 @@ const ReportBuilder = ({
         // Helper function to get proper connector phrase for each category
         const getConnectorPhrase = (category, value, isFirst) => {
           let val = value;
+          // Extract short form for Member Type (e.g., ECY1, ECY2, ECY3)
           if (category === 'Member Type' && val.includes(' - ')) val = val.split(' - ')[0];
+          // Extract short form for Province/State (e.g., ON, BC, AB)
+          if (category === 'Province/State' && val.includes(' - ')) val = val.split(' - ')[0];
 
           // First filter after status/members uses "that are" or "that have been members"
           if (isFirst && category === 'Member Type') {
@@ -649,7 +659,7 @@ const ReportBuilder = ({
           if (category === 'Member Year' && i > 0 && remainingSelections.slice(0, i).some(s => s.category === 'Renewed')) {
             return `for member year ${val}`;
           }
-          if (category === 'Member Type') return `and member type ${val}`;
+          if (category === 'Member Type') return `that are ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
             // Extract the number from "Consecutive Membership Years= 5" format
             const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
@@ -682,7 +692,7 @@ const ReportBuilder = ({
 
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
-            const val2 = sel.category === 'Member Type' && nextSel.value.includes(' - ')
+            const val2 = (sel.category === 'Member Type' || sel.category === 'Province/State') && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
@@ -702,9 +712,13 @@ const ReportBuilder = ({
 
             if (orValues.length > 1) {
               // Multiple values with OR
-              const formattedValues = orValues.map(v =>
-                sel.category === 'Member Type' && v.includes(' - ') ? v.split(' - ')[0] : v
-              ).join(' or ');
+              const formattedValues = orValues.map(v => {
+                // Extract short form for Member Type and Province/State
+                if ((sel.category === 'Member Type' || sel.category === 'Province/State') && v.includes(' - ')) {
+                  return v.split(' - ')[0];
+                }
+                return v;
+              }).join(' or ');
 
               const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
               parts.push(phrase.replace(sel.value, formattedValues));
@@ -987,7 +1001,21 @@ const ReportBuilder = ({
 
     // For Member Type and Member Year, use equals sign format
     if (sel.category === 'Member Type' || sel.category === 'Member Year') {
-      return `${sel.category}= ${sel.value}`;
+      let displayValue = sel.value;
+      // Extract short form for ECY1, ECY2, ECY3
+      if (sel.category === 'Member Type' && displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}= ${displayValue}`;
+    }
+
+    // For Province/State, extract short form
+    if (sel.category === 'Province/State') {
+      let displayValue = sel.value;
+      if (displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}: ${displayValue}`;
     }
 
     // For all other categories, display "Category: Value"
@@ -1384,12 +1412,16 @@ const ReportBuilder = ({
     // Update selections
     if (addAsOR && existingValues.length > 0) {
       addSelection(category, value, 'filter');
-      // Set connector to OR for the new selection
+      // Set connector to OR for the new selection, but only if a special connector wasn't already set
       setSelections(prev => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
         if (lastIndex >= 0) {
-          updated[lastIndex].connector = 'OR';
+          // Don't override special connectors like 'for' (Member Year after Renewed)
+          // Only set to OR if the connector is AND (default)
+          if (updated[lastIndex].connector === 'AND') {
+            updated[lastIndex].connector = 'OR';
+          }
         }
         return updated;
       });
@@ -1721,6 +1753,30 @@ const ReportBuilder = ({
                 {selections.map((sel, idx) => {
                   const Icon = sel.type === 'filter' ? Filter : Eye;
                   const isEditing = editingSelection?.id === sel.id;
+
+                  // Check if this is part of a Renewed OR group
+                  const isRenewedORGroup = sel.category === 'Renewed' &&
+                    (idx < selections.length - 1 && selections[idx + 1].connector === 'OR' && selections[idx + 1].category === 'Renewed');
+                  const isPreviousRenewedOR = idx > 0 && sel.connector === 'OR' && sel.category === 'Renewed' && selections[idx - 1].category === 'Renewed';
+
+                  // If this is a continuation of a Renewed OR group, skip rendering (it's included in the first one)
+                  if (isPreviousRenewedOR) {
+                    return null;
+                  }
+
+                  // Collect all consecutive Renewed values with OR connectors
+                  const renewedGroupValues = [];
+                  if (sel.category === 'Renewed') {
+                    renewedGroupValues.push(sel.value);
+                    let j = idx + 1;
+                    while (j < selections.length &&
+                           selections[j].connector === 'OR' &&
+                           selections[j].category === 'Renewed') {
+                      renewedGroupValues.push(selections[j].value);
+                      j++;
+                    }
+                  }
+
                   return (
                     <React.Fragment key={sel.id}>
                       {/* Connector dropdown (shown before chips except the first, and only if connector is not null) */}
@@ -1748,20 +1804,20 @@ const ReportBuilder = ({
                         <>
                           {/* "renewed" keyword chip */}
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
-                            <span className="font-medium">renewed</span>
+                            <span className="font-medium">Renewed</span>
                           </div>
                           {/* "in" keyword chip */}
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
                             <span className="font-medium">in</span>
                           </div>
-                          {/* Value chip with edit/remove buttons */}
+                          {/* Value chip(s) - combine if multiple OR values */}
                           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
                             isEditing
                               ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                               : 'bg-blue-100 text-blue-900 border border-blue-300'
                           }`}>
                             <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                            <span className="font-medium">{sel.value}</span>
+                            <span className="font-medium">{renewedGroupValues.join(' or ')}</span>
                             <div className="flex items-center gap-1 ml-1">
                               <button
                                 onClick={() => {
@@ -1774,8 +1830,18 @@ const ReportBuilder = ({
                               </button>
                               <button
                                 onClick={() => {
-                                  removeSelection(sel.id);
-                                  if (editingSelection?.id === sel.id) {
+                                  // Remove all items in the group
+                                  const idsToRemove = [];
+                                  idsToRemove.push(sel.id);
+                                  let j = idx + 1;
+                                  while (j < selections.length &&
+                                         selections[j].connector === 'OR' &&
+                                         selections[j].category === 'Renewed') {
+                                    idsToRemove.push(selections[j].id);
+                                    j++;
+                                  }
+                                  setSelections(selections.filter(s => !idsToRemove.includes(s.id)));
+                                  if (editingSelection && idsToRemove.includes(editingSelection.id)) {
                                     setEditingSelection(null);
                                   }
                                 }}
@@ -1938,23 +2004,6 @@ const ReportBuilder = ({
         <div className="flex-1 flex overflow-hidden">
           {/* Full Width: Filter Cards */}
           <div className="flex-1 overflow-auto bg-gray-50">
-            <div className="p-6 border-b border-gray-200 bg-white">
-              <h3 className="text-base font-semibold text-gray-900 mb-1">Query Builder</h3>
-              <p className="text-xs text-gray-500 mb-4">Build your query by selecting filters</p>
-
-              {/* Search Filters */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search filters..."
-                  value={filterSearchTerm}
-                  onChange={(e) => setFilterSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
             {/* Card Grid */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start" style={{ gridAutoFlow: 'dense' }}>
               {/* Starting Data Card */}
@@ -2021,8 +2070,8 @@ const ReportBuilder = ({
                           <div className="p-4">
                             <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                               {(() => {
-                                // Calculate max count for percentage calculation
-                                const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || recordCounts[v] || count));
+                                // Calculate percentage relative to 7100 as 100%
+                                const maxCount = 7100;
 
                                 return values.map((value, vIdx) => {
                                   const valCount = recordCounts[`${category}:${value}`] || recordCounts[value] || count;
@@ -2192,6 +2241,271 @@ const ReportBuilder = ({
                 );
               })()}
 
+              {/* Status Cards - Current, Previous, New, Lapsed */}
+              {['Current', 'Previous', 'New', 'Lapsed'].map((statusCategory) => {
+                const entityTypes = ['Members', 'Contacts', 'Invoices', 'Others'];
+                const CategoryIcon = categoryIcons[statusCategory] || Users;
+                const selectedValues = filterValues[statusCategory] || [];
+                const colors = SECTION_COLORS['Status'] || SECTION_COLORS['Demographics'];
+                const isFlipped = flippedCards[statusCategory];
+                const categoryFieldsList = categoryFields[statusCategory] || defaultFields;
+                const count = recordCounts[statusCategory] || 0;
+
+                return (
+                  <div key={statusCategory} className="card-flip-container">
+                    <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                      {/* Card Front */}
+                      <div className="card-flip-front">
+                        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                          <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-start gap-3">
+                              <button
+                                className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                title="Drag to reorder"
+                              >
+                                <GripVertical className="w-4 h-4" />
+                              </button>
+                              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-medium text-sm ${colors.header} truncate`}>{statusCategory}</h4>
+                                <p className="text-xs text-gray-500">{entityTypes.length} options</p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [statusCategory]: !prev[statusCategory] }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Flip card"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Add all entity types from this status category
+                                  entityTypes.forEach(entityType => {
+                                    if (!selectedValues.includes(entityType)) {
+                                      // Auto-select both status and entity type
+                                      const statusAlreadySelected = selections.some(s => s.category === statusCategory && s.value === statusCategory);
+                                      const entityAlreadySelected = selections.some(s => s.category === entityType && s.value === entityType);
+
+                                      if (!statusAlreadySelected) {
+                                        addSelection(statusCategory, statusCategory, 'field');
+                                      }
+                                      if (!entityAlreadySelected) {
+                                        addSelection(entityType, entityType, 'field');
+                                      }
+                                    }
+                                  });
+                                  showToast(`Added all ${statusCategory} items`);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Add all items"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-4">
+                            <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
+                              {(() => {
+                                // Calculate max count for percentage calculation (relative to 7100)
+                                const maxCount = 7100;
+
+                                return entityTypes.map((entityType, vIdx) => {
+                                  const valCount = recordCounts[`${statusCategory}:${entityType}`] || 0;
+                                  const isSelected = selectedValues.includes(entityType);
+                                  const percentage = maxCount > 0 ? Math.round((valCount / maxCount) * 100) : 0;
+
+                                  return (
+                                    <div key={vIdx} className="group">
+                                      <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <button
+                                          onClick={() => {
+                                            // Auto-select logic: select both status and entity type
+                                            const statusAlreadySelected = selections.some(s => s.category === statusCategory && s.value === statusCategory);
+                                            const entityAlreadySelected = selections.some(s => s.category === entityType && s.value === entityType);
+
+                                            if (isSelected) {
+                                              // Remove from selected
+                                              const newVals = selectedValues.filter(v => v !== entityType);
+                                              setFilterValues(prev => ({ ...prev, [statusCategory]: newVals }));
+                                              // Remove both status and entity from selections
+                                              setSelections(prev => prev.filter(s =>
+                                                !(s.category === statusCategory && s.value === statusCategory) &&
+                                                !(s.category === entityType && s.value === entityType)
+                                              ));
+                                            } else {
+                                              // Add to selected
+                                              const newVals = [...selectedValues, entityType];
+                                              setFilterValues(prev => ({ ...prev, [statusCategory]: newVals }));
+
+                                              // Add both status and entity type atomically
+                                              const newSelections = [...selections];
+                                              if (!statusAlreadySelected) {
+                                                newSelections.push({
+                                                  id: Date.now(),
+                                                  category: statusCategory,
+                                                  value: statusCategory,
+                                                  type: 'field',
+                                                  connector: null
+                                                });
+                                              }
+                                              if (!entityAlreadySelected) {
+                                                newSelections.push({
+                                                  id: Date.now() + 1,
+                                                  category: entityType,
+                                                  value: entityType,
+                                                  type: 'field',
+                                                  connector: null
+                                                });
+                                              }
+                                              setSelections(newSelections);
+                                              showToast(`Added: ${statusCategory} ${entityType}`);
+                                            }
+                                          }}
+                                          className="flex-1 text-left min-w-0"
+                                        >
+                                          <div className={`text-sm truncate mb-1 ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                            {entityType}
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                              {valCount.toLocaleString()}
+                                            </div>
+                                            <div className="flex-1 flex items-center gap-2">
+                                              <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                <div
+                                                  className="h-full bg-blue-300 rounded-full transition-all"
+                                                  style={{ width: `${percentage}%` }}
+                                                />
+                                              </div>
+                                              <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                {percentage}%
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </button>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+
+                                              // Auto-select logic for + button
+                                              const statusAlreadySelected = selections.some(s => s.category === statusCategory && s.value === statusCategory);
+                                              const entityAlreadySelected = selections.some(s => s.category === entityType && s.value === entityType);
+
+                                              if (isSelected) {
+                                                // Remove from selected
+                                                const newVals = selectedValues.filter(v => v !== entityType);
+                                                setFilterValues(prev => ({ ...prev, [statusCategory]: newVals }));
+                                                // Remove both status and entity from selections
+                                                setSelections(prev => prev.filter(s =>
+                                                  !(s.category === statusCategory && s.value === statusCategory) &&
+                                                  !(s.category === entityType && s.value === entityType)
+                                                ));
+                                              } else {
+                                                // Add to selected
+                                                const newVals = [...selectedValues, entityType];
+                                                setFilterValues(prev => ({ ...prev, [statusCategory]: newVals }));
+
+                                                // Add both status and entity type atomically
+                                                const newSelections = [...selections];
+                                                if (!statusAlreadySelected) {
+                                                  newSelections.push({
+                                                    id: Date.now(),
+                                                    category: statusCategory,
+                                                    value: statusCategory,
+                                                    type: 'field',
+                                                    connector: null
+                                                  });
+                                                }
+                                                if (!entityAlreadySelected) {
+                                                  newSelections.push({
+                                                    id: Date.now() + 1,
+                                                    category: entityType,
+                                                    value: entityType,
+                                                    type: 'field',
+                                                    connector: null
+                                                  });
+                                                }
+                                                setSelections(newSelections);
+                                                showToast(`Added: ${statusCategory} ${entityType}`);
+                                              }
+                                            }}
+                                            className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                            title={isSelected ? "Remove filter" : "Add filter"}
+                                          >
+                                            {isSelected ? (
+                                              <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                            ) : (
+                                              <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                            )}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Back - Show Fields */}
+                      <div className="card-flip-back">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCards(prev => ({ ...prev, [statusCategory]: false }));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {categoryFieldsList.map((field, idx) => (
+                                <div
+                                  key={idx}
+                                  className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                >
+                                  <span className="flex-1">{field}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      addSelection(statusCategory, field, 'field');
+                                      showToast(`Added field: ${field}`);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                    title="Add field"
+                                  >
+                                    <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
               {/* Regular Category Cards */}
               {Object.entries(categories).map(([section, cats]) => {
                 const startingDataItems = ['Current', 'Previous', 'New', 'Lapsed', 'Members', 'Contacts', 'Invoices', 'Other'];
@@ -2202,8 +2516,12 @@ const ReportBuilder = ({
                     if (section === 'Starting Data' && startingDataItems.includes(cat)) {
                       return false;
                     }
-                    if (!filterSearchTerm) return true;
-                    return cat.toLowerCase().includes(filterSearchTerm.toLowerCase());
+                    if (!searchTerm) return true;
+                    // Search in category name and values
+                    const lowerSearch = searchTerm.toLowerCase();
+                    if (cat.toLowerCase().includes(lowerSearch)) return true;
+                    const values = sampleValues[cat] || [];
+                    return values.some(value => value.toLowerCase().includes(lowerSearch));
                   })
                   .map(category => {
                     const values = sampleValues[category] || [];
@@ -2215,6 +2533,233 @@ const ReportBuilder = ({
                     const count = recordCounts[category] || 0;
                     const displayCount = Math.min(values.length, 8);
 
+                    // Special handling for "Renewed" category with year sections
+                    if (category === 'Renewed') {
+                      // Organize data by year
+                      const yearData = {};
+                      values.forEach(value => {
+                        const match = value.match(/^(.*)\s(\d{4})$/);
+                        if (match) {
+                          const month = match[1];
+                          const year = match[2];
+                          if (!yearData[year]) {
+                            yearData[year] = [];
+                          }
+                          yearData[year].push(value);
+                        }
+                      });
+
+                      // Sort years descending
+                      const sortedYears = Object.keys(yearData).sort((a, b) => parseInt(b) - parseInt(a));
+                      const yearsToDisplay = sortedYears.slice(0, renewedLoadedYears);
+                      const hasMoreYears = sortedYears.length > renewedLoadedYears;
+
+                      return (
+                        <div key={category} className="card-flip-container">
+                          <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
+                            {/* Card Front */}
+                            <div className="card-flip-front">
+                              <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all flex flex-col">
+                                <div className="p-4 border-b border-gray-100">
+                                  <div className="flex items-start gap-3">
+                                    <button
+                                      className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                      title="Drag to reorder"
+                                    >
+                                      <GripVertical className="w-4 h-4" />
+                                    </button>
+                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                                      <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className={`font-medium text-sm ${colors.header} truncate`}>{category}</h4>
+                                      <p className="text-xs text-gray-500">{yearsToDisplay.length} years loaded</p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFlippedCards(prev => ({ ...prev, [category]: !prev[category] }));
+                                      }}
+                                      className="text-gray-400 hover:text-gray-600"
+                                      title="Flip card"
+                                    >
+                                      <RefreshCw className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="p-4">
+                                  <div className="space-y-2 max-h-[320px] overflow-y-auto">
+                                    {yearsToDisplay.map((year) => {
+                                      const isYearExpanded = renewedExpandedYears[year];
+                                      const months = yearData[year] || [];
+                                      const maxCount = 7100;
+
+                                      return (
+                                        <div key={year} className="border border-gray-200 rounded-lg">
+                                          {/* Year Header */}
+                                          <button
+                                            onClick={() => {
+                                              setRenewedExpandedYears(prev => ({
+                                                ...prev,
+                                                [year]: !prev[year]
+                                              }));
+                                            }}
+                                            className="w-full flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-lg transition-colors"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              {isYearExpanded ? (
+                                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                                              ) : (
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                              )}
+                                              <span className="font-medium text-sm text-gray-900">{year}</span>
+                                              <span className="text-xs text-gray-500">({months.length} months)</span>
+                                            </div>
+                                          </button>
+
+                                          {/* Months List */}
+                                          {isYearExpanded && (
+                                            <div className="border-t border-gray-200 p-2 space-y-1">
+                                              {months.map((monthYear, idx) => {
+                                                const valCount = recordCounts[`${category}:${monthYear}`] || 0;
+                                                const isSelected = selectedValues.includes(monthYear);
+                                                const percentage = maxCount > 0 ? Math.round((valCount / maxCount) * 100) : 0;
+
+                                                return (
+                                                  <div key={idx} className="group">
+                                                    <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                                      <button
+                                                        onClick={() => {
+                                                          if (isSelected) {
+                                                            const newVals = selectedValues.filter(v => v !== monthYear);
+                                                            setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                            setSelections(prev => prev.filter(s => !(s.category === category && s.value === monthYear)));
+                                                          } else {
+                                                            setFilterValue(category, monthYear, selectedValues.length > 0);
+                                                          }
+                                                        }}
+                                                        className="flex-1 text-left min-w-0"
+                                                      >
+                                                        <div className={`text-sm truncate mb-1 ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-900 hover:text-blue-600'} transition-colors`}>
+                                                          {monthYear}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                          <div className="text-xs font-medium text-gray-500 min-w-[40px]">
+                                                            {valCount.toLocaleString()}
+                                                          </div>
+                                                          <div className="flex-1 flex items-center gap-2">
+                                                            <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                                              <div
+                                                                className="h-full bg-blue-300 rounded-full transition-all"
+                                                                style={{ width: `${percentage}%` }}
+                                                              />
+                                                            </div>
+                                                            <div className="text-xs font-bold text-blue-600 min-w-[35px] text-right">
+                                                              {percentage}%
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </button>
+                                                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isSelected) {
+                                                              const newVals = selectedValues.filter(v => v !== monthYear);
+                                                              setFilterValues(prev => ({ ...prev, [category]: newVals }));
+                                                              setSelections(prev => prev.filter(s => !(s.category === category && s.value === monthYear)));
+                                                            } else {
+                                                              setFilterValue(category, monthYear, selectedValues.length > 0);
+                                                            }
+                                                          }}
+                                                          className={`p-1.5 rounded transition-colors flex-shrink-0 ${isSelected ? 'hover:bg-red-50' : 'hover:bg-blue-50'}`}
+                                                          title={isSelected ? "Remove filter" : "Add filter"}
+                                                        >
+                                                          {isSelected ? (
+                                                            <X className="w-3 h-3 text-red-600" strokeWidth={2} />
+                                                          ) : (
+                                                            <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                                          )}
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Load More Years Button */}
+                                    {hasMoreYears && (
+                                      <button
+                                        onClick={() => {
+                                          setRenewedLoadedYears(prev => prev + 5);
+                                        }}
+                                        className="w-full mt-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                      >
+                                        <Plus className="w-4 h-4" />
+                                        Load More Years
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card Back - Show Fields */}
+                            <div className="card-flip-back">
+                              <div className="bg-white rounded-lg border border-gray-200 shadow-lg h-full">
+                                <div className="p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <CategoryIcon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.5} />
+                                      <h4 className={`font-medium text-sm ${colors.header}`}>Available Fields</h4>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFlippedCards(prev => ({ ...prev, [category]: false }));
+                                      }}
+                                      className="text-gray-400 hover:text-gray-600"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mb-3">{categoryFieldsList.length} fields</p>
+                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                    {categoryFieldsList.map((field, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="group flex items-center justify-between text-xs text-gray-700 py-1.5 px-2 hover:bg-gray-50 rounded cursor-default"
+                                      >
+                                        <span className="flex-1">{field}</span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            addSelection(category, field, 'field');
+                                            showToast(`Added field: ${field}`);
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-50 rounded transition-all"
+                                          title="Add field"
+                                        >
+                                          <Plus className="w-3 h-3 text-blue-600" strokeWidth={2} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Regular card rendering for all other categories
                     return (
                       <div key={category} className="card-flip-container">
                         <div className={`card-flip-inner ${isFlipped ? 'flipped' : ''}`}>
@@ -2268,8 +2813,8 @@ const ReportBuilder = ({
                               <div className="p-4">
                                 <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
                                   {(() => {
-                                    // Calculate max count for percentage calculation
-                                    const maxCount = Math.max(...values.map(v => recordCounts[`${category}:${v}`] || count));
+                                    // Calculate percentage relative to 7100 as 100%
+                                    const maxCount = 7100;
 
                                     return values.map((value, vIdx) => {
                                       const valCount = recordCounts[`${category}:${value}`] || count;
@@ -2360,11 +2905,11 @@ const ReportBuilder = ({
                                           {hasNestedOptions && isExpanded && (
                                             <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
                                               {(() => {
-                                                // Calculate max count for nested values
+                                                // Calculate percentage relative to 7100 as 100%
+                                                const maxNestedCount = 7100;
                                                 const nestedCounts = sampleValues[value].map(nv =>
                                                   recordCounts[`${value}:${nv}`] || Math.floor(Math.random() * 1000) + 100
                                                 );
-                                                const maxNestedCount = Math.max(...nestedCounts);
 
                                                 return sampleValues[value].map((nestedValue, nIdx) => {
                                                   const nestedKey = `${value}=${nestedValue}`;
