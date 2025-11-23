@@ -91,6 +91,10 @@ const ReportBuilder = (props) => {
   const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
   const [customYearValue, setCustomYearValue] = useState('');
 
+  // Demo: Mobile panel pattern toggle
+  const [mobilePanelPattern, setMobilePanelPattern] = useState('auto'); // 'auto', 'drawer', 'modal'
+  const [showDemoSettings, setShowDemoSettings] = useState(false);
+
   // Renewed date range state
   const [fromMonth, setFromMonth] = useState(null);
   const [fromYear, setFromYear] = useState(null);
@@ -1417,11 +1421,23 @@ const ReportBuilder = (props) => {
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300" style={{ marginRight: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
-        <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
-            <h1 className="text-2xl font-light">New Report - Browse</h1>
-            <button onClick={() => setStage('select')} className="ml-4 text-sm text-gray-500 hover:text-blue-500">Try Select mode →</button>
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4">
+          <div className="flex items-center gap-2 sm:gap-4 justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
+              <h1 className="text-lg sm:text-2xl font-light">New Report - Browse</h1>
+              <button onClick={() => setStage('select')} className="hidden sm:inline ml-4 text-sm text-gray-500 hover:text-blue-500">Try Select mode →</button>
+            </div>
+
+            {/* Demo Settings Button */}
+            <button
+              onClick={() => setShowDemoSettings(!showDemoSettings)}
+              className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
+              title="Toggle mobile panel pattern for demo"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Demo Settings</span>
+            </button>
           </div>
         </div>
 
@@ -3117,7 +3133,7 @@ const ReportBuilder = (props) => {
             activePanel === 'filters' ? 'Filters Builder' :
             'More Options'
           }
-          variant="auto"
+          variant={mobilePanelPattern}
           size="md"
         >
           <div className="p-4 sm:p-6" style={{ backgroundColor: '#F9FAFB', minHeight: '300px' }}>
@@ -3228,6 +3244,149 @@ const ReportBuilder = (props) => {
             )}
           </div>
         </ResponsivePanel>
+
+        {/* Demo Settings Panel */}
+        {showDemoSettings && (
+          <>
+            <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setShowDemoSettings(false)} />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl w-[90%] max-w-md animate-slideIn">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Demo Settings</h3>
+                    <p className="text-sm text-gray-500 mt-1">Toggle mobile panel patterns</p>
+                  </div>
+                  <button
+                    onClick={() => setShowDemoSettings(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Mobile Panel Pattern
+                  </label>
+
+                  {/* Option A: Auto (Mobile-Native) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('auto')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'auto'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'auto' ? 'border-blue-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'auto' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Auto (Mobile-Native) ✨
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Side drawer | Tablet: Side drawer | Mobile: Bottom sheet with swipe
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded inline-block">
+                          Best for: Consumer apps, native mobile feel
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option B: Drawer (Simple) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('drawer')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'drawer'
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'drawer' ? 'border-green-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'drawer' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Drawer (Simple) 📐
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Side drawer | Tablet: Side drawer | Mobile: Side drawer (narrower)
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-green-50 px-2 py-1 rounded inline-block">
+                          Best for: Internal tools, consistency priority
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option C: Modal (Centered) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('modal')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'modal'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'modal' ? 'border-purple-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'modal' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Modal (Centered) 🎯
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Centered modal | Tablet: Centered modal | Mobile: Centered modal
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-purple-50 px-2 py-1 rounded inline-block">
+                          Best for: Desktop-first apps, traditional UX
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-start gap-2 text-xs text-gray-500">
+                    <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-yellow-500" />
+                    <p>
+                      <strong>Try it:</strong> Click "Fields" or "Filters" button to see the selected panel pattern in action.
+                      Resize your browser window to test different screen sizes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <button
+                  onClick={() => setShowDemoSettings(false)}
+                  className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Save Query Panel */}
         {showSaveQueryPanel && (
