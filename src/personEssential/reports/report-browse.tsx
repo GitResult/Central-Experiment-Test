@@ -2222,11 +2222,378 @@ const ReportBuilder = (props) => {
                         </>
                       )}
 
-                      {/* WEEK, QUARTER, YEAR VIEWS - Placeholder */}
-                      {(renewedViewMode === 'week' || renewedViewMode === 'quarter' || renewedViewMode === 'year') && (
-                        <div className="text-center text-sm text-gray-500 py-8">
-                          {renewedViewMode.charAt(0).toUpperCase() + renewedViewMode.slice(1)} view - Implementation in progress
-                        </div>
+                      {/* WEEK VIEW */}
+                      {renewedViewMode === 'week' && (
+                        <>
+                          <div className="mb-2 flex items-center justify-center gap-2">
+                            <button
+                              onClick={handlePrevWeekYear}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <ChevronLeft size={14} className="text-gray-700" />
+                            </button>
+
+                            <div className="relative flex items-center gap-1.5">
+                              <div className="px-2 py-1 rounded-lg bg-gray-100 font-semibold text-gray-800 text-xs text-center">
+                                Q{weekViewQuarter}-Q{weekViewQuarter + 1}
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowWeekYearDropdown(!showWeekYearDropdown);
+                                }}
+                                className="px-2 py-1 rounded-lg bg-gray-100 font-semibold text-gray-800 text-xs hover:bg-gray-200 transition-colors cursor-pointer"
+                              >
+                                {weekViewYear}
+                              </button>
+                              {showWeekYearDropdown && (
+                                <div
+                                  className="absolute top-full mt-1 right-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-24"
+                                  onClick={(e) => e.stopPropagation()}
+                                  ref={(el) => {
+                                    if (el) scrollToYear(parseInt(weekViewYear), el);
+                                  }}
+                                >
+                                  <div className="max-h-32 overflow-y-auto py-1">
+                                    {getRenewedYearOptions().map((year) => (
+                                      <button
+                                        key={year}
+                                        data-year={year}
+                                        onClick={() => handleWeekYearSelect(year.toString())}
+                                        className={`
+                                          block w-full px-2 py-1 text-xs text-left hover:bg-blue-50 transition-colors
+                                          ${year === parseInt(weekViewYear) ? 'bg-blue-500 text-white font-semibold' : 'text-gray-700'}
+                                        `}
+                                      >
+                                        {year}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={handleNextWeekYear}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <ChevronRight size={14} className="text-gray-700" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-6 gap-1 mb-2">
+                            {(() => {
+                              const weeks = getWeeksForQuarters(weekViewYear, weekViewQuarter);
+                              const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                              return weeks.map((week, idx) => {
+                                const selected = isWeekInRange(week);
+                                const isStart = isWeekStart(week);
+                                const isEnd = isWeekEnd(week);
+
+                                return (
+                                  <button
+                                    key={`${week.year}-w${week.weekNum}-${idx}`}
+                                    onClick={() => {
+                                      if (renewedSelectionState === 'none') {
+                                        setFromWeek(week);
+                                        setToWeek(null);
+                                        setRenewedSelectionState('start');
+                                      } else if (renewedSelectionState === 'start') {
+                                        const fromVal = parseInt(fromWeek.year) * 53 + fromWeek.weekNum;
+                                        const toVal = parseInt(week.year) * 53 + week.weekNum;
+                                        if (toVal >= fromVal) {
+                                          setToWeek(week);
+                                          setRenewedSelectionState('complete');
+                                        } else {
+                                          setFromWeek(week);
+                                        }
+                                      } else {
+                                        setFromWeek(week);
+                                        setToWeek(null);
+                                        setRenewedSelectionState('start');
+                                      }
+                                    }}
+                                    className={`
+                                      px-1 py-1.5 rounded-lg text-xs font-medium transition-all
+                                      ${selected
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                      }
+                                      ${isStart || isEnd ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                                    `}
+                                  >
+                                    <div className="flex items-center justify-center gap-0.5">
+                                      <span className="font-semibold text-xs">W{week.weekNum}</span>
+                                      <span className="opacity-80 text-xs">{week.year.toString().slice(-2)}</span>
+                                    </div>
+                                    <div className="text-xs opacity-70 mt-0.5">
+                                      {monthAbbrev[week.startMonth]} {week.startDay}
+                                    </div>
+                                  </button>
+                                );
+                              });
+                            })()}
+                          </div>
+
+                          {renewedSelectionState === 'start' && fromWeek && (
+                            <div className="mb-2 flex justify-center gap-1.5">
+                              <button
+                                onClick={() => handleQuickSelectWeeks(1)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +1 wk
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectWeeks(2)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +2 wks
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectWeeks(4)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +4 wks
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="text-center text-xs text-gray-600 bg-gray-50 py-2 rounded-lg mb-2">
+                            {formatRenewedDateRange()}
+                          </div>
+
+                          {renewedSelectionState === 'complete' && (
+                            <button
+                              onClick={applyRenewedRange}
+                              className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                            >
+                              Apply Range
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* QUARTER VIEW */}
+                      {renewedViewMode === 'quarter' && (
+                        <>
+                          <div className="mb-2 flex items-center justify-center gap-2">
+                            <button
+                              onClick={handlePrevQuarterYear}
+                              disabled={parseInt(quarterViewStartYear) <= 2010}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronLeft size={14} className="text-gray-700" />
+                            </button>
+
+                            <div className="px-3 py-1 rounded-lg bg-gray-100 font-semibold text-gray-800 text-xs min-w-[100px] text-center">
+                              {quarterViewStartYear} - {parseInt(quarterViewStartYear) + 3}
+                            </div>
+
+                            <button
+                              onClick={handleNextQuarterYear}
+                              disabled={parseInt(quarterViewStartYear) >= 2027}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronRight size={14} className="text-gray-700" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-1 mb-2">
+                            {[0, 1, 2, 3].map((yearOffset) => {
+                              const year = (parseInt(quarterViewStartYear) + yearOffset).toString();
+                              return [1, 2, 3, 4].map((q) => {
+                                const selected = isQuarterInRange(q, year);
+                                const isStart = isQuarterStart(q, year);
+                                const isEnd = isQuarterEnd(q, year);
+
+                                return (
+                                  <button
+                                    key={`${year}-q${q}`}
+                                    onClick={() => {
+                                      if (renewedSelectionState === 'none') {
+                                        setFromQuarter(q);
+                                        setFromQuarterYear(year);
+                                        setToQuarter(null);
+                                        setToQuarterYear(null);
+                                        setRenewedSelectionState('start');
+                                      } else if (renewedSelectionState === 'start') {
+                                        const startVal = parseInt(fromQuarterYear) * 4 + fromQuarter;
+                                        const clickedVal = parseInt(year) * 4 + q;
+                                        if (clickedVal >= startVal) {
+                                          setToQuarter(q);
+                                          setToQuarterYear(year);
+                                          setRenewedSelectionState('complete');
+                                        } else {
+                                          setFromQuarter(q);
+                                          setFromQuarterYear(year);
+                                        }
+                                      } else {
+                                        setFromQuarter(q);
+                                        setFromQuarterYear(year);
+                                        setToQuarter(null);
+                                        setToQuarterYear(null);
+                                        setRenewedSelectionState('start');
+                                      }
+                                    }}
+                                    className={`
+                                      px-1 py-2 rounded-lg text-xs font-medium transition-all
+                                      ${selected
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                      }
+                                      ${isStart || isEnd ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                                    `}
+                                  >
+                                    <div className="font-semibold">Q{q}</div>
+                                    <div className="text-xs mt-0.5 opacity-80">{year}</div>
+                                  </button>
+                                );
+                              });
+                            }).flat()}
+                          </div>
+
+                          {renewedSelectionState === 'start' && fromQuarter !== null && (
+                            <div className="mb-2 flex justify-center gap-1.5">
+                              <button
+                                onClick={() => handleQuickSelectQuarters(1)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +1 qtr
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectQuarters(2)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +2 qtrs
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectQuarters(4)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +4 qtrs
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="text-center text-xs text-gray-600 bg-gray-50 py-2 rounded-lg mb-2">
+                            {formatRenewedDateRange()}
+                          </div>
+
+                          {renewedSelectionState === 'complete' && (
+                            <button
+                              onClick={applyRenewedRange}
+                              className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                            >
+                              Apply Range
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* YEAR VIEW */}
+                      {renewedViewMode === 'year' && (
+                        <>
+                          <div className="mb-2 flex items-center justify-center gap-2">
+                            <button
+                              onClick={handlePrevDecade}
+                              disabled={parseInt(yearDecadeStart) <= 2010}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronLeft size={14} className="text-gray-700" />
+                            </button>
+
+                            <div className="px-3 py-1 rounded-lg bg-gray-100 font-semibold text-gray-800 text-xs min-w-[100px] text-center">
+                              {getDecadeLabel()}
+                            </div>
+
+                            <button
+                              onClick={handleNextDecade}
+                              disabled={parseInt(yearDecadeStart) >= 2021}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronRight size={14} className="text-gray-700" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-5 gap-1.5 mb-2">
+                            {getDecadeYears().map((year) => {
+                              const selected = isYearInRange(year);
+                              const isStart = isYearStart(year);
+                              const isEnd = isYearEnd(year);
+
+                              return (
+                                <button
+                                  key={year}
+                                  onClick={() => {
+                                    if (renewedSelectionState === 'none') {
+                                      setFromYearOnly(year);
+                                      setToYearOnly(null);
+                                      setRenewedSelectionState('start');
+                                    } else if (renewedSelectionState === 'start') {
+                                      if (parseInt(year) >= parseInt(fromYearOnly)) {
+                                        setToYearOnly(year);
+                                        setRenewedSelectionState('complete');
+                                      } else {
+                                        setFromYearOnly(year);
+                                      }
+                                    } else {
+                                      setFromYearOnly(year);
+                                      setToYearOnly(null);
+                                      setRenewedSelectionState('start');
+                                    }
+                                  }}
+                                  className={`
+                                    px-2 py-3 rounded-lg text-xs font-medium transition-all
+                                    ${selected
+                                      ? 'bg-blue-500 text-white shadow-md'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }
+                                    ${isStart || isEnd ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                                  `}
+                                >
+                                  {year}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {renewedSelectionState === 'start' && fromYearOnly && (
+                            <div className="mb-2 flex justify-center gap-1.5">
+                              <button
+                                onClick={() => handleQuickSelectYears(1)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +1 yr
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectYears(2)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +2 yrs
+                              </button>
+                              <button
+                                onClick={() => handleQuickSelectYears(3)}
+                                className="px-2 py-0.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                              >
+                                +3 yrs
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="text-center text-xs text-gray-600 bg-gray-50 py-2 rounded-lg mb-2">
+                            {formatRenewedDateRange()}
+                          </div>
+
+                          {renewedSelectionState === 'complete' && (
+                            <button
+                              onClick={applyRenewedRange}
+                              className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                            >
+                              Apply Range
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   ) : (
