@@ -2632,11 +2632,7 @@ const ReportBuilder = (props) => {
                         <button
                           onClick={() => {
                             if (currentRenewedMonth && currentRenewedYear) {
-                              // Format: January 01, 2020 to January 31, 2020
-                              const monthIndex = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(currentRenewedMonth);
-                              const fromDate = new Date(parseInt(currentRenewedYear), monthIndex, 1);
-                              const toDate = new Date(parseInt(currentRenewedYear), monthIndex + 1, 0);
-                              const newSelection = `${currentRenewedMonth} ${String(fromDate.getDate()).padStart(2, '0')}, ${currentRenewedYear} to ${currentRenewedMonth} ${String(toDate.getDate()).padStart(2, '0')}, ${currentRenewedYear}`;
+                              const newSelection = `${currentRenewedMonth} ${currentRenewedYear}`;
                               if (!selectedRenewedMonths.includes(newSelection)) {
                                 setSelectedRenewedMonths([...selectedRenewedMonths, newSelection]);
                               }
