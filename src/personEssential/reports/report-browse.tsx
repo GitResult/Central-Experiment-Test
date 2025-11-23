@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
 import ReportList from './report-list.tsx';
 import AppReportPhrase from './AppReportPhrase.jsx';
+import { ResponsivePanel, ResponsiveCard, OptionsSelector } from '../../components/responsive';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
