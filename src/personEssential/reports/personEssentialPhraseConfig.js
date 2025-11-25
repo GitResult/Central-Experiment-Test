@@ -939,3 +939,92 @@ export const getThreeColumnsForPhrase = (chips) => {
     ]
   };
 };
+
+/**
+ * Legacy function for backwards compatibility
+ * Maps the old getSuggestionsForPhrase API to the new 3-column system
+ *
+ * @param {Array} chips - Current phrase chips
+ * @returns {Object} Object with current, next, and future suggestion arrays
+ */
+export const getSuggestionsForPhrase = (chips) => {
+  // For now, maintain backwards compatibility by returning the old format
+  // In the future, this can be updated to use getThreeColumnsForPhrase
+  // and map the results to the old format
+
+  // Check if we should use new 3-column logic
+  const use3ColumnLogic = false; // Set to true when ready to migrate
+
+  if (use3ColumnLogic) {
+    const result = getThreeColumnsForPhrase(chips);
+    // Convert 3-column format to old format
+    return {
+      current: result.column1 || [],
+      next: result.column2 || [],
+      future: result.column3 || []
+    };
+  }
+
+  // Legacy implementation (keep existing logic for now)
+  if (chips.length === 0) {
+    return {
+      current: STARTING_POINTS.map(sp => ({
+        label: sp.label,
+        type: sp.type,
+        icon: sp.icon,
+        color: sp.color
+      })),
+      next: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: et.type,
+        icon: et.icon,
+        color: et.color,
+        preview: true
+      })),
+      future: [
+        { label: 'that have', icon: ChevronRight, preview: true },
+        { label: 'with status', icon: Check, preview: true },
+        { label: 'in location', icon: MapPin, preview: true }
+      ]
+    };
+  }
+
+  const lastChip = chips[chips.length - 1];
+  const lastChipText = lastChip.text || lastChip.label;
+
+  // After selecting a cohort (Current, Previous, New, Lapsed)
+  if (lastChip.type === 'cohort') {
+    return {
+      current: ENTITY_TYPES.map(et => ({
+        label: et.label,
+        type: 'entity',
+        icon: et.icon,
+        color: et.color
+      })),
+      next: [
+        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
+        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
+        { label: 'with type', icon: Crown, type: 'connector', preview: true }
+      ],
+      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+        label: a.label,
+        preview: true
+      }))
+    };
+  }
+
+  // Default fallback
+  return {
+    current: [
+      { label: 'and', icon: Plus, type: 'connector' },
+      { label: 'that have', icon: ChevronRight, type: 'connector' },
+      { label: 'in location', icon: MapPin, type: 'connector' },
+      { label: 'with status', icon: Check, type: 'connector' }
+    ],
+    next: ENTITY_TYPES.slice(0, 4).map(et => ({ label: et.label, preview: true })),
+    future: [
+      { label: 'in timeframe', preview: true },
+      { label: 'with status', preview: true }
+    ]
+  };
+};
