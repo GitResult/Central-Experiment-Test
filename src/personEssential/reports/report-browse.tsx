@@ -435,7 +435,22 @@ const ReportBuilder = (props) => {
 
     // For Member Type and Member Year, use equals sign format
     if (sel.category === 'Member Type' || sel.category === 'Member Year') {
-      return `${sel.category}= ${sel.value}`;
+      let displayValue = sel.value;
+      // Extract short code for Member Type (e.g., "ECY1 - Early Career Year 1" -> "ECY1")
+      if (sel.category === 'Member Type' && displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}= ${displayValue}`;
+    }
+
+    // For Province/State, extract short code and use colon format
+    if (sel.category === 'Province/State') {
+      let displayValue = sel.value;
+      // Extract short code (e.g., "BC - British Columbia" -> "BC")
+      if (displayValue.includes(' - ')) {
+        displayValue = displayValue.split(' - ')[0];
+      }
+      return `${sel.category}: ${displayValue}`;
     }
 
     // For all other categories, display "Category: Value"
