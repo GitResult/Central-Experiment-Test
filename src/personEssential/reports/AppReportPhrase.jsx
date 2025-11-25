@@ -1043,7 +1043,7 @@ const PhraseModeReport = (props) => {
       ];
 
       // Initialize column selection state to show these in columns 1-2
-      const initialSuggestions = getPhraseSuggestions([]);
+      const initialSuggestions = getPhraseSuggestions(chips);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
         { label: 'Current', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'current' },
@@ -1073,7 +1073,7 @@ const PhraseModeReport = (props) => {
       ];
 
       // Initialize column selection state to show these in columns 1-2
-      const initialSuggestions = getPhraseSuggestions([]);
+      const initialSuggestions = getPhraseSuggestions(chips);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
         { label: 'Previous', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'previous' },
@@ -1103,7 +1103,7 @@ const PhraseModeReport = (props) => {
       ];
 
       // Initialize column selection state to show these in columns 1-2
-      const initialSuggestions = getPhraseSuggestions([]);
+      const initialSuggestions = getPhraseSuggestions(chips);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
         { label: 'New', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'new' },
@@ -1133,7 +1133,7 @@ const PhraseModeReport = (props) => {
       ];
 
       // Initialize column selection state to show these in columns 1-2
-      const initialSuggestions = getPhraseSuggestions([]);
+      const initialSuggestions = getPhraseSuggestions(chips);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
         { label: 'Lapsed', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'lapsed' },
