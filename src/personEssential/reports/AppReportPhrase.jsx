@@ -427,6 +427,7 @@ const PhraseModeReport = (props) => {
   const [selectionRoundStart, setSelectionRoundStart] = useState(0);
   const [previewChips, setPreviewChips] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [showAllExamples, setShowAllExamples] = useState(false);
 
   useEffect(() => {
     if (stage === 'intro') {
@@ -1170,6 +1171,7 @@ const PhraseModeReport = (props) => {
     setStage('intro');
     setSelectedTemplate(null);
     setInputValue('');
+    setShowAllExamples(false);
   };
 
   const generateNaturalQuery = () => {
@@ -1275,9 +1277,9 @@ const PhraseModeReport = (props) => {
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Start with an Example</h3>
               <p className="text-sm text-gray-600">Pre-built phrases you can modify</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {PHRASE_TEMPLATES.map((template) => (
+              {(showAllExamples ? PHRASE_TEMPLATES : PHRASE_TEMPLATES.slice(0, 3)).map((template) => (
                 <button
                   key={template.id}
                   onClick={() => loadTemplate(template)}
@@ -1291,9 +1293,9 @@ const PhraseModeReport = (props) => {
                       {template.category}
                     </span>
                   </div>
-                  
+
                   <h4 className="font-medium text-gray-900 mb-2 text-sm">{template.label}</h4>
-                  
+
                   <div className="flex flex-wrap gap-1">
                     {template.chips.slice(0, 4).map((chip, idx) => (
                       <PhraseChip key={idx} chip={chip} size="sm" readOnly />
@@ -1307,6 +1309,28 @@ const PhraseModeReport = (props) => {
                 </button>
               ))}
             </div>
+
+            {/* Show More / Hide Link */}
+            {PHRASE_TEMPLATES.length > 3 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllExamples(!showAllExamples)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {showAllExamples ? (
+                    <>
+                      <span>Hide</span>
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Show More</span>
+                      <ChevronRight className="w-4 h-4 -rotate-90" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="max-w-6xl w-full">
