@@ -332,6 +332,16 @@ const ReportBuilder = (props) => {
     if (category === 'Member Stats') {
       setShowMemberStatsPanel(true);
       setSelectedCategory(null);
+
+      // Add a progressive chip for Member Stats
+      const existingMemberStatsChip = selections.find(s =>
+        s.category === 'Member Stats' && !s.value.includes('=')
+      );
+
+      if (!existingMemberStatsChip) {
+        addSelection('Member Stats', 'Member Stats', 'filter');
+      }
+
       return;
     }
 
@@ -431,6 +441,24 @@ const ReportBuilder = (props) => {
     // For Status categories and Members, display only the category name
     if (statusCategories.includes(sel.category) || sel.category === 'Members') {
       return sel.category;
+    }
+
+    // For Member Stats, handle progressive display
+    if (sel.category === 'Member Stats') {
+      // Stage 1: Just "Member Stats" selected
+      if (sel.value === 'Member Stats') {
+        return 'Member Stats';
+      }
+      // Stage 2: Subcategory selected (e.g., "Consecutive Membership Years")
+      if (sel.value === 'Consecutive Membership Years') {
+        return 'Member Stats: Consecutive Membership Years';
+      }
+      // Stage 3: Final value selected (e.g., "Consecutive Membership Years= 5")
+      if (sel.value.includes('=')) {
+        return `Member Stats: ${sel.value}`;
+      }
+      // Fallback
+      return `Member Stats: ${sel.value}`;
     }
 
     // For Member Type and Member Year, use equals sign format
@@ -1160,6 +1188,11 @@ const ReportBuilder = (props) => {
           }
           if (category === 'Member Type') return `and member type ${val}`;
           if (category === 'Member Stats' || category.includes('Consecutive Membership Years')) {
+            // Skip incomplete Member Stats selections (progressive building)
+            if (val === 'Member Stats' || val === 'Consecutive Membership Years') {
+              return null;
+            }
+
             // Extract the number from "Consecutive Membership Years= 5" format
             const yearMatch = val.match(/Consecutive Membership Years=\s*(\d+)/);
             if (yearMatch) {
@@ -1189,13 +1222,21 @@ const ReportBuilder = (props) => {
           const nextSel = remainingSelections[i + 1];
           const isFirst = i === 0;
 
+          // Get the phrase for this selection
+          const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
+
+          // Skip if phrase is null (incomplete Member Stats selection)
+          if (phrase === null) {
+            i++;
+            continue;
+          }
+
           // Check if this is a BETWEEN scenario
           if (nextSel && nextSel.connector === 'BETWEEN' && sel.category === nextSel.category) {
             const val2 = (sel.category === 'Member Type' || sel.category === 'Province/State') && nextSel.value.includes(' - ')
               ? nextSel.value.split(' - ')[0]
               : nextSel.value;
 
-            const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
             parts.push(phrase.replace(sel.value, `${sel.value} and ${val2}`));
             i += 2;
           } else {
@@ -1215,11 +1256,10 @@ const ReportBuilder = (props) => {
                 (sel.category === 'Member Type' || sel.category === 'Province/State') && v.includes(' - ') ? v.split(' - ')[0] : v
               ).join(' or ');
 
-              const phrase = getConnectorPhrase(sel.category, sel.value, isFirst);
               parts.push(phrase.replace(sel.value, formattedValues));
             } else {
               // Single value
-              parts.push(getConnectorPhrase(sel.category, sel.value, isFirst));
+              parts.push(phrase);
             }
 
             i = j;
@@ -2918,6 +2958,19 @@ const ReportBuilder = (props) => {
                     onClick={() => {
                       if (statField === 'Consecutive Membership Years') {
                         setSelectedMemberStatField(statField);
+
+                        // Update the progressive chip to show the subcategory
+                        const memberStatsChip = selections.find(s =>
+                          s.category === 'Member Stats' && s.value === 'Member Stats'
+                        );
+
+                        if (memberStatsChip) {
+                          setSelections(selections.map(s =>
+                            s.id === memberStatsChip.id
+                              ? { ...s, value: 'Consecutive Membership Years' }
+                              : s
+                          ));
+                        }
                       } else {
                         showToast(`${statField} filter coming soon`);
                       }
@@ -2979,7 +3032,21 @@ const ReportBuilder = (props) => {
                         className="rounded"
                         onChange={(e) => {
                           if (e.target.checked) {
-                            addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
+                            // Update the progressive chip to show the final value
+                            const memberStatsChip = selections.find(s =>
+                              s.category === 'Member Stats' &&
+                              (s.value === 'Consecutive Membership Years' || s.value === 'Member Stats')
+                            );
+
+                            if (memberStatsChip) {
+                              setSelections(selections.map(s =>
+                                s.id === memberStatsChip.id
+                                  ? { ...s, value: `Consecutive Membership Years= ${yearValue}` }
+                                  : s
+                              ));
+                            } else {
+                              addSelection('Member Stats', `Consecutive Membership Years= ${yearValue}`, 'filter');
+                            }
                             showToast(`Filter added: ${yearRange}`);
                           }
                         }}
@@ -2997,7 +3064,21 @@ const ReportBuilder = (props) => {
                       className="rounded"
                       onChange={(e) => {
                         if (e.target.checked && customYearValue) {
-                          addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
+                          // Update the progressive chip to show the final value
+                          const memberStatsChip = selections.find(s =>
+                            s.category === 'Member Stats' &&
+                            (s.value === 'Consecutive Membership Years' || s.value === 'Member Stats')
+                          );
+
+                          if (memberStatsChip) {
+                            setSelections(selections.map(s =>
+                              s.id === memberStatsChip.id
+                                ? { ...s, value: `Consecutive Membership Years= ${customYearValue}` }
+                                : s
+                            ));
+                          } else {
+                            addSelection('Member Stats', `Consecutive Membership Years= ${customYearValue}`, 'filter');
+                          }
                           showToast(`Filter added: ${customYearValue} years`);
                           setCustomYearValue('');
                         }
