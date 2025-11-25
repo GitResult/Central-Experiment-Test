@@ -4268,6 +4268,69 @@ const ReportBuilder = ({
           </div>
       )}
 
+      {/* Preview Panel - Shows above bottom bar when previewExpanded is true */}
+      {previewExpanded && (
+        <div
+          className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-20 overflow-auto"
+          style={{
+            bottom: '88px',
+            height: '533px'
+          }}
+        >
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">Matching Records Preview</h3>
+              <div className="text-xs text-gray-500">
+                ~{calculateFilterImpact(selections).toLocaleString()} records
+              </div>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Join Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {[...Array(10)].map((_, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-sm text-gray-900">M{10001 + idx}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">
+                          {['John Smith', 'Sarah Johnson', 'Michael Chen', 'Emma Davis', 'James Wilson',
+                            'Lisa Anderson', 'David Martinez', 'Mary Taylor', 'Robert Thomas', 'Jennifer Lee'][idx]}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-600">
+                          {['john@example.com', 'sarah@example.com', 'michael@example.com', 'emma@example.com',
+                            'james@example.com', 'lisa@example.com', 'david@example.com', 'mary@example.com',
+                            'robert@example.com', 'jennifer@example.com'][idx]}
+                        </td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            idx % 3 === 0 ? 'bg-green-100 text-green-800' :
+                            idx % 3 === 1 ? 'bg-blue-100 text-blue-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {idx % 3 === 0 ? 'Current' : idx % 3 === 1 ? 'Active' : 'Member'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-600">
+                          {new Date(2024, 0, 1 + idx * 10).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
         <div className="h-full flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2">
 

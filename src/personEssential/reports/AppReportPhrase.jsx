@@ -1501,11 +1501,11 @@ const PhraseModeReport = (props) => {
                       onKeyDown={(e) => {
                         const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
                         const allSuggestions = [
-                          phraseSuggestions.current,
-                          phraseSuggestions.next,
-                          phraseSuggestions.future
+                          phraseSuggestions.current || [],
+                          phraseSuggestions.next || [],
+                          phraseSuggestions.future || []
                         ];
-                        const currentColumnSuggestions = allSuggestions[activeColumn];
+                        const currentColumnSuggestions = allSuggestions[activeColumn] || [];
 
                         if (e.key === 'ArrowDown') {
                           e.preventDefault();
@@ -1588,12 +1588,12 @@ const PhraseModeReport = (props) => {
                   const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
                   const allSuggestions = [
                     inputValue
-                      ? phraseSuggestions.current.filter(s =>
-                          s.label.toLowerCase().startsWith(inputValue.toLowerCase())
+                      ? (phraseSuggestions.current || []).filter(s =>
+                          s.label?.toLowerCase().startsWith(inputValue.toLowerCase())
                         )
-                      : phraseSuggestions.current.slice(0, 6),
-                    phraseSuggestions.next.slice(0, 6),
-                    phraseSuggestions.future.slice(0, 6)
+                      : (phraseSuggestions.current || []).slice(0, 6),
+                    (phraseSuggestions.next || []).slice(0, 6),
+                    (phraseSuggestions.future || []).slice(0, 6)
                   ];
                   const columnTitles = [
                     phraseChips.length === 0 ? 'Start with' : 'Select',

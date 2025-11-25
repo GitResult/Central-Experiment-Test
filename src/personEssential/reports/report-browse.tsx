@@ -3176,11 +3176,29 @@ const ReportBuilder = (props) => {
             </div>
           </div>
 
-
-          {/* Report VIEW Content */}
-          <ReportViewComponent selections={selections} />
-
         </div>
+
+        {/* Preview Panel - Shows above bottom bar when showPreview is true */}
+        {showPreview && (
+          <div
+            className="fixed left-0 bg-white border-t border-gray-200 shadow-2xl z-20 overflow-auto"
+            style={{
+              bottom: '88px',
+              height: '533px',
+              right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0'
+            }}
+          >
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900">Matching Records Preview</h3>
+                <div className="text-xs text-gray-500">
+                  ~{estimatedRecordCount.toLocaleString()} records
+                </div>
+              </div>
+              <ReportViewComponent selections={selections} />
+            </div>
+          </div>
+        )}
 
         <ResponsivePanel
           isOpen={!!activePanel}
