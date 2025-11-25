@@ -202,6 +202,55 @@ const PHRASE_TEMPLATES = [
     description: 'Recently joined members from Toronto area',
     category: 'Demographics',
     popularity: 76
+  },
+  {
+    id: 'current-members-5-years',
+    label: 'Current members that have been members for the past 5 years',
+    chips: [
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'that have been', type: 'connector', icon: Clock, color: 'gray' },
+      { text: 'members', type: 'entityType', icon: Crown, color: 'purple' },
+      { text: 'for', type: 'connector', icon: Clock, color: 'gray' },
+      { text: 'past 5 years', type: 'consecutiveMembershipYears', icon: Clock, color: 'blue' }
+    ],
+    description: 'Members with 5 consecutive years of membership',
+    category: 'Membership',
+    popularity: 90
+  },
+  {
+    id: 'current-ecy1-practitioner-masters-bc',
+    label: 'Current members that are ECY1 and occupation is practitioner with a Degree: Masters from province/state BC',
+    chips: [
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'that are', type: 'connector', icon: Filter, color: 'gray' },
+      { text: 'ECY1', type: 'membershipType', icon: Crown, color: 'purple' },
+      { text: 'and', type: 'connector', icon: Plus, color: 'gray' },
+      { text: 'occupation is', type: 'connector', icon: Briefcase, color: 'gray' },
+      { text: 'Practitioner', type: 'occupation', icon: Briefcase, color: 'teal' },
+      { text: 'with a Degree:', type: 'connector', icon: GraduationCap, color: 'gray' },
+      { text: 'Masters', type: 'degree', icon: GraduationCap, color: 'indigo' },
+      { text: 'from province/state', type: 'connector', icon: MapPin, color: 'gray' },
+      { text: 'BC', type: 'province', icon: MapPin, color: 'red' }
+    ],
+    description: 'ECY1 practitioners with Masters degree from BC',
+    category: 'Demographics',
+    popularity: 85
+  },
+  {
+    id: '2019-renewed-december',
+    label: '2019 members who renewed in December 2019 or January 2020 for Member Year 2020',
+    chips: [
+      { text: '2019', type: 'yearCohort', icon: Calendar, color: 'indigo' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'who renewed in', type: 'connector', icon: CalendarClock, color: 'gray' },
+      { text: 'December', type: 'renewalMonth', icon: Calendar, color: 'orange' },
+      { text: '2019', type: 'renewalYear', icon: Calendar, color: 'orange' }
+    ],
+    description: '2019 members who renewed in December 2019',
+    category: 'Membership',
+    popularity: 80
   }
 ];
 
