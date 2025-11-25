@@ -1527,33 +1527,39 @@ const PhraseModeReport = (props) => {
               )}
             </div>
 
-              {/* Quick Actions - Filter, Sort, Limit - Compact horizontal layout */}
-              <div className="flex items-center gap-2 mt-3">
+              {/* Quick Actions - Filter, Sort, Limit - Bigger, better-looking buttons */}
+              <div className="flex items-center gap-3 mt-4 pb-6">
                 <button
                   onClick={() => {
                     addChip({ text: 'that have', type: 'connector', color: 'gray' });
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all text-xs font-medium text-gray-700 hover:text-blue-700"
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-blue-700 hover:scale-105"
                 >
-                  <Filter className="w-3.5 h-3.5" strokeWidth={2} />
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <Filter className="w-4 h-4 text-blue-600" strokeWidth={2} />
+                  </div>
                   <span>Add Filter</span>
                 </button>
                 <button
                   onClick={() => {
                     showOptionsSelector('sort', { text: 'sorted by', type: 'sort', color: 'purple' });
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all text-xs font-medium text-gray-700 hover:text-blue-700"
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-purple-700 hover:scale-105"
                 >
-                  <ArrowUpDown className="w-3.5 h-3.5" strokeWidth={2} />
+                  <div className="p-1.5 bg-purple-50 rounded-lg">
+                    <ArrowUpDown className="w-4 h-4 text-purple-600" strokeWidth={2} />
+                  </div>
                   <span>Sort</span>
                 </button>
                 <button
                   onClick={() => {
                     showOptionsSelector('limit', { text: 'limited to', type: 'limit', color: 'indigo' });
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all text-xs font-medium text-gray-700 hover:text-blue-700"
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-indigo-700 hover:scale-105"
                 >
-                  <Target className="w-3.5 h-3.5" strokeWidth={2} />
+                  <div className="p-1.5 bg-indigo-50 rounded-lg">
+                    <Target className="w-4 h-4 text-indigo-600" strokeWidth={2} />
+                  </div>
                   <span>Limit</span>
                 </button>
               </div>
@@ -1561,8 +1567,8 @@ const PhraseModeReport = (props) => {
           </div>
           </div>
 
-          {/* Blurred background effect below the panels */}
-          <div className="absolute inset-x-0" style={{ top: '400px', bottom: '88px', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none' }}></div>
+          {/* Blurred background effect - positioned after all content */}
+          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none', zIndex: 1 }}></div>
         </div>
 
         {/* Options Modal */}
