@@ -315,7 +315,12 @@ const ReportBuilder = () => {
   const [showFieldPanel, setShowFieldPanel] = useState(true);
   const [categories, setCategories] = useState({});
   const [sampleValues, setSampleValues] = useState({});
-  
+
+  // Calculate right panel width for push-style panel effect
+  // Select mode: w-80 = 320px (20rem * 16px) - always visible
+  // Browse mode: w-96 = 384px (24rem * 16px) - conditional based on selectedCategory
+  const rightPanelWidth = stage === 'select' ? 320 : (selectedCategory ? 384 : 0);
+
   const getSectionIcon = (section) => {
     const iconName = SECTION_ICONS[section];
     const iconMap = {
@@ -918,12 +923,13 @@ const ReportBuilder = () => {
 
         {/* Bottom Control Panel */}
         <div
-          className={`fixed bottom-0 left-0 right-0 border-t border-gray-200 shadow-2xl transition-all duration-300 ${
+          className={`fixed bottom-0 left-0 border-t border-gray-200 shadow-2xl transition-all duration-300 ${
             bottomPanelExpanded ? 'h-48' : 'h-24'
           }`}
-          style={{ 
+          style={{
             backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)'
+            backdropFilter: 'blur(20px)',
+            right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0'
           }}
         >
           {/* Drag Handle */}
@@ -1289,12 +1295,13 @@ const ReportBuilder = () => {
 
         {/* Bottom Control Panel */}
         <div
-          className={`fixed bottom-0 left-0 right-0 border-t border-gray-200 shadow-2xl transition-all duration-300 ${
+          className={`fixed bottom-0 left-0 border-t border-gray-200 shadow-2xl transition-all duration-300 ${
             bottomPanelExpanded ? 'h-48' : 'h-24'
           }`}
-          style={{ 
+          style={{
             backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)'
+            backdropFilter: 'blur(20px)',
+            right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0'
           }}
         >
           <button
