@@ -562,11 +562,15 @@ const PhraseModeReport = (props) => {
       if (newSelections[i]) {
         const sel = newSelections[i];
         chipsToAdd.push({
-          id: Date.now() + i + Math.random(),
+          id: sel.id || (Date.now() + i + Math.random()),  // Preserve original ID if it exists
           text: sel.label,
+          label: sel.label,  // Add label property as well
           type: sel.type || 'connector',
           icon: sel.icon,
-          color: sel.color || 'gray'
+          color: sel.color || 'gray',
+          valueType: sel.valueType,  // Preserve valueType for value chips
+          enablesMultiSelect: sel.enablesMultiSelect,  // Preserve special flags
+          order: sel.order  // Preserve order if present
         });
       }
     }
@@ -595,7 +599,7 @@ const PhraseModeReport = (props) => {
   };
 
   const addChip = (chip) => {
-    const newChip = { ...chip, id: Date.now() };
+    const newChip = { ...chip, id: chip.id || Date.now() };  // Preserve original ID if it exists
 
     // Check if this chip text requires options selection
     if (chip.text === 'in location') {
@@ -1012,7 +1016,7 @@ const PhraseModeReport = (props) => {
 
   const loadTemplate = (template) => {
     setSelectedTemplate(template);
-    setPhraseChips(template.chips.map((chip, idx) => ({ ...chip, id: Date.now() + idx })));
+    setPhraseChips(template.chips.map((chip, idx) => ({ ...chip, id: chip.id || (Date.now() + idx) })));  // Preserve original IDs
     setStage('building');
     toast(`Template loaded: ${template.label}`);
   };
@@ -1026,17 +1030,19 @@ const PhraseModeReport = (props) => {
       chips = [
         {
           text: 'Current',
-          type: 'cohort',
+          label: 'Current',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
           icon: startingPoint.icon,
           color: startingPoint.color,
-          id: Date.now()
+          id: 'current'  // Use string ID instead of timestamp
         },
         {
-          text: 'members',
-          type: 'entity',
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
           icon: Crown,
           color: 'purple',
-          id: Date.now() + 1
+          id: 'members'  // Use string ID instead of timestamp
         }
       ];
 
@@ -1044,8 +1050,8 @@ const PhraseModeReport = (props) => {
       const initialSuggestions = getPhraseSuggestions([]);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
-        { label: 'Current', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
-        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        { label: 'Current', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'current' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
         null
       ]);
       setSelectionRoundStart(0);
@@ -1054,17 +1060,19 @@ const PhraseModeReport = (props) => {
       chips = [
         {
           text: 'Previous',
-          type: 'cohort',
+          label: 'Previous',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
           icon: startingPoint.icon,
           color: startingPoint.color,
-          id: Date.now()
+          id: 'previous'  // Use string ID instead of timestamp
         },
         {
-          text: 'members',
-          type: 'entity',
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
           icon: Crown,
           color: 'purple',
-          id: Date.now() + 1
+          id: 'members'  // Use string ID instead of timestamp
         }
       ];
 
@@ -1072,8 +1080,8 @@ const PhraseModeReport = (props) => {
       const initialSuggestions = getPhraseSuggestions([]);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
-        { label: 'Previous', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
-        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        { label: 'Previous', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'previous' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
         null
       ]);
       setSelectionRoundStart(0);
@@ -1082,17 +1090,19 @@ const PhraseModeReport = (props) => {
       chips = [
         {
           text: 'New',
-          type: 'cohort',
+          label: 'New',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
           icon: startingPoint.icon,
           color: startingPoint.color,
-          id: Date.now()
+          id: 'new'  // Use string ID instead of timestamp
         },
         {
-          text: 'members',
-          type: 'entity',
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
           icon: Crown,
           color: 'purple',
-          id: Date.now() + 1
+          id: 'members'  // Use string ID instead of timestamp
         }
       ];
 
@@ -1100,8 +1110,8 @@ const PhraseModeReport = (props) => {
       const initialSuggestions = getPhraseSuggestions([]);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
-        { label: 'New', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
-        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        { label: 'New', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'new' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
         null
       ]);
       setSelectionRoundStart(0);
@@ -1110,17 +1120,19 @@ const PhraseModeReport = (props) => {
       chips = [
         {
           text: 'Lapsed',
-          type: 'cohort',
+          label: 'Lapsed',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
           icon: startingPoint.icon,
           color: startingPoint.color,
-          id: Date.now()
+          id: 'lapsed'  // Use string ID instead of timestamp
         },
         {
-          text: 'members',
-          type: 'entity',
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
           icon: Crown,
           color: 'purple',
-          id: Date.now() + 1
+          id: 'members'  // Use string ID instead of timestamp
         }
       ];
 
@@ -1128,8 +1140,8 @@ const PhraseModeReport = (props) => {
       const initialSuggestions = getPhraseSuggestions([]);
       setLockedSuggestions(initialSuggestions);
       setColumnSelections([
-        { label: 'Lapsed', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
-        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        { label: 'Lapsed', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'lapsed' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
         null
       ]);
       setSelectionRoundStart(0);
