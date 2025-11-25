@@ -55,7 +55,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SET 1: Initial Selection (Timeframe → Subject → Connector)
   // ============================================================================
 
-  // Stage 0: Empty query - Show timeframes in Column 1
+  // Stage 0: Empty query - Show all 3 columns pre-populated (anticipatory)
   if (chips.length === 0) {
     return {
       column1: [...TIMEFRAMES, ...YEAR_COHORTS].map(t => ({
@@ -65,8 +65,19 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: t.color,
         id: t.id
       })),
-      column2: [],
-      column3: [],
+      column2: SUBJECTS.map(s => ({
+        label: s.label,
+        type: s.type,
+        icon: s.icon,
+        color: s.color,
+        id: s.id
+      })),
+      column3: INITIAL_CONNECTORS.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        id: c.id
+      })),
       awaitingSelection: 'column1',
       context: 'initial'
     };
@@ -137,8 +148,16 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SET 2+: Filter Selection (After initial connector)
   // ============================================================================
 
-  // After "that have" connector - NEW SET: Show filter categories
+  // After "that have" connector - NEW SET: Show all 3 columns pre-populated (anticipatory)
   if (lastChipText === 'that have' && chips.length === 3) {
+    // Get subcategories for the first filter category (Member Stats)
+    const firstCategory = FILTER_CATEGORIES[0];
+    const subCats = firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
+
+    // Get values for the first subcategory
+    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
+
     return {
       column1: FILTER_CATEGORIES.map(c => ({
         label: c.label,
@@ -147,8 +166,16 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: [],
-      column3: [],
+      column2: subCats.map(sc => ({
+        label: sc.label,
+        type: sc.type,
+        id: sc.id
+      })),
+      column3: values.map(v => ({
+        label: String(v),
+        type: 'value',
+        valueType: 'number'
+      })),
       awaitingSelection: 'column1',
       context: 'filter_selection'
     };

@@ -139,7 +139,7 @@ export const FILTER_CATEGORIES = [
         label: 'Consecutive Membership Years',
         type: 'subcategory',
         valueType: 'number',
-        values: [1, 2, 3, 5, 10, 15],
+        values: [5, 1, 2, 3, 10, 15],
         order: 1
       },
       {
