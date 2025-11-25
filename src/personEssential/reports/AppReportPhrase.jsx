@@ -567,19 +567,26 @@ const PhraseModeReport = (props) => {
         chipText += '= ' + newSelections[2].label; // Add "= 5"
       }
 
-      // Add non-hierarchical chips (before this selection round)
-      for (let i = 0; i < selectionRoundStart; i++) {
-        if (i < phraseChips.length) {
-          chipsToAdd.push(phraseChips[i]);
-        }
+      // Add the merged hierarchical chip (previousChips will be prepended later)
+      // Determine the appropriate type and ID based on what's been selected
+      let chipType = 'category';
+      let chipId = 'member_stats';
+
+      if (columnIdx >= 2 && newSelections[2]) {
+        // Final value selected - this completes the selection
+        chipType = 'value';
+        chipId = 'member_stats_complete';
+      } else if (columnIdx >= 1 && newSelections[1]) {
+        // Subcategory selected - show values next
+        chipType = 'subcategory';
+        chipId = newSelections[1].id || 'consecutive_membership_years';
       }
 
-      // Add the merged hierarchical chip
       chipsToAdd.push({
-        id: 'member_stats_' + Date.now(),
+        id: chipId,
         text: chipText,
         label: chipText,
-        type: 'category',
+        type: chipType,
         icon: newSelections[0].icon,
         color: newSelections[0].color || 'blue',
         isHierarchical: true,
