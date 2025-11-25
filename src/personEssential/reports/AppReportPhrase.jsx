@@ -549,13 +549,6 @@ const PhraseModeReport = (props) => {
     newSelections[columnIdx] = suggestion;
     setColumnSelections(newSelections);
 
-    // Lock suggestions at the START of a selection round (when first column is selected)
-    // This prevents suggestions from changing as we build the phrase
-    if (columnIdx === 0 && !lockedSuggestions) {
-      const currentSuggestions = getPhraseSuggestions(phraseChips.slice(0, selectionRoundStart));
-      setLockedSuggestions(currentSuggestions);
-    }
-
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
     for (let i = 0; i <= columnIdx; i++) {
@@ -577,10 +570,16 @@ const PhraseModeReport = (props) => {
 
     // Replace chips from current selection round instead of appending
     const previousChips = phraseChips.slice(0, selectionRoundStart);
-    setPhraseChips([...previousChips, ...chipsToAdd]);
+    const newChipState = [...previousChips, ...chipsToAdd];
+    setPhraseChips(newChipState);
     setInputValue('');
 
-    // If this was the 3rd column (column 2), reset everything
+    // Update locked suggestions based on the NEW chip state (after adding selections)
+    // This ensures columns 2 and 3 populate correctly as selections are made
+    const updatedSuggestions = getPhraseSuggestions(newChipState);
+    setLockedSuggestions(updatedSuggestions);
+
+    // If this was the 3rd column (column 2), reset everything for next round
     if (columnIdx === 2) {
       setColumnSelections([null, null, null]);
       setColumnIndices([0, 0, 0]);
@@ -588,10 +587,7 @@ const PhraseModeReport = (props) => {
       setPreviewChips([]);
       // Set start position for next selection round
       setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
-      // Re-lock suggestions for the next round based on new chips
-      const newChipsForNextRound = [...previousChips, ...chipsToAdd];
-      const nextRoundSuggestions = getPhraseSuggestions(newChipsForNextRound);
-      setLockedSuggestions(nextRoundSuggestions);
+      // Locked suggestions already updated above with the new chip state
     } else {
       // Otherwise, move to next column
       setActiveColumn(columnIdx + 1);
