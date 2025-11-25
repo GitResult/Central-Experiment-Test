@@ -257,6 +257,7 @@ const PHRASE_TEMPLATES = [
 const STARTING_POINTS = [
   { id: 'current', label: 'Current Members', icon: Users, color: 'blue', description: 'Active membership status' },
   { id: 'new', label: 'New Members', icon: Plus, color: 'emerald', description: 'Recently joined' },
+  { id: 'previous', label: 'Previous Members', icon: Clock, color: 'orange', description: 'Former members' },
   { id: 'lapsed', label: 'Lapsed Members', icon: X, color: 'red', description: 'Expired membership' },
   { id: 'all', label: 'All Contacts', icon: Database, color: 'gray', description: 'Complete database' }
 ];
@@ -1016,18 +1017,59 @@ const PhraseModeReport = (props) => {
   };
 
   const startFromScratch = (startingPoint) => {
-    const chip = {
-      text: startingPoint.label,
-      type: 'entity',
-      icon: startingPoint.icon,
-      color: startingPoint.color,
-      id: Date.now()
-    };
-    setPhraseChips([chip]);
+    let chips = [];
+
+    // Special handling for Current Members and Previous Members - create two separate chips
+    if (startingPoint.label === 'Current Members') {
+      chips = [
+        {
+          text: 'Current',
+          type: 'entity',
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: Date.now()
+        },
+        {
+          text: 'member',
+          type: 'entity',
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: Date.now() + 1
+        }
+      ];
+    } else if (startingPoint.label === 'Previous Members') {
+      chips = [
+        {
+          text: 'Previous',
+          type: 'entity',
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: Date.now()
+        },
+        {
+          text: 'Members',
+          type: 'entity',
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: Date.now() + 1
+        }
+      ];
+    } else {
+      // Default behavior for other starting points
+      chips = [{
+        text: startingPoint.label,
+        type: 'entity',
+        icon: startingPoint.icon,
+        color: startingPoint.color,
+        id: Date.now()
+      }];
+    }
+
+    setPhraseChips(chips);
     setStage('building');
     setInputValue('');
     toast(`Starting with: ${startingPoint.label}`);
-    
+
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -1187,8 +1229,8 @@ const PhraseModeReport = (props) => {
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Start from Scratch</h3>
               <p className="text-sm text-gray-600">Begin by selecting your starting point</p>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {STARTING_POINTS.map((point) => {
                 const IconComponent = point.icon;
                 return (
@@ -1527,7 +1569,7 @@ const PhraseModeReport = (props) => {
             </div>
 
               {/* Quick Actions - Filter, Sort, Limit - Bigger, better-looking buttons */}
-              <div className="flex items-center gap-3 mt-4 pb-6">
+              <div className="flex items-center justify-center gap-3 mt-4 pb-6">
                 <button
                   onClick={() => {
                     addChip({ text: 'that have', type: 'connector', color: 'gray' });
