@@ -1038,6 +1038,17 @@ const PhraseModeReport = (props) => {
           id: Date.now() + 1
         }
       ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions([]);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Current', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
+        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
     } else if (startingPoint.label === 'Previous Members') {
       chips = [
         {
@@ -1055,6 +1066,17 @@ const PhraseModeReport = (props) => {
           id: Date.now() + 1
         }
       ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions([]);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Previous', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
+        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
     } else if (startingPoint.label === 'New Members') {
       chips = [
         {
@@ -1072,6 +1094,17 @@ const PhraseModeReport = (props) => {
           id: Date.now() + 1
         }
       ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions([]);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'New', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
+        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
     } else if (startingPoint.label === 'Lapsed Members') {
       chips = [
         {
@@ -1089,6 +1122,17 @@ const PhraseModeReport = (props) => {
           id: Date.now() + 1
         }
       ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions([]);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Lapsed', type: 'cohort', icon: startingPoint.icon, color: startingPoint.color },
+        { label: 'members', type: 'entity', icon: Crown, color: 'purple' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
     } else {
       // Default behavior for other starting points (All Contacts, year cohorts, etc.)
       chips = [{
@@ -1098,6 +1142,12 @@ const PhraseModeReport = (props) => {
         color: startingPoint.color,
         id: Date.now()
       }];
+
+      // Reset column selection state for single-chip starting points
+      setLockedSuggestions(null);
+      setColumnSelections([null, null, null]);
+      setSelectionRoundStart(chips.length);
+      setActiveColumn(0);
     }
 
     setPhraseChips(chips);
