@@ -1,5 +1,5 @@
 /**
- * Person Essential Phrase Search Configuration
+ * Person Essential Phrase Search Configuration - NEW 3-COLUMN SYSTEM
  *
  * Contains all constants and logic for the 3-column phrase search feature in PersonEssential reports.
  * This system presents 3 columns simultaneously, where each column updates based on previous selections.
@@ -35,160 +35,13 @@ import {
   isHierarchical
 } from './phraseBuilderData';
 
-// Starting point cohorts for phrase building
-export const STARTING_POINTS = [
-  {
-    id: 'current',
-    label: 'Current',
-    icon: Users,
-    color: 'blue',
-    type: 'cohort',
-    description: 'Active members'
-  },
-  {
-    id: 'previous',
-    label: 'Previous',
-    icon: Clock,
-    color: 'orange',
-    type: 'cohort',
-    description: 'Previous period members'
-  },
-  {
-    id: 'new',
-    label: 'New',
-    icon: Sparkles,
-    color: 'green',
-    type: 'cohort',
-    description: 'Recent additions'
-  },
-  {
-    id: 'lapsed',
-    label: 'Lapsed',
-    icon: UserMinus,
-    color: 'red',
-    type: 'cohort',
-    description: 'Inactive members'
-  },
-  {
-    id: 'all',
-    label: 'All Contacts',
-    icon: Users,
-    color: 'gray',
-    type: 'entity',
-    description: 'Everyone'
-  },
-  {
-    id: '2024',
-    label: '2024',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2024 members'
-  },
-  {
-    id: '2023',
-    label: '2023',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2023 members'
-  },
-  {
-    id: '2022',
-    label: '2022',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2022 members'
-  },
-  {
-    id: '2021',
-    label: '2021',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2021 members'
-  },
-  {
-    id: '2020',
-    label: '2020',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2020 members'
-  },
-  {
-    id: '2019',
-    label: '2019',
-    icon: Calendar,
-    color: 'indigo',
-    type: 'yearCohort',
-    description: '2019 members'
-  }
-];
+// Re-export for backwards compatibility
+export { TIMEFRAMES, YEAR_COHORTS, SUBJECTS, FILTER_CATEGORIES, ACTIONS, BROWSE_MODE_DATA };
 
-// Entity types for filtering
-export const ENTITY_TYPES = [
-  { label: 'members', type: 'entity', color: 'purple', icon: Crown },
-  { label: 'students', type: 'entity', color: 'emerald', icon: GraduationCap },
-  { label: 'professionals', type: 'entity', color: 'blue', icon: Briefcase },
-  { label: 'volunteers', type: 'entity', color: 'orange', icon: Users },
-  { label: 'donors', type: 'entity', color: 'amber', icon: Award },
-  { label: 'contacts', type: 'entity', color: 'gray', icon: Users }
-];
-
-// Filter options for various categories
-export const FILTER_OPTIONS = {
-  provinces: [
-    'ON', 'BC', 'AB', 'QC', 'MB', 'SK', 'NS', 'NB', 'PE', 'NL', 'YT', 'NT', 'NU',
-    'Ontario', 'British Columbia', 'Alberta', 'Quebec', 'Manitoba', 'Saskatchewan'
-  ],
-  locations: [
-    'Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa',
-    'Edmonton', 'Winnipeg', 'Quebec City', 'Hamilton', 'Halifax',
-    'London', 'Victoria', 'Saskatoon', 'Regina', 'Kitchener'
-  ],
-  timeframes: [
-    'Last 7 days', 'Last 30 days', 'Last 90 days',
-    'This month', 'This quarter', 'This year', 'Last year'
-  ],
-  attributes: [
-    { label: 'orders', icon: DollarSign, color: 'green' },
-    { label: 'events', icon: Calendar, color: 'purple' },
-    { label: 'donations', icon: Award, color: 'orange' },
-    { label: 'emails', icon: Mail, color: 'blue' }
-  ],
-  membershipTypes: [
-    'ECY1', 'ECY2', 'ECY3', 'STU1', 'STU2', 'CORP1', 'PROF1', 'PROF2',
-    'Individual', 'Professional', 'Corporate', 'Student',
-    'Senior', 'Family', 'Lifetime', 'Honorary'
-  ],
-  occupations: [
-    'Practitioner', 'Educator', 'Researcher', 'Administrator',
-    'Consultant', 'Manager', 'Director', 'Specialist', 'Coordinator'
-  ],
-  degrees: [
-    'Masters', 'Bachelors', 'Doctorate', 'PhD', 'MBA', 'Certificate', 'Diploma', 'Associate'
-  ],
-  consecutiveMembershipYearsValues: [
-    'past 1 year', 'past 2 years', 'past 3 years', 'past 5 years',
-    'past 10 years', 'past 15 years', 'past 20 years', 'more than 5 years'
-  ],
-  renewalMonths: [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ],
-  renewalYears: ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017'],
-  statuses: ['Current', 'Active', 'Lapsed', 'Pending', 'Suspended'],
-  sortOptions: [
-    'by revenue (high to low)', 'by revenue (low to high)',
-    'by date (newest first)', 'by date (oldest first)',
-    'by name (A-Z)', 'by name (Z-A)'
-  ],
-  limitOptions: ['Top 10', 'Top 25', 'Top 50', 'Top 100', 'Top 500', 'All records'],
-  comparisonOperators: ['greater than', 'less than', 'equals', 'between'],
-  amountValues: ['$100', '$500', '$1,000', '$2,500', '$5,000', '$10,000', '$25,000', '$50,000']
-};
+// Legacy exports for backwards compatibility
+export const STARTING_POINTS = [...TIMEFRAMES, ...YEAR_COHORTS];
+export const ENTITY_TYPES = SUBJECTS;
+export const FILTER_OPTIONS = BROWSE_MODE_DATA;
 
 /**
  * 3-Column System Logic
@@ -223,808 +76,750 @@ export const getThreeColumnsForPhrase = (chips) => {
   const lastChipText = lastChip.text || lastChip.label;
   const lastChipType = lastChip.type;
 
-  // After selecting a cohort (Current, Previous, New, Lapsed)
-  if (lastChip.type === 'cohort') {
-    return {
-      current: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: 'entity',
-        icon: et.icon,
-        color: et.color
-      })),
-      next: [
-        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
-        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
-        { label: 'with type', icon: Crown, type: 'connector', preview: true }
-      ],
-      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
-        label: a.label,
-        preview: true
-      }))
-    };
-  }
-
-  // After selecting a year cohort (2019, 2020, etc.)
-  if (lastChip.type === 'yearCohort') {
-    return {
-      current: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: 'entity',
-        icon: et.icon,
-        color: et.color
-      })),
-      next: [
-        { label: 'who renewed in', icon: CalendarClock, type: 'connector', preview: true },
-        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
-        { label: 'with type', icon: Crown, type: 'connector', preview: true }
-      ],
-      future: FILTER_OPTIONS.renewalMonths.slice(0, 4).map(m => ({
-        label: m,
-        preview: true
-      }))
-    };
-  }
-
-  // After selecting a starting point (All Contacts)
-  if (lastChip.type === 'entity' && STARTING_POINTS.some(sp => sp.label === lastChipText)) {
-    return {
-      current: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: et.type,
-        icon: et.icon,
-        color: et.color
-      })),
-      next: [
-        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
-        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
-        { label: 'with type', icon: Crown, type: 'connector', preview: true }
-      ],
-      future: ENTITY_TYPES.slice(0, 4).map(et => ({
-        label: et.label,
-        preview: true
-      }))
-    };
-  }
-
-  // After selecting an entity type (Members, Donors, Contacts)
-  if (lastChip.type === 'entity' && ENTITY_TYPES.some(et => et.label === lastChipText)) {
-    return {
-      current: [
-        { label: 'that are', icon: Filter, type: 'connector' },
-        { label: 'that have been', icon: Clock, type: 'connector' },
-        { label: 'that have', icon: ChevronRight, type: 'connector' },
-        { label: 'that', icon: ChevronRight, type: 'connector' },
-        { label: 'with', icon: Settings, type: 'connector' },
-        { label: 'with status', icon: Check, type: 'connector' },
-        { label: 'with type', icon: Crown, type: 'connector' },
-        { label: 'in', icon: MapPin, type: 'connector' },
-        { label: 'in location', icon: MapPin, type: 'connector' },
-        { label: 'for', icon: Clock, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
-        label: a.label,
-        preview: true
-      })),
-      future: [
-        { label: 'in timeframe', preview: true },
-        { label: 'greater than', preview: true }
-      ]
-    };
-  }
-
-  // After "that have" -> show attributes
-  if (lastChipText === 'that have') {
-    return {
-      current: FILTER_OPTIONS.attributes.map(a => ({
-        label: a.label,
-        type: 'attribute',
-        icon: a.icon,
-        color: a.color
-      })),
-      next: [
-        { label: 'in timeframe', icon: Calendar, type: 'connector', preview: true },
-        { label: 'greater than', icon: TrendingUp, type: 'connector', preview: true }
-      ],
-      future: FILTER_OPTIONS.timeframes.slice(0, 4).map(t => ({
-        label: t,
-        preview: true
-      }))
-    };
-  }
-
-  // After selecting an attribute (orders, events, donations, emails)
-  if (lastChip.type === 'attribute') {
-    return {
-      current: [
-        { label: 'in timeframe', icon: Calendar, type: 'connector' },
-        { label: 'greater than', icon: TrendingUp, type: 'comparison' },
-        { label: 'equals', icon: Check, type: 'comparison' }
-      ],
-      next: FILTER_OPTIONS.timeframes.slice(0, 6).map(t => ({
-        label: t,
-        preview: true
-      })),
-      future: [
-        { label: 'and', icon: Plus, preview: true }
-      ]
-    };
-  }
-
-  // After "in timeframe" -> show timeframe values
-  if (lastChipText === 'in timeframe') {
-    return {
-      current: FILTER_OPTIONS.timeframes.map(t => ({
-        label: t,
-        type: 'timeframe',
-        icon: Calendar,
-        color: 'orange'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'sorted by', preview: true }
-      ],
-      future: [
-        { label: 'that have', preview: true },
-        { label: 'in location', preview: true }
-      ]
-    };
-  }
-
-  // After "in location" -> show location values
-  if (lastChipText === 'in location') {
-    return {
-      current: FILTER_OPTIONS.locations.map(l => ({
-        label: l,
-        type: 'location',
-        icon: MapPin,
-        color: 'red'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'with status', preview: true }
-      ],
-      future: FILTER_OPTIONS.statuses.slice(0, 4).map(s => ({
-        label: s,
-        preview: true
-      }))
-    };
-  }
-
-  // After "with status" -> show status values
-  if (lastChipText === 'with status') {
-    return {
-      current: FILTER_OPTIONS.statuses.map(s => ({
-        label: s,
-        type: 'status',
-        color: 'blue'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'that have', preview: true }
-      ],
-      future: [
-        { label: 'in location', preview: true },
-        { label: 'with type', preview: true }
-      ]
-    };
-  }
-
-  // After "that have been" -> show entity types
-  if (lastChipText === 'that have been') {
-    return {
-      current: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: 'entityType',
-        icon: et.icon,
-        color: et.color
-      })),
-      next: [
-        { label: 'for', icon: Clock, type: 'connector', preview: true }
-      ],
-      future: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 4).map(t => ({
-        label: t,
-        preview: true
-      }))
-    };
-  }
-
-  // After entity type following "that have been" -> show "for"
-  if (lastChip.type === 'entityType' && chips.some(c => c.text === 'that have been')) {
-    return {
-      current: [
-        { label: 'for', icon: Clock, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.consecutiveMembershipYearsValues.slice(0, 6).map(t => ({
-        label: t,
-        preview: true
-      })),
-      future: [
-        { label: 'and', icon: Plus, preview: true }
-      ]
-    };
-  }
-
-  // After "for" (in consecutive membership years context) -> show consecutive membership years values
-  if (lastChipText === 'for' && chips.some(c => c.text === 'that have been')) {
-    return {
-      current: FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
-        label: t,
-        type: 'consecutiveMembershipYears',
-        icon: Clock,
-        color: 'blue'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'with type', icon: Crown, preview: true },
-        { label: 'occupation is', icon: Briefcase, preview: true }
-      ]
-    };
-  }
-
-  // After consecutive membership years value
-  if (lastChip.type === 'consecutiveMembershipYears') {
-    return {
-      current: [
-        { label: 'and', icon: Plus, type: 'connector' }
-      ],
-      next: [
-        { label: 'with type', icon: Crown, preview: true },
-        { label: 'occupation is', icon: Briefcase, preview: true },
-        { label: 'from province/state', icon: MapPin, preview: true }
-      ],
-      future: FILTER_OPTIONS.membershipTypes.slice(0, 4).map(m => ({
-        label: m,
-        preview: true
-      }))
-    };
-  }
-
-  // After "that are" -> show membership types and statuses
-  if (lastChipText === 'that are') {
-    return {
-      current: FILTER_OPTIONS.membershipTypes.map(m => ({
-        label: m,
-        type: 'membershipType',
-        icon: Crown,
-        color: 'purple'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'with status', preview: true }
-      ],
-      future: FILTER_OPTIONS.statuses.slice(0, 4).map(s => ({
-        label: s,
-        preview: true
-      }))
-    };
-  }
-
-  // After "with" -> show options for type, status, etc.
-  if (lastChipText === 'with') {
-    return {
-      current: [
-        { label: 'type', icon: Crown, type: 'subconnector' },
-        { label: 'status', icon: Check, type: 'subconnector' },
-        { label: 'attribute', icon: Star, type: 'subconnector' }
-      ],
-      next: FILTER_OPTIONS.membershipTypes.slice(0, 4).map(m => ({
-        label: m,
-        preview: true
-      })),
-      future: [
-        { label: 'and', icon: Plus, preview: true }
-      ]
-    };
-  }
-
-  // After "in" -> show options for location, timeframe, etc.
-  if (lastChipText === 'in') {
-    return {
-      current: [
-        { label: 'location', icon: MapPin, type: 'subconnector' },
-        { label: 'timeframe', icon: Calendar, type: 'subconnector' }
-      ],
-      next: FILTER_OPTIONS.locations.slice(0, 6).map(l => ({
-        label: l,
-        preview: true
-      })),
-      future: FILTER_OPTIONS.timeframes.slice(0, 4).map(t => ({
-        label: t,
-        preview: true
-      }))
-    };
-  }
-
-  // After "that" -> show general options
-  if (lastChipText === 'that') {
-    return {
-      current: [
-        { label: 'have', icon: ChevronRight, type: 'connector' },
-        { label: 'are', icon: Filter, type: 'connector' },
-        { label: 'renewed', icon: Calendar, type: 'action' },
-        { label: 'joined', icon: UserPlus, type: 'action' }
-      ],
-      next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
-        label: a.label,
-        preview: true
-      })),
-      future: [
-        { label: 'in timeframe', preview: true }
-      ]
-    };
-  }
-
-  // After "for" (generic, not consecutive membership years context) -> show various time periods
-  if (lastChipText === 'for' && !chips.some(c => c.text === 'that have been')) {
-    return {
-      current: [
-        ...FILTER_OPTIONS.consecutiveMembershipYearsValues.map(t => ({
-          label: t,
-          type: 'timePeriod',
-          icon: Clock,
-          color: 'blue'
+  // Stage 1: After selecting timeframe/yearCohort - Show subjects in Column 2
+  if (lastChipType === 'timeframe' || lastChipType === 'yearCohort') {
+    // Check if this is the most recent chip (still in Set 1)
+    if (chips.length === 1) {
+      return {
+        column1: [...TIMEFRAMES, ...YEAR_COHORTS].map((t, idx) => ({
+          label: t.label,
+          type: t.type,
+          icon: t.icon,
+          color: t.color,
+          id: t.id,
+          selected: t.label === lastChipText
         })),
-        { label: 'custom period', type: 'customPeriod', icon: Calendar, color: 'orange' }
-      ],
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'with type', preview: true },
-        { label: 'in location', preview: true }
-      ]
-    };
+        column2: SUBJECTS.map(s => ({
+          label: s.label,
+          type: s.type,
+          icon: s.icon,
+          color: s.color,
+          id: s.id
+        })),
+        column3: [],
+        awaitingSelection: 'column2',
+        context: 'after_timeframe'
+      };
+    }
   }
 
-  // After "type" (subconnector from "with") -> show membership types
-  if (lastChipText === 'type' && chips.some(c => c.text === 'with')) {
+  // Stage 2: After selecting subject - Show connectors in Column 3
+  if (lastChipType === 'subject' && chips.length === 2) {
     return {
-      current: FILTER_OPTIONS.membershipTypes.map(m => ({
-        label: m,
-        type: 'membershipType',
-        icon: Crown,
-        color: 'purple'
+      column1: [...TIMEFRAMES, ...YEAR_COHORTS].map((t, idx) => ({
+        label: t.label,
+        type: t.type,
+        icon: t.icon,
+        color: t.color,
+        id: t.id,
+        selected: t.label === chips[0].text
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'occupation is', preview: true },
-        { label: 'from province/state', preview: true }
-      ]
-    };
-  }
-
-  // After "status" (subconnector from "with") -> show statuses
-  if (lastChipText === 'status' && chips.some(c => c.text === 'with')) {
-    return {
-      current: FILTER_OPTIONS.statuses.map(s => ({
-        label: s,
-        type: 'status',
-        color: 'blue'
+      column2: SUBJECTS.map(s => ({
+        label: s.label,
+        type: s.type,
+        icon: s.icon,
+        color: s.color,
+        id: s.id,
+        selected: s.label === lastChipText
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'that have', preview: true },
-        { label: 'in location', preview: true }
-      ]
-    };
-  }
-
-  // After "attribute" (subconnector from "with") -> show attributes
-  if (lastChipText === 'attribute' && chips.some(c => c.text === 'with')) {
-    return {
-      current: FILTER_OPTIONS.attributes.map(a => ({
-        label: a.label,
-        type: 'attribute',
-        icon: a.icon,
-        color: a.color
+      column3: INITIAL_CONNECTORS.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        id: c.id
       })),
-      next: [
-        { label: 'in timeframe', icon: Calendar, preview: true }
-      ],
-      future: [
-        { label: 'greater than', preview: true }
-      ]
+      awaitingSelection: 'column3',
+      context: 'after_subject'
     };
   }
 
-  // After "location" (subconnector from "in") -> show locations
-  if (lastChipText === 'location' && chips.some(c => c.text === 'in')) {
+  // ============================================================================
+  // SET 2+: Filter Selection (After initial connector)
+  // ============================================================================
+
+  // After "that have" connector - NEW SET: Show filter categories
+  if (lastChipText === 'that have' && chips.length === 3) {
     return {
-      current: FILTER_OPTIONS.locations.map(l => ({
-        label: l,
-        type: 'location',
-        icon: MapPin,
-        color: 'red'
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'with status', preview: true },
-        { label: 'that have', preview: true }
-      ]
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'filter_selection'
     };
   }
 
-  // After "timeframe" (subconnector from "in") -> show timeframes
-  if (lastChipText === 'timeframe' && chips.some(c => c.text === 'in')) {
+  // After "that are" connector - NEW SET: Show member types
+  if (lastChipText === 'that are' && chips.length === 3) {
     return {
-      current: FILTER_OPTIONS.timeframes.map(t => ({
-        label: t,
-        type: 'timeframe',
-        icon: Calendar,
-        color: 'orange'
+      column1: FILTER_CATEGORIES.filter(c => c.id === 'member_type' || c.id === 'member_stats').map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: [
-        { label: 'that have', preview: true },
-        { label: 'in location', preview: true }
-      ]
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'that_are_filter'
     };
   }
 
-  // After "with type" -> show membership types
-  if (lastChipText === 'with type') {
+  // After "for" connector - NEW SET: Show Member Year and Member Type
+  if (lastChipText === 'for' && chips.length === 3) {
     return {
-      current: FILTER_OPTIONS.membershipTypes.map(m => ({
-        label: m,
-        type: 'membershipType',
-        icon: Crown,
-        color: 'purple'
+      column1: [
+        FILTER_CATEGORIES.find(c => c.id === 'member_year'),
+        FILTER_CATEGORIES.find(c => c.id === 'member_type')
+      ].filter(Boolean).map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'occupation is', icon: Briefcase, preview: true }
-      ],
-      future: [
-        { label: 'from province/state', icon: MapPin, preview: true },
-        { label: 'with a Degree:', icon: GraduationCap, preview: true }
-      ]
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'for_filter'
     };
   }
 
-  // After "occupation is" -> show occupation values
-  if (lastChipText === 'occupation is') {
+  // After selecting "Member Stats" category - Show sub-categories in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'member_stats') {
+    const subCats = getSubCategories('member_stats');
     return {
-      current: FILTER_OPTIONS.occupations.map(o => ({
-        label: o,
-        type: 'occupation',
-        icon: Briefcase,
-        color: 'teal'
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_stats'
       })),
-      next: [
-        { label: 'with a Degree:', icon: GraduationCap, preview: true },
-        { label: 'from province/state', icon: MapPin, preview: true }
-      ],
-      future: FILTER_OPTIONS.degrees.slice(0, 4).map(d => ({
-        label: d,
-        preview: true
-      }))
-    };
-  }
-
-  // After occupation value
-  if (lastChip.type === 'occupation') {
-    return {
-      current: [
-        { label: 'with a Degree:', icon: GraduationCap, type: 'connector' },
-        { label: 'from province/state', icon: MapPin, type: 'connector' },
-        { label: 'and', icon: Plus, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.degrees.slice(0, 6).map(d => ({
-        label: d,
-        preview: true
+      column2: subCats.map(sc => ({
+        label: sc.label,
+        type: sc.type,
+        id: sc.id
       })),
-      future: [
-        { label: 'from province/state', preview: true }
-      ]
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'member_stats_subcategory'
     };
   }
 
-  // After "with a Degree:" -> show degree values
-  if (lastChipText === 'with a Degree:') {
+  // After selecting "Consecutive Membership Years" subcategory - Show values in Column 3
+  if (lastChipType === 'subcategory' && lastChip.id === 'consecutive_membership_years') {
+    const subCats = getSubCategories('member_stats');
+    const selectedSubCat = subCats.find(sc => sc.id === 'consecutive_membership_years');
     return {
-      current: FILTER_OPTIONS.degrees.map(d => ({
-        label: d,
-        type: 'degree',
-        icon: GraduationCap,
-        color: 'indigo'
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_stats'
       })),
-      next: [
-        { label: 'from province/state', icon: MapPin, preview: true },
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: FILTER_OPTIONS.provinces.slice(0, 4).map(p => ({
-        label: p,
-        preview: true
-      }))
-    };
-  }
-
-  // After degree value
-  if (lastChip.type === 'degree') {
-    return {
-      current: [
-        { label: 'from province/state', icon: MapPin, type: 'connector' },
-        { label: 'and', icon: Plus, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.provinces.slice(0, 6).map(p => ({
-        label: p,
-        preview: true
+      column2: subCats.map(sc => ({
+        label: sc.label,
+        type: sc.type,
+        id: sc.id,
+        selected: sc.id === 'consecutive_membership_years'
       })),
-      future: [
-        { label: 'and', preview: true }
-      ]
-    };
-  }
-
-  // After "from province/state" -> show province codes
-  if (lastChipText === 'from province/state') {
-    return {
-      current: FILTER_OPTIONS.provinces.map(p => ({
-        label: p,
-        type: 'province',
-        icon: MapPin,
-        color: 'red'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: []
-    };
-  }
-
-  // After province value
-  if (lastChip.type === 'province') {
-    return {
-      current: [
-        { label: 'and', icon: Plus, type: 'connector' }
-      ],
-      next: [
-        { label: 'occupation is', icon: Briefcase, preview: true },
-        { label: 'who renewed in', icon: CalendarClock, preview: true }
-      ],
-      future: []
-    };
-  }
-
-  // After "who renewed in" -> show months
-  if (lastChipText === 'who renewed in') {
-    return {
-      current: FILTER_OPTIONS.renewalMonths.map(m => ({
-        label: m,
-        type: 'renewalMonth',
-        icon: Calendar,
-        color: 'orange'
-      })),
-      next: FILTER_OPTIONS.renewalYears.slice(0, 6).map(y => ({
-        label: y,
-        preview: true
-      })),
-      future: [
-        { label: 'and', icon: Plus, preview: true }
-      ]
-    };
-  }
-
-  // After renewal month -> show year or "and"
-  if (lastChip.type === 'renewalMonth') {
-    return {
-      current: FILTER_OPTIONS.renewalYears.map(y => ({
-        label: y,
-        type: 'renewalYear',
-        icon: Calendar,
-        color: 'orange'
-      })),
-      next: [
-        { label: 'and', icon: Plus, preview: true }
-      ],
-      future: FILTER_OPTIONS.renewalMonths.slice(0, 4).map(m => ({
-        label: m,
-        preview: true
-      }))
-    };
-  }
-
-  // After renewal year
-  if (lastChip.type === 'renewalYear') {
-    return {
-      current: [
-        { label: 'and', icon: Plus, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.renewalMonths.slice(0, 6).map(m => ({
-        label: m,
-        preview: true
-      })),
-      future: []
-    };
-  }
-
-  // After comparison operators (greater than, equals, etc.)
-  if (lastChip.type === 'comparison' || FILTER_OPTIONS.comparisonOperators.includes(lastChipText)) {
-    return {
-      current: FILTER_OPTIONS.amountValues.map(a => ({
-        label: a,
+      column3: selectedSubCat.values.map(v => ({
+        label: String(v),
         type: 'value',
-        color: 'green'
+        valueType: 'number'
       })),
-      next: [
-        { label: 'and', icon: Plus, preview: true },
-        { label: 'sorted by', preview: true }
-      ],
-      future: [
-        { label: 'in location', preview: true },
-        { label: 'with status', preview: true }
-      ]
+      awaitingSelection: 'column3',
+      context: 'consecutive_years_value'
     };
   }
 
-  // After timeframe, location, status, membershipType, value, consecutiveMembershipYears, occupation, degree, province, renewalMonth, or renewalYear
-  if (['timeframe', 'location', 'status', 'membershipType', 'value', 'consecutiveMembershipYears', 'occupation', 'degree', 'province'].includes(lastChip.type)) {
+  // After selecting "Member Type" category - Show member types from browse mode in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'member_type') {
+    const memberTypes = getBrowseModeData('memberTypes');
     return {
-      current: [
-        { label: 'and', icon: Plus, type: 'connector' },
-        { label: 'sorted by', icon: TrendingUp, type: 'connector' }
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_type'
+      })),
+      column2: memberTypes.map(mt => ({
+        label: mt.label,
+        type: 'value',
+        valueType: 'memberType',
+        id: mt.id
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'member_type_value'
+    };
+  }
+
+  // After selecting a member type value - Show "And"/"Or" connectors in Column 3
+  if (lastChipType === 'value' && lastChip.valueType === 'memberType') {
+    // Find the previous category selection
+    const memberTypeChipIndex = chips.findIndex(c => c.id === 'member_type');
+    const memberTypes = getBrowseModeData('memberTypes');
+
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_type'
+      })),
+      column2: memberTypes.map(mt => ({
+        label: mt.label,
+        type: 'value',
+        valueType: 'memberType',
+        id: mt.id,
+        selected: mt.label === lastChipText
+      })),
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
+      awaitingSelection: 'column3',
+      context: 'after_member_type_value'
+    };
+  }
+
+  // After selecting "Member Year" category - Show years from browse mode in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'member_year') {
+    const memberYears = getBrowseModeData('memberYears');
+    return {
+      column1: [
+        FILTER_CATEGORIES.find(c => c.id === 'member_year'),
+        FILTER_CATEGORIES.find(c => c.id === 'member_type')
+      ].filter(Boolean).map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_year'
+      })),
+      column2: memberYears.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'memberYear',
+        id: my.id
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'member_year_value'
+    };
+  }
+
+  // After selecting a member year value - Show "that have" connector in Column 3
+  if (lastChipType === 'value' && lastChip.valueType === 'memberYear') {
+    const memberYears = getBrowseModeData('memberYears');
+
+    return {
+      column1: [
+        FILTER_CATEGORIES.find(c => c.id === 'member_year'),
+        FILTER_CATEGORIES.find(c => c.id === 'member_type')
+      ].filter(Boolean).map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'member_year'
+      })),
+      column2: memberYears.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'memberYear',
+        id: my.id,
+        selected: my.label === lastChipText
+      })),
+      column3: [
+        {
+          label: 'that have',
+          type: 'connector',
+          icon: ChevronRight,
+          id: 'that_have',
+          order: 1
+        },
+        {
+          label: 'and',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'and',
+          order: 2
+        }
       ],
-      next: [
-        { label: 'that have', icon: ChevronRight, preview: true },
-        { label: 'occupation is', icon: Briefcase, preview: true },
-        { label: 'with type', icon: Crown, preview: true }
+      awaitingSelection: 'column3',
+      context: 'after_member_year_value'
+    };
+  }
+
+  // After "And" or "Or" connector - NEW SET: Show available filter categories
+  if (lastChipType === 'logical_connector') {
+    // Determine which categories are still available based on context
+    const availableCategories = FILTER_CATEGORIES.filter(c => {
+      // Customize based on query context
+      return true; // For now, show all
+    });
+
+    return {
+      column1: availableCategories.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id
+      })),
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'after_logical_connector'
+    };
+  }
+
+  // After selecting "Occupation" category - Show occupations from browse mode in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'occupation') {
+    const occupations = getBrowseModeData('occupations');
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'occupation'
+      })),
+      column2: occupations.map(o => ({
+        label: o.label,
+        type: 'value',
+        valueType: 'occupation',
+        id: o.id
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'occupation_value'
+    };
+  }
+
+  // After selecting an occupation value - Show "And"/"Or" connectors in Column 3
+  if (lastChipType === 'value' && lastChip.valueType === 'occupation') {
+    const occupations = getBrowseModeData('occupations');
+
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'occupation'
+      })),
+      column2: occupations.map(o => ({
+        label: o.label,
+        type: 'value',
+        valueType: 'occupation',
+        id: o.id,
+        selected: o.label === lastChipText
+      })),
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
+      awaitingSelection: 'column3',
+      context: 'after_occupation_value'
+    };
+  }
+
+  // After selecting "Degree" category - Show degrees from browse mode in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'degree') {
+    const degrees = getBrowseModeData('degrees');
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'degree'
+      })),
+      column2: degrees.map(d => ({
+        label: d.label,
+        type: 'value',
+        valueType: 'degree',
+        id: d.id
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'degree_value'
+    };
+  }
+
+  // After selecting a degree value - Show "And"/"Or" connectors in Column 3
+  if (lastChipType === 'value' && lastChip.valueType === 'degree') {
+    const degrees = getBrowseModeData('degrees');
+
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'degree'
+      })),
+      column2: degrees.map(d => ({
+        label: d.label,
+        type: 'value',
+        valueType: 'degree',
+        id: d.id,
+        selected: d.label === lastChipText
+      })),
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
+      awaitingSelection: 'column3',
+      context: 'after_degree_value'
+    };
+  }
+
+  // After selecting "Province/State" category - Show provinces from browse mode in Column 2
+  if (lastChipType === 'category' && lastChip.id === 'province_state') {
+    const provinces = getBrowseModeData('provinces');
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'province_state'
+      })),
+      column2: provinces.map(p => ({
+        label: p.label,
+        type: 'value',
+        valueType: 'province',
+        id: p.id
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'province_value'
+    };
+  }
+
+  // After selecting a province value - Query can be complete or continue with "And"
+  if (lastChipType === 'value' && lastChip.valueType === 'province') {
+    const provinces = getBrowseModeData('provinces');
+
+    return {
+      column1: FILTER_CATEGORIES.map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id,
+        selected: c.id === 'province_state'
+      })),
+      column2: provinces.map(p => ({
+        label: p.label,
+        type: 'value',
+        valueType: 'province',
+        id: p.id,
+        selected: p.label === lastChipText
+      })),
+      column3: [
+        {
+          label: 'And',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'and'
+        },
+        {
+          label: '(Query Complete)',
+          type: 'complete',
+          icon: Check,
+          id: 'complete'
+        }
       ],
-      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+      awaitingSelection: 'column3',
+      context: 'after_province_value'
+    };
+  }
+
+  // ============================================================================
+  // SPECIAL CASE: Renewed Action Flow
+  // ============================================================================
+
+  // After "that have" connector in renewal context - Show "Renewed" action
+  if (lastChipText === 'that have' && chips.length > 3) {
+    // Check if we're in a Member Year context
+    const hasMemberYear = chips.some(c => c.valueType === 'memberYear');
+    if (hasMemberYear) {
+      return {
+        column1: ACTIONS.map(a => ({
+          label: a.label,
+          type: a.type,
+          icon: a.icon,
+          color: a.color,
+          id: a.id
+        })),
+        column2: [],
+        column3: [],
+        awaitingSelection: 'column1',
+        context: 'action_selection'
+      };
+    }
+  }
+
+  // After selecting "Renewed" action - Show action connectors in Column 2
+  if (lastChipType === 'action' && lastChip.id === 'renewed') {
+    const actionConnectors = getActionConnectors('renewed');
+    return {
+      column1: ACTIONS.map(a => ({
         label: a.label,
-        preview: true
-      }))
+        type: a.type,
+        icon: a.icon,
+        color: a.color,
+        id: a.id,
+        selected: a.id === 'renewed'
+      })),
+      column2: actionConnectors.map(ac => ({
+        label: ac.label,
+        type: ac.type,
+        id: ac.id,
+        enablesMultiSelect: ac.enablesMultiSelect
+      })),
+      column3: [],
+      awaitingSelection: 'column2',
+      context: 'renewed_connector'
     };
   }
 
-  // After "and"
-  if (lastChipText === 'and') {
+  // After selecting "in" action connector - Show month+year combinations in Column 3
+  if (lastChipType === 'action_connector' && lastChip.id === 'in') {
+    // Get the member year from chips
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear');
+    const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+
+    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6); // Generate 6 months starting from December of previous year
+    const actionConnectors = getActionConnectors('renewed');
+
     return {
-      current: [
-        { label: 'that have', icon: ChevronRight, type: 'connector' },
-        { label: 'with type', icon: Crown, type: 'connector' },
-        { label: 'occupation is', icon: Briefcase, type: 'connector' },
-        { label: 'with a Degree:', icon: GraduationCap, type: 'connector' },
-        { label: 'from province/state', icon: MapPin, type: 'connector' },
-        { label: 'who renewed in', icon: CalendarClock, type: 'connector' }
-      ],
-      next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
+      column1: ACTIONS.map(a => ({
         label: a.label,
-        preview: true
+        type: a.type,
+        icon: a.icon,
+        color: a.color,
+        id: a.id,
+        selected: a.id === 'renewed'
       })),
-      future: [
-        { label: 'in timeframe', preview: true }
-      ]
+      column2: actionConnectors.map(ac => ({
+        label: ac.label,
+        type: ac.type,
+        id: ac.id,
+        enablesMultiSelect: ac.enablesMultiSelect,
+        selected: ac.id === 'in'
+      })),
+      column3: monthYearOptions.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'monthYear',
+        id: my.id
+      })),
+      awaitingSelection: 'column3',
+      context: 'renewal_month_year'
     };
   }
 
-  // After "sorted by"
-  if (lastChipText === 'sorted by') {
+  // After selecting a month+year value with "in" - Show "or" and "for" options
+  if (lastChipType === 'value' && lastChip.valueType === 'monthYear') {
+    // Check if there's an "in" connector before this
+    const hasInConnector = chips.some(c => c.id === 'in');
+
+    if (hasInConnector) {
+      // Get the member year from chips
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
+      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
+      return {
+        column1: [
+          {
+            label: 'or',
+            type: 'logical_connector',
+            icon: Plus,
+            id: 'or',
+            order: 1
+          },
+          {
+            label: 'for',
+            type: 'connector',
+            icon: Clock,
+            id: 'for',
+            order: 2
+          }
+        ],
+        column2: [],
+        column3: [],
+        awaitingSelection: 'column1',
+        context: 'after_renewal_month_year'
+      };
+    }
+  }
+
+  // After selecting "or" in renewal context - Show month+year options again in Column 2
+  if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
+    const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
+
+    if (hasPreviousMonthYear) {
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
+      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
+      return {
+        column1: [
+          {
+            label: 'or',
+            type: 'logical_connector',
+            icon: Plus,
+            id: 'or',
+            order: 1,
+            selected: true
+          },
+          {
+            label: 'for',
+            type: 'connector',
+            icon: Clock,
+            id: 'for',
+            order: 2
+          }
+        ],
+        column2: monthYearOptions.map(my => ({
+          label: my.label,
+          type: 'value',
+          valueType: 'monthYear',
+          id: my.id
+        })),
+        column3: [],
+        awaitingSelection: 'column2',
+        context: 'renewal_or_month_year'
+      };
+    }
+  }
+
+  // After selecting second month+year with "or" - Show "for" in Column 3
+  if (lastChipType === 'value' && lastChip.valueType === 'monthYear' && chips.filter(c => c.valueType === 'monthYear').length === 2) {
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear');
+    const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
     return {
-      current: FILTER_OPTIONS.sortOptions.map(s => ({
-        label: s,
-        type: 'sort',
-        color: 'purple'
+      column1: [
+        {
+          label: 'or',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'or',
+          order: 1,
+          selected: true
+        },
+        {
+          label: 'for',
+          type: 'connector',
+          icon: Clock,
+          id: 'for',
+          order: 2
+        }
+      ],
+      column2: monthYearOptions.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'monthYear',
+        id: my.id,
+        selected: my.label === lastChipText
       })),
-      next: [],
-      future: []
+      column3: [
+        {
+          label: 'for',
+          type: 'connector',
+          icon: Clock,
+          id: 'for'
+        }
+      ],
+      awaitingSelection: 'column3',
+      context: 'after_second_renewal_month'
     };
   }
 
-  // Default fallback to allow continuous phrase building
+  // After "for" connector in renewal target year context - Show Member Year category
+  if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
+    return {
+      column1: [
+        {
+          label: 'Member Year',
+          type: 'category',
+          icon: Calendar,
+          color: 'indigo',
+          id: 'member_year'
+        }
+      ],
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'renewal_target_year'
+    };
+  }
+
+  // ============================================================================
+  // DEFAULT FALLBACK
+  // ============================================================================
+
+  // Default fallback - Show available categories
   return {
-    current: [
-      { label: 'and', icon: Plus, type: 'connector' },
-      { label: 'that have', icon: ChevronRight, type: 'connector' },
-      { label: 'in location', icon: MapPin, type: 'connector' },
-      { label: 'with status', icon: Check, type: 'connector' },
-      { label: 'sorted by', icon: TrendingUp, type: 'connector' }
-    ],
-    next: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
-      label: a.label,
-      preview: true
+    column1: FILTER_CATEGORIES.map(c => ({
+      label: c.label,
+      type: c.type,
+      icon: c.icon,
+      color: c.color,
+      id: c.id
     })),
-    future: [
-      { label: 'in timeframe', preview: true },
-      { label: 'greater than', preview: true }
-    ]
+    column2: [],
+    column3: [],
+    awaitingSelection: 'column1',
+    context: 'default'
   };
 };
 
-/**
- * Legacy function for backwards compatibility
- * Maps the old getSuggestionsForPhrase API to the new 3-column system
- *
- * @param {Array} chips - Current phrase chips
- * @returns {Object} Object with current, next, and future suggestion arrays
- */
+// Legacy function for backwards compatibility
 export const getSuggestionsForPhrase = (chips) => {
-  // For now, maintain backwards compatibility by returning the old format
-  // In the future, this can be updated to use getThreeColumnsForPhrase
-  // and map the results to the old format
+  const result = getThreeColumnsForPhrase(chips);
 
-  // Check if we should use new 3-column logic
-  const use3ColumnLogic = false; // Set to true when ready to migrate
-
-  if (use3ColumnLogic) {
-    const result = getThreeColumnsForPhrase(chips);
-    // Convert 3-column format to old format
-    return {
-      current: result.column1 || [],
-      next: result.column2 || [],
-      future: result.column3 || []
-    };
-  }
-
-  // Legacy implementation (keep existing logic for now)
-  if (chips.length === 0) {
-    return {
-      current: STARTING_POINTS.map(sp => ({
-        label: sp.label,
-        type: sp.type,
-        icon: sp.icon,
-        color: sp.color
-      })),
-      next: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: et.type,
-        icon: et.icon,
-        color: et.color,
-        preview: true
-      })),
-      future: [
-        { label: 'that have', icon: ChevronRight, preview: true },
-        { label: 'with status', icon: Check, preview: true },
-        { label: 'in location', icon: MapPin, preview: true }
-      ]
-    };
-  }
-
-  const lastChip = chips[chips.length - 1];
-  const lastChipText = lastChip.text || lastChip.label;
-
-  // After selecting a cohort (Current, Previous, New, Lapsed)
-  if (lastChip.type === 'cohort') {
-    return {
-      current: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: 'entity',
-        icon: et.icon,
-        color: et.color
-      })),
-      next: [
-        { label: 'that have been', icon: Clock, type: 'connector', preview: true },
-        { label: 'that have', icon: ChevronRight, type: 'connector', preview: true },
-        { label: 'with type', icon: Crown, type: 'connector', preview: true }
-      ],
-      future: FILTER_OPTIONS.attributes.slice(0, 4).map(a => ({
-        label: a.label,
-        preview: true
-      }))
-    };
-  }
-
-  // Default fallback
+  // Convert 3-column format to old format
   return {
-    current: [
-      { label: 'and', icon: Plus, type: 'connector' },
-      { label: 'that have', icon: ChevronRight, type: 'connector' },
-      { label: 'in location', icon: MapPin, type: 'connector' },
-      { label: 'with status', icon: Check, type: 'connector' }
-    ],
-    next: ENTITY_TYPES.slice(0, 4).map(et => ({ label: et.label, preview: true })),
-    future: [
-      { label: 'in timeframe', preview: true },
-      { label: 'with status', preview: true }
-    ]
+    current: result.column1 || [],
+    next: result.column2 || [],
+    future: result.column3 || []
   };
 };
