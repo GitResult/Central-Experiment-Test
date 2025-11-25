@@ -1317,29 +1317,28 @@ const PhraseModeReport = (props) => {
           <div className="w-full bg-white py-6">
             <div className="max-w-3xl mx-auto px-4">
               {/* Input field with phrase chips inside */}
-              <div className="bg-white rounded-xl border-2 border-blue-200 p-4 mb-4 shadow-sm">
-                <div className="flex flex-wrap gap-1 mb-3 min-h-[40px]">
-                  {phraseChips.map((chip) => (
-                    <div key={chip.id} className="chip-pop">
-                      <PhraseChip
-                        chip={chip}
-                        size="sm"
-                        onRemove={() => removeChip(chip.id)}
-                        onEdit={() => editChip(chip.id)}
-                        showRemove={true}
-                        showEdit={true}
-                      />
-                    </div>
-                  ))}
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  {/* Centered, smaller Search icon */}
+                  <div className="flex items-center justify-center flex-shrink-0">
+                    <Search className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
 
-                  {phraseChips.length === 0 && (
-                    <div className="text-gray-400 italic text-sm">Start building your phrase...</div>
-                  )}
-                </div>
+                  {/* Phrase chips and input in same container */}
+                  <div className="flex-1 flex flex-wrap items-center gap-1 min-h-[36px]">
+                    {phraseChips.map((chip) => (
+                      <div key={chip.id} className="chip-pop">
+                        <PhraseChip
+                          chip={chip}
+                          size="sm"
+                          onRemove={() => removeChip(chip.id)}
+                          onEdit={() => editChip(chip.id)}
+                          showRemove={true}
+                          showEdit={true}
+                        />
+                      </div>
+                    ))}
 
-                <div className="relative">
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     <input
                       ref={inputRef}
                       type="text"
@@ -1400,20 +1399,20 @@ const PhraseModeReport = (props) => {
                           removeChip(phraseChips[phraseChips.length - 1].id);
                         }
                       }}
-                      placeholder="Continue typing or select a suggestion..."
-                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={phraseChips.length === 0 ? "Start building your phrase..." : "Continue typing or select..."}
+                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic"
                     />
-
-                    {inputValue && (
-                      <button
-                        onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 text-sm flex-shrink-0"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add
-                      </button>
-                    )}
                   </div>
+
+                  {inputValue && (
+                    <button
+                      onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 text-sm flex-shrink-0"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add
+                    </button>
+                  )}
                 </div>
               </div>
 
