@@ -1,8 +1,15 @@
 /**
  * Person Essential Phrase Search Configuration
  *
- * Contains all constants and logic for the phrase search feature in PersonEssential reports.
- * This includes starting points, entity types, filter options, and progressive suggestion logic.
+ * Contains all constants and logic for the 3-column phrase search feature in PersonEssential reports.
+ * This system presents 3 columns simultaneously, where each column updates based on previous selections.
+ *
+ * Column Structure:
+ * - Column 1: Categories/Timeframes/Actions/Connectors
+ * - Column 2: Sub-categories/Values (context-dependent on Column 1)
+ * - Column 3: Connectors/Values (context-dependent on Column 2)
+ *
+ * After completing a selection from Column 3, a NEW set of 3 columns appears.
  */
 
 import {
@@ -11,6 +18,22 @@ import {
   GraduationCap, Briefcase, CalendarClock, UserMinus, Filter,
   Settings, Star, UserPlus
 } from 'lucide-react';
+
+import {
+  TIMEFRAMES,
+  YEAR_COHORTS,
+  SUBJECTS,
+  INITIAL_CONNECTORS,
+  LOGICAL_CONNECTORS,
+  FILTER_CATEGORIES,
+  ACTIONS,
+  BROWSE_MODE_DATA,
+  generateMonthYearOptions,
+  getBrowseModeData,
+  getSubCategories,
+  getActionConnectors,
+  isHierarchical
+} from './phraseBuilderData';
 
 // Starting point cohorts for phrase building
 export const STARTING_POINTS = [
@@ -168,38 +191,37 @@ export const FILTER_OPTIONS = {
 };
 
 /**
- * Progressive suggestion logic with 3 levels (Current, Next, Future)
- * Returns suggestions based on the current phrase chips
+ * 3-Column System Logic
+ * Returns three columns of suggestions based on the current phrase chips
  *
  * @param {Array} chips - Current phrase chips
- * @returns {Object} Object with current, next, and future suggestion arrays
+ * @returns {Object} Object with column1, column2, column3 arrays
  */
-export const getSuggestionsForPhrase = (chips) => {
+export const getThreeColumnsForPhrase = (chips) => {
+  // ============================================================================
+  // SET 1: Initial Selection (Timeframe → Subject → Connector)
+  // ============================================================================
+
+  // Stage 0: Empty query - Show timeframes in Column 1
   if (chips.length === 0) {
     return {
-      current: STARTING_POINTS.map(sp => ({
-        label: sp.label,
-        type: sp.type,
-        icon: sp.icon,
-        color: sp.color
+      column1: [...TIMEFRAMES, ...YEAR_COHORTS].map(t => ({
+        label: t.label,
+        type: t.type,
+        icon: t.icon,
+        color: t.color,
+        id: t.id
       })),
-      next: ENTITY_TYPES.map(et => ({
-        label: et.label,
-        type: et.type,
-        icon: et.icon,
-        color: et.color,
-        preview: true
-      })),
-      future: [
-        { label: 'that have', icon: ChevronRight, preview: true },
-        { label: 'with status', icon: Check, preview: true },
-        { label: 'in location', icon: MapPin, preview: true }
-      ]
+      column2: [],
+      column3: [],
+      awaitingSelection: 'column1',
+      context: 'initial'
     };
   }
 
   const lastChip = chips[chips.length - 1];
   const lastChipText = lastChip.text || lastChip.label;
+  const lastChipType = lastChip.type;
 
   // After selecting a cohort (Current, Previous, New, Lapsed)
   if (lastChip.type === 'cohort') {
