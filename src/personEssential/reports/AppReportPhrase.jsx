@@ -549,27 +549,67 @@ const PhraseModeReport = (props) => {
     newSelections[columnIdx] = suggestion;
     setColumnSelections(newSelections);
 
+    // Check if we're in a hierarchical selection (Member Stats)
+    const isHierarchicalSelection = newSelections[0]?.id === 'member_stats' || newSelections[0]?.label === 'Member Stats';
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
-    for (let i = 0; i <= columnIdx; i++) {
-      if (newSelections[i]) {
-        const sel = newSelections[i];
-        chipsToAdd.push({
-          id: sel.id || (Date.now() + i + Math.random()),  // Preserve original ID if it exists
-          text: sel.label,
-          label: sel.label,  // Add label property as well
-          type: sel.type || 'connector',
-          icon: sel.icon,
-          color: sel.color || 'gray',
-          valueType: sel.valueType,  // Preserve valueType for value chips
-          enablesMultiSelect: sel.enablesMultiSelect,  // Preserve special flags
-          order: sel.order  // Preserve order if present
-        });
+
+    if (isHierarchicalSelection) {
+      // For hierarchical selections, merge into a single chip progressively
+      let chipText = newSelections[0].label; // Start with "Member Stats"
+
+      if (columnIdx >= 1 && newSelections[1]) {
+        chipText += ': ' + newSelections[1].label; // Add ": Consecutive Membership Years"
+      }
+
+      if (columnIdx >= 2 && newSelections[2]) {
+        chipText += '= ' + newSelections[2].label; // Add "= 5"
+      }
+
+      // Add non-hierarchical chips (before this selection round)
+      for (let i = 0; i < selectionRoundStart; i++) {
+        if (i < phraseChips.length) {
+          chipsToAdd.push(phraseChips[i]);
+        }
+      }
+
+      // Add the merged hierarchical chip
+      chipsToAdd.push({
+        id: 'member_stats_' + Date.now(),
+        text: chipText,
+        label: chipText,
+        type: 'category',
+        icon: newSelections[0].icon,
+        color: newSelections[0].color || 'blue',
+        isHierarchical: true,
+        subcategory: newSelections[1]?.label,
+        value: newSelections[2]?.label
+      });
+    } else {
+      // Non-hierarchical: add chips for each selection
+      for (let i = 0; i <= columnIdx; i++) {
+        if (newSelections[i]) {
+          const sel = newSelections[i];
+          chipsToAdd.push({
+            id: sel.id || (Date.now() + i + Math.random()),
+            text: sel.label,
+            label: sel.label,
+            type: sel.type || 'connector',
+            icon: sel.icon,
+            color: sel.color || 'gray',
+            valueType: sel.valueType,
+            enablesMultiSelect: sel.enablesMultiSelect,
+            order: sel.order
+          });
+        }
       }
     }
 
     // Replace chips from current selection round instead of appending
-    const previousChips = phraseChips.slice(0, selectionRoundStart);
+    const previousChips = isHierarchicalSelection ?
+      phraseChips.slice(0, selectionRoundStart) :
+      phraseChips.slice(0, selectionRoundStart);
     const newChipState = [...previousChips, ...chipsToAdd];
     setPhraseChips(newChipState);
     setInputValue('');
@@ -586,7 +626,12 @@ const PhraseModeReport = (props) => {
       setActiveColumn(0);
       setPreviewChips([]);
       // Set start position for next selection round
-      setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      if (isHierarchicalSelection) {
+        // For hierarchical, we added only 1 merged chip
+        setSelectionRoundStart(previousChips.length + 1);
+      } else {
+        setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      }
       // Locked suggestions already updated above with the new chip state
     } else {
       // Otherwise, move to next column
@@ -1184,7 +1229,71 @@ const PhraseModeReport = (props) => {
 
   const generateNaturalQuery = () => {
     if (phraseChips.length === 0) return '';
-    return phraseChips.map(chip => chip.text).join(' ');
+
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+    let query = '';
+    let i = 0;
+
+    // Check for timeframe + Members pattern (e.g., Current Members)
+    if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
+      const timeframe = phraseChips[i].text;
+      i++;
+
+      if (i < phraseChips.length && phraseChips[i].text === 'Members') {
+        // Format as "Current members" (lowercase 'members')
+        query = timeframe + ' members';
+        i++;
+      } else {
+        query = timeframe;
+      }
+    }
+
+    // Process remaining chips
+    while (i < phraseChips.length) {
+      const chip = phraseChips[i];
+
+      // Skip connector chips in output (they're implied in the structure)
+      if (chip.type === 'connector') {
+        const connectorText = chip.text?.toLowerCase();
+
+        // Handle "that have" with Member Stats
+        if (connectorText === 'that have') {
+          i++;
+          // Look ahead for Member Stats hierarchical chip
+          if (i < phraseChips.length && phraseChips[i].isHierarchical) {
+            const memberStatsChip = phraseChips[i];
+
+            // Extract the number from "Member Stats: Consecutive Membership Years= 5"
+            const match = memberStatsChip.text.match(/Consecutive Membership Years=\s*(\d+)/);
+            if (match) {
+              const years = match[1];
+              query += ' that have been members for the past ' + years + ' years';
+            } else {
+              query += ' ' + memberStatsChip.text;
+            }
+            i++;
+            continue;
+          }
+        }
+        i++;
+        continue;
+      }
+
+      // Skip if already processed
+      if (chip.isHierarchical) {
+        // Already handled above
+        i++;
+        continue;
+      }
+
+      // Add other chips as-is
+      if (chip.text !== 'Members' || i > 1) {
+        query += ' ' + chip.text;
+      }
+      i++;
+    }
+
+    return query.trim();
   };
 
   const renderAnimatedExamples = () => {
