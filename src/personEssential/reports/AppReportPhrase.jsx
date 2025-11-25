@@ -547,6 +547,13 @@ const PhraseModeReport = (props) => {
     newSelections[columnIdx] = suggestion;
     setColumnSelections(newSelections);
 
+    // Lock suggestions at the START of a selection round (when first column is selected)
+    // This prevents suggestions from changing as we build the phrase
+    if (columnIdx === 0 && !lockedSuggestions) {
+      const currentSuggestions = getPhraseSuggestions(phraseChips.slice(0, selectionRoundStart));
+      setLockedSuggestions(currentSuggestions);
+    }
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
     for (let i = 0; i <= columnIdx; i++) {
