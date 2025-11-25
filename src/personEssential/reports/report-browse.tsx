@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import ReportViewComponent from './ReportViewComponent.tsx';
 import ReportList from './report-list.tsx';
 import AppReportPhrase from './AppReportPhrase.jsx';
+import { ResponsivePanel, ResponsiveCard, OptionsSelector } from '../../components/responsive';
 
 const getIconComponent = (iconName) => {
   const iconMap = {
@@ -89,6 +90,10 @@ const ReportBuilder = (props) => {
   const [showMemberStatsPanel, setShowMemberStatsPanel] = useState(false);
   const [selectedMemberStatField, setSelectedMemberStatField] = useState(null);
   const [customYearValue, setCustomYearValue] = useState('');
+
+  // Demo: Mobile panel pattern toggle
+  const [mobilePanelPattern, setMobilePanelPattern] = useState('auto'); // 'auto', 'drawer', 'modal'
+  const [showDemoSettings, setShowDemoSettings] = useState(false);
 
   // Renewed date range state
   const [fromMonth, setFromMonth] = useState(null);
@@ -971,32 +976,38 @@ const ReportBuilder = (props) => {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <h1 className="text-5xl font-light mb-12 text-gray-900">New Report</h1>
-          <p className="text-xl text-gray-600 mb-16 text-center max-w-2xl">Browse, select or use the phrase experience to tailor your results.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
+          <h1 className="text-3xl sm:text-5xl font-light mb-8 sm:mb-12 text-gray-900 text-center">New Report</h1>
+          <p className="text-base sm:text-xl text-gray-600 mb-8 sm:mb-16 text-center max-w-2xl px-4">Browse, select or use the phrase experience to tailor your results.</p>
 
-          <div className="grid grid-cols-3 gap-8 mb-12 max-w-4xl w-full">
-            <button onClick={() => setStage('browse')} className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white">
-              <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Browse</h3>
-              <p className="text-sm text-gray-500">Categories to select</p>
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mb-12 max-w-4xl w-full px-4">
+            <ResponsiveCard
+              icon={Grid3x3}
+              iconColor="blue"
+              title="Browse"
+              description="Categories to select"
+              onClick={() => setStage('browse')}
+              variant="default"
+            />
 
-            <button onClick={() => setStage('select')} className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white">
-              <List className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Select</h3>
-              <p className="text-sm text-gray-500">From a list of fields</p>
-            </button>
+            <ResponsiveCard
+              icon={List}
+              iconColor="purple"
+              title="Select"
+              description="From a list of fields"
+              onClick={() => setStage('select')}
+              variant="default"
+            />
 
-            <button
-              onClick={() => {
-                updateDemoStateAction({ isPhraseActive: !isPhraseActive })
-              }}
-              className="welcome-card p-8 rounded-2xl border border-gray-200 bg-white focus-visible:outline-none">
-              <Search className="w-12 h-12 mx-auto mb-4 text-gray-400" strokeWidth={1.5} />
-              <h3 className="text-xl font-medium mb-2 text-gray-900">Phrase</h3>
-              <p className="text-sm text-gray-500">Based on terms to use</p>
-            </button>
+            <ResponsiveCard
+              icon={Search}
+              iconColor="green"
+              title="Phrase"
+              description="Based on terms to use"
+              onClick={() => updateDemoStateAction({ isPhraseActive: !isPhraseActive })}
+              variant="default"
+              className="sm:col-span-2 lg:col-span-1"
+            />
           </div>
         </div>
 
@@ -1410,20 +1421,32 @@ const ReportBuilder = (props) => {
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto flex flex-col transition-all duration-300" style={{ marginRight: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
-        <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
-            <h1 className="text-2xl font-light">New Report - Browse</h1>
-            <button onClick={() => setStage('select')} className="ml-4 text-sm text-gray-500 hover:text-blue-500">Try Select mode →</button>
+        <div className="bg-white border-b border-gray-200 px-1 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-4 justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button onClick={() => setStage('welcome')} className="text-blue-500 hover:text-blue-600 text-sm">← Back</button>
+              <h1 className="text-base sm:text-lg lg:text-2xl font-light">New Report - Browse</h1>
+              <button onClick={() => setStage('select')} className="hidden lg:inline ml-4 text-sm text-gray-500 hover:text-blue-500">Try Select mode →</button>
+            </div>
+
+            {/* Demo Settings Button */}
+            <button
+              onClick={() => setShowDemoSettings(!showDemoSettings)}
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
+              title="Toggle mobile panel pattern for demo"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Demo Settings</span>
+            </button>
           </div>
         </div>
 
         {/* Query Builder Panel */}
         {selections.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-8 py-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 px-1 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4">
+            <div className="flex items-start gap-2 sm:gap-4 flex-col sm:flex-row">
+              <div className="flex-1 w-full min-w-0">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <Sparkles className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-semibold text-gray-900">Your Query</h3>
                   <span className="text-xs text-gray-500">({selections.length} selection{selections.length !== 1 ? 's' : ''})</span>
@@ -1437,12 +1460,12 @@ const ReportBuilder = (props) => {
                       setSelectedMemberStatField(null);
                       showToast('All selections cleared');
                     }}
-                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-2"
+                    className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium ml-auto sm:ml-2"
                   >
                     Clear
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center w-full">
                   {selections.map((sel, idx) => {
                     const Icon = sel.type === 'filter' ? Filter : Eye;
                     const isEditing = editingSelection?.id === sel.id;
@@ -1472,15 +1495,15 @@ const ReportBuilder = (props) => {
                         {sel.category === 'Renewed' ? (
                           <>
                             {/* "renewed" keyword chip */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm bg-green-100 text-green-900 border border-green-300">
                               <span className="font-medium">renewed</span>
                             </div>
                             {/* "in" keyword chip */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-100 text-green-900 border border-green-300">
+                            <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm bg-green-100 text-green-900 border border-green-300">
                               <span className="font-medium">in</span>
                             </div>
                             {/* Value chip with edit/remove buttons */}
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                            <div className={`flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm transition-all ${
                               isEditing
                                 ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                                 : 'bg-blue-100 text-blue-900 border border-blue-300'
@@ -1513,16 +1536,16 @@ const ReportBuilder = (props) => {
                           </>
                         ) : (
                           /* Regular chip for all other categories */
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          <div className={`flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm transition-all ${
                             isEditing
                               ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg'
                               : sel.type === 'filter'
                                 ? 'bg-blue-100 text-blue-900 border border-blue-300'
                                 : 'bg-purple-100 text-purple-900 border border-purple-300'
                           }`}>
-                            <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                            <span className="font-medium">{getSelectionDisplayLabel(sel)}</span>
-                            <div className="flex items-center gap-1 ml-1">
+                            <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={2} />
+                            <span className="font-medium break-words max-w-[200px] sm:max-w-none">{getSelectionDisplayLabel(sel)}</span>
+                            <div className="flex items-center gap-0.5 sm:gap-1 ml-1">
                               <button
                                 onClick={() => handleEditSelection(sel)}
                                 className="hover:bg-white/80 hover:shadow-sm rounded p-1 transition-all"
@@ -1594,12 +1617,12 @@ const ReportBuilder = (props) => {
 
         {/* Query Templates Panel */}
         {selections.length === 0 && (
-          <div className="bg-white border-b border-gray-200 px-8 py-4">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="bg-white border-b border-gray-200 px-1 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
               <Target className="w-4 h-4 text-gray-600" />
               <h3 className="text-sm font-semibold text-gray-900">Quick Start Templates</h3>
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {queryTemplates.map((template, idx) => (
                 <button
                   key={idx}
@@ -1609,9 +1632,9 @@ const ReportBuilder = (props) => {
                     });
                     showToast(`Applied template: ${template.name}`);
                   }}
-                  className="p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group"
+                  className="p-3 sm:p-4 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all text-left group min-h-[56px]"
                 >
-                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1">{template.name}</div>
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 mb-1 line-clamp-2">{template.name}</div>
                   <div className="text-xs text-gray-500">{template.filters.length} filters</div>
                 </button>
               ))}
@@ -1624,11 +1647,21 @@ const ReportBuilder = (props) => {
             const isThreeColumn = categories.length >= 6;
             const isFourColumn = categories.length === 4 || section === 'Starting Data';
 
+            // Responsive grid classes based on category count
+            // Mobile: 2 columns for better space usage
+            const gridClasses = isFourColumn
+              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4'
+              : isThreeColumn
+                ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4'
+                : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-6';
+
             return (
               <div key={section}>
-                <div className="px-8 py-4"><h2 className="text-base text-black">{section}</h2></div>
+                <div className="px-1 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4">
+                  <h2 className="text-sm sm:text-base font-semibold text-black">{section}</h2>
+                </div>
 
-                <div className={`px-8 pb-8 ${isFourColumn ? 'grid grid-cols-4 gap-4' : isThreeColumn ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-5 gap-6'}`}>
+                <div className={`px-1 sm:px-4 lg:px-8 pb-3 sm:pb-6 lg:pb-8 ${gridClasses}`}>
                   {categories.map((category) => {
                     const CategoryIcon = getIconComponent(categoryIcons[category]);
                     const isSelected = selections.some(s => s.category === category);
@@ -1642,23 +1675,23 @@ const ReportBuilder = (props) => {
                         <div
                           key={category}
                           onClick={() => handleCategorySelect(category, section)}
-                          className={`flex items-start gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                          className={`flex flex-col sm:flex-row items-start gap-2 p-2 sm:p-3 lg:p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md group relative min-h-[64px] sm:min-h-[72px] ${isSelected ? 'ring-2 ring-blue-500' : 'border border-gray-100'}`}
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverColors[section] || '#dbeafe'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
                         >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
-                            <CategoryIcon className={`w-5 h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
+                          <div className={`w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${sectionColor.bg.replace('50', '100')}`}>
+                            <CategoryIcon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5 ${sectionColor.icon.replace('400', '600')}`} strokeWidth={1.5} />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 text-sm">{category}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
+                          <div className="flex-1 min-w-0 w-full sm:w-auto">
+                            <div className="font-medium text-gray-900 text-xs sm:text-sm lg:text-base break-words leading-tight">{category}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{recordCount > 0 ? `${formattedCount} records` : `${sampleValues[category]?.length || 6} options`}</div>
                           </div>
                           {isSelected ? (
                             <div className="bg-blue-500 text-white rounded-full p-0.5 flex-shrink-0">
-                              <Check className="w-3 h-3" strokeWidth={3} />
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
                             </div>
                           ) : (
-                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Add as field">
+                            <button onClick={(e) => { e.stopPropagation(); addField(category); }} className="p-1.5 sm:p-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" title="Add as field">
                               <Plus className="w-4 h-4 text-gray-600 hover:text-gray-900" strokeWidth={2} />
                             </button>
                           )}
@@ -2976,24 +3009,32 @@ const ReportBuilder = (props) => {
         )}
 
         <div className={`absolute ${showPreview ? "bottom-[533px]" : "bottom-0"} ease-in-out transition-all duration-700 left-0 bg-white border-t border-gray-200 shadow-2xl z-30`} style={{ height: '88px', right: rightPanelWidth > 0 ? `${rightPanelWidth}px` : '0' }}>
-          <div className="h-full flex items-center justify-between px-4">
+          <div className="h-full flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2">
 
-            <div className="flex items-center gap-4">
+            {/* Left section - Info */}
+            <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0 overflow-hidden">
               <ChevronUp
                 size={18}
                 onClick={() => setShowPreview(!showPreview)}
-                className={`cursor-pointer text-gray-400/50 ${showPreview ? 'rotate-180' : ''}`}
+                className={`cursor-pointer text-gray-400/50 flex-shrink-0 ${showPreview ? 'rotate-180' : ''}`}
               />
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
                   <Users className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
                 </div>
-                <div className="flex-1 max-w-2xl">
-                  <div className="text-sm font-semibold text-gray-900">{reportTitle}</div>
-                  <div className="text-xs text-gray-500">JD • {estimatedRecordCount.toLocaleString()} records</div>
+
+                {/* Text content - stacked on mobile, inline on desktop */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
+                  {/* Title and meta - inline */}
+                  <div className="flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">{reportTitle}</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">JD • {estimatedRecordCount.toLocaleString()} records</span>
+                  </div>
+
+                  {/* Natural query - separate line, truncated */}
                   {buildNaturalLanguageQuery() && (
-                    <div className="text-xs text-blue-700 mt-1 font-medium italic">
+                    <div className="text-[9px] sm:text-xs text-blue-700 font-medium italic truncate leading-tight mt-0.5">
                       "{buildNaturalLanguageQuery()}"
                     </div>
                   )}
@@ -3001,7 +3042,8 @@ const ReportBuilder = (props) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right section - Actions (desktop only, critical on mobile) */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
               {/* Load Query Button */}
               <div className="relative">
                 <button
@@ -3080,7 +3122,8 @@ const ReportBuilder = (props) => {
               <button onClick={() => setActivePanel('more')} className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings"><Settings className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} /></button>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Desktop: Fields/Filters buttons group */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
               <button onClick={() => setActivePanel('fields')} className="relative p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Fields">
                 <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
                 {selections.filter(s => s.type === 'field').length > 0 && (
@@ -3095,99 +3138,293 @@ const ReportBuilder = (props) => {
                 )}
               </button>
             </div>
+
+            {/* Mobile: Compact critical buttons */}
+            <div className="flex sm:hidden items-center gap-0.5 flex-shrink-0">
+              <button onClick={() => setActivePanel('fields')} className="relative p-1.5 rounded active:bg-gray-100" title="Fields">
+                <Eye className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+                {selections.filter(s => s.type === 'field').length > 0 && (
+                  <div className="absolute -top-0.5 -right-0.5 bg-purple-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">{selections.filter(s => s.type === 'field').length}</div>
+                )}
+              </button>
+
+              <button onClick={() => setActivePanel('filters')} className="relative p-1.5 rounded active:bg-gray-100" title="Filters">
+                <Filter className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+                {selections.filter(s => s.type === 'filter').length > 0 && (
+                  <div className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">{selections.filter(s => s.type === 'filter').length}</div>
+                )}
+              </button>
+
+              <button disabled={selections.length === 0} className={`p-2 rounded-full ml-0.5 ${selections.length > 0 ? 'bg-blue-500 text-white active:bg-blue-600' : 'bg-gray-200 text-gray-400'}`} title="Run">
+                <Play className="w-4 h-4" strokeWidth={1.5} fill="currentColor" />
+              </button>
+            </div>
           </div>
 
 
           {/* Report VIEW Content */}
           <ReportViewComponent selections={selections} />
+
         </div>
 
-        {activePanel && (
-          <>
-            <div className="absolute inset-0 bg-black bg-opacity-20 z-40" onClick={() => setActivePanel(null)} />
+        <ResponsivePanel
+          isOpen={!!activePanel}
+          onClose={() => setActivePanel(null)}
+          title={
+            activePanel === 'fields' ? 'Fields Configuration' :
+            activePanel === 'filters' ? 'Filters Builder' :
+            'More Options'
+          }
+          variant={mobilePanelPattern}
+          size="md"
+        >
+          <div className="p-2 sm:p-4 lg:p-6" style={{ backgroundColor: '#F9FAFB', minHeight: '300px' }}>
+            {activePanel === 'fields' && (
+                  <div className="space-y-2 sm:space-y-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4">Manage which fields appear in your report output. Drag to reorder.</p>
+                {selections.filter(s => s.type === 'field').length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Eye className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} />
+                    <p className="text-xs sm:text-sm">No fields selected</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 sm:space-y-2">
+                    {selections.filter(s => s.type === 'field').map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
 
-            <div className="absolute right-0 top-0 h-full w-[390px] bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col animate-slideInRight">
-              <div className="p-6 border-b border-gray-200 bg-white flex-shrink-0">
+                      return (
+                        <div key={sel.id} className="flex items-center gap-1.5 sm:gap-3 p-2 sm:p-3 bg-white rounded-lg border border-purple-200 min-h-[48px] sm:min-h-[56px]">
+                          <div className="cursor-move text-gray-400 hidden sm:block">::</div>
+                          <Eye className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
+                          {isStatusOrMembers ? (
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs sm:text-base font-semibold text-gray-900 break-words">{sel.category}</div>
+                            </div>
+                          ) : (
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs sm:text-base font-semibold text-gray-900 break-words">{sel.category}</div>
+                              <div className="text-[10px] sm:text-sm text-gray-600 break-words">{sel.value}</div>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => removeSelection(sel.id)}
+                            className="text-gray-400 hover:text-red-500 active:text-red-500 p-1 sm:p-2 flex-shrink-0"
+                          >
+                            <X className="w-3.5 h-3.5 sm:w-5 sm:h-5" strokeWidth={1.5} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activePanel === 'filters' && (
+              <div className="space-y-2 sm:space-y-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4">Build complex filter logic with AND/OR conditions.</p>
+                {selections.filter(s => s.type === 'filter').length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Filter className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} />
+                    <p className="text-xs sm:text-sm">No filters applied</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 sm:space-y-2">
+                    {selections.filter(s => s.type === 'filter').map((sel) => {
+                      const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+                      const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+
+                      return (
+                        <div key={sel.id} className="p-2 sm:p-3 bg-white rounded-lg border border-blue-200 min-h-[48px] sm:min-h-[56px]">
+                          <div className="flex items-center justify-between gap-1.5 sm:gap-3">
+                            <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                              <Filter className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
+                              {isStatusOrMembers ? (
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs sm:text-base font-semibold text-gray-900 break-words">{sel.category}</div>
+                                </div>
+                              ) : (
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs sm:text-base font-semibold text-gray-900 break-words">{sel.category}</div>
+                                  <div className="text-[10px] sm:text-sm text-gray-600 break-words">{sel.value}</div>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => removeSelection(sel.id)}
+                              className="text-gray-400 hover:text-red-500 active:text-red-500 p-1 sm:p-2 flex-shrink-0"
+                            >
+                              <X className="w-3.5 h-3.5 sm:w-5 sm:h-5" strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activePanel === 'more' && (
+              <div className="space-y-2">
+                <button className="w-full flex items-center gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left min-h-[56px]">
+                  <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm sm:text-base font-medium text-gray-900">Settings</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Report name and configuration</div>
+                  </div>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left min-h-[56px]">
+                  <Download className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm sm:text-base font-medium text-gray-900">Export</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Download as CSV, Excel, or PDF</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        </ResponsivePanel>
+
+        {/* Demo Settings Panel */}
+        {showDemoSettings && (
+          <>
+            <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setShowDemoSettings(false)} />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl w-[90%] max-w-md animate-slideIn">
+              <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{activePanel === 'fields' ? 'Fields Configuration' : activePanel === 'filters' ? 'Filters Builder' : 'More Options'}</h3>
-                  <button onClick={() => setActivePanel(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X className="w-5 h-5" strokeWidth={1.5} /></button>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Demo Settings</h3>
+                    <p className="text-sm text-gray-500 mt-1">Toggle mobile panel patterns</p>
+                  </div>
+                  <button
+                    onClick={() => setShowDemoSettings(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-6" style={{ backgroundColor: '#F9FAFB' }}>
-                {activePanel === 'fields' && (
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">Manage which fields appear in your report output. Drag to reorder.</p>
-                    {selections.filter(s => s.type === 'field').length === 0 ? (
-                      <div className="text-center py-8 text-gray-400"><Eye className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No fields selected</p></div>
-                    ) : (
-                      <div className="space-y-2">
-                        {selections.filter(s => s.type === 'field').map((sel) => {
-                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
-                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
+              <div className="p-6 space-y-4">
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Mobile Panel Pattern
+                  </label>
 
-                          return (
-                            <div key={sel.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                              <div className="cursor-move text-gray-400">::</div>
-                              <Eye className="w-4 h-4 text-purple-600 flex-shrink-0" strokeWidth={1.5} />
-                              {isStatusOrMembers ? (
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
-                              ) : (
-                                <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                              )}
-                              <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                            </div>
-                          );
-                        })}
+                  {/* Option A: Auto (Mobile-Native) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('auto')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'auto'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'auto' ? 'border-blue-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'auto' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
-
-                {activePanel === 'filters' && (
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">Build complex filter logic with AND/OR conditions.</p>
-                    {selections.filter(s => s.type === 'filter').length === 0 ? (
-                      <div className="text-center py-8 text-gray-400"><Filter className="w-12 h-12 mx-auto mb-2 opacity-20" strokeWidth={1.5} /><p className="text-sm">No filters applied</p></div>
-                    ) : (
-                      <div className="space-y-2">
-                        {selections.filter(s => s.type === 'filter').map((sel) => {
-                          const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
-                          const isStatusOrMembers = statusCategories.includes(sel.category) || sel.category === 'Members';
-
-                          return (
-                            <div key={sel.id} className="p-3 bg-white rounded-lg border border-blue-200">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <Filter className="w-4 h-4 text-blue-600 flex-shrink-0" strokeWidth={1.5} />
-                                  {isStatusOrMembers ? (
-                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div></div>
-                                  ) : (
-                                    <div className="flex-1"><div className="text-sm font-semibold text-gray-900">{sel.category}</div><div className="text-xs text-gray-600">{sel.value}</div></div>
-                                  )}
-                                </div>
-                                <button onClick={() => removeSelection(sel.id)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" strokeWidth={1.5} /></button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Auto (Mobile-Native) ✨
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Side drawer | Tablet: Side drawer | Mobile: Bottom sheet with swipe
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded inline-block">
+                          Best for: Consumer apps, native mobile feel
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
-                )}
 
-                {activePanel === 'more' && (
-                  <div className="space-y-2">
-                    <button className="w-full flex items-center gap-3 p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left">
-                      <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
-                      <div><div className="text-sm font-medium text-gray-900">Settings</div><div className="text-xs text-gray-500">Report name and configuration</div></div>
-                    </button>
-                    <button className="w-full flex items-center gap-3 p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors text-left">
-                      <Download className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
-                      <div><div className="text-sm font-medium text-gray-900">Export</div><div className="text-xs text-gray-500">Download as CSV, Excel, or PDF</div></div>
-                    </button>
+                  {/* Option B: Drawer (Simple) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('drawer')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'drawer'
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'drawer' ? 'border-green-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'drawer' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Drawer (Simple) 📐
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Side drawer | Tablet: Side drawer | Mobile: Side drawer (narrower)
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-green-50 px-2 py-1 rounded inline-block">
+                          Best for: Internal tools, consistency priority
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  {/* Option C: Modal (Centered) */}
+                  <div
+                    onClick={() => setMobilePanelPattern('modal')}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      mobilePanelPattern === 'modal'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        mobilePanelPattern === 'modal' ? 'border-purple-500' : 'border-gray-300'
+                      }`}>
+                        {mobilePanelPattern === 'modal' && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 mb-1">
+                          Modal (Centered) 🎯
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Desktop: Centered modal | Tablet: Centered modal | Mobile: Centered modal
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 bg-purple-50 px-2 py-1 rounded inline-block">
+                          Best for: Desktop-first apps, traditional UX
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-start gap-2 text-xs text-gray-500">
+                    <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-yellow-500" />
+                    <p>
+                      <strong>Try it:</strong> Click "Fields" or "Filters" button to see the selected panel pattern in action.
+                      Resize your browser window to test different screen sizes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <button
+                  onClick={() => setShowDemoSettings(false)}
+                  className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </>
