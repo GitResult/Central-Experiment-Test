@@ -303,7 +303,7 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a number value (from Member Stats) - Show Connectors in Column 1 AND ANTICIPATE ALL 3 COLUMNS
+  // After selecting a number value (from Member Stats) - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
   if (lastChipType === 'value' && lastChip.valueType === 'number') {
     // Get first category's subcategories for anticipation
     const firstCategory = FILTER_CATEGORIES[0];
@@ -313,8 +313,14 @@ export const getThreeColumnsForPhrase = (chips) => {
     const firstSubCat = subCats.length > 0 ? subCats[0] : null;
     const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
 
+    // Combine logical connectors with "that have" to give more flexibility
+    const allConnectors = [
+      ...LOGICAL_CONNECTORS,
+      ...INITIAL_CONNECTORS.filter(c => c.id === 'that_have')
+    ];
+
     return {
-      column1: LOGICAL_CONNECTORS.map(lc => ({
+      column1: allConnectors.map(lc => ({
         label: lc.label,
         type: lc.type,
         icon: lc.icon,
