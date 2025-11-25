@@ -14,67 +14,66 @@ import { getSuggestionsForPhrase as getPhraseSuggestions } from './personEssenti
 const AnimationStyles = () => (
   <style>{`
     @keyframes phraseSlideIn {
-      0% { opacity: 0; transform: translateY(-5px) scale(0.475); }
-      100% { opacity: 1; transform: translateY(0) scale(0.5); }
+      0% { opacity: 0; transform: translateY(-5px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
-    
+
     @keyframes chipPop {
-      0% { opacity: 0; transform: scale(0.4); }
-      60% { opacity: 1; transform: scale(0.525); }
-      100% { opacity: 1; transform: scale(0.5); }
+      0% { opacity: 0; transform: scale(0.8); }
+      60% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
     }
-    
+
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
       50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
     }
-    
+
     @keyframes slideInFromRight {
-      from { opacity: 0; transform: translateX(10px) scale(0.5); }
-      to { opacity: 1; transform: translateX(0) scale(0.5); }
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
     }
-    
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.5); }
-      to { opacity: 1; transform: scale(0.5); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    
+
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px) scale(0.5); }
-      to { opacity: 1; transform: translateY(0) scale(0.5); }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .phrase-slide-in {
       animation: phraseSlideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .chip-pop {
       animation: chipPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .pulse-glow {
       animation: pulseGlow 2s infinite;
-      transform: scale(0.5);
     }
-    
+
     .slide-in-right {
       animation: slideInFromRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .fade-in {
       animation: fadeIn 0.4s ease-in forwards;
     }
-    
+
     .slide-up {
       animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .chip-hover {
       transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    
+
     .chip-hover:hover {
-      transform: scale(0.52) translateY(-1px);
+      transform: translateY(-1px);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
   `}</style>
@@ -990,24 +989,29 @@ const PhraseModeReport = (props) => {
     setInputValue('');
   };
 
+  const generateNaturalQuery = () => {
+    if (phraseChips.length === 0) return '';
+    return phraseChips.map(chip => chip.text).join(' ');
+  };
+
   const renderAnimatedExamples = () => {
     const currentExample = PHRASE_TEMPLATES[animatingExample];
-    
+
     return (
       <div className="space-y-4">
         <p className="text-sm text-gray-600 text-center fade-in">
           {currentExample.description}
         </p>
-        <div className="flex flex-wrap gap-2 justify-center items-center min-h-[60px]">
+        <div className="flex flex-wrap gap-1 justify-center items-center min-h-[60px]">
           {currentExample.chips.map((chip, idx) => {
             const isVisible = idx < visibleChipsCount;
-            
+
             return isVisible ? (
               <div
                 key={`chip-${animatingExample}-${idx}`}
                 className="chip-pop"
               >
-                <PhraseChip chip={chip} readOnly />
+                <PhraseChip chip={chip} size="sm" readOnly />
               </div>
             ) : null;
           })}
@@ -1171,33 +1175,30 @@ const PhraseModeReport = (props) => {
         {/* bottom bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
           <div className="h-full flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
               </div>
-              <div>
-                <div className="text-sm font-semibold text-gray-900">Phrase Mode Report</div>
-                <div className="text-xs text-gray-500">
-                  {stage !== 'building' ? "": previewCount !== null ? `~${previewCount.toLocaleString()} records` : 'Building query...'}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-900">Natural Query</div>
+                <div className="text-xs text-gray-600 truncate" title={generateNaturalQuery()}>
+                  {phraseChips.length > 0 ? generateNaturalQuery() : 'Start building your phrase...'}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {previewCount !== null ? `~${previewCount.toLocaleString()} records` : ''}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={runReport}
-                disabled={phraseChips.length === 0} 
-                className={`p-4 rounded-full transition-all mx-2 ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} 
+                disabled={phraseChips.length === 0}
+                className={`p-4 rounded-full transition-all mx-2 ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                 title="Run Report"
               >
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
               </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-500">
-                {phraseChips.length} {phraseChips.length === 1 ? 'chip' : 'chips'}
-              </div>
             </div>
           </div>
         </div>
@@ -1223,114 +1224,122 @@ const PhraseModeReport = (props) => {
           </div>
         </div>
 
-        <div className="flex-1 p-8 pb-32">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-200 p-8 mb-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-semibold text-gray-700">Your Phrase</span>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 mb-6 min-h-[60px]">
-                {phraseChips.map((chip) => (
-                  <div key={chip.id} className="chip-pop">
-                    <PhraseChip 
-                      chip={chip} 
-                      onRemove={() => removeChip(chip.id)}
-                      onEdit={() => editChip(chip.id)}
-                      showRemove={true}
-                      showEdit={true}
-                    />
-                  </div>
-                ))}
-                
-                {phraseChips.length === 0 && (
-                  <div className="text-gray-400 italic">Start building your phrase...</div>
-                )}
-              </div>
+        <div className="flex-1 pb-32">
+          {/* Your Phrase Panel - constrained width */}
+          <div className="p-8 pb-0">
+            <div className="max-w-6xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-200 p-8 mb-0">
+                <div className="flex items-center gap-2 mb-6">
+                  <Sparkles className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-semibold text-gray-700">Your Phrase</span>
+                </div>
 
-              <div className="relative">
-                <div className="flex items-center gap-3">
-                  <Search className="w-5 h-5 text-gray-400" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => {
-                      setInputValue(e.target.value);
-                      setSelectedSuggestionIndex(0); // Reset selection when typing
-                    }}
-                    onKeyDown={(e) => {
-                      const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
-                      const allSuggestions = [
-                        phraseSuggestions.current,
-                        phraseSuggestions.next,
-                        phraseSuggestions.future
-                      ];
-                      const currentColumnSuggestions = allSuggestions[activeColumn];
+                <div className="flex flex-wrap gap-1 mb-6 min-h-[60px]">
+                  {phraseChips.map((chip) => (
+                    <div key={chip.id} className="chip-pop">
+                      <PhraseChip
+                        chip={chip}
+                        size="sm"
+                        onRemove={() => removeChip(chip.id)}
+                        onEdit={() => editChip(chip.id)}
+                        showRemove={true}
+                        showEdit={true}
+                      />
+                    </div>
+                  ))}
 
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const newIndex = Math.min(columnIndices[activeColumn] + 1, currentColumnSuggestions.length - 1);
-                        const newIndices = [...columnIndices];
-                        newIndices[activeColumn] = newIndex;
-                        setColumnIndices(newIndices);
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const newIndex = Math.max(columnIndices[activeColumn] - 1, 0);
-                        const newIndices = [...columnIndices];
-                        newIndices[activeColumn] = newIndex;
-                        setColumnIndices(newIndices);
-                      } else if (e.key === 'ArrowRight') {
-                        e.preventDefault();
-                        if (activeColumn < 2) {
-                          setActiveColumn(activeColumn + 1);
-                        }
-                      } else if (e.key === 'ArrowLeft') {
-                        e.preventDefault();
-                        if (activeColumn > 0) {
-                          setActiveColumn(activeColumn - 1);
-                        }
-                      } else if (e.key === 'Tab') {
-                        e.preventDefault();
-                        setActiveColumn((activeColumn + 1) % 3);
-                      } else if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
-                        if (selectedSuggestion) {
-                          handleColumnSelection(activeColumn, selectedSuggestion, allSuggestions);
-                        }
-                      } else if (e.key === 'Escape') {
-                        setInputValue('');
-                        setColumnSelections([null, null, null]);
-                        setColumnIndices([0, 0, 0]);
-                        setActiveColumn(0);
-                        setLockedSuggestions(null);
-                        setSelectionRoundStart(0);
-                        setPreviewChips([]);
-                      } else if (e.key === 'Backspace' && inputValue === '' && phraseChips.length > 0) {
-                        removeChip(phraseChips[phraseChips.length - 1].id);
-                      }
-                    }}
-                    placeholder="Continue typing or select a suggestion below..."
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-
-                  {inputValue && (
-                    <button
-                      onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
-                      className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add
-                    </button>
+                  {phraseChips.length === 0 && (
+                    <div className="text-gray-400 italic">Start building your phrase...</div>
                   )}
+                </div>
+
+                <div className="relative">
+                  <div className="flex items-center gap-3">
+                    <Search className="w-5 h-5 text-gray-400" />
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        setSelectedSuggestionIndex(0); // Reset selection when typing
+                      }}
+                      onKeyDown={(e) => {
+                        const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+                        const allSuggestions = [
+                          phraseSuggestions.current,
+                          phraseSuggestions.next,
+                          phraseSuggestions.future
+                        ];
+                        const currentColumnSuggestions = allSuggestions[activeColumn];
+
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const newIndex = Math.min(columnIndices[activeColumn] + 1, currentColumnSuggestions.length - 1);
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = newIndex;
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const newIndex = Math.max(columnIndices[activeColumn] - 1, 0);
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = newIndex;
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          if (activeColumn < 2) {
+                            setActiveColumn(activeColumn + 1);
+                          }
+                        } else if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          if (activeColumn > 0) {
+                            setActiveColumn(activeColumn - 1);
+                          }
+                        } else if (e.key === 'Tab') {
+                          e.preventDefault();
+                          setActiveColumn((activeColumn + 1) % 3);
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
+                          if (selectedSuggestion) {
+                            handleColumnSelection(activeColumn, selectedSuggestion, allSuggestions);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setInputValue('');
+                          setColumnSelections([null, null, null]);
+                          setColumnIndices([0, 0, 0]);
+                          setActiveColumn(0);
+                          setLockedSuggestions(null);
+                          setSelectionRoundStart(0);
+                          setPreviewChips([]);
+                        } else if (e.key === 'Backspace' && inputValue === '' && phraseChips.length > 0) {
+                          removeChip(phraseChips[phraseChips.length - 1].id);
+                        }
+                      }}
+                      placeholder="Continue typing or select a suggestion below..."
+                      className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+
+                    {inputValue && (
+                      <button
+                        onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
+                        className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* 3-Column Progressive Selection UI */}
-            <div className="bg-white rounded-xl border-2 border-blue-200 p-6 mb-8 slide-in-right">
+          {/* Build Your Phrase Panel - full width background, constrained content */}
+          <div className="w-full bg-white border-t-2 border-blue-200 py-6 slide-in-right">
+            <div className="max-w-6xl mx-auto px-8">
+              {/* 3-Column Progressive Selection UI */}
+              <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-yellow-500" />
@@ -1437,31 +1446,33 @@ const PhraseModeReport = (props) => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <QuickAction
-                icon={Filter}
-                title="Add Filter"
-                description="Narrow down results"
-                onClick={() => {
-                  addChip({ text: 'that have', type: 'connector', color: 'gray' });
-                }}
-              />
-              <QuickAction
-                icon={ArrowUpDown}
-                title="Sort Results"
-                description="Order by criteria"
-                onClick={() => {
-                  showOptionsSelector('sort', { text: 'sorted by', type: 'sort', color: 'purple' });
-                }}
-              />
-              <QuickAction
-                icon={Target}
-                title="Limit Results"
-                description="Top N or percentage"
-                onClick={() => {
-                  showOptionsSelector('limit', { text: 'limited to', type: 'limit', color: 'indigo' });
-                }}
-              />
+              {/* Quick Actions - Filter, Sort, Limit */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <QuickAction
+                  icon={Filter}
+                  title="Add Filter"
+                  description="Narrow down results"
+                  onClick={() => {
+                    addChip({ text: 'that have', type: 'connector', color: 'gray' });
+                  }}
+                />
+                <QuickAction
+                  icon={ArrowUpDown}
+                  title="Sort Results"
+                  description="Order by criteria"
+                  onClick={() => {
+                    showOptionsSelector('sort', { text: 'sorted by', type: 'sort', color: 'purple' });
+                  }}
+                />
+                <QuickAction
+                  icon={Target}
+                  title="Limit Results"
+                  description="Top N or percentage"
+                  onClick={() => {
+                    showOptionsSelector('limit', { text: 'limited to', type: 'limit', color: 'indigo' });
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1571,6 +1582,9 @@ const PhraseModeReport = (props) => {
                   {phraseChips.map((chip) => (
                     <PhraseChip key={chip.id} chip={chip} size="xs" readOnly />
                   ))}
+                </div>
+                <div className="text-xs text-gray-600 mt-2 italic">
+                  Query: {generateNaturalQuery()}
                 </div>
               </div>
             </div>
