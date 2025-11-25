@@ -166,8 +166,8 @@ const PHRASE_TEMPLATES = [
     id: 'current-recent-orders',
     label: 'Current members with recent orders',
     chips: [
-      { text: 'Current', type: 'entity', icon: Users, color: 'blue' },
-      { text: 'Members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
       { text: 'that have', type: 'connector', color: 'gray' },
       { text: 'orders', type: 'attribute', icon: DollarSign, color: 'green' },
       { text: 'last 30 days', type: 'timeframe', icon: Calendar, color: 'orange' }
@@ -194,8 +194,8 @@ const PHRASE_TEMPLATES = [
     id: 'new-members-location',
     label: 'New members in Toronto',
     chips: [
-      { text: 'New', type: 'status', icon: Plus, color: 'emerald' },
-      { text: 'Members', type: 'entity', icon: Users, color: 'blue' },
+      { text: 'New', type: 'cohort', icon: Plus, color: 'emerald' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'Toronto', type: 'location', icon: MapPin, color: 'red' }
     ],
@@ -1019,21 +1019,22 @@ const PhraseModeReport = (props) => {
   const startFromScratch = (startingPoint) => {
     let chips = [];
 
-    // Special handling for Current Members and Previous Members - create two separate chips
+    // Special handling for cohort starting points (Current/Previous/New/Lapsed Members)
+    // These need to be split into two chips: cohort + entity type
     if (startingPoint.label === 'Current Members') {
       chips = [
         {
           text: 'Current',
-          type: 'entity',
+          type: 'cohort',
           icon: startingPoint.icon,
           color: startingPoint.color,
           id: Date.now()
         },
         {
-          text: 'member',
+          text: 'members',
           type: 'entity',
-          icon: startingPoint.icon,
-          color: startingPoint.color,
+          icon: Crown,
+          color: 'purple',
           id: Date.now() + 1
         }
       ];
@@ -1041,21 +1042,55 @@ const PhraseModeReport = (props) => {
       chips = [
         {
           text: 'Previous',
-          type: 'entity',
+          type: 'cohort',
           icon: startingPoint.icon,
           color: startingPoint.color,
           id: Date.now()
         },
         {
-          text: 'Members',
+          text: 'members',
           type: 'entity',
+          icon: Crown,
+          color: 'purple',
+          id: Date.now() + 1
+        }
+      ];
+    } else if (startingPoint.label === 'New Members') {
+      chips = [
+        {
+          text: 'New',
+          type: 'cohort',
           icon: startingPoint.icon,
           color: startingPoint.color,
+          id: Date.now()
+        },
+        {
+          text: 'members',
+          type: 'entity',
+          icon: Crown,
+          color: 'purple',
+          id: Date.now() + 1
+        }
+      ];
+    } else if (startingPoint.label === 'Lapsed Members') {
+      chips = [
+        {
+          text: 'Lapsed',
+          type: 'cohort',
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: Date.now()
+        },
+        {
+          text: 'members',
+          type: 'entity',
+          icon: Crown,
+          color: 'purple',
           id: Date.now() + 1
         }
       ];
     } else {
-      // Default behavior for other starting points
+      // Default behavior for other starting points (All Contacts, year cohorts, etc.)
       chips = [{
         text: startingPoint.label,
         type: 'entity',
