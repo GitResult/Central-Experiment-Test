@@ -1559,6 +1559,7 @@ const PhraseModeReport = (props) => {
               </div>
             </div>
           </div>
+          </div>
 
           {/* Blurred background effect below the panels */}
           <div className="absolute inset-x-0" style={{ top: '400px', bottom: '88px', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none' }}></div>
