@@ -1468,6 +1468,16 @@ const PhraseModeReport = (props) => {
 
       // Handle logical connectors (And/Or)
       if (chip.type === 'logical_connector') {
+        // Check what comes after this connector
+        const nextChip = i + 1 < phraseChips.length ? phraseChips[i + 1] : null;
+
+        // Skip "and" before degree and province_state in Query 2 (they have their own formatting)
+        if (nextChip && nextChip.isMergedCategory &&
+            (nextChip.categoryId === 'degree' || nextChip.categoryId === 'province_state')) {
+          i++;
+          continue;
+        }
+
         // Use lowercase "and"/"or"
         query += ' ' + chip.text.toLowerCase();
         i++;
@@ -1490,9 +1500,9 @@ const PhraseModeReport = (props) => {
           const shortForm = valueLabel.split(' - ')[0].trim();
           query += ' ' + shortForm;
         } else if (categoryId === 'occupation') {
-          // Format: "occupation is practitioner"
+          // Format: "and occupation is practitioner"
           const value = valueLabel.toLowerCase();
-          query += ' occupation is ' + value;
+          query += ' and occupation is ' + value;
         } else if (categoryId === 'degree') {
           // Format: "with a Degree: Masters"
           query += ' with a Degree: ' + valueLabel;
