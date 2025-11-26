@@ -848,13 +848,27 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a month+year value with "in" - Show "or" and "for" options ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // After selecting a month+year value with "in" - Show "or" and "for" with anticipatory columns
+  // Anticipate: Column 2 shows "in" (action connector), Column 3 shows month-year options
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear') {
     // Check if there's an "in" connector before this
     const hasInConnector = chips.some(c => c.id === 'in');
 
     if (hasInConnector) {
+      // Get member year for month-year options
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const actionConnectors = getActionConnectors('renewed');
+
       return {
         column1: [
           {
@@ -872,51 +886,24 @@ export const getThreeColumnsForPhrase = (chips) => {
             order: 2
           }
         ],
-        column2: [], // Empty until "or" or "for" is selected
-        column3: [], // Empty until column 2 is populated and selected
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
+          label: my.label,
+          type: 'value',
+          valueType: 'monthYear',
+          id: my.id
+        })),
         awaitingSelection: 'column1',
         context: 'after_renewal_month_year'
       };
     }
   }
 
-  // After selecting "or" in renewal context - Show action connectors in Column 2, month+year in Column 3
-  if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
-    const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
-
-    if (hasPreviousMonthYear) {
-      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
-      let baseYear = 2019;
-      if (memberYearChip) {
-        if (memberYearChip.valueLabel) {
-          baseYear = parseInt(memberYearChip.valueLabel);
-        } else if (memberYearChip.text) {
-          const match = memberYearChip.text.match(/\d{4}/);
-          if (match) baseYear = parseInt(match[0]);
-        }
-      }
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
-      const actionConnectors = getActionConnectors('renewed');
-
-      return {
-        column1: actionConnectors.map(ac => ({
-          label: ac.label,
-          type: ac.type,
-          id: ac.id,
-          enablesMultiSelect: ac.enablesMultiSelect
-        })),
-        column2: monthYearOptions.map(my => ({
-          label: my.label,
-          type: 'value',
-          valueType: 'monthYear',
-          id: my.id
-        })),
-        column3: [],
-        awaitingSelection: 'column1',
-        context: 'renewal_or_connector'
-      };
-    }
-  }
 
   // After selecting second month+year with "or" - Show "for" in Column 3
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear' && chips.filter(c => c.valueType === 'monthYear').length === 2) {
