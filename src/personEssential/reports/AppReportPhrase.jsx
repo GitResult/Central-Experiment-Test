@@ -626,20 +626,11 @@ const PhraseModeReport = (props) => {
         isMergedCategory: true
       });
     } else if (isRenewalTargetYearMerging) {
-      // RENEWAL CONTEXT: Merge "for" + category from Column 2 + value from Column 3
-      // Pattern: [for] + [Member Year] + [2020] → [for] + [Member Year = 2020]
+      // RENEWAL CONTEXT: Merge category from Column 2 + value from Column 3
+      // Pattern: [Member Year] + [2020] → [Member Year = 2020]
+      // IMPORTANT: "for" connector is already in phraseChips from previous round - don't add it again!
 
-      // Add "for" connector first
-      chipsToAdd.push({
-        id: newSelections[0].id,
-        text: newSelections[0].label,
-        label: newSelections[0].label,
-        type: newSelections[0].type,
-        icon: newSelections[0].icon,
-        color: newSelections[0].color || 'gray'
-      });
-
-      // Then add merged category + value chip
+      // Add merged category + value chip only
       const chipText = newSelections[1].label + ' = ' + newSelections[2].label;
       chipsToAdd.push({
         id: newSelections[1].id + '_merged',
@@ -794,8 +785,8 @@ const PhraseModeReport = (props) => {
         // For hierarchical and Query 2 merged categories, we added only 1 merged chip
         setSelectionRoundStart(previousChips.length + 1);
       } else if (isRenewalTargetYearMerging) {
-        // For renewal target year, we added 2 chips: [for] + [Member Year = 2020]
-        setSelectionRoundStart(previousChips.length + 2);
+        // For renewal target year, we added 1 merged chip: [Member Year = 2020]
+        setSelectionRoundStart(previousChips.length + 1);
       } else {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
       }
