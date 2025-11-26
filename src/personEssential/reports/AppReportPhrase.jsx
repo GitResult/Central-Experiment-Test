@@ -558,6 +558,17 @@ const PhraseModeReport = (props) => {
     const query2Categories = ['member_type', 'occupation', 'degree', 'province_state', 'member_year'];
     const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
 
+    // Check if we're in renewal target year merging (for + category + value)
+    // Check phraseChips directly instead of relying on lockedSuggestions.context
+    const isRenewalTargetYearMerging = columnIdx === 2 &&
+                                        phraseChips.length > 0 &&
+                                        phraseChips[phraseChips.length - 1]?.id === 'for' &&
+                                        phraseChips[phraseChips.length - 1]?.type === 'connector' &&
+                                        newSelections[0]?.id === 'for' &&
+                                        newSelections[1]?.type === 'category' &&
+                                        (newSelections[1]?.id === 'member_year' || newSelections[1]?.id === 'member_type') &&
+                                        newSelections[2]?.type === 'value';
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
 
@@ -618,7 +629,62 @@ const PhraseModeReport = (props) => {
         valueLabel: newSelections[1].label,
         isMergedCategory: true
       });
+    } else if (columnIdx === 1 &&
+               phraseChips.length > 0 &&
+               phraseChips[phraseChips.length - 1]?.id === 'for' &&
+               phraseChips[phraseChips.length - 1]?.type === 'connector' &&
+               newSelections[1]?.type === 'category' &&
+               (newSelections[1]?.id === 'member_year' || newSelections[1]?.id === 'member_type')) {
+      // DEBUG: Capture state when early return SHOULD execute
+      console.log('=== EARLY RETURN CHECK (Column 2 clicked) ===');
+      console.log('Last chip:', phraseChips[phraseChips.length - 1]);
+      console.log('newSelections:', newSelections);
+      console.log('Condition met - executing early return');
+      console.log('==========================================');
+
+      // SPECIAL CASE: Renewal target year context at Column 2
+      // Don't add chips yet - preserve phrase state for Column 3 merging
+      // This prevents duplicate "for" chips by checking phraseChips directly
+      setActiveColumn(columnIdx + 1);
+      return;  // Early exit without adding chips or updating suggestions
+    } else if (isRenewalTargetYearMerging) {
+      // RENEWAL CONTEXT: Merge category from Column 2 + value from Column 3
+      // Pattern: [Member Year] + [2020] → [Member Year = 2020]
+      // IMPORTANT: "for" connector is already in phraseChips from previous round - don't add it again!
+
+      // Add merged category + value chip only
+      const chipText = newSelections[1].label + ' = ' + newSelections[2].label;
+      chipsToAdd.push({
+        id: newSelections[1].id + '_merged',
+        text: chipText,
+        label: chipText,
+        type: 'value',
+        icon: newSelections[1].icon,
+        color: newSelections[1].color || 'blue',
+        valueType: newSelections[2].valueType,
+        categoryId: newSelections[1].id,
+        categoryLabel: newSelections[1].label,
+        valueLabel: newSelections[2].label,
+        isMergedCategory: true
+      });
     } else {
+      // DEBUG: Capture state when falling through to normal case
+      if (columnIdx === 1 && newSelections[0]?.id === 'for') {
+        console.log('=== FALLING TO NORMAL CASE (Early return did NOT execute) ===');
+        console.log('columnIdx:', columnIdx);
+        console.log('Context:', lockedSuggestions.context);
+        console.log('Last chip:', phraseChips[phraseChips.length - 1]);
+        console.log('newSelections:', newSelections);
+        console.log('newSelections[0]?.id:', newSelections[0]?.id);
+        console.log('newSelections[1]?.type:', newSelections[1]?.type);
+        console.log('Condition check results:');
+        console.log('  columnIdx === 1:', columnIdx === 1);
+        console.log('  context === renewal_target_year:', lockedSuggestions.context === 'renewal_target_year');
+        console.log('  newSelections[0]?.id === for:', newSelections[0]?.id === 'for');
+        console.log('  newSelections[1]?.type === category:', newSelections[1]?.type === 'category');
+        console.log('===================================================');
+      }
+
       // Non-hierarchical: add chips for each selection
 
       // Special case: If clicking Column 3 (columnIdx === 2) with a connector, and Column 1 is a query2 category
@@ -668,27 +734,119 @@ const PhraseModeReport = (props) => {
     const previousChips = isHierarchicalSelection ?
       phraseChips.slice(0, selectionRoundStart) :
       phraseChips.slice(0, selectionRoundStart);
-    const newChipState = [...previousChips, ...chipsToAdd];
+    let newChipState = [...previousChips, ...chipsToAdd];
+
+    // SPECIAL CASE: Query 3 month-year merging
+    // After selecting second+ month-year in renewal context, merge all month-years into single chip
+    // Pattern: [monthYear][or][in][monthYear] → [monthYear or monthYear]
+    const lastAddedChip = chipsToAdd[chipsToAdd.length - 1];
+    if (lastAddedChip && lastAddedChip.valueType === 'monthYear') {
+      // Check if there's a previous month-year with "or" pattern
+      const monthYearChips = [];
+      let foundPattern = false;
+
+      // Scan backwards to collect all month-years connected by "or"/"in"
+      for (let i = newChipState.length - 1; i >= 0; i--) {
+        const chip = newChipState[i];
+
+        if (chip.valueType === 'monthYear') {
+          monthYearChips.unshift(chip); // Add to beginning to maintain order
+        } else if (chip.id === 'or' || chip.id === 'in') {
+          // Found connector, continue looking
+          foundPattern = true;
+        } else if (chip.type === 'action' && chip.id === 'renewed') {
+          // Reached the Renewed action, stop scanning
+          break;
+        } else if (foundPattern) {
+          // Found a chip that's not part of the pattern, stop
+          break;
+        }
+      }
+
+      // If we found multiple month-years, merge them
+      if (monthYearChips.length >= 2) {
+        // Create merged chip text: "December 2019 or January 2020"
+        const mergedText = monthYearChips.map(mc => mc.text || mc.label).join(' or ');
+
+        // Create merged month-year chip
+        const mergedChip = {
+          id: 'merged_month_year_' + Date.now(),
+          text: mergedText,
+          label: mergedText,
+          type: 'value',
+          valueType: 'monthYear',
+          isMergedMonthYear: true,
+          monthYears: monthYearChips.map(mc => mc.text || mc.label)
+        };
+
+        // Remove all month-year chips and their connectors from the state
+        // Keep everything before the first month-year, then add the merged chip
+        const firstMonthYearIndex = newChipState.findIndex(c =>
+          monthYearChips.some(mc => mc.id === c.id || mc.text === c.text)
+        );
+
+        if (firstMonthYearIndex !== -1) {
+          // Keep chips before first month-year, add merged chip, keep chips after last month-year
+          const beforePattern = newChipState.slice(0, firstMonthYearIndex);
+          const afterLastMonthYear = newChipState.slice(newChipState.length); // Nothing after, we just added it
+
+          // Filter out month-year chips, "or" and "in" connectors from the pattern
+          const chipsToRemove = new Set([
+            ...monthYearChips.map(mc => mc.id),
+            'or', 'in'
+          ]);
+
+          // Rebuild chip state: before pattern + merged chip
+          newChipState = [
+            ...beforePattern,
+            mergedChip
+          ];
+        }
+      }
+    }
+
     setPhraseChips(newChipState);
     setInputValue('');
 
     // Update locked suggestions based on the NEW chip state (after adding selections)
     // This ensures columns 2 and 3 populate correctly as selections are made
     const updatedSuggestions = getPhraseSuggestions(newChipState);
+
+    // DEBUG: Log what suggestions are returned and check if context is set
+    console.log('=== AFTER ADDING CHIPS (columnIdx=' + columnIdx + ') ===');
+    console.log('newChipState length:', newChipState.length);
+    console.log('Last chip:', newChipState[newChipState.length - 1]);
+    console.log('updatedSuggestions.context:', updatedSuggestions.context);
+    console.log('updatedSuggestions.awaitingSelection:', updatedSuggestions.awaitingSelection);
+    console.log('Full updatedSuggestions:', updatedSuggestions);
+    console.log('==============================================');
+
     setLockedSuggestions(updatedSuggestions);
 
     // If this was the 3rd column (column 2), reset everything for next round
     if (columnIdx === 2) {
       setColumnSelections([null, null, null]);
       setColumnIndices([0, 0, 0]);
-      setActiveColumn(0);
       setPreviewChips([]);
+
       // Set start position for next selection round
       if (isHierarchicalSelection || isQuery2CategorySelection) {
         // For hierarchical and Query 2 merged categories, we added only 1 merged chip
         setSelectionRoundStart(previousChips.length + 1);
+      } else if (isRenewalTargetYearMerging) {
+        // For renewal target year, we added 1 merged chip: [Member Year = 2020]
+        setSelectionRoundStart(previousChips.length + 1);
       } else {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      }
+
+      // Use awaitingSelection from suggestions to set correct activeColumn
+      // This allows flows to continue (e.g., Column 3 active) instead of always resetting to Column 1
+      if (updatedSuggestions.awaitingSelection) {
+        const columnMap = { 'column1': 0, 'column2': 1, 'column3': 2 };
+        setActiveColumn(columnMap[updatedSuggestions.awaitingSelection] || 0);
+      } else {
+        setActiveColumn(0);
       }
       // Locked suggestions already updated above with the new chip state
     } else if (columnIdx === 1 && isQuery2CategorySelection) {
