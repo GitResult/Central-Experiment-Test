@@ -471,21 +471,14 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "And" or "Or" connector - NEW SET: Show available filter categories WITH ALL 3 COLUMNS ANTICIPATED
+  // After "And" or "Or" connector - NEW SET: Show available filter categories ONLY
+  // Column 2 and 3 should be EMPTY until user selects from Column 1
   if (lastChipType === 'logical_connector') {
     // Determine which categories are still available based on context
     const availableCategories = FILTER_CATEGORIES.filter(c => {
       // Customize based on query context
       return true; // For now, show all
     });
-
-    // Get first category's subcategories for anticipation
-    const firstCategory = availableCategories[0];
-    const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
-
-    // Get first subcategory's values for anticipation
-    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
-    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
 
     return {
       column1: availableCategories.map(c => ({
@@ -495,16 +488,8 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: subCats.map(sc => ({
-        label: sc.label,
-        type: sc.type,
-        id: sc.id
-      })),
-      column3: values.map(v => ({
-        label: String(v),
-        type: 'value',
-        valueType: 'number'
-      })),
+      column2: [], // Empty until category is selected
+      column3: [], // Empty until category and subcategory/value are selected
       awaitingSelection: 'column1',
       context: 'after_logical_connector'
     };
@@ -687,16 +672,12 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SPECIAL CASE: Renewed Action Flow
   // ============================================================================
 
-  // After "that have" connector in renewal context - Show "Renewed" action AND ANTICIPATE ALL 3 COLUMNS
+  // After "that have" connector in renewal context - Show "Renewed" action ONLY
+  // Column 2 and 3 should be EMPTY until user selects an action
   if (lastChipText === 'that have' && chips.length > 3) {
     // Check if we're in a Member Year context
     const hasMemberYear = chips.some(c => c.valueType === 'memberYear');
     if (hasMemberYear) {
-      const actionConnectors = getActionConnectors('renewed');
-      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
-
       return {
         column1: ACTIONS.map(a => ({
           label: a.label,
@@ -705,18 +686,8 @@ export const getThreeColumnsForPhrase = (chips) => {
           color: a.color,
           id: a.id
         })),
-        column2: actionConnectors.map(ac => ({
-          label: ac.label,
-          type: ac.type,
-          id: ac.id,
-          enablesMultiSelect: ac.enablesMultiSelect
-        })),
-        column3: monthYearOptions.map(my => ({
-          label: my.label,
-          type: 'value',
-          valueType: 'monthYear',
-          id: my.id
-        })),
+        column2: [], // Empty until action is selected
+        column3: [], // Empty until action connector is selected
         awaitingSelection: 'column1',
         context: 'action_selection'
       };
@@ -783,18 +754,13 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a month+year value with "in" - Show "or" and "for" options AND ANTICIPATE ALL 3 COLUMNS
+  // After selecting a month+year value with "in" - Show "or" and "for" options ONLY
+  // Column 2 and 3 should be EMPTY until user selects from Column 1
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear') {
     // Check if there's an "in" connector before this
     const hasInConnector = chips.some(c => c.id === 'in');
 
     if (hasInConnector) {
-      // Get the member year from chips
-      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
-
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
-
       return {
         column1: [
           {
@@ -812,20 +778,8 @@ export const getThreeColumnsForPhrase = (chips) => {
             order: 2
           }
         ],
-        column2: monthYearOptions.map(my => ({
-          label: my.label,
-          type: 'value',
-          valueType: 'monthYear',
-          id: my.id
-        })),
-        column3: [
-          {
-            label: 'for',
-            type: 'connector',
-            icon: Clock,
-            id: 'for'
-          }
-        ],
+        column2: [], // Empty until "or" or "for" is selected
+        column3: [], // Empty until column 2 is populated and selected
         awaitingSelection: 'column1',
         context: 'after_renewal_month_year'
       };
@@ -916,10 +870,9 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "for" connector in renewal target year context - Show Member Year category AND ANTICIPATE ALL 3 COLUMNS
+  // After "for" connector in renewal target year context - Show Member Year category ONLY
+  // Column 2 and 3 should be EMPTY until user selects Member Year
   if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
-    const memberYears = getBrowseModeData('memberYears');
-
     return {
       column1: [
         {
@@ -930,26 +883,8 @@ export const getThreeColumnsForPhrase = (chips) => {
           id: 'member_year'
         }
       ],
-      column2: memberYears.map(my => ({
-        label: my.label,
-        type: 'value',
-        valueType: 'memberYear',
-        id: my.id
-      })),
-      column3: [
-        {
-          label: 'that have',
-          type: 'connector',
-          icon: ChevronRight,
-          id: 'that_have'
-        },
-        {
-          label: 'and',
-          type: 'logical_connector',
-          icon: Plus,
-          id: 'and'
-        }
-      ],
+      column2: [], // Empty until Member Year category is selected
+      column3: [], // Empty until year value is selected
       awaitingSelection: 'column1',
       context: 'renewal_target_year'
     };
