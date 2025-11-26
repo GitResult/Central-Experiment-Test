@@ -458,7 +458,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting a member year value - Show "that have" connector in Column 3
-  if (lastChipType === 'value' && lastChip.valueType === 'memberYear') {
+  if (lastChipType === 'value' && (lastChip.valueType === 'memberYear' || lastChip.categoryId === 'member_year')) {
     const memberYears = getBrowseModeData('memberYears');
 
     return {
