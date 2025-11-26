@@ -668,7 +668,77 @@ const PhraseModeReport = (props) => {
     const previousChips = isHierarchicalSelection ?
       phraseChips.slice(0, selectionRoundStart) :
       phraseChips.slice(0, selectionRoundStart);
-    const newChipState = [...previousChips, ...chipsToAdd];
+    let newChipState = [...previousChips, ...chipsToAdd];
+
+    // SPECIAL CASE: Query 3 month-year merging
+    // After selecting second+ month-year in renewal context, merge all month-years into single chip
+    // Pattern: [monthYear][or][in][monthYear] → [monthYear or monthYear]
+    const lastAddedChip = chipsToAdd[chipsToAdd.length - 1];
+    if (lastAddedChip && lastAddedChip.valueType === 'monthYear') {
+      // Check if there's a previous month-year with "or" pattern
+      const monthYearChips = [];
+      let foundPattern = false;
+
+      // Scan backwards to collect all month-years connected by "or"/"in"
+      for (let i = newChipState.length - 1; i >= 0; i--) {
+        const chip = newChipState[i];
+
+        if (chip.valueType === 'monthYear') {
+          monthYearChips.unshift(chip); // Add to beginning to maintain order
+        } else if (chip.id === 'or' || chip.id === 'in') {
+          // Found connector, continue looking
+          foundPattern = true;
+        } else if (chip.type === 'action' && chip.id === 'renewed') {
+          // Reached the Renewed action, stop scanning
+          break;
+        } else if (foundPattern) {
+          // Found a chip that's not part of the pattern, stop
+          break;
+        }
+      }
+
+      // If we found multiple month-years, merge them
+      if (monthYearChips.length >= 2) {
+        // Create merged chip text: "December 2019 or January 2020"
+        const mergedText = monthYearChips.map(mc => mc.text || mc.label).join(' or ');
+
+        // Create merged month-year chip
+        const mergedChip = {
+          id: 'merged_month_year_' + Date.now(),
+          text: mergedText,
+          label: mergedText,
+          type: 'value',
+          valueType: 'monthYear',
+          isMergedMonthYear: true,
+          monthYears: monthYearChips.map(mc => mc.text || mc.label)
+        };
+
+        // Remove all month-year chips and their connectors from the state
+        // Keep everything before the first month-year, then add the merged chip
+        const firstMonthYearIndex = newChipState.findIndex(c =>
+          monthYearChips.some(mc => mc.id === c.id || mc.text === c.text)
+        );
+
+        if (firstMonthYearIndex !== -1) {
+          // Keep chips before first month-year, add merged chip, keep chips after last month-year
+          const beforePattern = newChipState.slice(0, firstMonthYearIndex);
+          const afterLastMonthYear = newChipState.slice(newChipState.length); // Nothing after, we just added it
+
+          // Filter out month-year chips, "or" and "in" connectors from the pattern
+          const chipsToRemove = new Set([
+            ...monthYearChips.map(mc => mc.id),
+            'or', 'in'
+          ]);
+
+          // Rebuild chip state: before pattern + merged chip
+          newChipState = [
+            ...beforePattern,
+            mergedChip
+          ];
+        }
+      }
+    }
+
     setPhraseChips(newChipState);
     setInputValue('');
 
@@ -697,8 +767,23 @@ const PhraseModeReport = (props) => {
       setSelectionRoundStart(previousChips.length + 1);
       setActiveColumn(columnIdx + 1);
     } else {
-      // Otherwise, move to next column
-      setActiveColumn(columnIdx + 1);
+      // Check if we just added "for" connector and next context is renewal_target_year
+      // If yes, reset columnSelections to allow fresh auto-selection from Column 1
+      const justAddedFor = chipsToAdd.length > 0 &&
+                           chipsToAdd[chipsToAdd.length - 1].type === 'connector' &&
+                           chipsToAdd[chipsToAdd.length - 1].id === 'for';
+      const isRenewalTargetYear = updatedSuggestions?.context === 'renewal_target_year';
+
+      if (justAddedFor && isRenewalTargetYear) {
+        // Reset columnSelections to allow auto-selection when user clicks Column 2
+        setColumnSelections([null, null, null]);
+        setColumnIndices([0, 0, 0]);
+        setActiveColumn(0);
+        setSelectionRoundStart(previousChips.length + chipsToAdd.length);
+      } else {
+        // Otherwise, move to next column
+        setActiveColumn(columnIdx + 1);
+      }
     }
   };
 
