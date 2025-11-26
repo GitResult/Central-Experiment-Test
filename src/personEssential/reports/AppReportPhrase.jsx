@@ -1169,156 +1169,53 @@ const PhraseModeReport = (props) => {
   };
 
   const editChip = (chipId) => {
+    // Editing a chip = removing it and all following chips, then showing columns for re-selection
+    // This matches the requirement: "When edited, Natural query, Selected Phrase and Displayed
+    // group of phrases (if applicable) needs to be updated accordingly"
     const chip = phraseChips.find(c => c.id === chipId);
     if (!chip) return;
 
+    const chipIndex = phraseChips.findIndex(c => c.id === chipId);
+
+    // Visual feedback: briefly highlight the chip being edited
     setEditingChipId(chipId);
+    setTimeout(() => setEditingChipId(null), 200);
 
-    // Determine option type based on chip type and text
-    let optionType = 'custom';
-    let options = [];
-    let title = '';
+    // Call removeChip which handles:
+    // 1. Cascading deletion (removes this chip and all following)
+    // 2. Updates suggestions via getPhraseSuggestions()
+    // 3. Updates natural query automatically (via phraseChips state change)
+    // 4. Resets column selections for re-selection
+    removeChip(chipId);
+  };
 
-    // Handle merged category chips (from suggestion panel)
-    if (chip.isMergedCategory) {
-      const categoryId = chip.categoryId;
+  // Determine if a chip is editable (category items and last chip)
+  const isChipEditable = (chip, index) => {
+    // Last chip is always editable
+    if (index === phraseChips.length - 1) return true;
 
-      if (categoryId === 'member_type') {
-        const memberTypes = getBrowseModeData('memberTypes');
-        options = memberTypes.map(mt => mt.label);
-        title = 'Change Member Type';
-        optionType = 'memberType';
-      } else if (categoryId === 'occupation') {
-        const occupations = getBrowseModeData('occupations');
-        options = occupations.map(o => o.label);
-        title = 'Change Occupation';
-        optionType = 'occupation';
-      } else if (categoryId === 'degree') {
-        const degrees = getBrowseModeData('degrees');
-        options = degrees.map(d => d.label);
-        title = 'Change Degree';
-        optionType = 'degree';
-      } else if (categoryId === 'province_state') {
-        const provinces = getBrowseModeData('provinces');
-        options = provinces.map(p => p.label);
-        title = 'Change Province/State';
-        optionType = 'province';
-      } else if (categoryId === 'member_year') {
-        const memberYears = getBrowseModeData('memberYears');
-        options = memberYears.map(my => my.label);
-        title = 'Change Member Year';
-        optionType = 'memberYear';
-      }
+    // Category items (middle level in hierarchy) are editable
+    // Category → Category Item → Child
+    // Examples: Member Year → 2019, Member Type → ECY1, Member Stat → Consecutive Membership Years → 5
+    const editableTypes = [
+      'value',           // Category item values like "2019", "ECY1", or final values like "5"
+      'subcategory',     // Like "Consecutive Membership Years"
+      'action',          // Like "Renewed", "Joined"
+      'timeframe',       // Like "Current", "Previous"
+      'yearCohort',      // Like "2024", "2023"
+    ];
 
-      if (options.length > 0) {
-        setOptionsModalData({ type: optionType, options, title, chip });
-        setShowOptionsModal(true);
-        return;
-      }
-    }
+    // Merged category chips are editable (they contain category items)
+    if (chip.isMergedCategory) return true;
 
-    // Connector chips - can be changed to other connectors
-    if (chip.type === 'connector') {
-      options = ['that have', 'with status', 'in location', 'with type', 'from'];
-      title = 'Change Connector';
-      optionType = 'connector';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Location chips
-    else if (chip.type === 'location' || FILTER_OPTIONS.locations.includes(chip.text)) {
-      optionType = 'location';
-      showOptionsSelector('location', chip);
-      return;
-    }
-    // Timeframe chips
-    else if (chip.type === 'timeframe' || FILTER_OPTIONS.timeframes.some(t => t.label === chip.text)) {
-      optionType = 'timeframe';
-      showOptionsSelector('timeframe', chip);
-      return;
-    }
-    // Amount/value chips
-    else if (chip.type === 'value' || FILTER_OPTIONS.amountValues.includes(chip.text)) {
-      optionType = 'amount';
-      showOptionsSelector('amount', chip);
-      return;
-    }
-    // Status chips - NOW EDITABLE
-    else if (chip.type === 'status' || FILTER_OPTIONS.statuses.some(s => s.label === chip.text)) {
-      options = FILTER_OPTIONS.statuses.map(s => s.label);
-      title = 'Change Status';
-      optionType = 'status';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Membership type chips
-    else if (chip.type === 'membershipType' || FILTER_OPTIONS.membershipTypes.includes(chip.text)) {
-      options = FILTER_OPTIONS.membershipTypes;
-      title = 'Change Membership Type';
-      optionType = 'membershipType';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Attribute chips
-    else if (chip.type === 'attribute' && ['orders', 'events', 'donations', 'emails', 'phone calls'].includes(chip.text)) {
-      options = FILTER_OPTIONS.attributes.map(a => a.label);
-      title = 'Change Attribute';
-      optionType = 'attribute';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Sort chips
-    else if (chip.type === 'sort' || FILTER_OPTIONS.sortOptions.some(s => s.label === chip.text)) {
-      optionType = 'sort';
-      showOptionsSelector('sort', chip);
-      return;
-    }
-    // Limit chips
-    else if (chip.type === 'limit' || FILTER_OPTIONS.limitOptions.some(l => l.label === chip.text)) {
-      optionType = 'limit';
-      showOptionsSelector('limit', chip);
-      return;
-    }
-    // Occupation chips
-    else if (chip.type === 'occupation' || FILTER_OPTIONS.occupations.includes(chip.text)) {
-      optionType = 'occupation';
-      showOptionsSelector('occupation', chip);
-      return;
-    }
-    // Degree chips
-    else if (chip.type === 'degree' || FILTER_OPTIONS.degrees.includes(chip.text)) {
-      optionType = 'degree';
-      showOptionsSelector('degree', chip);
-      return;
-    }
-    // Province chips
-    else if (chip.type === 'province' || FILTER_OPTIONS.provinces.includes(chip.text)) {
-      optionType = 'province';
-      showOptionsSelector('province', chip);
-      return;
-    }
-    // Consecutive Membership Years chips
-    else if (chip.type === 'consecutiveMembershipYears' || FILTER_OPTIONS.consecutiveMembershipYearsValues.includes(chip.text)) {
-      optionType = 'consecutiveMembershipYears';
-      showOptionsSelector('consecutiveMembershipYears', chip);
-      return;
-    }
-    // Renewal month chips
-    else if (chip.type === 'renewalMonth' || FILTER_OPTIONS.renewalMonths.includes(chip.text)) {
-      optionType = 'renewalMonth';
-      showOptionsSelector('renewalMonth', chip);
-      return;
-    }
-    // Renewal year chips
-    else if (chip.type === 'renewalYear' || FILTER_OPTIONS.renewalYears.includes(chip.text)) {
-      optionType = 'renewalYear';
-      showOptionsSelector('renewalYear', chip);
-      return;
-    }
+    // Hierarchical chips are editable
+    if (chip.isHierarchical) return true;
+
+    // Merged month-year chips are editable
+    if (chip.isMergedMonthYear) return true;
+
+    // Check if chip type is in editable list
+    return editableTypes.includes(chip.type);
   };
 
   const removeChip = (chipId) => {
@@ -2002,7 +1899,7 @@ const PhraseModeReport = (props) => {
 
                   {/* Phrase chips and input in same container */}
                   <div className="flex-1 flex flex-wrap items-center gap-1 min-h-[36px]">
-                    {phraseChips.map((chip) => (
+                    {phraseChips.map((chip, chipIndex) => (
                       <div key={chip.id} className="chip-pop">
                         <PhraseChip
                           chip={chip}
@@ -2010,7 +1907,8 @@ const PhraseModeReport = (props) => {
                           onRemove={() => removeChip(chip.id)}
                           onEdit={() => editChip(chip.id)}
                           showRemove={true}
-                          showEdit={true}
+                          showEdit={isChipEditable(chip, chipIndex)}
+                          isEditing={editingChipId === chip.id}
                         />
                       </div>
                     ))}
@@ -2501,7 +2399,7 @@ const PhraseModeReport = (props) => {
 };
 
 // PhraseChip Component
-const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = false, size = 'md', readOnly = false }) => {
+const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = false, size = 'md', readOnly = false, isEditing = false }) => {
   const sizeClasses = {
     xs: 'px-2 py-0.5 text-xs',
     sm: 'px-2.5 py-1 text-xs',
@@ -2526,10 +2424,11 @@ const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = fal
   return (
     <div
       className={`
-        inline-flex items-center gap-2 rounded-lg border-2 font-medium
+        inline-flex items-center gap-2 rounded-lg border-2 font-medium transition-all
         ${sizeClasses[size]}
         ${colorClasses[chip.color] || colorClasses.gray}
         ${!readOnly && 'chip-hover'}
+        ${isEditing ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
       `}
     >
       {IconComponent && (
