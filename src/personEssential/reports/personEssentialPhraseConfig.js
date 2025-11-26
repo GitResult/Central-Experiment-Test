@@ -181,9 +181,9 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "that are" connector - NEW SET: Show member types AND ANTICIPATE ALL 3 COLUMNS
+  // After "that are" connector - NEW SET: Show Member Type ONLY AND ANTICIPATE ALL 3 COLUMNS
   if (lastChipText === 'that are' && chips.length === 3) {
-    const filteredCategories = FILTER_CATEGORIES.filter(c => c.id === 'member_type' || c.id === 'member_stats');
+    const filteredCategories = FILTER_CATEGORIES.filter(c => c.id === 'member_type');
     const memberTypes = getBrowseModeData('memberTypes');
 
     return {
