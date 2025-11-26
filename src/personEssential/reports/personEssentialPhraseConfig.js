@@ -806,9 +806,17 @@ export const getThreeColumnsForPhrase = (chips) => {
 
   // After selecting "in" action connector - Show month+year combinations in Column 3
   if (lastChipType === 'action_connector' && lastChip.id === 'in') {
-    // Get the member year from chips
-    const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-    const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+    // Get the member year from chips (check both valueType and categoryId for merged chips)
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+    let baseYear = 2019;
+    if (memberYearChip) {
+      if (memberYearChip.valueLabel) {
+        baseYear = parseInt(memberYearChip.valueLabel);
+      } else if (memberYearChip.text) {
+        const match = memberYearChip.text.match(/\d{4}/);
+        if (match) baseYear = parseInt(match[0]);
+      }
+    }
 
     const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6); // Generate 6 months starting from December of previous year
     const actionConnectors = getActionConnectors('renewed');
@@ -872,14 +880,23 @@ export const getThreeColumnsForPhrase = (chips) => {
     }
   }
 
-  // After selecting "or" in renewal context - Show month+year options again in Column 2
+  // After selecting "or" in renewal context - Show action connectors in Column 2, month+year in Column 3
   if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
     const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
 
     if (hasPreviousMonthYear) {
-      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
       const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const actionConnectors = getActionConnectors('renewed');
 
       return {
         column1: [
@@ -899,15 +916,20 @@ export const getThreeColumnsForPhrase = (chips) => {
             order: 2
           }
         ],
-        column2: monthYearOptions.map(my => ({
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
           label: my.label,
           type: 'value',
           valueType: 'monthYear',
           id: my.id
         })),
-        column3: [],
         awaitingSelection: 'column2',
-        context: 'renewal_or_month_year'
+        context: 'renewal_or_connector'
       };
     }
   }
