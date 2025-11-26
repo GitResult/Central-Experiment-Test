@@ -107,7 +107,12 @@ export const getThreeColumnsForPhrase = (chips) => {
           color: s.color,
           id: s.id
         })),
-        column3: [],
+        column3: INITIAL_CONNECTORS.map(c => ({
+          label: c.label,
+          type: c.type,
+          icon: c.icon,
+          id: c.id
+        })),
         awaitingSelection: 'column2',
         context: 'after_timeframe'
       };
@@ -824,12 +829,27 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SPECIAL CASE: Renewed Action Flow
   // ============================================================================
 
-  // After "that have" connector in renewal context - Show "Renewed" action ONLY
-  // Column 2 and 3 should be EMPTY until user selects an action
+  // After "that have" connector in renewal context - Show "Renewed" action with anticipatory columns
   if (lastChipText === 'that have' && chips.length > 3) {
     // Check if we're in a Member Year context (check both valueType and categoryId for merged chips)
     const hasMemberYear = chips.some(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
     if (hasMemberYear) {
+      // Get action connectors for first action "Renewed" (anticipatory for column2)
+      const actionConnectors = getActionConnectors('renewed');
+
+      // Get member year for month-year anticipation (column3)
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
+      const monthYearOptions = generateMonthYearOptions(baseYear, 6);
+
       return {
         column1: ACTIONS.map(a => ({
           label: a.label,
@@ -838,8 +858,18 @@ export const getThreeColumnsForPhrase = (chips) => {
           color: a.color,
           id: a.id
         })),
-        column2: [], // Empty until action is selected
-        column3: [], // Empty until action connector is selected
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
+          label: my.label,
+          type: 'value',
+          valueType: 'monthYear',
+          id: my.id
+        })),
         awaitingSelection: 'column1',
         context: 'action_selection'
       };
@@ -1076,7 +1106,15 @@ export const getThreeColumnsForPhrase = (chips) => {
   // DEFAULT FALLBACK
   // ============================================================================
 
-  // Default fallback - Show available categories
+  // Default fallback - Show available categories with anticipatory columns
+  // Get subcategories for first category (Member Stats) for anticipation
+  const firstCategory = FILTER_CATEGORIES[0];
+  const subCats = firstCategory?.isHierarchical ? getSubCategories(firstCategory.id) : [];
+
+  // Get values for first subcategory for anticipation
+  const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+  const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
+
   return {
     column1: FILTER_CATEGORIES.map(c => ({
       label: c.label,
@@ -1085,8 +1123,16 @@ export const getThreeColumnsForPhrase = (chips) => {
       color: c.color,
       id: c.id
     })),
-    column2: [],
-    column3: [],
+    column2: subCats.map(sc => ({
+      label: sc.label,
+      type: sc.type,
+      id: sc.id
+    })),
+    column3: values.map(v => ({
+      label: String(v),
+      type: 'value',
+      valueType: 'number'
+    })),
     awaitingSelection: 'column1',
     context: 'default'
   };
