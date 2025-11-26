@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Search, Sparkles, Play, ChevronRight, X, Check,
+  Search, Sparkles, Play, ChevronRight, ChevronUp, X, Check,
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
@@ -418,6 +418,7 @@ const PhraseModeReport = (props) => {
   const [editingChipId, setEditingChipId] = useState(null);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [optionsModalData, setOptionsModalData] = useState(null);
+  const [showMatchingRecords, setShowMatchingRecords] = useState(false);
   const inputRef = useRef(null);
 
   // 3-Column Selection State (from Contact List Search)
@@ -1783,10 +1784,25 @@ const PhraseModeReport = (props) => {
       <div className="max-h-screen min-h-screen h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col w-full">
         
         {/* bottom bar - matching Browse/List mode format */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
-          <div className="h-full flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30 transition-all duration-300" style={{ height: showMatchingRecords ? '621px' : '88px' }}>
+          <div className="flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2" style={{ height: '88px' }}>
             {/* Left section - Info */}
             <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0 overflow-hidden" style={{ flex: '1 1 auto' }}>
+              {/* ChevronUp toggle - first element */}
+              <button
+                onClick={() => setShowMatchingRecords(!showMatchingRecords)}
+                className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
+                title={showMatchingRecords ? "Hide matching records" : "Show matching records"}
+                disabled={phraseChips.length === 0}
+              >
+                <ChevronUp
+                  size={18}
+                  className={`transition-transform duration-300 ${
+                    showMatchingRecords ? 'rotate-180' : ''
+                  } ${phraseChips.length === 0 ? 'text-gray-300' : 'text-gray-600 hover:text-gray-900'}`}
+                />
+              </button>
+
               <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
                 <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
               </div>
@@ -1881,8 +1897,19 @@ const PhraseModeReport = (props) => {
               </button>
             </div>
           </div>
+
+          {/* Matching Records Preview - conditionally rendered */}
+          {showMatchingRecords && phraseChips.length > 0 && (
+            <div className="overflow-auto" style={{ height: 'calc(621px - 88px)' }}>
+              <PhraseRecordsPreview
+                chips={phraseChips}
+                recordCount={previewCount}
+                naturalQuery={generateNaturalQuery()}
+              />
+            </div>
+          )}
         </div>
-        
+
         <AnimationStyles />
 
         <div className="flex-1 pb-32 relative">
@@ -2396,6 +2423,111 @@ const PhraseModeReport = (props) => {
   }
 
   return null;
+};
+
+// Phrase Records Preview Component
+const PhraseRecordsPreview = ({ chips, recordCount, naturalQuery }) => {
+  const demoNames = ['John Smith', 'Sarah Johnson', 'Michael Chen', 'Emma Davis', 'James Wilson',
+    'Lisa Anderson', 'David Martinez', 'Mary Taylor', 'Robert Thomas', 'Jennifer Lee'];
+  const demoEmails = ['john.smith@example.com', 'sarah.j@example.com', 'mchen@example.com', 'emma.d@example.com',
+    'james.w@example.com', 'lisa.a@example.com', 'david.m@example.com', 'mary.t@example.com',
+    'robert.t@example.com', 'jennifer.l@example.com'];
+  const demoLocations = ['Toronto, ON', 'Vancouver, BC', 'Montreal, QC', 'Calgary, AB', 'Ottawa, ON',
+    'Edmonton, AB', 'Toronto, ON', 'Vancouver, BC', 'Montreal, QC', 'Calgary, AB'];
+
+  return (
+    <div className="h-full w-full">
+      <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Matching Records</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Results for: "{naturalQuery}"
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="w-full border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            {/* Fixed Header */}
+            <div className="bg-gray-50 border-b border-gray-200">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Member ID
+                    </th>
+                    <th className="w-[180px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="w-[220px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Join Date
+                    </th>
+                    <th className="w-[160px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Location
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="max-h-[300px] overflow-y-auto">
+              <table className="min-w-full">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Array.from({ length: Math.min(10, recordCount || 10) }).map((_, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="w-[120px] px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        M{10001 + idx}
+                      </td>
+                      <td className="w-[180px] px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {demoNames[idx]}
+                      </td>
+                      <td className="w-[220px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {demoEmails[idx]}
+                      </td>
+                      <td className="w-[120px] px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Current
+                        </span>
+                      </td>
+                      <td className="w-[140px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {new Date(2024, 0, 1 + idx * 10).toLocaleDateString()}
+                      </td>
+                      <td className="w-[160px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {demoLocations[idx]}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer - Pagination */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing 1 to {Math.min(10, recordCount || 10)} of {recordCount?.toLocaleString() || '0'} results
+          </div>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+              Previous
+            </button>
+            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // PhraseChip Component
