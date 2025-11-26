@@ -899,36 +899,20 @@ export const getThreeColumnsForPhrase = (chips) => {
       const actionConnectors = getActionConnectors('renewed');
 
       return {
-        column1: [
-          {
-            label: 'or',
-            type: 'logical_connector',
-            icon: Plus,
-            id: 'or',
-            order: 1,
-            selected: true
-          },
-          {
-            label: 'for',
-            type: 'connector',
-            icon: Clock,
-            id: 'for',
-            order: 2
-          }
-        ],
-        column2: actionConnectors.map(ac => ({
+        column1: actionConnectors.map(ac => ({
           label: ac.label,
           type: ac.type,
           id: ac.id,
           enablesMultiSelect: ac.enablesMultiSelect
         })),
-        column3: monthYearOptions.map(my => ({
+        column2: monthYearOptions.map(my => ({
           label: my.label,
           type: 'value',
           valueType: 'monthYear',
           id: my.id
         })),
-        awaitingSelection: 'column2',
+        column3: [],
+        awaitingSelection: 'column1',
         context: 'renewal_or_connector'
       };
     }
