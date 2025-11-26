@@ -625,6 +625,15 @@ const PhraseModeReport = (props) => {
         valueLabel: newSelections[1].label,
         isMergedCategory: true
       });
+    } else if (columnIdx === 1 &&
+               lockedSuggestions.context === 'renewal_target_year' &&
+               newSelections[0]?.id === 'for' &&
+               newSelections[1]?.type === 'category') {
+      // SPECIAL CASE: Renewal target year context at Column 2
+      // Don't add chips yet - preserve phrase state and context for Column 3 merging
+      // This prevents duplicate "for" chips and context loss
+      setActiveColumn(columnIdx + 1);
+      return;  // Early exit without adding chips or updating suggestions
     } else if (isRenewalTargetYearMerging) {
       // RENEWAL CONTEXT: Merge category from Column 2 + value from Column 3
       // Pattern: [Member Year] + [2020] → [Member Year = 2020]
