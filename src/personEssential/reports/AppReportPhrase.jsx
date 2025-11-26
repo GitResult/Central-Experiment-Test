@@ -419,6 +419,14 @@ const PhraseModeReport = (props) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [optionsModalData, setOptionsModalData] = useState(null);
   const [showMatchingRecords, setShowMatchingRecords] = useState(false);
+
+  // Save/Load Query State
+  const [showSaveQueryPanel, setShowSaveQueryPanel] = useState(false);
+  const [savedQueryName, setSavedQueryName] = useState('');
+  const [savedQueryDescription, setSavedQueryDescription] = useState('');
+  const [savedQueries, setSavedQueries] = useState([]);
+  const [showLoadQueryDropdown, setShowLoadQueryDropdown] = useState(false);
+
   const inputRef = useRef(null);
 
   // 3-Column Selection State (from Contact List Search)
@@ -530,6 +538,18 @@ const PhraseModeReport = (props) => {
       setPreviewCount(Math.max(50, estimated));
     }
   }, [phraseChips]);
+
+  // Load saved queries from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('savedPhraseQueries');
+      if (saved) {
+        setSavedQueries(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading saved queries:', error);
+    }
+  }, []);
 
   const toast = (message) => {
     setToastMessage(message);
@@ -1408,6 +1428,78 @@ const PhraseModeReport = (props) => {
     toast('Report generated successfully!');
   };
 
+  // Save current query
+  const handleSaveQuery = () => {
+    if (!savedQueryName.trim()) {
+      toast('Please enter a query name');
+      return;
+    }
+
+    const newQuery = {
+      id: Date.now(),
+      name: savedQueryName.trim(),
+      description: savedQueryDescription.trim(),
+      chips: phraseChips,
+      naturalQuery: generateNaturalQuery(),
+      timestamp: new Date().toISOString(),
+      recordCount: previewCount
+    };
+
+    const updatedQueries = [...savedQueries, newQuery];
+    setSavedQueries(updatedQueries);
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem('savedPhraseQueries', JSON.stringify(updatedQueries));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      toast('Error saving query');
+      return;
+    }
+
+    // Reset form and close panel
+    setSavedQueryName('');
+    setSavedQueryDescription('');
+    setShowSaveQueryPanel(false);
+    toast(`Query saved: ${newQuery.name}`);
+  };
+
+  // Load a saved query
+  const handleLoadQuery = (query) => {
+    setPhraseChips(query.chips);
+
+    // Regenerate suggestions from loaded chips
+    const suggestions = getPhraseSuggestions(query.chips);
+    setLockedSuggestions(suggestions);
+
+    // Reset other state
+    setColumnSelections([null, null, null]);
+    setColumnIndices([0, 0, 0]);
+    setActiveColumn(0);
+    setInputValue('');
+    setShowLoadQueryDropdown(false);
+
+    // Switch to building stage if not already there
+    if (stage !== 'building') {
+      setStage('building');
+    }
+
+    toast(`Loaded: ${query.name}`);
+  };
+
+  // Delete a saved query
+  const handleDeleteQuery = (queryId) => {
+    const updatedQueries = savedQueries.filter(q => q.id !== queryId);
+    setSavedQueries(updatedQueries);
+
+    try {
+      localStorage.setItem('savedPhraseQueries', JSON.stringify(updatedQueries));
+      toast('Query deleted');
+    } catch (error) {
+      console.error('Error deleting from localStorage:', error);
+    }
+  };
+
   const [showPreview, setShowPreview] = useState(true);
 
   const resetReport = () => {
@@ -1849,9 +1941,80 @@ const PhraseModeReport = (props) => {
 
             {/* Right section - Actions (desktop only) */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0" style={{ flex: '0 0 auto' }}>
-              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Load Query">
-                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowLoadQueryDropdown(!showLoadQueryDropdown)}
+                  className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group relative"
+                  title="Load Query"
+                >
+                  <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+                  {savedQueries.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                      {savedQueries.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Load Query Dropdown */}
+                {showLoadQueryDropdown && (
+                  <div className="absolute bottom-full right-0 mb-2 w-96 bg-white border border-gray-200 shadow-xl rounded-lg z-50 max-h-96 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Load Saved Query</h3>
+                        <button
+                          onClick={() => setShowLoadQueryDropdown(false)}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-80">
+                      {savedQueries.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <FileUp className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">No saved queries yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Save your current query to load it later</p>
+                        </div>
+                      ) : (
+                        savedQueries.map(query => (
+                          <div key={query.id} className="p-4 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <button
+                                onClick={() => handleLoadQuery(query)}
+                                className="flex-1 text-left"
+                              >
+                                <div className="font-medium text-gray-900 mb-1">{query.name}</div>
+                                {query.description && (
+                                  <div className="text-xs text-gray-600 mb-2">{query.description}</div>
+                                )}
+                                <div className="text-xs text-gray-500 mb-1 italic line-clamp-2">
+                                  "{query.naturalQuery}"
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-400">
+                                  <span>{new Date(query.timestamp).toLocaleDateString()}</span>
+                                  <span>•</span>
+                                  <span>{query.recordCount?.toLocaleString()} records</span>
+                                </div>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteQuery(query.id);
+                                }}
+                                className="p-1.5 hover:bg-red-50 rounded transition-colors group"
+                                title="Delete query"
+                              >
+                                <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
                 <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
               </button>
@@ -1867,6 +2030,7 @@ const PhraseModeReport = (props) => {
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
               </button>
               <button
+                onClick={() => setShowSaveQueryPanel(true)}
                 disabled={phraseChips.length === 0}
                 className={`p-2.5 rounded-lg transition-colors group ${phraseChips.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                 title="Save Query"
@@ -2223,6 +2387,138 @@ const PhraseModeReport = (props) => {
             <div className="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3">
               <Check className="w-5 h-5 text-green-400" />
               <span className="text-sm font-medium">{toastMessage}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Save Query Slide-out Panel */}
+        {showSaveQueryPanel && (
+          <div className="fixed inset-0 z-40" onClick={() => setShowSaveQueryPanel(false)}>
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+            <div
+              className="fixed top-0 right-0 bottom-0 w-[480px] bg-white shadow-2xl z-50 flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="border-b border-gray-200 bg-white px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Save className="w-5 h-5 text-blue-600" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
+                      <p className="text-xs text-gray-500">Save your current phrase query for later use</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSaveQueryPanel(false)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Query Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Query Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={savedQueryName}
+                    onChange={(e) => setSavedQueryName(e.target.value)}
+                    placeholder="e.g., Active Members 2024"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Query Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Description <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={savedQueryDescription}
+                    onChange={(e) => setSavedQueryDescription(e.target.value)}
+                    placeholder="Add notes about this query..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Current Query Preview */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Current Query
+                  </label>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    {/* Chips Preview */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {phraseChips.map((chip) => (
+                        <PhraseChip key={chip.id} chip={chip} size="xs" readOnly />
+                      ))}
+                    </div>
+
+                    {/* Natural Language Query */}
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-1 font-medium">Natural Language:</div>
+                      <div className="text-sm text-gray-700 italic">
+                        "{generateNaturalQuery()}"
+                      </div>
+                    </div>
+
+                    {/* Record Count */}
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500">
+                        Estimated Records: <span className="font-semibold text-gray-900">{previewCount?.toLocaleString() || '0'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">Query Storage</p>
+                      <p className="text-xs text-blue-700">
+                        Saved queries are stored locally in your browser. They will be available the next time you visit this page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowSaveQueryPanel(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveQuery}
+                    disabled={!savedQueryName.trim()}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      savedQueryName.trim()
+                        ? 'bg-blue-500 text-white hover:bg-blue-600'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      <span>Save Query</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
