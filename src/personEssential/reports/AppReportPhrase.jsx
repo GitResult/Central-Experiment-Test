@@ -599,8 +599,9 @@ const PhraseModeReport = (props) => {
         subcategory: newSelections[1]?.label,
         value: newSelections[2]?.label
       });
-    } else if (isQuery2CategorySelection && columnIdx >= 1 && newSelections[1]) {
+    } else if (isQuery2CategorySelection && columnIdx === 1 && newSelections[1]) {
       // For Query 2 categories: merge category + value into single chip
+      // Only when selecting from Column 2 (columnIdx === 1), not Column 3
       // Format: "Member Type = ECY1 - Member Early Career Year 1"
       const chipText = newSelections[0].label + ' = ' + newSelections[1].label;
 
