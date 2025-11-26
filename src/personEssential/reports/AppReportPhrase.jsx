@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Search, Sparkles, Play, ChevronRight, X, Check,
+  Search, Sparkles, Play, ChevronRight, ChevronUp, X, Check,
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
@@ -418,6 +418,15 @@ const PhraseModeReport = (props) => {
   const [editingChipId, setEditingChipId] = useState(null);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [optionsModalData, setOptionsModalData] = useState(null);
+  const [showMatchingRecords, setShowMatchingRecords] = useState(false);
+
+  // Save/Load Query State
+  const [showSaveQueryPanel, setShowSaveQueryPanel] = useState(false);
+  const [savedQueryName, setSavedQueryName] = useState('');
+  const [savedQueryDescription, setSavedQueryDescription] = useState('');
+  const [savedQueries, setSavedQueries] = useState([]);
+  const [showLoadQueryDropdown, setShowLoadQueryDropdown] = useState(false);
+
   const inputRef = useRef(null);
 
   // 3-Column Selection State (from Contact List Search)
@@ -529,6 +538,18 @@ const PhraseModeReport = (props) => {
       setPreviewCount(Math.max(50, estimated));
     }
   }, [phraseChips]);
+
+  // Load saved queries from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('savedPhraseQueries');
+      if (saved) {
+        setSavedQueries(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading saved queries:', error);
+    }
+  }, []);
 
   const toast = (message) => {
     setToastMessage(message);
@@ -1169,156 +1190,53 @@ const PhraseModeReport = (props) => {
   };
 
   const editChip = (chipId) => {
+    // Editing a chip = removing it and all following chips, then showing columns for re-selection
+    // This matches the requirement: "When edited, Natural query, Selected Phrase and Displayed
+    // group of phrases (if applicable) needs to be updated accordingly"
     const chip = phraseChips.find(c => c.id === chipId);
     if (!chip) return;
 
+    const chipIndex = phraseChips.findIndex(c => c.id === chipId);
+
+    // Visual feedback: briefly highlight the chip being edited
     setEditingChipId(chipId);
+    setTimeout(() => setEditingChipId(null), 200);
 
-    // Determine option type based on chip type and text
-    let optionType = 'custom';
-    let options = [];
-    let title = '';
+    // Call removeChip which handles:
+    // 1. Cascading deletion (removes this chip and all following)
+    // 2. Updates suggestions via getPhraseSuggestions()
+    // 3. Updates natural query automatically (via phraseChips state change)
+    // 4. Resets column selections for re-selection
+    removeChip(chipId);
+  };
 
-    // Handle merged category chips (from suggestion panel)
-    if (chip.isMergedCategory) {
-      const categoryId = chip.categoryId;
+  // Determine if a chip is editable (category items and last chip)
+  const isChipEditable = (chip, index) => {
+    // Last chip is always editable
+    if (index === phraseChips.length - 1) return true;
 
-      if (categoryId === 'member_type') {
-        const memberTypes = getBrowseModeData('memberTypes');
-        options = memberTypes.map(mt => mt.label);
-        title = 'Change Member Type';
-        optionType = 'memberType';
-      } else if (categoryId === 'occupation') {
-        const occupations = getBrowseModeData('occupations');
-        options = occupations.map(o => o.label);
-        title = 'Change Occupation';
-        optionType = 'occupation';
-      } else if (categoryId === 'degree') {
-        const degrees = getBrowseModeData('degrees');
-        options = degrees.map(d => d.label);
-        title = 'Change Degree';
-        optionType = 'degree';
-      } else if (categoryId === 'province_state') {
-        const provinces = getBrowseModeData('provinces');
-        options = provinces.map(p => p.label);
-        title = 'Change Province/State';
-        optionType = 'province';
-      } else if (categoryId === 'member_year') {
-        const memberYears = getBrowseModeData('memberYears');
-        options = memberYears.map(my => my.label);
-        title = 'Change Member Year';
-        optionType = 'memberYear';
-      }
+    // Category items (middle level in hierarchy) are editable
+    // Category → Category Item → Child
+    // Examples: Member Year → 2019, Member Type → ECY1, Member Stat → Consecutive Membership Years → 5
+    const editableTypes = [
+      'value',           // Category item values like "2019", "ECY1", or final values like "5"
+      'subcategory',     // Like "Consecutive Membership Years"
+      'action',          // Like "Renewed", "Joined"
+      'timeframe',       // Like "Current", "Previous"
+      'yearCohort',      // Like "2024", "2023"
+    ];
 
-      if (options.length > 0) {
-        setOptionsModalData({ type: optionType, options, title, chip });
-        setShowOptionsModal(true);
-        return;
-      }
-    }
+    // Merged category chips are editable (they contain category items)
+    if (chip.isMergedCategory) return true;
 
-    // Connector chips - can be changed to other connectors
-    if (chip.type === 'connector') {
-      options = ['that have', 'with status', 'in location', 'with type', 'from'];
-      title = 'Change Connector';
-      optionType = 'connector';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Location chips
-    else if (chip.type === 'location' || FILTER_OPTIONS.locations.includes(chip.text)) {
-      optionType = 'location';
-      showOptionsSelector('location', chip);
-      return;
-    }
-    // Timeframe chips
-    else if (chip.type === 'timeframe' || FILTER_OPTIONS.timeframes.some(t => t.label === chip.text)) {
-      optionType = 'timeframe';
-      showOptionsSelector('timeframe', chip);
-      return;
-    }
-    // Amount/value chips
-    else if (chip.type === 'value' || FILTER_OPTIONS.amountValues.includes(chip.text)) {
-      optionType = 'amount';
-      showOptionsSelector('amount', chip);
-      return;
-    }
-    // Status chips - NOW EDITABLE
-    else if (chip.type === 'status' || FILTER_OPTIONS.statuses.some(s => s.label === chip.text)) {
-      options = FILTER_OPTIONS.statuses.map(s => s.label);
-      title = 'Change Status';
-      optionType = 'status';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Membership type chips
-    else if (chip.type === 'membershipType' || FILTER_OPTIONS.membershipTypes.includes(chip.text)) {
-      options = FILTER_OPTIONS.membershipTypes;
-      title = 'Change Membership Type';
-      optionType = 'membershipType';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Attribute chips
-    else if (chip.type === 'attribute' && ['orders', 'events', 'donations', 'emails', 'phone calls'].includes(chip.text)) {
-      options = FILTER_OPTIONS.attributes.map(a => a.label);
-      title = 'Change Attribute';
-      optionType = 'attribute';
-      setOptionsModalData({ type: optionType, options, title, chip });
-      setShowOptionsModal(true);
-      return;
-    }
-    // Sort chips
-    else if (chip.type === 'sort' || FILTER_OPTIONS.sortOptions.some(s => s.label === chip.text)) {
-      optionType = 'sort';
-      showOptionsSelector('sort', chip);
-      return;
-    }
-    // Limit chips
-    else if (chip.type === 'limit' || FILTER_OPTIONS.limitOptions.some(l => l.label === chip.text)) {
-      optionType = 'limit';
-      showOptionsSelector('limit', chip);
-      return;
-    }
-    // Occupation chips
-    else if (chip.type === 'occupation' || FILTER_OPTIONS.occupations.includes(chip.text)) {
-      optionType = 'occupation';
-      showOptionsSelector('occupation', chip);
-      return;
-    }
-    // Degree chips
-    else if (chip.type === 'degree' || FILTER_OPTIONS.degrees.includes(chip.text)) {
-      optionType = 'degree';
-      showOptionsSelector('degree', chip);
-      return;
-    }
-    // Province chips
-    else if (chip.type === 'province' || FILTER_OPTIONS.provinces.includes(chip.text)) {
-      optionType = 'province';
-      showOptionsSelector('province', chip);
-      return;
-    }
-    // Consecutive Membership Years chips
-    else if (chip.type === 'consecutiveMembershipYears' || FILTER_OPTIONS.consecutiveMembershipYearsValues.includes(chip.text)) {
-      optionType = 'consecutiveMembershipYears';
-      showOptionsSelector('consecutiveMembershipYears', chip);
-      return;
-    }
-    // Renewal month chips
-    else if (chip.type === 'renewalMonth' || FILTER_OPTIONS.renewalMonths.includes(chip.text)) {
-      optionType = 'renewalMonth';
-      showOptionsSelector('renewalMonth', chip);
-      return;
-    }
-    // Renewal year chips
-    else if (chip.type === 'renewalYear' || FILTER_OPTIONS.renewalYears.includes(chip.text)) {
-      optionType = 'renewalYear';
-      showOptionsSelector('renewalYear', chip);
-      return;
-    }
+    // Hierarchical chips are editable
+    if (chip.isHierarchical) return true;
+
+    // Merged month-year chips are editable
+    if (chip.isMergedMonthYear) return true;
+
+    // Check if chip type is in editable list
+    return editableTypes.includes(chip.type);
   };
 
   const removeChip = (chipId) => {
@@ -1508,6 +1426,78 @@ const PhraseModeReport = (props) => {
   const runReport = () => {
     setStage('results');
     toast('Report generated successfully!');
+  };
+
+  // Save current query
+  const handleSaveQuery = () => {
+    if (!savedQueryName.trim()) {
+      toast('Please enter a query name');
+      return;
+    }
+
+    const newQuery = {
+      id: Date.now(),
+      name: savedQueryName.trim(),
+      description: savedQueryDescription.trim(),
+      chips: phraseChips,
+      naturalQuery: generateNaturalQuery(),
+      timestamp: new Date().toISOString(),
+      recordCount: previewCount
+    };
+
+    const updatedQueries = [...savedQueries, newQuery];
+    setSavedQueries(updatedQueries);
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem('savedPhraseQueries', JSON.stringify(updatedQueries));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      toast('Error saving query');
+      return;
+    }
+
+    // Reset form and close panel
+    setSavedQueryName('');
+    setSavedQueryDescription('');
+    setShowSaveQueryPanel(false);
+    toast(`Query saved: ${newQuery.name}`);
+  };
+
+  // Load a saved query
+  const handleLoadQuery = (query) => {
+    setPhraseChips(query.chips);
+
+    // Regenerate suggestions from loaded chips
+    const suggestions = getPhraseSuggestions(query.chips);
+    setLockedSuggestions(suggestions);
+
+    // Reset other state
+    setColumnSelections([null, null, null]);
+    setColumnIndices([0, 0, 0]);
+    setActiveColumn(0);
+    setInputValue('');
+    setShowLoadQueryDropdown(false);
+
+    // Switch to building stage if not already there
+    if (stage !== 'building') {
+      setStage('building');
+    }
+
+    toast(`Loaded: ${query.name}`);
+  };
+
+  // Delete a saved query
+  const handleDeleteQuery = (queryId) => {
+    const updatedQueries = savedQueries.filter(q => q.id !== queryId);
+    setSavedQueries(updatedQueries);
+
+    try {
+      localStorage.setItem('savedPhraseQueries', JSON.stringify(updatedQueries));
+      toast('Query deleted');
+    } catch (error) {
+      console.error('Error deleting from localStorage:', error);
+    }
   };
 
   const [showPreview, setShowPreview] = useState(true);
@@ -1745,12 +1735,12 @@ const PhraseModeReport = (props) => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 mt-0">
-          <div className="max-w-4xl w-full mb-8">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-light text-gray-900 mb-3">
+          <div className="max-w-4xl w-full mb-6">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-light text-gray-900 mb-2">
                 Describe the data you need
               </h2>
-              <p className="text-base text-gray-600">
+              <p className="text-sm text-gray-600">
                 Use phrases to build your query naturally—no need to know database structure
               </p>
             </div>
@@ -1771,17 +1761,17 @@ const PhraseModeReport = (props) => {
               </div>
               
               {showPreview && (
-                <div className="px-4 pb-4 min-h-[100px] flex flex-col items-center justify-center">
+                <div className="px-4 pb-4 min-h-[80px] flex flex-col items-center justify-center">
                   {renderAnimatedExamples()}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="max-w-6xl w-full mb-8">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Start with an Example</h3>
-              <p className="text-sm text-gray-600">Pre-built phrases you can modify</p>
+          <div className="max-w-6xl w-full mb-6">
+            <div className="mb-3">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Start with an Example</h3>
+              <p className="text-xs text-gray-600">Pre-built phrases you can modify</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1840,9 +1830,9 @@ const PhraseModeReport = (props) => {
           </div>
 
           <div className="max-w-6xl w-full">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Start from Scratch</h3>
-              <p className="text-sm text-gray-600">Begin by selecting your starting point</p>
+            <div className="mb-3">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Start from Scratch</h3>
+              <p className="text-xs text-gray-600">Begin by selecting your starting point</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -1886,10 +1876,25 @@ const PhraseModeReport = (props) => {
       <div className="max-h-screen min-h-screen h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col w-full">
         
         {/* bottom bar - matching Browse/List mode format */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
-          <div className="h-full flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30 transition-all duration-300" style={{ height: showMatchingRecords ? '621px' : '88px' }}>
+          <div className="flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2" style={{ height: '88px' }}>
             {/* Left section - Info */}
             <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0 overflow-hidden" style={{ flex: '1 1 auto' }}>
+              {/* ChevronUp toggle - first element */}
+              <button
+                onClick={() => setShowMatchingRecords(!showMatchingRecords)}
+                className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
+                title={showMatchingRecords ? "Hide matching records" : "Show matching records"}
+                disabled={phraseChips.length === 0}
+              >
+                <ChevronUp
+                  size={18}
+                  className={`transition-transform duration-300 ${
+                    showMatchingRecords ? 'rotate-180' : ''
+                  } ${phraseChips.length === 0 ? 'text-gray-300' : 'text-gray-600 hover:text-gray-900'}`}
+                />
+              </button>
+
               <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
                 <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
               </div>
@@ -1936,9 +1941,80 @@ const PhraseModeReport = (props) => {
 
             {/* Right section - Actions (desktop only) */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0" style={{ flex: '0 0 auto' }}>
-              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Load Query">
-                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowLoadQueryDropdown(!showLoadQueryDropdown)}
+                  className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group relative"
+                  title="Load Query"
+                >
+                  <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+                  {savedQueries.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                      {savedQueries.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Load Query Dropdown */}
+                {showLoadQueryDropdown && (
+                  <div className="absolute bottom-full right-0 mb-2 w-96 bg-white border border-gray-200 shadow-xl rounded-lg z-50 max-h-96 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Load Saved Query</h3>
+                        <button
+                          onClick={() => setShowLoadQueryDropdown(false)}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-80">
+                      {savedQueries.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <FileUp className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">No saved queries yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Save your current query to load it later</p>
+                        </div>
+                      ) : (
+                        savedQueries.map(query => (
+                          <div key={query.id} className="p-4 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <button
+                                onClick={() => handleLoadQuery(query)}
+                                className="flex-1 text-left"
+                              >
+                                <div className="font-medium text-gray-900 mb-1">{query.name}</div>
+                                {query.description && (
+                                  <div className="text-xs text-gray-600 mb-2">{query.description}</div>
+                                )}
+                                <div className="text-xs text-gray-500 mb-1 italic line-clamp-2">
+                                  "{query.naturalQuery}"
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-400">
+                                  <span>{new Date(query.timestamp).toLocaleDateString()}</span>
+                                  <span>•</span>
+                                  <span>{query.recordCount?.toLocaleString()} records</span>
+                                </div>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteQuery(query.id);
+                                }}
+                                className="p-1.5 hover:bg-red-50 rounded transition-colors group"
+                                title="Delete query"
+                              >
+                                <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
                 <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
               </button>
@@ -1954,6 +2030,7 @@ const PhraseModeReport = (props) => {
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
               </button>
               <button
+                onClick={() => setShowSaveQueryPanel(true)}
                 disabled={phraseChips.length === 0}
                 className={`p-2.5 rounded-lg transition-colors group ${phraseChips.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                 title="Save Query"
@@ -1984,8 +2061,19 @@ const PhraseModeReport = (props) => {
               </button>
             </div>
           </div>
+
+          {/* Matching Records Preview - conditionally rendered */}
+          {showMatchingRecords && phraseChips.length > 0 && (
+            <div className="overflow-auto" style={{ height: 'calc(621px - 88px)' }}>
+              <PhraseRecordsPreview
+                chips={phraseChips}
+                recordCount={previewCount}
+                naturalQuery={generateNaturalQuery()}
+              />
+            </div>
+          )}
         </div>
-        
+
         <AnimationStyles />
 
         <div className="flex-1 pb-32 relative">
@@ -1993,7 +2081,7 @@ const PhraseModeReport = (props) => {
           <div className="w-full bg-white py-6">
             <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused || phraseChips.length > 0 ? 'max-w-full' : 'max-w-3xl'}`}>
               {/* Input field with phrase chips inside - now as global search bar */}
-              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-2 shadow-sm">
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-2 mb-2 shadow-sm min-h-[56px]">
                 <div className="flex items-center gap-2">
                   {/* Centered, smaller Search icon */}
                   <div className="flex items-center justify-center flex-shrink-0">
@@ -2002,15 +2090,16 @@ const PhraseModeReport = (props) => {
 
                   {/* Phrase chips and input in same container */}
                   <div className="flex-1 flex flex-wrap items-center gap-1 min-h-[36px]">
-                    {phraseChips.map((chip) => (
+                    {phraseChips.map((chip, chipIndex) => (
                       <div key={chip.id} className="chip-pop">
                         <PhraseChip
                           chip={chip}
-                          size="sm"
+                          size="xs"
                           onRemove={() => removeChip(chip.id)}
                           onEdit={() => editChip(chip.id)}
                           showRemove={true}
-                          showEdit={true}
+                          showEdit={isChipEditable(chip, chipIndex)}
+                          isEditing={editingChipId === chip.id}
                         />
                       </div>
                     ))}
@@ -2078,7 +2167,7 @@ const PhraseModeReport = (props) => {
                         }
                       }}
                       placeholder={phraseChips.length === 0 ? "Start building your phrase..." : "Continue typing or select..."}
-                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic"
+                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic h-8"
                     />
                   </div>
 
@@ -2094,27 +2183,6 @@ const PhraseModeReport = (props) => {
                 </div>
               </div>
 
-              {/* Clear link - right aligned below input */}
-              {phraseChips.length > 0 && (
-                <div className="flex justify-end mb-3">
-                  <button
-                    onClick={() => {
-                      setPhraseChips([]);
-                      setInputValue('');
-                      setLockedSuggestions(null);
-                      setColumnSelections([null, null, null]);
-                      setColumnIndices([0, 0, 0]);
-                      setActiveColumn(0);
-                      setSelectionRoundStart(0);
-                      setPreviewChips([]);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
-
               {/* Build Your Phrase Section */}
               <div className="max-w-4xl">
               {/* 3-Column Progressive Selection UI */}
@@ -2124,8 +2192,27 @@ const PhraseModeReport = (props) => {
                   <Zap className="w-4 h-4 text-yellow-500" />
                   <span className="text-xs font-semibold text-gray-700">Build Your Phrase</span>
                 </div>
-                <div className="text-[10px] text-gray-400">
-                  ↑↓ • ←→ • Enter • Tab
+                <div className="flex items-center gap-3">
+                  {phraseChips.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setPhraseChips([]);
+                        setInputValue('');
+                        setLockedSuggestions(null);
+                        setColumnSelections([null, null, null]);
+                        setColumnIndices([0, 0, 0]);
+                        setActiveColumn(0);
+                        setSelectionRoundStart(0);
+                        setPreviewChips([]);
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <div className="text-[10px] text-gray-400">
+                    ↑↓ • ←→ • Enter • Tab
+                  </div>
                 </div>
               </div>
 
@@ -2134,14 +2221,27 @@ const PhraseModeReport = (props) => {
                 {(() => {
                   // Use locked suggestions if available, otherwise get fresh
                   const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+
+                  // Helper function to filter column data
+                  const filterColumnData = (columnData, columnIndex) => {
+                    if (!Array.isArray(columnData)) return [];
+
+                    // Only filter if this column is active and there's input
+                    if (activeColumn === columnIndex && inputValue) {
+                      return columnData.filter(item => {
+                        const searchText = typeof item === 'string' ? item : (item.label || item.text || '');
+                        return searchText.toLowerCase().startsWith(inputValue.toLowerCase());
+                      });
+                    }
+
+                    // Otherwise show first 6 items
+                    return columnData.slice(0, 6);
+                  };
+
                   const allSuggestions = [
-                    inputValue
-                      ? (phraseSuggestions.current || []).filter(s =>
-                          s.label?.toLowerCase().startsWith(inputValue.toLowerCase())
-                        )
-                      : (phraseSuggestions.current || []).slice(0, 6),
-                    (phraseSuggestions.next || []).slice(0, 6),
-                    (phraseSuggestions.future || []).slice(0, 6)
+                    filterColumnData(phraseSuggestions.current || [], 0),
+                    filterColumnData(phraseSuggestions.next || [], 1),
+                    filterColumnData(phraseSuggestions.future || [], 2)
                   ];
                   const columnTitles = [
                     phraseChips.length === 0 ? 'Start with' : 'Select',
@@ -2287,6 +2387,138 @@ const PhraseModeReport = (props) => {
             <div className="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3">
               <Check className="w-5 h-5 text-green-400" />
               <span className="text-sm font-medium">{toastMessage}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Save Query Slide-out Panel */}
+        {showSaveQueryPanel && (
+          <div className="fixed inset-0 z-40" onClick={() => setShowSaveQueryPanel(false)}>
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+            <div
+              className="fixed top-0 right-0 bottom-0 w-[480px] bg-white shadow-2xl z-50 flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="border-b border-gray-200 bg-white px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Save className="w-5 h-5 text-blue-600" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Save Query</h2>
+                      <p className="text-xs text-gray-500">Save your current phrase query for later use</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSaveQueryPanel(false)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Query Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Query Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={savedQueryName}
+                    onChange={(e) => setSavedQueryName(e.target.value)}
+                    placeholder="e.g., Active Members 2024"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Query Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Description <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={savedQueryDescription}
+                    onChange={(e) => setSavedQueryDescription(e.target.value)}
+                    placeholder="Add notes about this query..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Current Query Preview */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Current Query
+                  </label>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    {/* Chips Preview */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {phraseChips.map((chip) => (
+                        <PhraseChip key={chip.id} chip={chip} size="xs" readOnly />
+                      ))}
+                    </div>
+
+                    {/* Natural Language Query */}
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-1 font-medium">Natural Language:</div>
+                      <div className="text-sm text-gray-700 italic">
+                        "{generateNaturalQuery()}"
+                      </div>
+                    </div>
+
+                    {/* Record Count */}
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500">
+                        Estimated Records: <span className="font-semibold text-gray-900">{previewCount?.toLocaleString() || '0'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">Query Storage</p>
+                      <p className="text-xs text-blue-700">
+                        Saved queries are stored locally in your browser. They will be available the next time you visit this page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowSaveQueryPanel(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveQuery}
+                    disabled={!savedQueryName.trim()}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      savedQueryName.trim()
+                        ? 'bg-blue-500 text-white hover:bg-blue-600'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      <span>Save Query</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -2489,8 +2721,113 @@ const PhraseModeReport = (props) => {
   return null;
 };
 
+// Phrase Records Preview Component
+const PhraseRecordsPreview = ({ chips, recordCount, naturalQuery }) => {
+  const demoNames = ['John Smith', 'Sarah Johnson', 'Michael Chen', 'Emma Davis', 'James Wilson',
+    'Lisa Anderson', 'David Martinez', 'Mary Taylor', 'Robert Thomas', 'Jennifer Lee'];
+  const demoEmails = ['john.smith@example.com', 'sarah.j@example.com', 'mchen@example.com', 'emma.d@example.com',
+    'james.w@example.com', 'lisa.a@example.com', 'david.m@example.com', 'mary.t@example.com',
+    'robert.t@example.com', 'jennifer.l@example.com'];
+  const demoLocations = ['Toronto, ON', 'Vancouver, BC', 'Montreal, QC', 'Calgary, AB', 'Ottawa, ON',
+    'Edmonton, AB', 'Toronto, ON', 'Vancouver, BC', 'Montreal, QC', 'Calgary, AB'];
+
+  return (
+    <div className="h-full w-full">
+      <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Matching Records</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Results for: "{naturalQuery}"
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="w-full border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            {/* Fixed Header */}
+            <div className="bg-gray-50 border-b border-gray-200">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Member ID
+                    </th>
+                    <th className="w-[180px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="w-[220px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Join Date
+                    </th>
+                    <th className="w-[160px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Location
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="max-h-[300px] overflow-y-auto">
+              <table className="min-w-full">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Array.from({ length: Math.min(10, recordCount || 10) }).map((_, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="w-[120px] px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        M{10001 + idx}
+                      </td>
+                      <td className="w-[180px] px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {demoNames[idx]}
+                      </td>
+                      <td className="w-[220px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {demoEmails[idx]}
+                      </td>
+                      <td className="w-[120px] px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Current
+                        </span>
+                      </td>
+                      <td className="w-[140px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {new Date(2024, 0, 1 + idx * 10).toLocaleDateString()}
+                      </td>
+                      <td className="w-[160px] px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {demoLocations[idx]}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer - Pagination */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing 1 to {Math.min(10, recordCount || 10)} of {recordCount?.toLocaleString() || '0'} results
+          </div>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+              Previous
+            </button>
+            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // PhraseChip Component
-const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = false, size = 'md', readOnly = false }) => {
+const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = false, size = 'md', readOnly = false, isEditing = false }) => {
   const sizeClasses = {
     xs: 'px-2 py-0.5 text-xs',
     sm: 'px-2.5 py-1 text-xs',
@@ -2515,10 +2852,11 @@ const PhraseChip = ({ chip, onRemove, onEdit, showRemove = false, showEdit = fal
   return (
     <div
       className={`
-        inline-flex items-center gap-2 rounded-lg border-2 font-medium
+        inline-flex items-center gap-2 rounded-lg border-2 font-medium transition-all
         ${sizeClasses[size]}
         ${colorClasses[chip.color] || colorClasses.gray}
         ${!readOnly && 'chip-hover'}
+        ${isEditing ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
       `}
     >
       {IconComponent && (
