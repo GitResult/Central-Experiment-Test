@@ -1566,17 +1566,6 @@ const PhraseModeReport = (props) => {
         <div className="border-b border-gray-200 bg-white px-8 py-6">
           <div className="flex items-center gap-3">
 
-            {/* home button */}
-            <button
-              onClick={()=>{
-                updateDemoStateAction({ isPhraseActive: false });
-              }}
-              className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
-              title="Back to home"
-            >
-              <Home className="w-5 h-5 text-gray-600" />
-            </button>
-            
             <div className="p-2 bg-blue-100 rounded-lg">
               <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={2} />
             </div>
