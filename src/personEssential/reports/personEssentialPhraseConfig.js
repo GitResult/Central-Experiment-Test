@@ -739,8 +739,8 @@ export const getThreeColumnsForPhrase = (chips) => {
   // After "that have" connector in renewal context - Show "Renewed" action ONLY
   // Column 2 and 3 should be EMPTY until user selects an action
   if (lastChipText === 'that have' && chips.length > 3) {
-    // Check if we're in a Member Year context
-    const hasMemberYear = chips.some(c => c.valueType === 'memberYear');
+    // Check if we're in a Member Year context (check both valueType and categoryId for merged chips)
+    const hasMemberYear = chips.some(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
     if (hasMemberYear) {
       return {
         column1: ACTIONS.map(a => ({
