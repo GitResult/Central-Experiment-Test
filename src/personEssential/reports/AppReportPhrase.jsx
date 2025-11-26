@@ -552,6 +552,10 @@ const PhraseModeReport = (props) => {
     // Check if we're in a hierarchical selection (Member Stats)
     const isHierarchicalSelection = newSelections[0]?.id === 'member_stats' || newSelections[0]?.label === 'Member Stats';
 
+    // Check if we're in Query 2 category selection (Member Type, Occupation, Degree, Province/State)
+    const query2Categories = ['member_type', 'occupation', 'degree', 'province_state'];
+    const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
 
@@ -593,6 +597,24 @@ const PhraseModeReport = (props) => {
         subcategory: newSelections[1]?.label,
         value: newSelections[2]?.label
       });
+    } else if (isQuery2CategorySelection && columnIdx >= 1 && newSelections[1]) {
+      // For Query 2 categories: merge category + value into single chip
+      // Format: "Member Type = ECY1 - Member Early Career Year 1"
+      const chipText = newSelections[0].label + ' = ' + newSelections[1].label;
+
+      chipsToAdd.push({
+        id: newSelections[0].id + '_merged',
+        text: chipText,
+        label: chipText,
+        type: 'value',
+        icon: newSelections[0].icon,
+        color: newSelections[0].color || 'blue',
+        valueType: newSelections[1].valueType,
+        categoryId: newSelections[0].id,
+        categoryLabel: newSelections[0].label,
+        valueLabel: newSelections[1].label,
+        isMergedCategory: true
+      });
     } else {
       // Non-hierarchical: add chips for each selection
       for (let i = 0; i <= columnIdx; i++) {
@@ -633,8 +655,8 @@ const PhraseModeReport = (props) => {
       setActiveColumn(0);
       setPreviewChips([]);
       // Set start position for next selection round
-      if (isHierarchicalSelection) {
-        // For hierarchical, we added only 1 merged chip
+      if (isHierarchicalSelection || isQuery2CategorySelection) {
+        // For hierarchical and Query 2 merged categories, we added only 1 merged chip
         setSelectionRoundStart(previousChips.length + 1);
       } else {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
@@ -1259,7 +1281,7 @@ const PhraseModeReport = (props) => {
     while (i < phraseChips.length) {
       const chip = phraseChips[i];
 
-      // Skip connector chips in output (they're implied in the structure)
+      // Handle connector chips
       if (chip.type === 'connector') {
         const connectorText = chip.text?.toLowerCase();
 
@@ -1281,14 +1303,51 @@ const PhraseModeReport = (props) => {
             i++;
             continue;
           }
+        } else if (connectorText === 'that are') {
+          // Include "that are" in the output
+          query += ' that are';
         }
         i++;
         continue;
       }
 
-      // Skip if already processed
+      // Handle logical connectors (And/Or)
+      if (chip.type === 'logical_connector') {
+        // Use lowercase "and"/"or"
+        query += ' ' + chip.text.toLowerCase();
+        i++;
+        continue;
+      }
+
+      // Skip if already processed (hierarchical chips handled with "that have")
       if (chip.isHierarchical) {
-        // Already handled above
+        i++;
+        continue;
+      }
+
+      // Handle Query 2 merged category chips
+      if (chip.isMergedCategory) {
+        const categoryId = chip.categoryId;
+        const valueLabel = chip.valueLabel;
+
+        if (categoryId === 'member_type') {
+          // Extract short form from "ECY1 - Member Early Career Year 1" -> "ECY1"
+          const shortForm = valueLabel.split(' - ')[0].trim();
+          query += ' ' + shortForm;
+        } else if (categoryId === 'occupation') {
+          // Format: "occupation is practitioner"
+          const value = valueLabel.toLowerCase();
+          query += ' occupation is ' + value;
+        } else if (categoryId === 'degree') {
+          // Format: "with a Degree: Masters"
+          query += ' with a Degree: ' + valueLabel;
+        } else if (categoryId === 'province_state') {
+          // Format: "from province/state BC"
+          query += ' from province/state ' + valueLabel;
+        } else {
+          // Default: just add the value
+          query += ' ' + valueLabel;
+        }
         i++;
         continue;
       }
