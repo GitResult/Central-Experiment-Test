@@ -313,8 +313,8 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a number value (from Member Stats) - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
-  if (lastChipType === 'value' && lastChip.valueType === 'number') {
+  // After selecting a number value (from Member Stats) or completing hierarchical selection - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
+  if (lastChipType === 'value' && (lastChip.valueType === 'number' || lastChip.isHierarchical)) {
     // Get first category's subcategories for anticipation
     const firstCategory = FILTER_CATEGORIES[0];
     const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
