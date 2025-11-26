@@ -690,6 +690,11 @@ const PhraseModeReport = (props) => {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
       }
       // Locked suggestions already updated above with the new chip state
+    } else if (columnIdx === 1 && isQuery2CategorySelection) {
+      // Special case: When creating a merged chip from Column 2, update selectionRoundStart
+      // so that the merged chip is preserved when clicking Column 3
+      setSelectionRoundStart(previousChips.length + 1);
+      setActiveColumn(columnIdx + 1);
     } else {
       // Otherwise, move to next column
       setActiveColumn(columnIdx + 1);
