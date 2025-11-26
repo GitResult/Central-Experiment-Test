@@ -4,7 +4,7 @@ import {
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
-  Edit2, Trash2, Settings,
+  Edit2, Trash2, Settings, Home,
   MoveLeft, GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
@@ -1531,19 +1531,19 @@ const PhraseModeReport = (props) => {
           <AnimationStyles />
         </div>
         
-        <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-6">
+        <div className="border-b border-gray-200 bg-white px-8 py-6">
           <div className="flex items-center gap-3">
 
-            {/* back button */}
-            <div 
+            {/* home button */}
+            <button
               onClick={()=>{
                 updateDemoStateAction({ isPhraseActive: false });
               }}
-              className='text-blue-500 flex items-center gap-2 cursor-pointer'
+              className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+              title="Back to home"
             >
-              <MoveLeft />
-              <p>Back</p>  
-            </div>
+              <Home className="w-5 h-5 text-gray-600" />
+            </button>
             
             <div className="p-2 bg-blue-100 rounded-lg">
               <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={2} />
@@ -1762,9 +1762,9 @@ const PhraseModeReport = (props) => {
         <AnimationStyles />
 
         <div className="flex-1 pb-32 relative">
-          {/* Combined Input + Build Your Phrase Panel - full width on focus */}
+          {/* Combined Input + Build Your Phrase Panel - full width on focus or when has chips */}
           <div className="w-full bg-white py-6">
-            <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused ? 'max-w-full' : 'max-w-3xl'}`}>
+            <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused || phraseChips.length > 0 ? 'max-w-full' : 'max-w-3xl'}`}>
               {/* Input field with phrase chips inside - now as global search bar */}
               <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-2 shadow-sm">
                 <div className="flex items-center gap-2">
@@ -1889,7 +1889,7 @@ const PhraseModeReport = (props) => {
               )}
 
               {/* Build Your Phrase Section */}
-              <div>
+              <div className="max-w-4xl">
               {/* 3-Column Progressive Selection UI */}
               <div>
               <div className="flex items-center justify-between mb-3">
@@ -2016,9 +2016,6 @@ const PhraseModeReport = (props) => {
             </div>
           </div>
           </div>
-
-          {/* Blurred background effect - positioned after all content */}
-          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(1px)', backgroundColor: 'rgba(255, 255, 255, 0.2)', pointerEvents: 'none', zIndex: 1 }}></div>
         </div>
 
         {/* Options Modal */}
