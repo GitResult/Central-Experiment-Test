@@ -629,6 +629,14 @@ const PhraseModeReport = (props) => {
                lockedSuggestions.context === 'renewal_target_year' &&
                newSelections[0]?.id === 'for' &&
                newSelections[1]?.type === 'category') {
+      // DEBUG: Capture state when early return SHOULD execute
+      console.log('=== EARLY RETURN CHECK (Column 2 clicked) ===');
+      console.log('Context:', lockedSuggestions.context);
+      console.log('Last chip:', phraseChips[phraseChips.length - 1]);
+      console.log('newSelections:', newSelections);
+      console.log('Condition met - executing early return');
+      console.log('==========================================');
+
       // SPECIAL CASE: Renewal target year context at Column 2
       // Don't add chips yet - preserve phrase state and context for Column 3 merging
       // This prevents duplicate "for" chips and context loss
@@ -655,6 +663,23 @@ const PhraseModeReport = (props) => {
         isMergedCategory: true
       });
     } else {
+      // DEBUG: Capture state when falling through to normal case
+      if (columnIdx === 1 && newSelections[0]?.id === 'for') {
+        console.log('=== FALLING TO NORMAL CASE (Early return did NOT execute) ===');
+        console.log('columnIdx:', columnIdx);
+        console.log('Context:', lockedSuggestions.context);
+        console.log('Last chip:', phraseChips[phraseChips.length - 1]);
+        console.log('newSelections:', newSelections);
+        console.log('newSelections[0]?.id:', newSelections[0]?.id);
+        console.log('newSelections[1]?.type:', newSelections[1]?.type);
+        console.log('Condition check results:');
+        console.log('  columnIdx === 1:', columnIdx === 1);
+        console.log('  context === renewal_target_year:', lockedSuggestions.context === 'renewal_target_year');
+        console.log('  newSelections[0]?.id === for:', newSelections[0]?.id === 'for');
+        console.log('  newSelections[1]?.type === category:', newSelections[1]?.type === 'category');
+        console.log('===================================================');
+      }
+
       // Non-hierarchical: add chips for each selection
 
       // Special case: If clicking Column 3 (columnIdx === 2) with a connector, and Column 1 is a query2 category
