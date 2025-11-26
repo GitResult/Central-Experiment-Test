@@ -6,7 +6,6 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 
 // Import all components
 import Navigation from './components/Navigation';
@@ -54,10 +53,6 @@ function App() {
     setCurrentComponent(componentId);
   };
 
-  const handleBackToHome = () => {
-    setCurrentComponent(null);
-  };
-
   // Render navigation page or selected component
   if (!currentComponent) {
     return <Navigation onNavigate={handleNavigate} />;
@@ -65,15 +60,6 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      {/* Back to Navigation Button */}
-      <button
-        onClick={handleBackToHome}
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-gray-700 hover:text-blue-600 border border-gray-200"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="font-medium">Back to Home</span>
-      </button>
-
       {/* Render selected component */}
       {ComponentToRender && <ComponentToRender />}
     </div>

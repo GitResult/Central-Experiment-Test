@@ -5,7 +5,7 @@ import {
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
   Edit2, Trash2, Settings,
-  MoveLeft, GraduationCap, Briefcase, Clock, CalendarClock
+  GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
 import { updateDemoState } from '../../redux/demo/actions';
