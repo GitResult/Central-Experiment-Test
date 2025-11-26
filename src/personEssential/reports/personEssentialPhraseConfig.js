@@ -181,9 +181,9 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "that are" connector - NEW SET: Show member types AND ANTICIPATE ALL 3 COLUMNS
+  // After "that are" connector - NEW SET: Show Member Type ONLY AND ANTICIPATE ALL 3 COLUMNS
   if (lastChipText === 'that are' && chips.length === 3) {
-    const filteredCategories = FILTER_CATEGORIES.filter(c => c.id === 'member_type' || c.id === 'member_stats');
+    const filteredCategories = FILTER_CATEGORIES.filter(c => c.id === 'member_type');
     const memberTypes = getBrowseModeData('memberTypes');
 
     return {
@@ -252,8 +252,14 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Stats" category - Show sub-categories in Column 2
+  // AND anticipate values in Column 3 (values of first subcategory)
   if (lastChipType === 'category' && lastChip.id === 'member_stats') {
     const subCats = getSubCategories('member_stats');
+
+    // Get values for the first subcategory
+    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
+
     return {
       column1: FILTER_CATEGORIES.map(c => ({
         label: c.label,
@@ -268,7 +274,11 @@ export const getThreeColumnsForPhrase = (chips) => {
         type: sc.type,
         id: sc.id
       })),
-      column3: [],
+      column3: values.map(v => ({
+        label: String(v),
+        type: 'value',
+        valueType: 'number'
+      })),
       awaitingSelection: 'column2',
       context: 'member_stats_subcategory'
     };
@@ -303,8 +313,8 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a number value (from Member Stats) - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
-  if (lastChipType === 'value' && lastChip.valueType === 'number') {
+  // After selecting a number value (from Member Stats) or completing hierarchical selection - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
+  if (lastChipType === 'value' && (lastChip.valueType === 'number' || lastChip.isHierarchical)) {
     // Get first category's subcategories for anticipation
     const firstCategory = FILTER_CATEGORIES[0];
     const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
@@ -344,6 +354,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Type" category - Show member types from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since member types have no children)
   if (lastChipType === 'category' && lastChip.id === 'member_type') {
     const memberTypes = getBrowseModeData('memberTypes');
     return {
@@ -361,7 +372,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'memberType',
         id: mt.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'member_type_value'
     };
@@ -401,6 +417,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Year" category - Show years from browse mode in Column 2
+  // AND anticipate connectors in Column 3
   if (lastChipType === 'category' && lastChip.id === 'member_year') {
     const memberYears = getBrowseModeData('memberYears');
     return {
@@ -421,14 +438,27 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'memberYear',
         id: my.id
       })),
-      column3: [],
+      column3: [
+        {
+          label: 'that have',
+          type: 'connector',
+          icon: ChevronRight,
+          id: 'that_have'
+        },
+        {
+          label: 'and',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'and'
+        }
+      ],
       awaitingSelection: 'column2',
       context: 'member_year_value'
     };
   }
 
   // After selecting a member year value - Show "that have" connector in Column 3
-  if (lastChipType === 'value' && lastChip.valueType === 'memberYear') {
+  if (lastChipType === 'value' && (lastChip.valueType === 'memberYear' || lastChip.categoryId === 'member_year')) {
     const memberYears = getBrowseModeData('memberYears');
 
     return {
@@ -471,14 +501,71 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "And" or "Or" connector - NEW SET: Show available filter categories ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // RENEWAL CONTEXT: After selecting "or" connector - Keep showing action connectors and month-year options
+  // This check MUST come before the generic logical_connector check to avoid being caught by it
+  if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
+    const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
+
+    if (hasPreviousMonthYear) {
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const actionConnectors = getActionConnectors('renewed');
+
+      return {
+        column1: [
+          {
+            label: 'or',
+            type: 'logical_connector',
+            icon: Plus,
+            id: 'or',
+            order: 1,
+            selected: true
+          }
+        ],
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
+          label: my.label,
+          type: 'value',
+          valueType: 'monthYear',
+          id: my.id
+        })),
+        awaitingSelection: 'column2',
+        context: 'after_or_selection'
+      };
+    }
+  }
+
+  // After "And" or "Or" connector - NEW SET: Show available filter categories AND ANTICIPATE ALL 3 COLUMNS
+  // Column 2 and 3 should show items based on FIRST item in Column 1
+  // NOTE: Renewal-specific "or" is handled above to avoid being caught by this generic check
   if (lastChipType === 'logical_connector') {
     // Determine which categories are still available based on context
     const availableCategories = FILTER_CATEGORIES.filter(c => {
       // Customize based on query context
       return true; // For now, show all
     });
+
+    // Get subcategories and values for the first category (Member Stats)
+    const firstCategory = availableCategories[0];
+    const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
+
+    // Get values for the first subcategory
+    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
 
     return {
       column1: availableCategories.map(c => ({
@@ -488,14 +575,23 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: [], // Empty until category is selected
-      column3: [], // Empty until category and subcategory/value are selected
+      column2: subCats.map(sc => ({
+        label: sc.label,
+        type: sc.type,
+        id: sc.id
+      })),
+      column3: values.map(v => ({
+        label: String(v),
+        type: 'value',
+        valueType: 'number'
+      })),
       awaitingSelection: 'column1',
       context: 'after_logical_connector'
     };
   }
 
   // After selecting "Occupation" category - Show occupations from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since occupations have no children)
   if (lastChipType === 'category' && lastChip.id === 'occupation') {
     const occupations = getBrowseModeData('occupations');
     return {
@@ -513,7 +609,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'occupation',
         id: o.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'occupation_value'
     };
@@ -551,6 +652,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Degree" category - Show degrees from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since degrees have no children)
   if (lastChipType === 'category' && lastChip.id === 'degree') {
     const degrees = getBrowseModeData('degrees');
     return {
@@ -568,7 +670,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'degree',
         id: d.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'degree_value'
     };
@@ -606,6 +713,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Province/State" category - Show provinces from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since provinces have no children)
   if (lastChipType === 'category' && lastChip.id === 'province_state') {
     const provinces = getBrowseModeData('provinces');
     return {
@@ -623,7 +731,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'province',
         id: p.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'province_value'
     };
@@ -675,8 +788,8 @@ export const getThreeColumnsForPhrase = (chips) => {
   // After "that have" connector in renewal context - Show "Renewed" action ONLY
   // Column 2 and 3 should be EMPTY until user selects an action
   if (lastChipText === 'that have' && chips.length > 3) {
-    // Check if we're in a Member Year context
-    const hasMemberYear = chips.some(c => c.valueType === 'memberYear');
+    // Check if we're in a Member Year context (check both valueType and categoryId for merged chips)
+    const hasMemberYear = chips.some(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
     if (hasMemberYear) {
       return {
         column1: ACTIONS.map(a => ({
@@ -695,8 +808,25 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Renewed" action - Show action connectors in Column 2
+  // AND anticipate month+year values in Column 3 (based on first connector "in")
   if (lastChipType === 'action' && lastChip.id === 'renewed') {
     const actionConnectors = getActionConnectors('renewed');
+
+    // Get the member year from chips for anticipatory month+year values
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+    let baseYear = 2019;
+    if (memberYearChip) {
+      // Extract year from merged chip "Member Year = 2019" or from valueLabel
+      if (memberYearChip.valueLabel) {
+        baseYear = parseInt(memberYearChip.valueLabel);
+      } else if (memberYearChip.text) {
+        const match = memberYearChip.text.match(/\d{4}/);
+        if (match) baseYear = parseInt(match[0]);
+      }
+    }
+
+    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
     return {
       column1: ACTIONS.map(a => ({
         label: a.label,
@@ -712,7 +842,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         id: ac.id,
         enablesMultiSelect: ac.enablesMultiSelect
       })),
-      column3: [],
+      column3: monthYearOptions.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'monthYear',
+        id: my.id
+      })),
       awaitingSelection: 'column2',
       context: 'renewed_connector'
     };
@@ -720,9 +855,17 @@ export const getThreeColumnsForPhrase = (chips) => {
 
   // After selecting "in" action connector - Show month+year combinations in Column 3
   if (lastChipType === 'action_connector' && lastChip.id === 'in') {
-    // Get the member year from chips
-    const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-    const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+    // Get the member year from chips (check both valueType and categoryId for merged chips)
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+    let baseYear = 2019;
+    if (memberYearChip) {
+      if (memberYearChip.valueLabel) {
+        baseYear = parseInt(memberYearChip.valueLabel);
+      } else if (memberYearChip.text) {
+        const match = memberYearChip.text.match(/\d{4}/);
+        if (match) baseYear = parseInt(match[0]);
+      }
+    }
 
     const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6); // Generate 6 months starting from December of previous year
     const actionConnectors = getActionConnectors('renewed');
@@ -754,13 +897,27 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a month+year value with "in" - Show "or" and "for" options ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // After selecting a month+year value with "in" - Show "or" and "for" with anticipatory columns
+  // Anticipate: Column 2 shows "in" (action connector), Column 3 shows month-year options
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear') {
     // Check if there's an "in" connector before this
     const hasInConnector = chips.some(c => c.id === 'in');
 
     if (hasInConnector) {
+      // Get member year for month-year options
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const actionConnectors = getActionConnectors('renewed');
+
       return {
         column1: [
           {
@@ -778,50 +935,20 @@ export const getThreeColumnsForPhrase = (chips) => {
             order: 2
           }
         ],
-        column2: [], // Empty until "or" or "for" is selected
-        column3: [], // Empty until column 2 is populated and selected
-        awaitingSelection: 'column1',
-        context: 'after_renewal_month_year'
-      };
-    }
-  }
-
-  // After selecting "or" in renewal context - Show month+year options again in Column 2
-  if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
-    const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
-
-    if (hasPreviousMonthYear) {
-      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
-      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
-
-      return {
-        column1: [
-          {
-            label: 'or',
-            type: 'logical_connector',
-            icon: Plus,
-            id: 'or',
-            order: 1,
-            selected: true
-          },
-          {
-            label: 'for',
-            type: 'connector',
-            icon: Clock,
-            id: 'for',
-            order: 2
-          }
-        ],
-        column2: monthYearOptions.map(my => ({
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
           label: my.label,
           type: 'value',
           valueType: 'monthYear',
           id: my.id
         })),
-        column3: [],
-        awaitingSelection: 'column2',
-        context: 'renewal_or_month_year'
+        awaitingSelection: 'column1',
+        context: 'after_renewal_month_year'
       };
     }
   }

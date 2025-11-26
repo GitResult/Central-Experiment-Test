@@ -4,12 +4,13 @@ import {
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
-  Edit2, Trash2, Settings,
-  MoveLeft, GraduationCap, Briefcase, Clock, CalendarClock
+  Edit2, Trash2, Settings, Save, Eye, Grid3x3, Hash, FileUp,
+  GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
 import { updateDemoState } from '../../redux/demo/actions';
 import { getSuggestionsForPhrase as getPhraseSuggestions } from './personEssentialPhraseConfig';
+import { getBrowseModeData } from './phraseBuilderData';
 
 const AnimationStyles = () => (
   <style>{`
@@ -428,6 +429,7 @@ const PhraseModeReport = (props) => {
   const [previewChips, setPreviewChips] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [showAllExamples, setShowAllExamples] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     if (stage === 'intro') {
@@ -552,6 +554,10 @@ const PhraseModeReport = (props) => {
     // Check if we're in a hierarchical selection (Member Stats)
     const isHierarchicalSelection = newSelections[0]?.id === 'member_stats' || newSelections[0]?.label === 'Member Stats';
 
+    // Check if we're in Query 2/3 category selection (Member Type, Occupation, Degree, Province/State, Member Year)
+    const query2Categories = ['member_type', 'occupation', 'degree', 'province_state', 'member_year'];
+    const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
 
@@ -593,22 +599,67 @@ const PhraseModeReport = (props) => {
         subcategory: newSelections[1]?.label,
         value: newSelections[2]?.label
       });
+    } else if (isQuery2CategorySelection && columnIdx === 1 && newSelections[1]) {
+      // For Query 2 categories: merge category + value into single chip
+      // Only when selecting from Column 2 (columnIdx === 1), not Column 3
+      // Format: "Member Type = ECY1 - Member Early Career Year 1"
+      const chipText = newSelections[0].label + ' = ' + newSelections[1].label;
+
+      chipsToAdd.push({
+        id: newSelections[0].id + '_merged',
+        text: chipText,
+        label: chipText,
+        type: 'value',
+        icon: newSelections[0].icon,
+        color: newSelections[0].color || 'blue',
+        valueType: newSelections[1].valueType,
+        categoryId: newSelections[0].id,
+        categoryLabel: newSelections[0].label,
+        valueLabel: newSelections[1].label,
+        isMergedCategory: true
+      });
     } else {
       // Non-hierarchical: add chips for each selection
-      for (let i = 0; i <= columnIdx; i++) {
-        if (newSelections[i]) {
-          const sel = newSelections[i];
-          chipsToAdd.push({
-            id: sel.id || (Date.now() + i + Math.random()),
-            text: sel.label,
-            label: sel.label,
-            type: sel.type || 'connector',
-            icon: sel.icon,
-            color: sel.color || 'gray',
-            valueType: sel.valueType,
-            enablesMultiSelect: sel.enablesMultiSelect,
-            order: sel.order
-          });
+
+      // Special case: If clicking Column 3 (columnIdx === 2) with a connector, and Column 1 is a query2 category
+      // that's already in a merged chip, only add the Column 3 connector, not Column 1 and 2
+      const isColumn3ConnectorAfterMergedCategory =
+        columnIdx === 2 &&
+        newSelections[0]?.type === 'category' &&
+        query2Categories.includes(newSelections[0]?.id) &&
+        (newSelections[2]?.type === 'connector' || newSelections[2]?.type === 'logical_connector');
+
+      if (isColumn3ConnectorAfterMergedCategory) {
+        // Only add the connector from Column 3, skip Column 1 and 2 (already in merged chip)
+        const sel = newSelections[2];
+        chipsToAdd.push({
+          id: sel.id || (Date.now() + Math.random()),
+          text: sel.label,
+          label: sel.label,
+          type: sel.type || 'connector',
+          icon: sel.icon,
+          color: sel.color || 'gray',
+          valueType: sel.valueType,
+          enablesMultiSelect: sel.enablesMultiSelect,
+          order: sel.order
+        });
+      } else {
+        // Normal case: add chips for each selection
+        for (let i = 0; i <= columnIdx; i++) {
+          if (newSelections[i]) {
+            const sel = newSelections[i];
+            chipsToAdd.push({
+              id: sel.id || (Date.now() + i + Math.random()),
+              text: sel.label,
+              label: sel.label,
+              type: sel.type || 'connector',
+              icon: sel.icon,
+              color: sel.color || 'gray',
+              valueType: sel.valueType,
+              enablesMultiSelect: sel.enablesMultiSelect,
+              order: sel.order
+            });
+          }
         }
       }
     }
@@ -633,13 +684,18 @@ const PhraseModeReport = (props) => {
       setActiveColumn(0);
       setPreviewChips([]);
       // Set start position for next selection round
-      if (isHierarchicalSelection) {
-        // For hierarchical, we added only 1 merged chip
+      if (isHierarchicalSelection || isQuery2CategorySelection) {
+        // For hierarchical and Query 2 merged categories, we added only 1 merged chip
         setSelectionRoundStart(previousChips.length + 1);
       } else {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
       }
       // Locked suggestions already updated above with the new chip state
+    } else if (columnIdx === 1 && isQuery2CategorySelection) {
+      // Special case: When creating a merged chip from Column 2, update selectionRoundStart
+      // so that the merged chip is preserved when clicking Column 3
+      setSelectionRoundStart(previousChips.length + 1);
+      setActiveColumn(columnIdx + 1);
     } else {
       // Otherwise, move to next column
       setActiveColumn(columnIdx + 1);
@@ -821,6 +877,18 @@ const PhraseModeReport = (props) => {
         icon: undefined
       };
     }
+    // Handle merged category chips - maintain merged structure
+    else if (chip.isMergedCategory && ['memberType', 'occupation', 'degree', 'province', 'memberYear'].includes(optionsModalData.type)) {
+      // Update merged chip with new value while preserving structure
+      const newText = chip.categoryLabel + ' = ' + option;
+      finalChip = {
+        ...chip,
+        text: newText,
+        label: newText,
+        valueLabel: option
+        // Keep: isMergedCategory, categoryId, categoryLabel, type, icon, color
+      };
+    }
     // Handle status changes
     else if (optionsModalData.type === 'status') {
       const statusOption = FILTER_OPTIONS.statuses.find(s => s.label === option);
@@ -945,14 +1013,52 @@ const PhraseModeReport = (props) => {
   const editChip = (chipId) => {
     const chip = phraseChips.find(c => c.id === chipId);
     if (!chip) return;
-    
+
     setEditingChipId(chipId);
-    
+
     // Determine option type based on chip type and text
     let optionType = 'custom';
     let options = [];
     let title = '';
-    
+
+    // Handle merged category chips (from suggestion panel)
+    if (chip.isMergedCategory) {
+      const categoryId = chip.categoryId;
+
+      if (categoryId === 'member_type') {
+        const memberTypes = getBrowseModeData('memberTypes');
+        options = memberTypes.map(mt => mt.label);
+        title = 'Change Member Type';
+        optionType = 'memberType';
+      } else if (categoryId === 'occupation') {
+        const occupations = getBrowseModeData('occupations');
+        options = occupations.map(o => o.label);
+        title = 'Change Occupation';
+        optionType = 'occupation';
+      } else if (categoryId === 'degree') {
+        const degrees = getBrowseModeData('degrees');
+        options = degrees.map(d => d.label);
+        title = 'Change Degree';
+        optionType = 'degree';
+      } else if (categoryId === 'province_state') {
+        const provinces = getBrowseModeData('provinces');
+        options = provinces.map(p => p.label);
+        title = 'Change Province/State';
+        optionType = 'province';
+      } else if (categoryId === 'member_year') {
+        const memberYears = getBrowseModeData('memberYears');
+        options = memberYears.map(my => my.label);
+        title = 'Change Member Year';
+        optionType = 'memberYear';
+      }
+
+      if (options.length > 0) {
+        setOptionsModalData({ type: optionType, options, title, chip });
+        setShowOptionsModal(true);
+        return;
+      }
+    }
+
     // Connector chips - can be changed to other connectors
     if (chip.type === 'connector') {
       options = ['that have', 'with status', 'in location', 'with type', 'from'];
@@ -1058,8 +1164,30 @@ const PhraseModeReport = (props) => {
   };
 
   const removeChip = (chipId) => {
-    setPhraseChips(phraseChips.filter(c => c.id !== chipId));
-    toast('Chip removed');
+    // Find the index of the chip being deleted
+    const chipIndex = phraseChips.findIndex(c => c.id === chipId);
+
+    if (chipIndex === -1) return; // Chip not found
+
+    // Cascading deletion: Keep only chips before the deleted chip
+    const remainingChips = phraseChips.slice(0, chipIndex);
+    setPhraseChips(remainingChips);
+
+    // Restore suggestion panel to state matching remaining chips
+    const updatedSuggestions = getPhraseSuggestions(remainingChips);
+    setLockedSuggestions(updatedSuggestions);
+
+    // Reset selection state for clean continuation
+    setColumnSelections([null, null, null]);
+    setColumnIndices([0, 0, 0]);
+    setActiveColumn(0);
+    setPreviewChips([]);
+
+    // Update selection round start to end of remaining chips
+    setSelectionRoundStart(remainingChips.length);
+
+    const deletedCount = phraseChips.length - chipIndex;
+    toast(`Removed ${deletedCount} chip(s)`);
   };
 
   const loadTemplate = (template) => {
@@ -1240,9 +1368,24 @@ const PhraseModeReport = (props) => {
     const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     let query = '';
     let i = 0;
+    let isQuery3 = false;
+    let isInRenewalContext = false;
 
-    // Check for timeframe + Members pattern (e.g., Current Members)
-    if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
+    // Check if this is Query 3: Previous + Members + for + Member Year
+    if (phraseChips.length >= 4 &&
+        phraseChips[0].text === 'Previous' &&
+        phraseChips[1].text === 'Members' &&
+        phraseChips[2].text === 'for' &&
+        phraseChips[3].isMergedCategory &&
+        phraseChips[3].categoryId === 'member_year') {
+      isQuery3 = true;
+      // Extract year from "Member Year = 2019"
+      const yearValue = phraseChips[3].valueLabel;
+      query = yearValue + ' members';
+      i = 4; // Skip first 4 chips
+    }
+    // Check for timeframe + Members pattern (Query 1 & 2)
+    else if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
       const timeframe = phraseChips[i].text;
       i++;
 
@@ -1259,15 +1402,24 @@ const PhraseModeReport = (props) => {
     while (i < phraseChips.length) {
       const chip = phraseChips[i];
 
-      // Skip connector chips in output (they're implied in the structure)
+      // Handle connector chips
       if (chip.type === 'connector') {
         const connectorText = chip.text?.toLowerCase();
 
-        // Handle "that have" with Member Stats
+        // Handle "that have"
         if (connectorText === 'that have') {
           i++;
-          // Look ahead for Member Stats hierarchical chip
-          if (i < phraseChips.length && phraseChips[i].isHierarchical) {
+
+          // Check if next chip is an action (Query 3: Renewed)
+          if (i < phraseChips.length && phraseChips[i].type === 'action') {
+            const action = phraseChips[i].text.toLowerCase();
+            query += ' who ' + action;
+            isInRenewalContext = true;
+            i++;
+            continue;
+          }
+          // Check if next chip is hierarchical Member Stats (Query 1)
+          else if (i < phraseChips.length && phraseChips[i].isHierarchical) {
             const memberStatsChip = phraseChips[i];
 
             // Extract the number from "Member Stats: Consecutive Membership Years= 5"
@@ -1282,13 +1434,96 @@ const PhraseModeReport = (props) => {
             continue;
           }
         }
+        // Handle "that are" (Query 2)
+        else if (connectorText === 'that are') {
+          // Include "that are" in the output
+          query += ' that are';
+        }
+        // Handle "in" connector (Query 3 renewal months)
+        else if (connectorText === 'in' && isInRenewalContext) {
+          query += ' in';
+        }
+        // Handle "for" connector in renewal target year context
+        else if (connectorText === 'for' && i < phraseChips.length - 1) {
+          // Look ahead to see if it's "for Member Year"
+          const nextChip = phraseChips[i + 1];
+          if (nextChip && nextChip.isMergedCategory && nextChip.categoryId === 'member_year') {
+            query += ' for Member Year ' + nextChip.valueLabel;
+            i += 2; // Skip "for" and the member year chip
+            continue;
+          }
+        }
         i++;
         continue;
       }
 
-      // Skip if already processed
+      // Handle action connector chips (Query 3: "in", "from", "for")
+      if (chip.type === 'action_connector') {
+        if (chip.text === 'in') {
+          query += ' in';
+        }
+        i++;
+        continue;
+      }
+
+      // Handle logical connectors (And/Or)
+      if (chip.type === 'logical_connector') {
+        // Check what comes after this connector
+        const nextChip = i + 1 < phraseChips.length ? phraseChips[i + 1] : null;
+
+        // Skip "and" before degree and province_state in Query 2 (they have their own formatting)
+        if (nextChip && nextChip.isMergedCategory &&
+            (nextChip.categoryId === 'degree' || nextChip.categoryId === 'province_state')) {
+          i++;
+          continue;
+        }
+
+        // Use lowercase "and"/"or"
+        query += ' ' + chip.text.toLowerCase();
+        i++;
+        continue;
+      }
+
+      // Skip if already processed (hierarchical chips handled with "that have")
       if (chip.isHierarchical) {
-        // Already handled above
+        i++;
+        continue;
+      }
+
+      // Handle Query 2/3 merged category chips
+      if (chip.isMergedCategory) {
+        const categoryId = chip.categoryId;
+        const valueLabel = chip.valueLabel;
+
+        if (categoryId === 'member_type') {
+          // Extract short form from "ECY1 - Member Early Career Year 1" -> "ECY1"
+          const shortForm = valueLabel.split(' - ')[0].trim();
+          query += ' ' + shortForm;
+        } else if (categoryId === 'occupation') {
+          // Format: "and occupation is practitioner"
+          const value = valueLabel.toLowerCase();
+          query += ' and occupation is ' + value;
+        } else if (categoryId === 'degree') {
+          // Format: "with a Degree: Masters"
+          query += ' with a Degree: ' + valueLabel;
+        } else if (categoryId === 'province_state') {
+          // Format: "from province/state BC"
+          query += ' from province/state ' + valueLabel;
+        } else if (categoryId === 'member_year') {
+          // Skip member year in merged chips (already handled in "for" logic)
+          i++;
+          continue;
+        } else {
+          // Default: just add the value
+          query += ' ' + valueLabel;
+        }
+        i++;
+        continue;
+      }
+
+      // Handle month-year values (Query 3)
+      if (chip.valueType === 'monthYear') {
+        query += ' ' + chip.text;
         i++;
         continue;
       }
@@ -1338,20 +1573,9 @@ const PhraseModeReport = (props) => {
           <AnimationStyles />
         </div>
         
-        <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-6">
+        <div className="border-b border-gray-200 bg-white px-8 py-6">
           <div className="flex items-center gap-3">
 
-            {/* back button */}
-            <div 
-              onClick={()=>{
-                updateDemoStateAction({ isPhraseActive: false });
-              }}
-              className='text-blue-500 flex items-center gap-2 cursor-pointer'
-            >
-              <MoveLeft />
-              <p>Back</p>  
-            </div>
-            
             <div className="p-2 bg-blue-100 rounded-lg">
               <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={2} />
             </div>
@@ -1554,45 +1778,64 @@ const PhraseModeReport = (props) => {
 
             {/* Right section - Actions (desktop only) */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0" style={{ flex: '0 0 auto' }}>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Load Query">
+                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
+                <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Schedule">
+                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
               <button
                 onClick={runReport}
                 disabled={phraseChips.length === 0}
-                className={`p-4 rounded-full transition-all ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                className={`p-4 rounded-full transition-all mx-2 ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                 title="Run Report"
               >
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
+              </button>
+              <button
+                disabled={phraseChips.length === 0}
+                className={`p-2.5 rounded-lg transition-colors group ${phraseChips.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                title="Save Query"
+              >
+                <Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings">
+                <Settings className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Far right section - Field/Filter/Sort/Grouping/Limits */}
+            <div className="flex items-center gap-2" style={{ flex: '0 0 auto' }}>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Fields">
+                <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Filters">
+                <Filter className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Sort">
+                <ArrowUpDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Grouping">
+                <Grid3x3 className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Row Limits">
+                <Hash className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
               </button>
             </div>
           </div>
         </div>
         
         <AnimationStyles />
-        
-        <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={resetReport}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Build Your Phrase</h1>
-                <p className="text-sm text-gray-600">
-                  {selectedTemplate ? `From template: ${selectedTemplate.label}` : 'Custom query'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="flex-1 pb-32 relative">
-          {/* Combined Input + Build Your Phrase Panel - half page width, white background */}
+          {/* Combined Input + Build Your Phrase Panel - full width on focus or when has chips */}
           <div className="w-full bg-white py-6">
-            <div className="max-w-3xl mx-auto px-4">
-              {/* Input field with phrase chips inside */}
-              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-4 shadow-sm">
+            <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused || phraseChips.length > 0 ? 'max-w-full' : 'max-w-3xl'}`}>
+              {/* Input field with phrase chips inside - now as global search bar */}
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-2 shadow-sm">
                 <div className="flex items-center gap-2">
                   {/* Centered, smaller Search icon */}
                   <div className="flex items-center justify-center flex-shrink-0">
@@ -1618,6 +1861,8 @@ const PhraseModeReport = (props) => {
                       ref={inputRef}
                       type="text"
                       value={inputValue}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
                       onChange={(e) => {
                         setInputValue(e.target.value);
                         setSelectedSuggestionIndex(0); // Reset selection when typing
@@ -1691,8 +1936,29 @@ const PhraseModeReport = (props) => {
                 </div>
               </div>
 
+              {/* Clear link - right aligned below input */}
+              {phraseChips.length > 0 && (
+                <div className="flex justify-end mb-3">
+                  <button
+                    onClick={() => {
+                      setPhraseChips([]);
+                      setInputValue('');
+                      setLockedSuggestions(null);
+                      setColumnSelections([null, null, null]);
+                      setColumnIndices([0, 0, 0]);
+                      setActiveColumn(0);
+                      setSelectionRoundStart(0);
+                      setPreviewChips([]);
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
               {/* Build Your Phrase Section */}
-              <div>
+              <div className="max-w-4xl">
               {/* 3-Column Progressive Selection UI */}
               <div>
               <div className="flex items-center justify-between mb-3">
@@ -1778,27 +2044,6 @@ const PhraseModeReport = (props) => {
                   });
                 })()}
               </div>
-
-              {/* Clear All Button */}
-              {phraseChips.length > 0 && (
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setPhraseChips([]);
-                      setInputValue('');
-                      setLockedSuggestions(null);
-                      setColumnSelections([null, null, null]);
-                      setColumnIndices([0, 0, 0]);
-                      setActiveColumn(0);
-                      setSelectionRoundStart(0);
-                      setPreviewChips([]);
-                    }}
-                    className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
             </div>
 
               {/* Quick Actions - Filter, Sort, Limit - Bigger, better-looking buttons */}
@@ -1840,9 +2085,6 @@ const PhraseModeReport = (props) => {
             </div>
           </div>
           </div>
-
-          {/* Blurred background effect - positioned after all content */}
-          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none', zIndex: 1 }}></div>
         </div>
 
         {/* Options Modal */}
