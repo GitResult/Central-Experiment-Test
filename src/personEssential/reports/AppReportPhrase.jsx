@@ -806,6 +806,16 @@ const PhraseModeReport = (props) => {
     // Update locked suggestions based on the NEW chip state (after adding selections)
     // This ensures columns 2 and 3 populate correctly as selections are made
     const updatedSuggestions = getPhraseSuggestions(newChipState);
+
+    // DEBUG: Log what suggestions are returned and check if context is set
+    console.log('=== AFTER ADDING CHIPS (columnIdx=' + columnIdx + ') ===');
+    console.log('newChipState length:', newChipState.length);
+    console.log('Last chip:', newChipState[newChipState.length - 1]);
+    console.log('updatedSuggestions.context:', updatedSuggestions.context);
+    console.log('updatedSuggestions.awaitingSelection:', updatedSuggestions.awaitingSelection);
+    console.log('Full updatedSuggestions:', updatedSuggestions);
+    console.log('==============================================');
+
     setLockedSuggestions(updatedSuggestions);
 
     // If this was the 3rd column (column 2), reset everything for next round
