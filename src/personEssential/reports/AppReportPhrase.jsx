@@ -843,6 +843,18 @@ const PhraseModeReport = (props) => {
         icon: undefined
       };
     }
+    // Handle merged category chips - maintain merged structure
+    else if (chip.isMergedCategory && ['memberType', 'occupation', 'degree', 'province', 'memberYear'].includes(optionsModalData.type)) {
+      // Update merged chip with new value while preserving structure
+      const newText = chip.categoryLabel + ' = ' + option;
+      finalChip = {
+        ...chip,
+        text: newText,
+        label: newText,
+        valueLabel: option
+        // Keep: isMergedCategory, categoryId, categoryLabel, type, icon, color
+      };
+    }
     // Handle status changes
     else if (optionsModalData.type === 'status') {
       const statusOption = FILTER_OPTIONS.statuses.find(s => s.label === option);
@@ -967,14 +979,52 @@ const PhraseModeReport = (props) => {
   const editChip = (chipId) => {
     const chip = phraseChips.find(c => c.id === chipId);
     if (!chip) return;
-    
+
     setEditingChipId(chipId);
-    
+
     // Determine option type based on chip type and text
     let optionType = 'custom';
     let options = [];
     let title = '';
-    
+
+    // Handle merged category chips (from suggestion panel)
+    if (chip.isMergedCategory) {
+      const categoryId = chip.categoryId;
+
+      if (categoryId === 'member_type') {
+        const memberTypes = getBrowseModeData('memberTypes');
+        options = memberTypes.map(mt => mt.label);
+        title = 'Change Member Type';
+        optionType = 'memberType';
+      } else if (categoryId === 'occupation') {
+        const occupations = getBrowseModeData('occupations');
+        options = occupations.map(o => o.label);
+        title = 'Change Occupation';
+        optionType = 'occupation';
+      } else if (categoryId === 'degree') {
+        const degrees = getBrowseModeData('degrees');
+        options = degrees.map(d => d.label);
+        title = 'Change Degree';
+        optionType = 'degree';
+      } else if (categoryId === 'province_state') {
+        const provinces = getBrowseModeData('provinces');
+        options = provinces.map(p => p.label);
+        title = 'Change Province/State';
+        optionType = 'province';
+      } else if (categoryId === 'member_year') {
+        const memberYears = getBrowseModeData('memberYears');
+        options = memberYears.map(my => my.label);
+        title = 'Change Member Year';
+        optionType = 'memberYear';
+      }
+
+      if (options.length > 0) {
+        setOptionsModalData({ type: optionType, options, title, chip });
+        setShowOptionsModal(true);
+        return;
+      }
+    }
+
     // Connector chips - can be changed to other connectors
     if (chip.type === 'connector') {
       options = ['that have', 'with status', 'in location', 'with type', 'from'];
