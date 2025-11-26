@@ -997,12 +997,22 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "for" connector in renewal target year context - Show Member Year and Member Type categories with anticipatory columns
+  // After "for" connector in renewal target year context - Continue selection flow
+  // Show "for" in Column 1 (selected), categories in Column 2, years in Column 3 (anticipatory)
   if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
     const memberYears = getBrowseModeData('memberYears');
 
     return {
       column1: [
+        {
+          label: 'for',
+          type: 'connector',
+          icon: Clock,
+          id: 'for',
+          selected: true  // Already selected, show as highlighted
+        }
+      ],
+      column2: [
         FILTER_CATEGORIES.find(c => c.id === 'member_year'),
         FILTER_CATEGORIES.find(c => c.id === 'member_type')
       ].filter(Boolean).map(c => ({
@@ -1012,29 +1022,13 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: memberYears.map(my => ({
+      column3: memberYears.map(my => ({
         label: my.label,
         type: 'value',
         valueType: 'memberYear',
         id: my.id
       })),
-      column3: [
-        {
-          label: 'that have',
-          type: 'connector',
-          icon: ChevronRight,
-          id: 'that_have',
-          order: 1
-        },
-        {
-          label: 'and',
-          type: 'logical_connector',
-          icon: Plus,
-          id: 'and',
-          order: 2
-        }
-      ],
-      awaitingSelection: 'column1',
+      awaitingSelection: 'column2',  // Changed from 'column1' to 'column2'
       context: 'renewal_target_year'
     };
   }

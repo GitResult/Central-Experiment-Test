@@ -767,23 +767,8 @@ const PhraseModeReport = (props) => {
       setSelectionRoundStart(previousChips.length + 1);
       setActiveColumn(columnIdx + 1);
     } else {
-      // Check if we just added "for" connector and next context is renewal_target_year
-      // If yes, reset columnSelections to allow fresh auto-selection from Column 1
-      const justAddedFor = chipsToAdd.length > 0 &&
-                           chipsToAdd[chipsToAdd.length - 1].type === 'connector' &&
-                           chipsToAdd[chipsToAdd.length - 1].id === 'for';
-      const isRenewalTargetYear = updatedSuggestions?.context === 'renewal_target_year';
-
-      if (justAddedFor && isRenewalTargetYear) {
-        // Reset columnSelections to allow auto-selection when user clicks Column 2
-        setColumnSelections([null, null, null]);
-        setColumnIndices([0, 0, 0]);
-        setActiveColumn(0);
-        setSelectionRoundStart(previousChips.length + chipsToAdd.length);
-      } else {
-        // Otherwise, move to next column
-        setActiveColumn(columnIdx + 1);
-      }
+      // Otherwise, move to next column
+      setActiveColumn(columnIdx + 1);
     }
   };
 
