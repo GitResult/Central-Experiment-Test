@@ -517,7 +517,7 @@ export const getThreeColumnsForPhrase = (chips) => {
           if (match) baseYear = parseInt(match[0]);
         }
       }
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const monthYearOptions = generateMonthYearOptions(baseYear, 6);
       const actionConnectors = getActionConnectors('renewed');
 
       return {
@@ -825,7 +825,7 @@ export const getThreeColumnsForPhrase = (chips) => {
       }
     }
 
-    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+    const monthYearOptions = generateMonthYearOptions(baseYear, 6);
 
     return {
       column1: ACTIONS.map(a => ({
@@ -867,7 +867,7 @@ export const getThreeColumnsForPhrase = (chips) => {
       }
     }
 
-    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6); // Generate 6 months starting from December of previous year
+    const monthYearOptions = generateMonthYearOptions(baseYear, 6); // Generate 6 months starting from December of member year
     const actionConnectors = getActionConnectors('renewed');
 
     return {
@@ -915,7 +915,7 @@ export const getThreeColumnsForPhrase = (chips) => {
           if (match) baseYear = parseInt(match[0]);
         }
       }
-      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const monthYearOptions = generateMonthYearOptions(baseYear, 6);
       const actionConnectors = getActionConnectors('renewed');
 
       return {
@@ -957,7 +957,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear' && chips.filter(c => c.valueType === 'monthYear').length === 2) {
     const memberYearChip = chips.find(c => c.valueType === 'memberYear');
     const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
-    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+    const monthYearOptions = generateMonthYearOptions(baseYear, 6);
 
     return {
       column1: [
@@ -997,20 +997,21 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "for" connector in renewal target year context - Show Member Year category with anticipatory columns
+  // After "for" connector in renewal target year context - Show Member Year and Member Type categories with anticipatory columns
   if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
     const memberYears = getBrowseModeData('memberYears');
 
     return {
       column1: [
-        {
-          label: 'Member Year',
-          type: 'category',
-          icon: Calendar,
-          color: 'indigo',
-          id: 'member_year'
-        }
-      ],
+        FILTER_CATEGORIES.find(c => c.id === 'member_year'),
+        FILTER_CATEGORIES.find(c => c.id === 'member_type')
+      ].filter(Boolean).map(c => ({
+        label: c.label,
+        type: c.type,
+        icon: c.icon,
+        color: c.color,
+        id: c.id
+      })),
       column2: memberYears.map(my => ({
         label: my.label,
         type: 'value',
