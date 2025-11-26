@@ -461,6 +461,26 @@ export const getThreeColumnsForPhrase = (chips) => {
   if (lastChipType === 'value' && (lastChip.valueType === 'memberYear' || lastChip.categoryId === 'member_year')) {
     const memberYears = getBrowseModeData('memberYears');
 
+    // DEBUG: Log when this condition is triggered
+    console.log('=== CONDITION TRIGGERED: after_member_year_value (lines 460-502) ===');
+    console.log('lastChip:', lastChip);
+    console.log('lastChipType:', lastChipType);
+    console.log('lastChip.valueType:', lastChip.valueType);
+    console.log('lastChip.categoryId:', lastChip.categoryId);
+
+    // Check for renewal context
+    const hasMonthYearChips = chips.some(c => c.valueType === 'monthYear');
+    console.log('hasMonthYearChips (renewal context):', hasMonthYearChips);
+    console.log('All chips:', chips.map(c => ({ text: c.text || c.label, valueType: c.valueType, type: c.type })));
+
+    console.log('RETURNING:');
+    console.log('  Column 1 (Categories):', ['Member Year', 'Member Type']);
+    console.log('  Column 2 (Values):', memberYears.map(y => y.label).slice(0, 3));
+    console.log('  Column 3 (Connectors):', ['that have', 'and']);
+    console.log('  awaitingSelection: column3');
+    console.log('  context: after_member_year_value');
+    console.log('===================================================================');
+
     return {
       column1: [
         FILTER_CATEGORIES.find(c => c.id === 'member_year'),
