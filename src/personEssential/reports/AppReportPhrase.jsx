@@ -429,6 +429,7 @@ const PhraseModeReport = (props) => {
   const [previewChips, setPreviewChips] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [showAllExamples, setShowAllExamples] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     if (stage === 'intro') {
@@ -1759,32 +1760,13 @@ const PhraseModeReport = (props) => {
         </div>
         
         <AnimationStyles />
-        
-        <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={resetReport}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Build Your Phrase</h1>
-                <p className="text-sm text-gray-600">
-                  {selectedTemplate ? `From template: ${selectedTemplate.label}` : 'Custom query'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="flex-1 pb-32 relative">
-          {/* Combined Input + Build Your Phrase Panel - half page width, white background */}
+          {/* Combined Input + Build Your Phrase Panel - full width on focus */}
           <div className="w-full bg-white py-6">
-            <div className="max-w-3xl mx-auto px-4">
-              {/* Input field with phrase chips inside */}
-              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-4 shadow-sm">
+            <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused ? 'max-w-full' : 'max-w-3xl'}`}>
+              {/* Input field with phrase chips inside - now as global search bar */}
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-2 shadow-sm">
                 <div className="flex items-center gap-2">
                   {/* Centered, smaller Search icon */}
                   <div className="flex items-center justify-center flex-shrink-0">
@@ -1810,6 +1792,8 @@ const PhraseModeReport = (props) => {
                       ref={inputRef}
                       type="text"
                       value={inputValue}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
                       onChange={(e) => {
                         setInputValue(e.target.value);
                         setSelectedSuggestionIndex(0); // Reset selection when typing
@@ -1882,6 +1866,27 @@ const PhraseModeReport = (props) => {
                   )}
                 </div>
               </div>
+
+              {/* Clear link - right aligned below input */}
+              {phraseChips.length > 0 && (
+                <div className="flex justify-end mb-3">
+                  <button
+                    onClick={() => {
+                      setPhraseChips([]);
+                      setInputValue('');
+                      setLockedSuggestions(null);
+                      setColumnSelections([null, null, null]);
+                      setColumnIndices([0, 0, 0]);
+                      setActiveColumn(0);
+                      setSelectionRoundStart(0);
+                      setPreviewChips([]);
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
 
               {/* Build Your Phrase Section */}
               <div>
@@ -1970,27 +1975,6 @@ const PhraseModeReport = (props) => {
                   });
                 })()}
               </div>
-
-              {/* Clear All Button */}
-              {phraseChips.length > 0 && (
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setPhraseChips([]);
-                      setInputValue('');
-                      setLockedSuggestions(null);
-                      setColumnSelections([null, null, null]);
-                      setColumnIndices([0, 0, 0]);
-                      setActiveColumn(0);
-                      setSelectionRoundStart(0);
-                      setPreviewChips([]);
-                    }}
-                    className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
             </div>
 
               {/* Quick Actions - Filter, Sort, Limit - Bigger, better-looking buttons */}
@@ -2034,7 +2018,7 @@ const PhraseModeReport = (props) => {
           </div>
 
           {/* Blurred background effect - positioned after all content */}
-          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none', zIndex: 1 }}></div>
+          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(1px)', backgroundColor: 'rgba(255, 255, 255, 0.2)', pointerEvents: 'none', zIndex: 1 }}></div>
         </div>
 
         {/* Options Modal */}
