@@ -1745,12 +1745,12 @@ const PhraseModeReport = (props) => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 mt-0">
-          <div className="max-w-4xl w-full mb-8">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-light text-gray-900 mb-3">
+          <div className="max-w-4xl w-full mb-6">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-light text-gray-900 mb-2">
                 Describe the data you need
               </h2>
-              <p className="text-base text-gray-600">
+              <p className="text-sm text-gray-600">
                 Use phrases to build your query naturally—no need to know database structure
               </p>
             </div>
@@ -1771,17 +1771,17 @@ const PhraseModeReport = (props) => {
               </div>
               
               {showPreview && (
-                <div className="px-4 pb-4 min-h-[100px] flex flex-col items-center justify-center">
+                <div className="px-4 pb-4 min-h-[80px] flex flex-col items-center justify-center">
                   {renderAnimatedExamples()}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="max-w-6xl w-full mb-8">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Start with an Example</h3>
-              <p className="text-sm text-gray-600">Pre-built phrases you can modify</p>
+          <div className="max-w-6xl w-full mb-6">
+            <div className="mb-3">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Start with an Example</h3>
+              <p className="text-xs text-gray-600">Pre-built phrases you can modify</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1840,9 +1840,9 @@ const PhraseModeReport = (props) => {
           </div>
 
           <div className="max-w-6xl w-full">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Start from Scratch</h3>
-              <p className="text-sm text-gray-600">Begin by selecting your starting point</p>
+            <div className="mb-3">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Start from Scratch</h3>
+              <p className="text-xs text-gray-600">Begin by selecting your starting point</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -1993,7 +1993,7 @@ const PhraseModeReport = (props) => {
           <div className="w-full bg-white py-6">
             <div className={`mx-auto px-8 transition-all duration-300 ${isInputFocused || phraseChips.length > 0 ? 'max-w-full' : 'max-w-3xl'}`}>
               {/* Input field with phrase chips inside - now as global search bar */}
-              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-2 shadow-sm">
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-2 mb-2 shadow-sm min-h-[56px]">
                 <div className="flex items-center gap-2">
                   {/* Centered, smaller Search icon */}
                   <div className="flex items-center justify-center flex-shrink-0">
@@ -2006,7 +2006,7 @@ const PhraseModeReport = (props) => {
                       <div key={chip.id} className="chip-pop">
                         <PhraseChip
                           chip={chip}
-                          size="sm"
+                          size="xs"
                           onRemove={() => removeChip(chip.id)}
                           onEdit={() => editChip(chip.id)}
                           showRemove={true}
@@ -2078,7 +2078,7 @@ const PhraseModeReport = (props) => {
                         }
                       }}
                       placeholder={phraseChips.length === 0 ? "Start building your phrase..." : "Continue typing or select..."}
-                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic"
+                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic h-8"
                     />
                   </div>
 
@@ -2094,27 +2094,6 @@ const PhraseModeReport = (props) => {
                 </div>
               </div>
 
-              {/* Clear link - right aligned below input */}
-              {phraseChips.length > 0 && (
-                <div className="flex justify-end mb-3">
-                  <button
-                    onClick={() => {
-                      setPhraseChips([]);
-                      setInputValue('');
-                      setLockedSuggestions(null);
-                      setColumnSelections([null, null, null]);
-                      setColumnIndices([0, 0, 0]);
-                      setActiveColumn(0);
-                      setSelectionRoundStart(0);
-                      setPreviewChips([]);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
-
               {/* Build Your Phrase Section */}
               <div className="max-w-4xl">
               {/* 3-Column Progressive Selection UI */}
@@ -2124,8 +2103,27 @@ const PhraseModeReport = (props) => {
                   <Zap className="w-4 h-4 text-yellow-500" />
                   <span className="text-xs font-semibold text-gray-700">Build Your Phrase</span>
                 </div>
-                <div className="text-[10px] text-gray-400">
-                  ↑↓ • ←→ • Enter • Tab
+                <div className="flex items-center gap-3">
+                  {phraseChips.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setPhraseChips([]);
+                        setInputValue('');
+                        setLockedSuggestions(null);
+                        setColumnSelections([null, null, null]);
+                        setColumnIndices([0, 0, 0]);
+                        setActiveColumn(0);
+                        setSelectionRoundStart(0);
+                        setPreviewChips([]);
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <div className="text-[10px] text-gray-400">
+                    ↑↓ • ←→ • Enter • Tab
+                  </div>
                 </div>
               </div>
 
@@ -2134,14 +2132,27 @@ const PhraseModeReport = (props) => {
                 {(() => {
                   // Use locked suggestions if available, otherwise get fresh
                   const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+
+                  // Helper function to filter column data
+                  const filterColumnData = (columnData, columnIndex) => {
+                    if (!Array.isArray(columnData)) return [];
+
+                    // Only filter if this column is active and there's input
+                    if (activeColumn === columnIndex && inputValue) {
+                      return columnData.filter(item => {
+                        const searchText = typeof item === 'string' ? item : (item.label || item.text || '');
+                        return searchText.toLowerCase().startsWith(inputValue.toLowerCase());
+                      });
+                    }
+
+                    // Otherwise show first 6 items
+                    return columnData.slice(0, 6);
+                  };
+
                   const allSuggestions = [
-                    inputValue
-                      ? (phraseSuggestions.current || []).filter(s =>
-                          s.label?.toLowerCase().startsWith(inputValue.toLowerCase())
-                        )
-                      : (phraseSuggestions.current || []).slice(0, 6),
-                    (phraseSuggestions.next || []).slice(0, 6),
-                    (phraseSuggestions.future || []).slice(0, 6)
+                    filterColumnData(phraseSuggestions.current || [], 0),
+                    filterColumnData(phraseSuggestions.next || [], 1),
+                    filterColumnData(phraseSuggestions.future || [], 2)
                   ];
                   const columnTitles = [
                     phraseChips.length === 0 ? 'Start with' : 'Select',
