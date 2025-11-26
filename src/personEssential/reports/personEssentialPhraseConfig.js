@@ -417,6 +417,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Year" category - Show years from browse mode in Column 2
+  // AND anticipate connectors in Column 3
   if (lastChipType === 'category' && lastChip.id === 'member_year') {
     const memberYears = getBrowseModeData('memberYears');
     return {
@@ -437,7 +438,20 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'memberYear',
         id: my.id
       })),
-      column3: [],
+      column3: [
+        {
+          label: 'that have',
+          type: 'connector',
+          icon: ChevronRight,
+          id: 'that_have'
+        },
+        {
+          label: 'and',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'and'
+        }
+      ],
       awaitingSelection: 'column2',
       context: 'member_year_value'
     };
@@ -745,8 +759,25 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Renewed" action - Show action connectors in Column 2
+  // AND anticipate month+year values in Column 3 (based on first connector "in")
   if (lastChipType === 'action' && lastChip.id === 'renewed') {
     const actionConnectors = getActionConnectors('renewed');
+
+    // Get the member year from chips for anticipatory month+year values
+    const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+    let baseYear = 2019;
+    if (memberYearChip) {
+      // Extract year from merged chip "Member Year = 2019" or from valueLabel
+      if (memberYearChip.valueLabel) {
+        baseYear = parseInt(memberYearChip.valueLabel);
+      } else if (memberYearChip.text) {
+        const match = memberYearChip.text.match(/\d{4}/);
+        if (match) baseYear = parseInt(match[0]);
+      }
+    }
+
+    const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
     return {
       column1: ACTIONS.map(a => ({
         label: a.label,
@@ -762,7 +793,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         id: ac.id,
         enablesMultiSelect: ac.enablesMultiSelect
       })),
-      column3: [],
+      column3: monthYearOptions.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'monthYear',
+        id: my.id
+      })),
       awaitingSelection: 'column2',
       context: 'renewed_connector'
     };

@@ -552,8 +552,8 @@ const PhraseModeReport = (props) => {
     // Check if we're in a hierarchical selection (Member Stats)
     const isHierarchicalSelection = newSelections[0]?.id === 'member_stats' || newSelections[0]?.label === 'Member Stats';
 
-    // Check if we're in Query 2 category selection (Member Type, Occupation, Degree, Province/State)
-    const query2Categories = ['member_type', 'occupation', 'degree', 'province_state'];
+    // Check if we're in Query 2/3 category selection (Member Type, Occupation, Degree, Province/State, Member Year)
+    const query2Categories = ['member_type', 'occupation', 'degree', 'province_state', 'member_year'];
     const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
 
     // Add chips cumulatively based on which column was clicked
@@ -1262,9 +1262,24 @@ const PhraseModeReport = (props) => {
     const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
     let query = '';
     let i = 0;
+    let isQuery3 = false;
+    let isInRenewalContext = false;
 
-    // Check for timeframe + Members pattern (e.g., Current Members)
-    if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
+    // Check if this is Query 3: Previous + Members + for + Member Year
+    if (phraseChips.length >= 4 &&
+        phraseChips[0].text === 'Previous' &&
+        phraseChips[1].text === 'Members' &&
+        phraseChips[2].text === 'for' &&
+        phraseChips[3].isMergedCategory &&
+        phraseChips[3].categoryId === 'member_year') {
+      isQuery3 = true;
+      // Extract year from "Member Year = 2019"
+      const yearValue = phraseChips[3].valueLabel;
+      query = yearValue + ' members';
+      i = 4; // Skip first 4 chips
+    }
+    // Check for timeframe + Members pattern (Query 1 & 2)
+    else if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
       const timeframe = phraseChips[i].text;
       i++;
 
@@ -1285,11 +1300,20 @@ const PhraseModeReport = (props) => {
       if (chip.type === 'connector') {
         const connectorText = chip.text?.toLowerCase();
 
-        // Handle "that have" with Member Stats
+        // Handle "that have"
         if (connectorText === 'that have') {
           i++;
-          // Look ahead for Member Stats hierarchical chip
-          if (i < phraseChips.length && phraseChips[i].isHierarchical) {
+
+          // Check if next chip is an action (Query 3: Renewed)
+          if (i < phraseChips.length && phraseChips[i].type === 'action') {
+            const action = phraseChips[i].text.toLowerCase();
+            query += ' who ' + action;
+            isInRenewalContext = true;
+            i++;
+            continue;
+          }
+          // Check if next chip is hierarchical Member Stats (Query 1)
+          else if (i < phraseChips.length && phraseChips[i].isHierarchical) {
             const memberStatsChip = phraseChips[i];
 
             // Extract the number from "Member Stats: Consecutive Membership Years= 5"
@@ -1303,9 +1327,34 @@ const PhraseModeReport = (props) => {
             i++;
             continue;
           }
-        } else if (connectorText === 'that are') {
+        }
+        // Handle "that are" (Query 2)
+        else if (connectorText === 'that are') {
           // Include "that are" in the output
           query += ' that are';
+        }
+        // Handle "in" connector (Query 3 renewal months)
+        else if (connectorText === 'in' && isInRenewalContext) {
+          query += ' in';
+        }
+        // Handle "for" connector in renewal target year context
+        else if (connectorText === 'for' && i < phraseChips.length - 1) {
+          // Look ahead to see if it's "for Member Year"
+          const nextChip = phraseChips[i + 1];
+          if (nextChip && nextChip.isMergedCategory && nextChip.categoryId === 'member_year') {
+            query += ' for Member Year ' + nextChip.valueLabel;
+            i += 2; // Skip "for" and the member year chip
+            continue;
+          }
+        }
+        i++;
+        continue;
+      }
+
+      // Handle action connector chips (Query 3: "in", "from", "for")
+      if (chip.type === 'action_connector') {
+        if (chip.text === 'in') {
+          query += ' in';
         }
         i++;
         continue;
@@ -1325,7 +1374,7 @@ const PhraseModeReport = (props) => {
         continue;
       }
 
-      // Handle Query 2 merged category chips
+      // Handle Query 2/3 merged category chips
       if (chip.isMergedCategory) {
         const categoryId = chip.categoryId;
         const valueLabel = chip.valueLabel;
@@ -1344,10 +1393,21 @@ const PhraseModeReport = (props) => {
         } else if (categoryId === 'province_state') {
           // Format: "from province/state BC"
           query += ' from province/state ' + valueLabel;
+        } else if (categoryId === 'member_year') {
+          // Skip member year in merged chips (already handled in "for" logic)
+          i++;
+          continue;
         } else {
           // Default: just add the value
           query += ' ' + valueLabel;
         }
+        i++;
+        continue;
+      }
+
+      // Handle month-year values (Query 3)
+      if (chip.valueType === 'monthYear') {
+        query += ' ' + chip.text;
         i++;
         continue;
       }
