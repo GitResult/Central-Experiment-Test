@@ -4,7 +4,7 @@ import {
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
-  Edit2, Trash2, Settings,
+  Edit2, Trash2, Settings, Save, Eye, Grid3x3, Hash, FileUp,
   GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
@@ -1768,13 +1768,51 @@ const PhraseModeReport = (props) => {
 
             {/* Right section - Actions (desktop only) */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0" style={{ flex: '0 0 auto' }}>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Load Query">
+                <FileUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Export">
+                <Download className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Schedule">
+                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
               <button
                 onClick={runReport}
                 disabled={phraseChips.length === 0}
-                className={`p-4 rounded-full transition-all ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                className={`p-4 rounded-full transition-all mx-2 ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                 title="Run Report"
               >
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
+              </button>
+              <button
+                disabled={phraseChips.length === 0}
+                className={`p-2.5 rounded-lg transition-colors group ${phraseChips.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                title="Save Query"
+              >
+                <Save className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="More Settings">
+                <Settings className="w-5 h-5 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Far right section - Field/Filter/Sort/Grouping/Limits */}
+            <div className="flex items-center gap-2" style={{ flex: '0 0 auto' }}>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Fields">
+                <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Filters">
+                <Filter className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Sort">
+                <ArrowUpDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Grouping">
+                <Grid3x3 className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
+              </button>
+              <button className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors group" title="Row Limits">
+                <Hash className="w-4 h-4 text-gray-400 group-hover:text-gray-600" strokeWidth={1.5} />
               </button>
             </div>
           </div>
