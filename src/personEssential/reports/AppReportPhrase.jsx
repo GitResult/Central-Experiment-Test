@@ -10,6 +10,7 @@ import {
 import { connect } from 'react-redux';
 import { updateDemoState } from '../../redux/demo/actions';
 import { getSuggestionsForPhrase as getPhraseSuggestions } from './personEssentialPhraseConfig';
+import { getBrowseModeData } from './phraseBuilderData';
 
 const AnimationStyles = () => (
   <style>{`
