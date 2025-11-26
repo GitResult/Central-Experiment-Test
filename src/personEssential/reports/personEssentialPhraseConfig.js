@@ -904,6 +904,52 @@ export const getThreeColumnsForPhrase = (chips) => {
     }
   }
 
+  // After selecting "or" connector - Keep showing action connectors and month-year options
+  if (lastChipType === 'logical_connector' && lastChip.id === 'or') {
+    const hasPreviousMonthYear = chips.filter(c => c.valueType === 'monthYear').length > 0;
+
+    if (hasPreviousMonthYear) {
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear' || c.categoryId === 'member_year');
+      let baseYear = 2019;
+      if (memberYearChip) {
+        if (memberYearChip.valueLabel) {
+          baseYear = parseInt(memberYearChip.valueLabel);
+        } else if (memberYearChip.text) {
+          const match = memberYearChip.text.match(/\d{4}/);
+          if (match) baseYear = parseInt(match[0]);
+        }
+      }
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+      const actionConnectors = getActionConnectors('renewed');
+
+      return {
+        column1: [
+          {
+            label: 'or',
+            type: 'logical_connector',
+            icon: Plus,
+            id: 'or',
+            order: 1,
+            selected: true
+          }
+        ],
+        column2: actionConnectors.map(ac => ({
+          label: ac.label,
+          type: ac.type,
+          id: ac.id,
+          enablesMultiSelect: ac.enablesMultiSelect
+        })),
+        column3: monthYearOptions.map(my => ({
+          label: my.label,
+          type: 'value',
+          valueType: 'monthYear',
+          id: my.id
+        })),
+        awaitingSelection: 'column2',
+        context: 'after_or_selection'
+      };
+    }
+  }
 
   // After selecting second month+year with "or" - Show "for" in Column 3
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear' && chips.filter(c => c.valueType === 'monthYear').length === 2) {
