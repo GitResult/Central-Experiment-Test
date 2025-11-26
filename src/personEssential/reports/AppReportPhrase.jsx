@@ -4,7 +4,7 @@ import {
   TrendingUp, Users, Calendar, DollarSign, MapPin,
   Crown, Award, Mail, Database, Info, Lightbulb,
   ArrowRight, Plus, Zap, Target, Filter, ArrowUpDown, Download,
-  Edit2, Trash2, Settings, Home,
+  Edit2, Trash2, Settings,
   MoveLeft, GraduationCap, Briefcase, Clock, CalendarClock
 } from 'lucide-react';
 import { connect } from 'react-redux';
