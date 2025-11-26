@@ -344,6 +344,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Type" category - Show member types from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since member types have no children)
   if (lastChipType === 'category' && lastChip.id === 'member_type') {
     const memberTypes = getBrowseModeData('memberTypes');
     return {
@@ -361,7 +362,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'memberType',
         id: mt.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'member_type_value'
     };
@@ -512,6 +518,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Occupation" category - Show occupations from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since occupations have no children)
   if (lastChipType === 'category' && lastChip.id === 'occupation') {
     const occupations = getBrowseModeData('occupations');
     return {
@@ -529,7 +536,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'occupation',
         id: o.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'occupation_value'
     };
@@ -567,6 +579,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Degree" category - Show degrees from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since degrees have no children)
   if (lastChipType === 'category' && lastChip.id === 'degree') {
     const degrees = getBrowseModeData('degrees');
     return {
@@ -584,7 +597,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'degree',
         id: d.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'degree_value'
     };
@@ -622,6 +640,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Province/State" category - Show provinces from browse mode in Column 2
+  // AND anticipate connectors in Column 3 (since provinces have no children)
   if (lastChipType === 'category' && lastChip.id === 'province_state') {
     const provinces = getBrowseModeData('provinces');
     return {
@@ -639,7 +658,12 @@ export const getThreeColumnsForPhrase = (chips) => {
         valueType: 'province',
         id: p.id
       })),
-      column3: [],
+      column3: LOGICAL_CONNECTORS.map(lc => ({
+        label: lc.label,
+        type: lc.type,
+        icon: lc.icon,
+        id: lc.id
+      })),
       awaitingSelection: 'column2',
       context: 'province_value'
     };
