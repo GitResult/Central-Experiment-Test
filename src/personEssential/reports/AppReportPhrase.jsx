@@ -673,12 +673,9 @@ const PhraseModeReport = (props) => {
     setInputValue('');
 
     // Update locked suggestions based on the NEW chip state (after adding selections)
-    // Don't update when selecting from Column 1 - anticipatory suggestions are already correct
-    // Only update when progressing to Column 2 or completing Column 3
-    if (columnIdx >= 1) {
-      const updatedSuggestions = getPhraseSuggestions(newChipState);
-      setLockedSuggestions(updatedSuggestions);
-    }
+    // This ensures columns 2 and 3 populate correctly as selections are made
+    const updatedSuggestions = getPhraseSuggestions(newChipState);
+    setLockedSuggestions(updatedSuggestions);
 
     // If this was the 3rd column (column 2), reset everything for next round
     if (columnIdx === 2) {
