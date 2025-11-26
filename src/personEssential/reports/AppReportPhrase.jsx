@@ -559,10 +559,14 @@ const PhraseModeReport = (props) => {
     const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
 
     // Check if we're in renewal target year merging (for + category + value)
+    // Check phraseChips directly instead of relying on lockedSuggestions.context
     const isRenewalTargetYearMerging = columnIdx === 2 &&
-                                        lockedSuggestions.context === 'renewal_target_year' &&
+                                        phraseChips.length > 0 &&
+                                        phraseChips[phraseChips.length - 1]?.id === 'for' &&
+                                        phraseChips[phraseChips.length - 1]?.type === 'connector' &&
                                         newSelections[0]?.id === 'for' &&
                                         newSelections[1]?.type === 'category' &&
+                                        (newSelections[1]?.id === 'member_year' || newSelections[1]?.id === 'member_type') &&
                                         newSelections[2]?.type === 'value';
 
     // Add chips cumulatively based on which column was clicked
@@ -626,20 +630,21 @@ const PhraseModeReport = (props) => {
         isMergedCategory: true
       });
     } else if (columnIdx === 1 &&
-               lockedSuggestions.context === 'renewal_target_year' &&
-               newSelections[0]?.id === 'for' &&
-               newSelections[1]?.type === 'category') {
+               phraseChips.length > 0 &&
+               phraseChips[phraseChips.length - 1]?.id === 'for' &&
+               phraseChips[phraseChips.length - 1]?.type === 'connector' &&
+               newSelections[1]?.type === 'category' &&
+               (newSelections[1]?.id === 'member_year' || newSelections[1]?.id === 'member_type')) {
       // DEBUG: Capture state when early return SHOULD execute
       console.log('=== EARLY RETURN CHECK (Column 2 clicked) ===');
-      console.log('Context:', lockedSuggestions.context);
       console.log('Last chip:', phraseChips[phraseChips.length - 1]);
       console.log('newSelections:', newSelections);
       console.log('Condition met - executing early return');
       console.log('==========================================');
 
       // SPECIAL CASE: Renewal target year context at Column 2
-      // Don't add chips yet - preserve phrase state and context for Column 3 merging
-      // This prevents duplicate "for" chips and context loss
+      // Don't add chips yet - preserve phrase state for Column 3 merging
+      // This prevents duplicate "for" chips by checking phraseChips directly
       setActiveColumn(columnIdx + 1);
       return;  // Early exit without adding chips or updating suggestions
     } else if (isRenewalTargetYearMerging) {
