@@ -619,20 +619,46 @@ const PhraseModeReport = (props) => {
       });
     } else {
       // Non-hierarchical: add chips for each selection
-      for (let i = 0; i <= columnIdx; i++) {
-        if (newSelections[i]) {
-          const sel = newSelections[i];
-          chipsToAdd.push({
-            id: sel.id || (Date.now() + i + Math.random()),
-            text: sel.label,
-            label: sel.label,
-            type: sel.type || 'connector',
-            icon: sel.icon,
-            color: sel.color || 'gray',
-            valueType: sel.valueType,
-            enablesMultiSelect: sel.enablesMultiSelect,
-            order: sel.order
-          });
+
+      // Special case: If clicking Column 3 (columnIdx === 2) with a connector, and Column 1 is a query2 category
+      // that's already in a merged chip, only add the Column 3 connector, not Column 1 and 2
+      const isColumn3ConnectorAfterMergedCategory =
+        columnIdx === 2 &&
+        newSelections[0]?.type === 'category' &&
+        query2Categories.includes(newSelections[0]?.id) &&
+        (newSelections[2]?.type === 'connector' || newSelections[2]?.type === 'logical_connector');
+
+      if (isColumn3ConnectorAfterMergedCategory) {
+        // Only add the connector from Column 3, skip Column 1 and 2 (already in merged chip)
+        const sel = newSelections[2];
+        chipsToAdd.push({
+          id: sel.id || (Date.now() + Math.random()),
+          text: sel.label,
+          label: sel.label,
+          type: sel.type || 'connector',
+          icon: sel.icon,
+          color: sel.color || 'gray',
+          valueType: sel.valueType,
+          enablesMultiSelect: sel.enablesMultiSelect,
+          order: sel.order
+        });
+      } else {
+        // Normal case: add chips for each selection
+        for (let i = 0; i <= columnIdx; i++) {
+          if (newSelections[i]) {
+            const sel = newSelections[i];
+            chipsToAdd.push({
+              id: sel.id || (Date.now() + i + Math.random()),
+              text: sel.label,
+              label: sel.label,
+              type: sel.type || 'connector',
+              icon: sel.icon,
+              color: sel.color || 'gray',
+              valueType: sel.valueType,
+              enablesMultiSelect: sel.enablesMultiSelect,
+              order: sel.order
+            });
+          }
         }
       }
     }
