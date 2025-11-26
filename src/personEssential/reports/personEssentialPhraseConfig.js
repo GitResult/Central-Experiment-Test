@@ -997,9 +997,10 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "for" connector in renewal target year context - Show Member Year category ONLY
-  // Column 2 and 3 should be EMPTY until user selects Member Year
+  // After "for" connector in renewal target year context - Show Member Year category with anticipatory columns
   if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
+    const memberYears = getBrowseModeData('memberYears');
+
     return {
       column1: [
         {
@@ -1010,8 +1011,28 @@ export const getThreeColumnsForPhrase = (chips) => {
           id: 'member_year'
         }
       ],
-      column2: [], // Empty until Member Year category is selected
-      column3: [], // Empty until year value is selected
+      column2: memberYears.map(my => ({
+        label: my.label,
+        type: 'value',
+        valueType: 'memberYear',
+        id: my.id
+      })),
+      column3: [
+        {
+          label: 'that have',
+          type: 'connector',
+          icon: ChevronRight,
+          id: 'that_have',
+          order: 1
+        },
+        {
+          label: 'and',
+          type: 'logical_connector',
+          icon: Plus,
+          id: 'and',
+          order: 2
+        }
+      ],
       awaitingSelection: 'column1',
       context: 'renewal_target_year'
     };
