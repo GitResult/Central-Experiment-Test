@@ -1080,8 +1080,30 @@ const PhraseModeReport = (props) => {
   };
 
   const removeChip = (chipId) => {
-    setPhraseChips(phraseChips.filter(c => c.id !== chipId));
-    toast('Chip removed');
+    // Find the index of the chip being deleted
+    const chipIndex = phraseChips.findIndex(c => c.id === chipId);
+
+    if (chipIndex === -1) return; // Chip not found
+
+    // Cascading deletion: Keep only chips before the deleted chip
+    const remainingChips = phraseChips.slice(0, chipIndex);
+    setPhraseChips(remainingChips);
+
+    // Restore suggestion panel to state matching remaining chips
+    const updatedSuggestions = getPhraseSuggestions(remainingChips);
+    setLockedSuggestions(updatedSuggestions);
+
+    // Reset selection state for clean continuation
+    setColumnSelections([null, null, null]);
+    setColumnIndices([0, 0, 0]);
+    setActiveColumn(0);
+    setPreviewChips([]);
+
+    // Update selection round start to end of remaining chips
+    setSelectionRoundStart(remainingChips.length);
+
+    const deletedCount = phraseChips.length - chipIndex;
+    toast(`Removed ${deletedCount} chip(s)`);
   };
 
   const loadTemplate = (template) => {
