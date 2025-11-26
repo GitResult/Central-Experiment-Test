@@ -252,8 +252,14 @@ export const getThreeColumnsForPhrase = (chips) => {
   }
 
   // After selecting "Member Stats" category - Show sub-categories in Column 2
+  // AND anticipate values in Column 3 (values of first subcategory)
   if (lastChipType === 'category' && lastChip.id === 'member_stats') {
     const subCats = getSubCategories('member_stats');
+
+    // Get values for the first subcategory
+    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
+
     return {
       column1: FILTER_CATEGORIES.map(c => ({
         label: c.label,
@@ -268,7 +274,11 @@ export const getThreeColumnsForPhrase = (chips) => {
         type: sc.type,
         id: sc.id
       })),
-      column3: [],
+      column3: values.map(v => ({
+        label: String(v),
+        type: 'value',
+        valueType: 'number'
+      })),
       awaitingSelection: 'column2',
       context: 'member_stats_subcategory'
     };
