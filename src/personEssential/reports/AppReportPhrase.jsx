@@ -14,67 +14,66 @@ import { getSuggestionsForPhrase as getPhraseSuggestions } from './personEssenti
 const AnimationStyles = () => (
   <style>{`
     @keyframes phraseSlideIn {
-      0% { opacity: 0; transform: translateY(-5px) scale(0.475); }
-      100% { opacity: 1; transform: translateY(0) scale(0.5); }
+      0% { opacity: 0; transform: translateY(-5px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
-    
+
     @keyframes chipPop {
-      0% { opacity: 0; transform: scale(0.4); }
-      60% { opacity: 1; transform: scale(0.525); }
-      100% { opacity: 1; transform: scale(0.5); }
+      0% { opacity: 0; transform: scale(0.8); }
+      60% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
     }
-    
+
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
       50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
     }
-    
+
     @keyframes slideInFromRight {
-      from { opacity: 0; transform: translateX(10px) scale(0.5); }
-      to { opacity: 1; transform: translateX(0) scale(0.5); }
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
     }
-    
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.5); }
-      to { opacity: 1; transform: scale(0.5); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    
+
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px) scale(0.5); }
-      to { opacity: 1; transform: translateY(0) scale(0.5); }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .phrase-slide-in {
       animation: phraseSlideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .chip-pop {
       animation: chipPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .pulse-glow {
       animation: pulseGlow 2s infinite;
-      transform: scale(0.5);
     }
-    
+
     .slide-in-right {
       animation: slideInFromRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .fade-in {
       animation: fadeIn 0.4s ease-in forwards;
     }
-    
+
     .slide-up {
       animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
-    
+
     .chip-hover {
       transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    
+
     .chip-hover:hover {
-      transform: scale(0.52) translateY(-1px);
+      transform: translateY(-1px);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
   `}</style>
@@ -167,8 +166,8 @@ const PHRASE_TEMPLATES = [
     id: 'current-recent-orders',
     label: 'Current members with recent orders',
     chips: [
-      { text: 'Current', type: 'entity', icon: Users, color: 'blue' },
-      { text: 'Members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
       { text: 'that have', type: 'connector', color: 'gray' },
       { text: 'orders', type: 'attribute', icon: DollarSign, color: 'green' },
       { text: 'last 30 days', type: 'timeframe', icon: Calendar, color: 'orange' }
@@ -195,20 +194,70 @@ const PHRASE_TEMPLATES = [
     id: 'new-members-location',
     label: 'New members in Toronto',
     chips: [
-      { text: 'New', type: 'status', icon: Plus, color: 'emerald' },
-      { text: 'Members', type: 'entity', icon: Users, color: 'blue' },
+      { text: 'New', type: 'cohort', icon: Plus, color: 'emerald' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
       { text: 'in', type: 'connector', color: 'gray' },
       { text: 'Toronto', type: 'location', icon: MapPin, color: 'red' }
     ],
     description: 'Recently joined members from Toronto area',
     category: 'Demographics',
     popularity: 76
+  },
+  {
+    id: 'current-members-5-years',
+    label: 'Current members that have been members for the past 5 years',
+    chips: [
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'that have been', type: 'connector', icon: Clock, color: 'gray' },
+      { text: 'members', type: 'entityType', icon: Crown, color: 'purple' },
+      { text: 'for', type: 'connector', icon: Clock, color: 'gray' },
+      { text: 'past 5 years', type: 'consecutiveMembershipYears', icon: Clock, color: 'blue' }
+    ],
+    description: 'Members with 5 consecutive years of membership',
+    category: 'Membership',
+    popularity: 90
+  },
+  {
+    id: 'current-ecy1-practitioner-masters-bc',
+    label: 'Current members that are ECY1 and occupation is practitioner with a Degree: Masters from province/state BC',
+    chips: [
+      { text: 'Current', type: 'cohort', icon: Users, color: 'blue' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'that are', type: 'connector', icon: Filter, color: 'gray' },
+      { text: 'ECY1', type: 'membershipType', icon: Crown, color: 'purple' },
+      { text: 'and', type: 'connector', icon: Plus, color: 'gray' },
+      { text: 'occupation is', type: 'connector', icon: Briefcase, color: 'gray' },
+      { text: 'Practitioner', type: 'occupation', icon: Briefcase, color: 'teal' },
+      { text: 'with a Degree:', type: 'connector', icon: GraduationCap, color: 'gray' },
+      { text: 'Masters', type: 'degree', icon: GraduationCap, color: 'indigo' },
+      { text: 'from province/state', type: 'connector', icon: MapPin, color: 'gray' },
+      { text: 'BC', type: 'province', icon: MapPin, color: 'red' }
+    ],
+    description: 'ECY1 practitioners with Masters degree from BC',
+    category: 'Demographics',
+    popularity: 85
+  },
+  {
+    id: '2019-renewed-december',
+    label: '2019 members who renewed in December 2019 or January 2020 for Member Year 2020',
+    chips: [
+      { text: '2019', type: 'yearCohort', icon: Calendar, color: 'indigo' },
+      { text: 'members', type: 'entity', icon: Crown, color: 'purple' },
+      { text: 'who renewed in', type: 'connector', icon: CalendarClock, color: 'gray' },
+      { text: 'December', type: 'renewalMonth', icon: Calendar, color: 'orange' },
+      { text: '2019', type: 'renewalYear', icon: Calendar, color: 'orange' }
+    ],
+    description: '2019 members who renewed in December 2019',
+    category: 'Membership',
+    popularity: 80
   }
 ];
 
 const STARTING_POINTS = [
   { id: 'current', label: 'Current Members', icon: Users, color: 'blue', description: 'Active membership status' },
   { id: 'new', label: 'New Members', icon: Plus, color: 'emerald', description: 'Recently joined' },
+  { id: 'previous', label: 'Previous Members', icon: Clock, color: 'orange', description: 'Former members' },
   { id: 'lapsed', label: 'Lapsed Members', icon: X, color: 'red', description: 'Expired membership' },
   { id: 'all', label: 'All Contacts', icon: Database, color: 'gray', description: 'Complete database' }
 ];
@@ -378,6 +427,7 @@ const PhraseModeReport = (props) => {
   const [selectionRoundStart, setSelectionRoundStart] = useState(0);
   const [previewChips, setPreviewChips] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [showAllExamples, setShowAllExamples] = useState(false);
 
   useEffect(() => {
     if (stage === 'intro') {
@@ -499,38 +549,97 @@ const PhraseModeReport = (props) => {
     newSelections[columnIdx] = suggestion;
     setColumnSelections(newSelections);
 
+    // Check if we're in a hierarchical selection (Member Stats)
+    const isHierarchicalSelection = newSelections[0]?.id === 'member_stats' || newSelections[0]?.label === 'Member Stats';
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
-    for (let i = 0; i <= columnIdx; i++) {
-      if (newSelections[i]) {
-        const sel = newSelections[i];
-        chipsToAdd.push({
-          id: Date.now() + i + Math.random(),
-          text: sel.label,
-          type: sel.type || 'connector',
-          icon: sel.icon,
-          color: sel.color || 'gray'
-        });
+
+    if (isHierarchicalSelection) {
+      // For hierarchical selections, merge into a single chip progressively
+      let chipText = newSelections[0].label; // Start with "Member Stats"
+
+      if (columnIdx >= 1 && newSelections[1]) {
+        chipText += ': ' + newSelections[1].label; // Add ": Consecutive Membership Years"
+      }
+
+      if (columnIdx >= 2 && newSelections[2]) {
+        chipText += '= ' + newSelections[2].label; // Add "= 5"
+      }
+
+      // Add the merged hierarchical chip (previousChips will be prepended later)
+      // Determine the appropriate type and ID based on what's been selected
+      let chipType = 'category';
+      let chipId = 'member_stats';
+
+      if (columnIdx >= 2 && newSelections[2]) {
+        // Final value selected - this completes the selection
+        chipType = 'value';
+        chipId = 'member_stats_complete';
+      } else if (columnIdx >= 1 && newSelections[1]) {
+        // Subcategory selected - show values next
+        chipType = 'subcategory';
+        chipId = newSelections[1].id || 'consecutive_membership_years';
+      }
+
+      chipsToAdd.push({
+        id: chipId,
+        text: chipText,
+        label: chipText,
+        type: chipType,
+        icon: newSelections[0].icon,
+        color: newSelections[0].color || 'blue',
+        isHierarchical: true,
+        subcategory: newSelections[1]?.label,
+        value: newSelections[2]?.label
+      });
+    } else {
+      // Non-hierarchical: add chips for each selection
+      for (let i = 0; i <= columnIdx; i++) {
+        if (newSelections[i]) {
+          const sel = newSelections[i];
+          chipsToAdd.push({
+            id: sel.id || (Date.now() + i + Math.random()),
+            text: sel.label,
+            label: sel.label,
+            type: sel.type || 'connector',
+            icon: sel.icon,
+            color: sel.color || 'gray',
+            valueType: sel.valueType,
+            enablesMultiSelect: sel.enablesMultiSelect,
+            order: sel.order
+          });
+        }
       }
     }
 
     // Replace chips from current selection round instead of appending
-    const previousChips = phraseChips.slice(0, selectionRoundStart);
-    setPhraseChips([...previousChips, ...chipsToAdd]);
+    const previousChips = isHierarchicalSelection ?
+      phraseChips.slice(0, selectionRoundStart) :
+      phraseChips.slice(0, selectionRoundStart);
+    const newChipState = [...previousChips, ...chipsToAdd];
+    setPhraseChips(newChipState);
     setInputValue('');
 
-    // If this was the 3rd column (column 2), reset everything
+    // Update locked suggestions based on the NEW chip state (after adding selections)
+    // This ensures columns 2 and 3 populate correctly as selections are made
+    const updatedSuggestions = getPhraseSuggestions(newChipState);
+    setLockedSuggestions(updatedSuggestions);
+
+    // If this was the 3rd column (column 2), reset everything for next round
     if (columnIdx === 2) {
       setColumnSelections([null, null, null]);
       setColumnIndices([0, 0, 0]);
       setActiveColumn(0);
       setPreviewChips([]);
       // Set start position for next selection round
-      setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
-      // Re-lock suggestions for the next round based on new chips
-      const newChipsForNextRound = [...previousChips, ...chipsToAdd];
-      const nextRoundSuggestions = getPhraseSuggestions(newChipsForNextRound);
-      setLockedSuggestions(nextRoundSuggestions);
+      if (isHierarchicalSelection) {
+        // For hierarchical, we added only 1 merged chip
+        setSelectionRoundStart(previousChips.length + 1);
+      } else {
+        setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      }
+      // Locked suggestions already updated above with the new chip state
     } else {
       // Otherwise, move to next column
       setActiveColumn(columnIdx + 1);
@@ -538,7 +647,7 @@ const PhraseModeReport = (props) => {
   };
 
   const addChip = (chip) => {
-    const newChip = { ...chip, id: Date.now() };
+    const newChip = { ...chip, id: chip.id || Date.now() };  // Preserve original ID if it exists
 
     // Check if this chip text requires options selection
     if (chip.text === 'in location') {
@@ -955,24 +1064,158 @@ const PhraseModeReport = (props) => {
 
   const loadTemplate = (template) => {
     setSelectedTemplate(template);
-    setPhraseChips(template.chips.map((chip, idx) => ({ ...chip, id: Date.now() + idx })));
+    setPhraseChips(template.chips.map((chip, idx) => ({ ...chip, id: chip.id || (Date.now() + idx) })));  // Preserve original IDs
     setStage('building');
     toast(`Template loaded: ${template.label}`);
   };
 
   const startFromScratch = (startingPoint) => {
-    const chip = {
-      text: startingPoint.label,
-      type: 'entity',
-      icon: startingPoint.icon,
-      color: startingPoint.color,
-      id: Date.now()
-    };
-    setPhraseChips([chip]);
+    let chips = [];
+
+    // Special handling for cohort starting points (Current/Previous/New/Lapsed Members)
+    // These need to be split into two chips: cohort + entity type
+    if (startingPoint.label === 'Current Members') {
+      chips = [
+        {
+          text: 'Current',
+          label: 'Current',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: 'current'  // Use string ID instead of timestamp
+        },
+        {
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
+          icon: Crown,
+          color: 'purple',
+          id: 'members'  // Use string ID instead of timestamp
+        }
+      ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions(chips);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Current', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'current' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
+    } else if (startingPoint.label === 'Previous Members') {
+      chips = [
+        {
+          text: 'Previous',
+          label: 'Previous',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: 'previous'  // Use string ID instead of timestamp
+        },
+        {
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
+          icon: Crown,
+          color: 'purple',
+          id: 'members'  // Use string ID instead of timestamp
+        }
+      ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions(chips);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Previous', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'previous' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
+    } else if (startingPoint.label === 'New Members') {
+      chips = [
+        {
+          text: 'New',
+          label: 'New',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: 'new'  // Use string ID instead of timestamp
+        },
+        {
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
+          icon: Crown,
+          color: 'purple',
+          id: 'members'  // Use string ID instead of timestamp
+        }
+      ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions(chips);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'New', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'new' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
+    } else if (startingPoint.label === 'Lapsed Members') {
+      chips = [
+        {
+          text: 'Lapsed',
+          label: 'Lapsed',
+          type: 'timeframe',  // Changed from 'cohort' to match data structure
+          icon: startingPoint.icon,
+          color: startingPoint.color,
+          id: 'lapsed'  // Use string ID instead of timestamp
+        },
+        {
+          text: 'Members',
+          label: 'Members',
+          type: 'subject',  // Changed from 'entity' to match data structure
+          icon: Crown,
+          color: 'purple',
+          id: 'members'  // Use string ID instead of timestamp
+        }
+      ];
+
+      // Initialize column selection state to show these in columns 1-2
+      const initialSuggestions = getPhraseSuggestions(chips);
+      setLockedSuggestions(initialSuggestions);
+      setColumnSelections([
+        { label: 'Lapsed', type: 'timeframe', icon: startingPoint.icon, color: startingPoint.color, id: 'lapsed' },
+        { label: 'Members', type: 'subject', icon: Crown, color: 'purple', id: 'members' },
+        null
+      ]);
+      setSelectionRoundStart(0);
+      setActiveColumn(2);
+    } else {
+      // Default behavior for other starting points (All Contacts, year cohorts, etc.)
+      chips = [{
+        text: startingPoint.label,
+        type: 'entity',
+        icon: startingPoint.icon,
+        color: startingPoint.color,
+        id: Date.now()
+      }];
+
+      // Reset column selection state for single-chip starting points
+      setLockedSuggestions(null);
+      setColumnSelections([null, null, null]);
+      setSelectionRoundStart(chips.length);
+      setActiveColumn(0);
+    }
+
+    setPhraseChips(chips);
     setStage('building');
     setInputValue('');
     toast(`Starting with: ${startingPoint.label}`);
-    
+
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -988,26 +1231,96 @@ const PhraseModeReport = (props) => {
     setStage('intro');
     setSelectedTemplate(null);
     setInputValue('');
+    setShowAllExamples(false);
+  };
+
+  const generateNaturalQuery = () => {
+    if (phraseChips.length === 0) return '';
+
+    const statusCategories = ['Current', 'Previous', 'New', 'Lapsed'];
+    let query = '';
+    let i = 0;
+
+    // Check for timeframe + Members pattern (e.g., Current Members)
+    if (i < phraseChips.length && statusCategories.includes(phraseChips[i].text)) {
+      const timeframe = phraseChips[i].text;
+      i++;
+
+      if (i < phraseChips.length && phraseChips[i].text === 'Members') {
+        // Format as "Current members" (lowercase 'members')
+        query = timeframe + ' members';
+        i++;
+      } else {
+        query = timeframe;
+      }
+    }
+
+    // Process remaining chips
+    while (i < phraseChips.length) {
+      const chip = phraseChips[i];
+
+      // Skip connector chips in output (they're implied in the structure)
+      if (chip.type === 'connector') {
+        const connectorText = chip.text?.toLowerCase();
+
+        // Handle "that have" with Member Stats
+        if (connectorText === 'that have') {
+          i++;
+          // Look ahead for Member Stats hierarchical chip
+          if (i < phraseChips.length && phraseChips[i].isHierarchical) {
+            const memberStatsChip = phraseChips[i];
+
+            // Extract the number from "Member Stats: Consecutive Membership Years= 5"
+            const match = memberStatsChip.text.match(/Consecutive Membership Years=\s*(\d+)/);
+            if (match) {
+              const years = match[1];
+              query += ' that have been members for the past ' + years + ' years';
+            } else {
+              query += ' ' + memberStatsChip.text;
+            }
+            i++;
+            continue;
+          }
+        }
+        i++;
+        continue;
+      }
+
+      // Skip if already processed
+      if (chip.isHierarchical) {
+        // Already handled above
+        i++;
+        continue;
+      }
+
+      // Add other chips as-is
+      if (chip.text !== 'Members' || i > 1) {
+        query += ' ' + chip.text;
+      }
+      i++;
+    }
+
+    return query.trim();
   };
 
   const renderAnimatedExamples = () => {
     const currentExample = PHRASE_TEMPLATES[animatingExample];
-    
+
     return (
       <div className="space-y-4">
         <p className="text-sm text-gray-600 text-center fade-in">
           {currentExample.description}
         </p>
-        <div className="flex flex-wrap gap-2 justify-center items-center min-h-[60px]">
+        <div className="flex flex-wrap gap-1 justify-center items-center min-h-[60px]">
           {currentExample.chips.map((chip, idx) => {
             const isVisible = idx < visibleChipsCount;
-            
+
             return isVisible ? (
               <div
                 key={`chip-${animatingExample}-${idx}`}
                 className="chip-pop"
               >
-                <PhraseChip chip={chip} readOnly />
+                <PhraseChip chip={chip} size="sm" readOnly />
               </div>
             ) : null;
           })}
@@ -1088,9 +1401,9 @@ const PhraseModeReport = (props) => {
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Start with an Example</h3>
               <p className="text-sm text-gray-600">Pre-built phrases you can modify</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {PHRASE_TEMPLATES.map((template) => (
+              {(showAllExamples ? PHRASE_TEMPLATES : PHRASE_TEMPLATES.slice(0, 3)).map((template) => (
                 <button
                   key={template.id}
                   onClick={() => loadTemplate(template)}
@@ -1104,9 +1417,9 @@ const PhraseModeReport = (props) => {
                       {template.category}
                     </span>
                   </div>
-                  
+
                   <h4 className="font-medium text-gray-900 mb-2 text-sm">{template.label}</h4>
-                  
+
                   <div className="flex flex-wrap gap-1">
                     {template.chips.slice(0, 4).map((chip, idx) => (
                       <PhraseChip key={idx} chip={chip} size="sm" readOnly />
@@ -1120,6 +1433,28 @@ const PhraseModeReport = (props) => {
                 </button>
               ))}
             </div>
+
+            {/* Show More / Hide Link */}
+            {PHRASE_TEMPLATES.length > 3 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllExamples(!showAllExamples)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {showAllExamples ? (
+                    <>
+                      <span>Hide</span>
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Show More</span>
+                      <ChevronRight className="w-4 h-4 -rotate-90" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="max-w-6xl w-full">
@@ -1127,8 +1462,8 @@ const PhraseModeReport = (props) => {
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Start from Scratch</h3>
               <p className="text-sm text-gray-600">Begin by selecting your starting point</p>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {STARTING_POINTS.map((point) => {
                 const IconComponent = point.icon;
                 return (
@@ -1168,36 +1503,65 @@ const PhraseModeReport = (props) => {
     return (
       <div className="max-h-screen min-h-screen h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col w-full">
         
-        {/* bottom bar */}
+        {/* bottom bar - matching Browse/List mode format */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-30" style={{ height: '88px' }}>
-          <div className="h-full flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+          <div className="h-full flex items-center justify-between px-1 sm:px-4 gap-1 sm:gap-2">
+            {/* Left section - Info */}
+            <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0 overflow-hidden" style={{ flex: '1 1 auto' }}>
+              <div className="hidden sm:flex w-12 h-12 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
                 <Sparkles className="w-6 h-6 text-blue-600" strokeWidth={1.5} />
               </div>
-              <div>
-                <div className="text-sm font-semibold text-gray-900">Phrase Mode Report</div>
-                <div className="text-xs text-gray-500">
-                  {stage !== 'building' ? "": previewCount !== null ? `~${previewCount.toLocaleString()} records` : 'Building query...'}
+
+              {/* Text content - stacked on mobile, inline on desktop */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
+                {/* Title and meta - inline */}
+                <div className="flex items-baseline gap-1.5 sm:gap-2">
+                  <span className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">New Report</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">JD • {previewCount !== null ? previewCount.toLocaleString() : '7100'} records</span>
                 </div>
+
+                {/* Natural query - separate line, blue italic, truncated */}
+                {phraseChips.length > 0 && (
+                  <div className="text-[9px] sm:text-xs text-blue-700 font-medium italic truncate leading-tight mt-0.5">
+                    "{generateNaturalQuery()}"
+                  </div>
+                )}
               </div>
+
+              {phraseChips.length > 0 && (
+                <button
+                  onClick={() => {
+                    setPhraseChips([]);
+                    setInputValue('');
+                  }}
+                  className="p-1 sm:p-1.5 hover:bg-red-50 active:bg-red-50 rounded-lg transition-colors group flex-shrink-0"
+                  title="Clear all"
+                >
+                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-red-500" strokeWidth={1.5} />
+                </button>
+              )}
+
+              {/* Play button on mobile - inline with content */}
+              <button
+                onClick={runReport}
+                disabled={phraseChips.length === 0}
+                className={`sm:hidden p-2 rounded-full transition-all flex-shrink-0 ${phraseChips.length > 0 ? 'bg-blue-500 text-white active:bg-blue-600' : 'bg-gray-200 text-gray-400'}`}
+                title="Run"
+              >
+                <Play className="w-4 h-4" strokeWidth={1.5} fill="currentColor" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button 
+            {/* Right section - Actions (desktop only) */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0" style={{ flex: '0 0 auto' }}>
+              <button
                 onClick={runReport}
-                disabled={phraseChips.length === 0} 
-                className={`p-4 rounded-full transition-all mx-2 ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} 
+                disabled={phraseChips.length === 0}
+                className={`p-4 rounded-full transition-all ${phraseChips.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                 title="Run Report"
               >
                 <Play className="w-6 h-6" strokeWidth={1.5} fill="currentColor" />
               </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-500">
-                {phraseChips.length} {phraseChips.length === 1 ? 'chip' : 'chips'}
-              </div>
             </div>
           </div>
         </div>
@@ -1223,137 +1587,137 @@ const PhraseModeReport = (props) => {
           </div>
         </div>
 
-        <div className="flex-1 p-8 pb-32">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-200 p-8 mb-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-semibold text-gray-700">Your Phrase</span>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 mb-6 min-h-[60px]">
-                {phraseChips.map((chip) => (
-                  <div key={chip.id} className="chip-pop">
-                    <PhraseChip 
-                      chip={chip} 
-                      onRemove={() => removeChip(chip.id)}
-                      onEdit={() => editChip(chip.id)}
-                      showRemove={true}
-                      showEdit={true}
+        <div className="flex-1 pb-32 relative">
+          {/* Combined Input + Build Your Phrase Panel - half page width, white background */}
+          <div className="w-full bg-white py-6">
+            <div className="max-w-3xl mx-auto px-4">
+              {/* Input field with phrase chips inside */}
+              <div className="bg-white rounded-xl border-2 border-blue-200 p-3 mb-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  {/* Centered, smaller Search icon */}
+                  <div className="flex items-center justify-center flex-shrink-0">
+                    <Search className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+
+                  {/* Phrase chips and input in same container */}
+                  <div className="flex-1 flex flex-wrap items-center gap-1 min-h-[36px]">
+                    {phraseChips.map((chip) => (
+                      <div key={chip.id} className="chip-pop">
+                        <PhraseChip
+                          chip={chip}
+                          size="sm"
+                          onRemove={() => removeChip(chip.id)}
+                          onEdit={() => editChip(chip.id)}
+                          showRemove={true}
+                          showEdit={true}
+                        />
+                      </div>
+                    ))}
+
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        setSelectedSuggestionIndex(0); // Reset selection when typing
+                      }}
+                      onKeyDown={(e) => {
+                        const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
+                        const allSuggestions = [
+                          phraseSuggestions.current || [],
+                          phraseSuggestions.next || [],
+                          phraseSuggestions.future || []
+                        ];
+                        const currentColumnSuggestions = allSuggestions[activeColumn] || [];
+
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const newIndex = Math.min(columnIndices[activeColumn] + 1, currentColumnSuggestions.length - 1);
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = newIndex;
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const newIndex = Math.max(columnIndices[activeColumn] - 1, 0);
+                          const newIndices = [...columnIndices];
+                          newIndices[activeColumn] = newIndex;
+                          setColumnIndices(newIndices);
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          if (activeColumn < 2) {
+                            setActiveColumn(activeColumn + 1);
+                          }
+                        } else if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          if (activeColumn > 0) {
+                            setActiveColumn(activeColumn - 1);
+                          }
+                        } else if (e.key === 'Tab') {
+                          e.preventDefault();
+                          setActiveColumn((activeColumn + 1) % 3);
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
+                          if (selectedSuggestion) {
+                            handleColumnSelection(activeColumn, selectedSuggestion, allSuggestions);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setInputValue('');
+                          setColumnSelections([null, null, null]);
+                          setColumnIndices([0, 0, 0]);
+                          setActiveColumn(0);
+                          setLockedSuggestions(null);
+                          setSelectionRoundStart(0);
+                          setPreviewChips([]);
+                        } else if (e.key === 'Backspace' && inputValue === '' && phraseChips.length > 0) {
+                          removeChip(phraseChips[phraseChips.length - 1].id);
+                        }
+                      }}
+                      placeholder={phraseChips.length === 0 ? "Start building your phrase..." : "Continue typing or select..."}
+                      className="flex-1 min-w-[120px] px-2 py-1.5 bg-transparent border-none text-sm focus:outline-none placeholder:text-gray-400 placeholder:italic"
                     />
                   </div>
-                ))}
-                
-                {phraseChips.length === 0 && (
-                  <div className="text-gray-400 italic">Start building your phrase...</div>
-                )}
-              </div>
-
-              <div className="relative">
-                <div className="flex items-center gap-3">
-                  <Search className="w-5 h-5 text-gray-400" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => {
-                      setInputValue(e.target.value);
-                      setSelectedSuggestionIndex(0); // Reset selection when typing
-                    }}
-                    onKeyDown={(e) => {
-                      const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
-                      const allSuggestions = [
-                        phraseSuggestions.current,
-                        phraseSuggestions.next,
-                        phraseSuggestions.future
-                      ];
-                      const currentColumnSuggestions = allSuggestions[activeColumn];
-
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const newIndex = Math.min(columnIndices[activeColumn] + 1, currentColumnSuggestions.length - 1);
-                        const newIndices = [...columnIndices];
-                        newIndices[activeColumn] = newIndex;
-                        setColumnIndices(newIndices);
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const newIndex = Math.max(columnIndices[activeColumn] - 1, 0);
-                        const newIndices = [...columnIndices];
-                        newIndices[activeColumn] = newIndex;
-                        setColumnIndices(newIndices);
-                      } else if (e.key === 'ArrowRight') {
-                        e.preventDefault();
-                        if (activeColumn < 2) {
-                          setActiveColumn(activeColumn + 1);
-                        }
-                      } else if (e.key === 'ArrowLeft') {
-                        e.preventDefault();
-                        if (activeColumn > 0) {
-                          setActiveColumn(activeColumn - 1);
-                        }
-                      } else if (e.key === 'Tab') {
-                        e.preventDefault();
-                        setActiveColumn((activeColumn + 1) % 3);
-                      } else if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const selectedSuggestion = currentColumnSuggestions[columnIndices[activeColumn]];
-                        if (selectedSuggestion) {
-                          handleColumnSelection(activeColumn, selectedSuggestion, allSuggestions);
-                        }
-                      } else if (e.key === 'Escape') {
-                        setInputValue('');
-                        setColumnSelections([null, null, null]);
-                        setColumnIndices([0, 0, 0]);
-                        setActiveColumn(0);
-                        setLockedSuggestions(null);
-                        setSelectionRoundStart(0);
-                        setPreviewChips([]);
-                      } else if (e.key === 'Backspace' && inputValue === '' && phraseChips.length > 0) {
-                        removeChip(phraseChips[phraseChips.length - 1].id);
-                      }
-                    }}
-                    placeholder="Continue typing or select a suggestion below..."
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
 
                   {inputValue && (
                     <button
                       onClick={() => addChip({ text: inputValue, type: 'custom', color: 'gray' })}
-                      className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 text-sm flex-shrink-0"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3 h-3" />
                       Add
                     </button>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* 3-Column Progressive Selection UI */}
-            <div className="bg-white rounded-xl border-2 border-blue-200 p-6 mb-8 slide-in-right">
-              <div className="flex items-center justify-between mb-4">
+              {/* Build Your Phrase Section */}
+              <div>
+              {/* 3-Column Progressive Selection UI */}
+              <div>
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm font-semibold text-gray-700">Build Your Phrase</span>
+                  <Zap className="w-4 h-4 text-yellow-500" />
+                  <span className="text-xs font-semibold text-gray-700">Build Your Phrase</span>
                 </div>
-                <div className="text-xs text-gray-400">
-                  ↑↓ navigate • ←→ change column • Enter select • Tab next column
+                <div className="text-[10px] text-gray-400">
+                  ↑↓ • ←→ • Enter • Tab
                 </div>
               </div>
 
               {/* 3-Column Grid */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 {(() => {
                   // Use locked suggestions if available, otherwise get fresh
                   const phraseSuggestions = lockedSuggestions || getPhraseSuggestions(phraseChips);
                   const allSuggestions = [
                     inputValue
-                      ? phraseSuggestions.current.filter(s =>
-                          s.label.toLowerCase().startsWith(inputValue.toLowerCase())
+                      ? (phraseSuggestions.current || []).filter(s =>
+                          s.label?.toLowerCase().startsWith(inputValue.toLowerCase())
                         )
-                      : phraseSuggestions.current.slice(0, 6),
-                    phraseSuggestions.next.slice(0, 6),
-                    phraseSuggestions.future.slice(0, 6)
+                      : (phraseSuggestions.current || []).slice(0, 6),
+                    (phraseSuggestions.next || []).slice(0, 6),
+                    (phraseSuggestions.future || []).slice(0, 6)
                   ];
                   const columnTitles = [
                     phraseChips.length === 0 ? 'Start with' : 'Select',
@@ -1377,10 +1741,10 @@ const PhraseModeReport = (props) => {
                             : 'opacity-40'
                         }`}
                       >
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                        <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           <span>{columnTitles[columnIdx]}</span>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {columnSuggestions.map((suggestion, idx) => {
                             const Icon = suggestion.icon;
                             const isHighlighted = isActive && idx === columnIndices[columnIdx];
@@ -1397,13 +1761,13 @@ const PhraseModeReport = (props) => {
                                   setColumnIndices(newIndices);
                                   handleColumnSelection(columnIdx, suggestion, allSuggestions);
                                 }}
-                                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
+                                className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs transition-all text-left ${
                                   isHighlighted
                                     ? 'bg-blue-500 text-white shadow-md'
                                     : 'bg-gray-50 hover:bg-blue-50 text-gray-900 hover:text-blue-700'
                                 }`}
                               >
-                                {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
+                                {Icon && <Icon className="w-3 h-3 flex-shrink-0" />}
                                 <span className="truncate">{suggestion.label}</span>
                               </button>
                             );
@@ -1417,7 +1781,7 @@ const PhraseModeReport = (props) => {
 
               {/* Clear All Button */}
               {phraseChips.length > 0 && (
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2">
                   <button
                     onClick={() => {
                       setPhraseChips([]);
@@ -1429,7 +1793,7 @@ const PhraseModeReport = (props) => {
                       setSelectionRoundStart(0);
                       setPreviewChips([]);
                     }}
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                    className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs font-medium transition-colors"
                   >
                     Clear All
                   </button>
@@ -1437,33 +1801,48 @@ const PhraseModeReport = (props) => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <QuickAction
-                icon={Filter}
-                title="Add Filter"
-                description="Narrow down results"
-                onClick={() => {
-                  addChip({ text: 'that have', type: 'connector', color: 'gray' });
-                }}
-              />
-              <QuickAction
-                icon={ArrowUpDown}
-                title="Sort Results"
-                description="Order by criteria"
-                onClick={() => {
-                  showOptionsSelector('sort', { text: 'sorted by', type: 'sort', color: 'purple' });
-                }}
-              />
-              <QuickAction
-                icon={Target}
-                title="Limit Results"
-                description="Top N or percentage"
-                onClick={() => {
-                  showOptionsSelector('limit', { text: 'limited to', type: 'limit', color: 'indigo' });
-                }}
-              />
+              {/* Quick Actions - Filter, Sort, Limit - Bigger, better-looking buttons */}
+              <div className="flex items-center justify-center gap-3 mt-4 pb-6">
+                <button
+                  onClick={() => {
+                    addChip({ text: 'that have', type: 'connector', color: 'gray' });
+                  }}
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-blue-700 hover:scale-105"
+                >
+                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                    <Filter className="w-4 h-4 text-blue-600" strokeWidth={2} />
+                  </div>
+                  <span>Add Filter</span>
+                </button>
+                <button
+                  onClick={() => {
+                    showOptionsSelector('sort', { text: 'sorted by', type: 'sort', color: 'purple' });
+                  }}
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-purple-700 hover:scale-105"
+                >
+                  <div className="p-1.5 bg-purple-50 rounded-lg">
+                    <ArrowUpDown className="w-4 h-4 text-purple-600" strokeWidth={2} />
+                  </div>
+                  <span>Sort</span>
+                </button>
+                <button
+                  onClick={() => {
+                    showOptionsSelector('limit', { text: 'limited to', type: 'limit', color: 'indigo' });
+                  }}
+                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all text-sm font-semibold text-gray-700 hover:text-indigo-700 hover:scale-105"
+                >
+                  <div className="p-1.5 bg-indigo-50 rounded-lg">
+                    <Target className="w-4 h-4 text-indigo-600" strokeWidth={2} />
+                  </div>
+                  <span>Limit</span>
+                </button>
+              </div>
             </div>
           </div>
+          </div>
+
+          {/* Blurred background effect - positioned after all content */}
+          <div className="absolute left-0 right-0 bottom-24" style={{ top: 'calc(100% - 300px)', backdropFilter: 'blur(4px)', backgroundColor: 'rgba(255, 255, 255, 0.3)', pointerEvents: 'none', zIndex: 1 }}></div>
         </div>
 
         {/* Options Modal */}
@@ -1571,6 +1950,9 @@ const PhraseModeReport = (props) => {
                   {phraseChips.map((chip) => (
                     <PhraseChip key={chip.id} chip={chip} size="xs" readOnly />
                   ))}
+                </div>
+                <div className="text-xs text-gray-600 mt-2 italic">
+                  Query: {generateNaturalQuery()}
                 </div>
               </div>
             </div>

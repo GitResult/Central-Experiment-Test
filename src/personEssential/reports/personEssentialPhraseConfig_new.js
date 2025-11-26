@@ -55,7 +55,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SET 1: Initial Selection (Timeframe → Subject → Connector)
   // ============================================================================
 
-  // Stage 0: Empty query - Show all 3 columns pre-populated (anticipatory)
+  // Stage 0: Empty query - Show timeframes in Column 1
   if (chips.length === 0) {
     return {
       column1: [...TIMEFRAMES, ...YEAR_COHORTS].map(t => ({
@@ -65,19 +65,8 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: t.color,
         id: t.id
       })),
-      column2: SUBJECTS.map(s => ({
-        label: s.label,
-        type: s.type,
-        icon: s.icon,
-        color: s.color,
-        id: s.id
-      })),
-      column3: INITIAL_CONNECTORS.map(c => ({
-        label: c.label,
-        type: c.type,
-        icon: c.icon,
-        id: c.id
-      })),
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'initial'
     };
@@ -148,16 +137,8 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SET 2+: Filter Selection (After initial connector)
   // ============================================================================
 
-  // After "that have" connector - NEW SET: Show all 3 columns pre-populated (anticipatory)
+  // After "that have" connector - NEW SET: Show filter categories
   if (lastChipText === 'that have' && chips.length === 3) {
-    // Get subcategories for the first filter category (Member Stats)
-    const firstCategory = FILTER_CATEGORIES[0];
-    const subCats = firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
-
-    // Get values for the first subcategory
-    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
-    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
-
     return {
       column1: FILTER_CATEGORIES.map(c => ({
         label: c.label,
@@ -166,55 +147,32 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: subCats.map(sc => ({
-        label: sc.label,
-        type: sc.type,
-        id: sc.id
-      })),
-      column3: values.map(v => ({
-        label: String(v),
-        type: 'value',
-        valueType: 'number'
-      })),
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'filter_selection'
     };
   }
 
-  // After "that are" connector - NEW SET: Show member types AND ANTICIPATE ALL 3 COLUMNS
+  // After "that are" connector - NEW SET: Show member types
   if (lastChipText === 'that are' && chips.length === 3) {
-    const filteredCategories = FILTER_CATEGORIES.filter(c => c.id === 'member_type' || c.id === 'member_stats');
-    const memberTypes = getBrowseModeData('memberTypes');
-
     return {
-      column1: filteredCategories.map(c => ({
+      column1: FILTER_CATEGORIES.filter(c => c.id === 'member_type' || c.id === 'member_stats').map(c => ({
         label: c.label,
         type: c.type,
         icon: c.icon,
         color: c.color,
         id: c.id
       })),
-      column2: memberTypes.map(mt => ({
-        label: mt.label,
-        type: 'value',
-        valueType: 'memberType',
-        id: mt.id
-      })),
-      column3: LOGICAL_CONNECTORS.map(lc => ({
-        label: lc.label,
-        type: lc.type,
-        icon: lc.icon,
-        id: lc.id
-      })),
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'that_are_filter'
     };
   }
 
-  // After "for" connector - NEW SET: Show Member Year and Member Type AND ANTICIPATE ALL 3 COLUMNS
+  // After "for" connector - NEW SET: Show Member Year and Member Type
   if (lastChipText === 'for' && chips.length === 3) {
-    const memberYears = getBrowseModeData('memberYears');
-
     return {
       column1: [
         FILTER_CATEGORIES.find(c => c.id === 'member_year'),
@@ -226,26 +184,8 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: memberYears.map(my => ({
-        label: my.label,
-        type: 'value',
-        valueType: 'memberYear',
-        id: my.id
-      })),
-      column3: [
-        {
-          label: 'that have',
-          type: 'connector',
-          icon: ChevronRight,
-          id: 'that_have'
-        },
-        {
-          label: 'and',
-          type: 'logical_connector',
-          icon: Plus,
-          id: 'and'
-        }
-      ],
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'for_filter'
     };
@@ -300,46 +240,6 @@ export const getThreeColumnsForPhrase = (chips) => {
       })),
       awaitingSelection: 'column3',
       context: 'consecutive_years_value'
-    };
-  }
-
-  // After selecting a number value (from Member Stats) - Show ALL CONNECTORS in Column 1 AND ANTICIPATE ALL 3 COLUMNS
-  if (lastChipType === 'value' && lastChip.valueType === 'number') {
-    // Get first category's subcategories for anticipation
-    const firstCategory = FILTER_CATEGORIES[0];
-    const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
-
-    // Get first subcategory's values for anticipation
-    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
-    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
-
-    // Combine logical connectors with "that have" to give more flexibility
-    const allConnectors = [
-      ...LOGICAL_CONNECTORS,
-      ...INITIAL_CONNECTORS.filter(c => c.id === 'that_have')
-    ];
-
-    return {
-      column1: allConnectors.map(lc => ({
-        label: lc.label,
-        type: lc.type,
-        icon: lc.icon,
-        id: lc.id
-      })),
-      column2: FILTER_CATEGORIES.map(c => ({
-        label: c.label,
-        type: c.type,
-        icon: c.icon,
-        color: c.color,
-        id: c.id
-      })),
-      column3: subCats.map(sc => ({
-        label: sc.label,
-        type: sc.type,
-        id: sc.id
-      })),
-      awaitingSelection: 'column1',
-      context: 'after_number_value'
     };
   }
 
@@ -471,8 +371,7 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "And" or "Or" connector - NEW SET: Show available filter categories ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // After "And" or "Or" connector - NEW SET: Show available filter categories
   if (lastChipType === 'logical_connector') {
     // Determine which categories are still available based on context
     const availableCategories = FILTER_CATEGORIES.filter(c => {
@@ -488,8 +387,8 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: [], // Empty until category is selected
-      column3: [], // Empty until category and subcategory/value are selected
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'after_logical_connector'
     };
@@ -672,8 +571,7 @@ export const getThreeColumnsForPhrase = (chips) => {
   // SPECIAL CASE: Renewed Action Flow
   // ============================================================================
 
-  // After "that have" connector in renewal context - Show "Renewed" action ONLY
-  // Column 2 and 3 should be EMPTY until user selects an action
+  // After "that have" connector in renewal context - Show "Renewed" action
   if (lastChipText === 'that have' && chips.length > 3) {
     // Check if we're in a Member Year context
     const hasMemberYear = chips.some(c => c.valueType === 'memberYear');
@@ -686,8 +584,8 @@ export const getThreeColumnsForPhrase = (chips) => {
           color: a.color,
           id: a.id
         })),
-        column2: [], // Empty until action is selected
-        column3: [], // Empty until action connector is selected
+        column2: [],
+        column3: [],
         awaitingSelection: 'column1',
         context: 'action_selection'
       };
@@ -754,13 +652,18 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After selecting a month+year value with "in" - Show "or" and "for" options ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // After selecting a month+year value with "in" - Show "or" and "for" options
   if (lastChipType === 'value' && lastChip.valueType === 'monthYear') {
     // Check if there's an "in" connector before this
     const hasInConnector = chips.some(c => c.id === 'in');
 
     if (hasInConnector) {
+      // Get the member year from chips
+      const memberYearChip = chips.find(c => c.valueType === 'memberYear');
+      const baseYear = memberYearChip ? parseInt(memberYearChip.text) : 2019;
+
+      const monthYearOptions = generateMonthYearOptions(baseYear - 1, 6);
+
       return {
         column1: [
           {
@@ -778,8 +681,8 @@ export const getThreeColumnsForPhrase = (chips) => {
             order: 2
           }
         ],
-        column2: [], // Empty until "or" or "for" is selected
-        column3: [], // Empty until column 2 is populated and selected
+        column2: [],
+        column3: [],
         awaitingSelection: 'column1',
         context: 'after_renewal_month_year'
       };
@@ -870,8 +773,7 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "for" connector in renewal target year context - Show Member Year category ONLY
-  // Column 2 and 3 should be EMPTY until user selects Member Year
+  // After "for" connector in renewal target year context - Show Member Year category
   if (lastChipText === 'for' && chips.filter(c => c.valueType === 'monthYear').length > 0) {
     return {
       column1: [
@@ -883,8 +785,8 @@ export const getThreeColumnsForPhrase = (chips) => {
           id: 'member_year'
         }
       ],
-      column2: [], // Empty until Member Year category is selected
-      column3: [], // Empty until year value is selected
+      column2: [],
+      column3: [],
       awaitingSelection: 'column1',
       context: 'renewal_target_year'
     };
