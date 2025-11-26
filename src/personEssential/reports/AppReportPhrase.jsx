@@ -558,6 +558,13 @@ const PhraseModeReport = (props) => {
     const query2Categories = ['member_type', 'occupation', 'degree', 'province_state', 'member_year'];
     const isQuery2CategorySelection = newSelections[0]?.id && query2Categories.includes(newSelections[0].id);
 
+    // Check if we're in renewal target year merging (for + category + value)
+    const isRenewalTargetYearMerging = columnIdx === 2 &&
+                                        lockedSuggestions.context === 'renewal_target_year' &&
+                                        newSelections[0]?.id === 'for' &&
+                                        newSelections[1]?.type === 'category' &&
+                                        newSelections[2]?.type === 'value';
+
     // Add chips cumulatively based on which column was clicked
     const chipsToAdd = [];
 
@@ -616,6 +623,35 @@ const PhraseModeReport = (props) => {
         categoryId: newSelections[0].id,
         categoryLabel: newSelections[0].label,
         valueLabel: newSelections[1].label,
+        isMergedCategory: true
+      });
+    } else if (isRenewalTargetYearMerging) {
+      // RENEWAL CONTEXT: Merge "for" + category from Column 2 + value from Column 3
+      // Pattern: [for] + [Member Year] + [2020] → [for] + [Member Year = 2020]
+
+      // Add "for" connector first
+      chipsToAdd.push({
+        id: newSelections[0].id,
+        text: newSelections[0].label,
+        label: newSelections[0].label,
+        type: newSelections[0].type,
+        icon: newSelections[0].icon,
+        color: newSelections[0].color || 'gray'
+      });
+
+      // Then add merged category + value chip
+      const chipText = newSelections[1].label + ' = ' + newSelections[2].label;
+      chipsToAdd.push({
+        id: newSelections[1].id + '_merged',
+        text: chipText,
+        label: chipText,
+        type: 'value',
+        icon: newSelections[1].icon,
+        color: newSelections[1].color || 'blue',
+        valueType: newSelections[2].valueType,
+        categoryId: newSelections[1].id,
+        categoryLabel: newSelections[1].label,
+        valueLabel: newSelections[2].label,
         isMergedCategory: true
       });
     } else {
@@ -751,14 +787,26 @@ const PhraseModeReport = (props) => {
     if (columnIdx === 2) {
       setColumnSelections([null, null, null]);
       setColumnIndices([0, 0, 0]);
-      setActiveColumn(0);
       setPreviewChips([]);
+
       // Set start position for next selection round
       if (isHierarchicalSelection || isQuery2CategorySelection) {
         // For hierarchical and Query 2 merged categories, we added only 1 merged chip
         setSelectionRoundStart(previousChips.length + 1);
+      } else if (isRenewalTargetYearMerging) {
+        // For renewal target year, we added 2 chips: [for] + [Member Year = 2020]
+        setSelectionRoundStart(previousChips.length + 2);
       } else {
         setSelectionRoundStart(selectionRoundStart + chipsToAdd.length);
+      }
+
+      // Use awaitingSelection from suggestions to set correct activeColumn
+      // This allows flows to continue (e.g., Column 3 active) instead of always resetting to Column 1
+      if (updatedSuggestions.awaitingSelection) {
+        const columnMap = { 'column1': 0, 'column2': 1, 'column3': 2 };
+        setActiveColumn(columnMap[updatedSuggestions.awaitingSelection] || 0);
+      } else {
+        setActiveColumn(0);
       }
       // Locked suggestions already updated above with the new chip state
     } else if (columnIdx === 1 && isQuery2CategorySelection) {
