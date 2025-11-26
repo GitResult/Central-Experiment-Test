@@ -471,14 +471,22 @@ export const getThreeColumnsForPhrase = (chips) => {
     };
   }
 
-  // After "And" or "Or" connector - NEW SET: Show available filter categories ONLY
-  // Column 2 and 3 should be EMPTY until user selects from Column 1
+  // After "And" or "Or" connector - NEW SET: Show available filter categories AND ANTICIPATE ALL 3 COLUMNS
+  // Column 2 and 3 should show items based on FIRST item in Column 1
   if (lastChipType === 'logical_connector') {
     // Determine which categories are still available based on context
     const availableCategories = FILTER_CATEGORIES.filter(c => {
       // Customize based on query context
       return true; // For now, show all
     });
+
+    // Get subcategories and values for the first category (Member Stats)
+    const firstCategory = availableCategories[0];
+    const subCats = firstCategory && firstCategory.isHierarchical ? getSubCategories(firstCategory.id) : [];
+
+    // Get values for the first subcategory
+    const firstSubCat = subCats.length > 0 ? subCats[0] : null;
+    const values = firstSubCat && firstSubCat.values ? firstSubCat.values : [];
 
     return {
       column1: availableCategories.map(c => ({
@@ -488,8 +496,16 @@ export const getThreeColumnsForPhrase = (chips) => {
         color: c.color,
         id: c.id
       })),
-      column2: [], // Empty until category is selected
-      column3: [], // Empty until category and subcategory/value are selected
+      column2: subCats.map(sc => ({
+        label: sc.label,
+        type: sc.type,
+        id: sc.id
+      })),
+      column3: values.map(v => ({
+        label: String(v),
+        type: 'value',
+        valueType: 'number'
+      })),
       awaitingSelection: 'column1',
       context: 'after_logical_connector'
     };
