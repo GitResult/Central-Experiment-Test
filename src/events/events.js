@@ -661,6 +661,13 @@ function computeRenewalByProvince(attendees, provinces, showAsShare) {
   });
 }
 
+function computeSegmentsWithPercentage(segments, totalCount) {
+  return segments.map((seg) => ({
+    ...seg,
+    percentage: totalCount > 0 ? ((seg.count / totalCount) * 100).toFixed(1) : 0,
+  }));
+}
+
 // -------------------- Top-Level Demo Component --------------------
 
 function CentralEventReportingDemo() {
@@ -980,6 +987,8 @@ function EventDetailLayout({
   setShowInsightsSlideout,
 }) {
   const [activeTab, setActiveTab] = useState("profile");
+  const [showChartPreview, setShowChartPreview] = useState(false);
+  const [chartPreviewData, setChartPreviewData] = useState(null);
 
   return (
     <div style={{ marginTop: "1rem" }}>
@@ -1033,6 +1042,10 @@ function EventDetailLayout({
             attendees={attendees}
             kpis={kpis}
             onOpenInsights={() => setShowInsightsPanel(true)}
+            onOpenChartPreview={(data, title) => {
+              setChartPreviewData({ data, title });
+              setShowChartPreview(true);
+            }}
           />
         )}
         {activeTab === "activities" && <EventActivitiesTab />}
@@ -1055,6 +1068,14 @@ function EventDetailLayout({
         <InsightsConfigSlideout
           attendees={attendees}
           onClose={() => setShowInsightsSlideout(false)}
+        />
+      )}
+
+      {showChartPreview && chartPreviewData && (
+        <ChartPreviewSlideout
+          data={chartPreviewData.data}
+          title={chartPreviewData.title}
+          onClose={() => setShowChartPreview(false)}
         />
       )}
     </div>
@@ -1101,7 +1122,7 @@ function EventTabs({ activeTab, onChange }) {
 
 // -------------------- Profile Tab --------------------
 
-function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
+function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPreview }) {
   const membershipSegments = useMemo(
     () => groupByField(attendees, "membershipStatus"),
     [attendees]
@@ -1128,7 +1149,22 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
           marginTop: "1rem",
         }}
       >
-        <ComboChartWithRecharts data={fakeTrendData} />
+        <div
+          onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
+          style={{ cursor: onOpenChartPreview ? "pointer" : "default" }}
+          onMouseEnter={(e) => {
+            if (onOpenChartPreview) {
+              e.currentTarget.style.opacity = "0.8";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (onOpenChartPreview) {
+              e.currentTarget.style.opacity = "1";
+            }
+          }}
+        >
+          <ComboChartWithRecharts data={fakeTrendData} />
+        </div>
         <VitalsRow event={event} kpis={kpis} membershipSegments={membershipSegments} />
       </div>
 
@@ -1364,6 +1400,7 @@ function MorePeopleListing({ attendees }) {
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedView, setSelectedView] = useState("Default");
+  const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
 
   const cards = [
     { title: "Registration Types", field: "registrationType" },
@@ -1376,6 +1413,18 @@ function MorePeopleListing({ attendees }) {
     { title: "Tenure", field: "tenure" }, // not in mock, will show "Unknown"
     { title: "Education", field: "education" },
   ];
+
+  const colorPalettes = {
+    registrationType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"],
+    dietary: ["#22c55e", "#10b981", "#14b8a6", "#06b6d4"],
+    session: ["#f59e0b", "#eab308", "#84cc16", "#22c55e"],
+    ticketType: ["#3b82f6", "#8b5cf6"],
+    memberType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
+    ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"],
+    province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4"],
+    tenure: ["#6b7280", "#9ca3af"],
+    education: ["#84cc16", "#22c55e", "#10b981", "#14b8a6"],
+  };
 
   const filteredAttendees = useMemo(
     () => filterAttendees(attendees, filters, searchTerm),
@@ -1404,43 +1453,123 @@ function MorePeopleListing({ attendees }) {
     }
   }
 
+  function handleCardFilterClick(field, label) {
+    handleToggle(field, label);
+  }
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 2fr) minmax(0, 3fr)",
+        gridTemplateColumns: viewMode === "list" ? "minmax(0, 2fr) minmax(0, 3fr)" : "1fr",
         gap: "1rem",
         marginTop: "0.5rem",
       }}
     >
+      {viewMode === "list" && (
+        <div>
+          <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
+          <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: "0.75rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            {cards.map((card) => {
+              const segments = groupByField(attendees, card.field);
+              const selectedValues = filters[card.field] || [];
+              return (
+                <ListingCard
+                  key={card.title}
+                  title={card.title}
+                  segments={segments}
+                  selectedValues={selectedValues}
+                  onToggle={(segment) => handleToggle(card.field, segment)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div>
-        <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
-        <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "0.75rem",
-            marginTop: "0.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "0.75rem",
           }}
         >
-          {cards.map((card) => {
-            const segments = groupByField(attendees, card.field);
-            const selectedValues = filters[card.field] || [];
-            return (
-              <ListingCard
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+            {viewMode === "cards" ? "Demographic Overview" : `Showing ${filteredAttendees.length} attendee(s)`}
+          </div>
+          <div
+            style={{
+              display: "inline-flex",
+              borderRadius: "999px",
+              background: "#e5e7eb",
+              padding: "2px",
+            }}
+          >
+            <button
+              onClick={() => setViewMode("list")}
+              style={{
+                border: "none",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "999px",
+                background: viewMode === "list" ? "white" : "transparent",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                fontWeight: viewMode === "list" ? 600 : 400,
+                color: viewMode === "list" ? "#111827" : "#6b7280",
+                transition: "all 0.2s",
+              }}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode("cards")}
+              style={{
+                border: "none",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "999px",
+                background: viewMode === "cards" ? "white" : "transparent",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                fontWeight: viewMode === "cards" ? 600 : 400,
+                color: viewMode === "cards" ? "#111827" : "#6b7280",
+                transition: "all 0.2s",
+              }}
+            >
+              Cards
+            </button>
+          </div>
+        </div>
+        {viewMode === "list" ? (
+          <AttendeeList attendees={filteredAttendees} />
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {cards.map((card) => (
+              <DemographicCard
                 key={card.title}
                 title={card.title}
-                segments={segments}
-                selectedValues={selectedValues}
-                onToggle={(segment) => handleToggle(card.field, segment)}
+                field={card.field}
+                attendees={filteredAttendees}
+                colorPalette={colorPalettes[card.field]}
+                onFilterClick={handleCardFilterClick}
               />
-            );
-          })}
-        </div>
-      </div>
-      <div>
-        <AttendeeList attendees={filteredAttendees} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1619,6 +1748,408 @@ function AttendeeList({ attendees }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+function DemographicCard({ title, field, attendees, colorPalette, onFilterClick }) {
+  const segments = useMemo(() => groupByField(attendees, field), [attendees, field]);
+  const totalCount = attendees.length;
+  const segmentsWithPercentage = useMemo(
+    () => computeSegmentsWithPercentage(segments, totalCount),
+    [segments, totalCount]
+  );
+
+  const getColor = (idx) => colorPalette[idx % colorPalette.length];
+
+  return (
+    <div
+      style={{
+        borderRadius: "0.75rem",
+        border: "1px solid #e5e7eb",
+        padding: "0.75rem",
+        background: "white",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.85rem",
+          fontWeight: 700,
+          color: "#111827",
+          marginBottom: "0.25rem",
+        }}
+      >
+        {title}
+      </div>
+      <div style={{ fontSize: "0.7rem", color: "#6b7280", marginBottom: "0.25rem" }}>
+        {segments.length} options
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {segmentsWithPercentage.map((seg, idx) => {
+          const color = getColor(idx);
+          return (
+            <div
+              key={seg.label}
+              style={{
+                cursor: onFilterClick ? "pointer" : "default",
+                transition: "all 0.2s",
+              }}
+              onClick={() => onFilterClick && onFilterClick(field, seg.label)}
+              onMouseEnter={(e) => {
+                if (onFilterClick) {
+                  e.currentTarget.style.transform = "scale(1.02)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (onFilterClick) {
+                  e.currentTarget.style.transform = "scale(1)";
+                }
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: "0.72rem",
+                  color: "#374151",
+                  marginBottom: "0.25rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {seg.label}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {seg.count}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.35rem",
+                    fontSize: "0.7rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  ({seg.percentage}%)
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "6px",
+                  borderRadius: "999px",
+                  background: "#f3f4f6",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${seg.percentage}%`,
+                    background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                    borderRadius: "999px",
+                    transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: `0 0 8px ${color}40`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ChartPreviewSlideout({ data, title, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const totalRegistrations = data[data.length - 1]?.registrations || 0;
+  const totalRevenue = data[data.length - 1]?.revenue || 0;
+  const avgRevenuePerRegistrant = totalRegistrations > 0 ? (totalRevenue / totalRegistrations).toFixed(0) : 0;
+  const peakWeek = data.reduce((max, item) => item.registrations > max.registrations ? item : max, data[0]);
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 199,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "32rem",
+          background: "white",
+          boxShadow: "-6px 0 15px rgba(0,0,0,0.1)",
+          borderLeft: "1px solid #e5e7eb",
+          zIndex: 200,
+          display: "flex",
+          flexDirection: "column",
+          transform: isVisible ? "translateX(0)" : "translateX(100%)",
+          transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          overflowY: "auto",
+        }}
+      >
+        <div
+          style={{
+            padding: "1.5rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+              {title}
+            </h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+              Chart Preview & Analysis
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "#f3f4f6",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              color: "#374151",
+              fontWeight: 500,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#e5e7eb";
+              e.target.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "#f3f4f6";
+              e.target.style.transform = "scale(1)";
+            }}
+          >
+            Close
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem", flex: 1 }}>
+          <div
+            style={{
+              background: "#f9fafb",
+              borderRadius: "0.5rem",
+              padding: "1rem",
+              border: "1px solid #e5e7eb",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart
+                data={data}
+                margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Registrations",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { fontSize: 11, fill: "#6b7280" },
+                  }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Revenue ($)",
+                    angle: 90,
+                    position: "insideRight",
+                    style: { fontSize: 11, fill: "#6b7280" },
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "white",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.75rem",
+                    padding: "0.5rem",
+                  }}
+                  formatter={(value, name) => {
+                    if (name === "Revenue ($)") {
+                      return `$${value.toLocaleString()}`;
+                    }
+                    return value;
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem" }}
+                  iconType="plainline"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="registrations"
+                  fill="#2563eb"
+                  name="Registrations"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={{ fill: "#22c55e", r: 4 }}
+                  name="Revenue ($)"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div
+            style={{
+              background: "#f0f9ff",
+              border: "1px solid #bae6fd",
+              borderRadius: "0.75rem",
+              padding: "1rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0c4a6e", marginBottom: "0.75rem" }}>
+              Summary Statistics
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Total Registrations</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  {totalRegistrations}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Total Revenue</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  ${totalRevenue.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Avg per Registrant</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  ${avgRevenuePerRegistrant}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Peak Week</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  {peakWeek.label}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              style={{
+                flex: 1,
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #2563eb",
+                background: "white",
+                color: "#2563eb",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                fontWeight: 600,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#eff6ff";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "white";
+              }}
+            >
+              Add to Report
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                background: "#e5e7eb",
+                color: "#374151",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                fontWeight: 600,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#d1d5db";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#e5e7eb";
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
