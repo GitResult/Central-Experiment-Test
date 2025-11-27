@@ -1153,6 +1153,12 @@ function AttendeeList({ attendees }) {
 // -------------------- Insights Bottom Panel --------------------
 
 function InsightsBottomPanel({ attendees, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
   const membershipTypeSegments = useMemo(
     () => groupByField(attendees, "memberType"),
     [attendees]
@@ -1174,116 +1180,256 @@ function InsightsBottomPanel({ attendees, onClose }) {
     [attendees]
   );
 
+  const totalAttendees = attendees.length;
+
+  const colorPalettes = {
+    membershipType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
+    ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6"],
+    education: ["#84cc16", "#22c55e", "#10b981", "#14b8a6"],
+    province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7"],
+    reason: ["#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981"],
+  };
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "white",
-        borderTop: "1px solid #e5e7eb",
-        boxShadow: "0 -6px 15px rgba(0,0,0,0.1)",
-        padding: "0.75rem 1rem 1rem",
-        zIndex: 30,
-      }}
-    >
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 29,
+          opacity: isVisible ? 1 : 0,
+          transition: "opacity 0.3s ease-in-out",
+        }}
+      />
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "0.5rem",
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "linear-gradient(to top, #ffffff, #fefefe)",
+          borderTop: "1px solid #d1d5db",
+          boxShadow: "0 -10px 40px rgba(0,0,0,0.15)",
+          padding: "1.25rem 1.5rem 1.5rem",
+          zIndex: 30,
+          transform: isVisible ? "translateY(0)" : "translateY(100%)",
+          transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          maxHeight: "60vh",
+          overflowY: "auto",
         }}
       >
-        <strong style={{ fontSize: "0.9rem" }}>Insights</strong>
-        <button
-          onClick={onClose}
+        <div
           style={{
-            border: "none",
-            background: "transparent",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-            color: "#6b7280",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+            paddingBottom: "0.75rem",
+            borderBottom: "2px solid #e5e7eb",
           }}
         >
-          Close
-        </button>
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                color: "#111827",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Event Insights
+            </h3>
+            <p
+              style={{
+                margin: "0.25rem 0 0",
+                fontSize: "0.8rem",
+                color: "#6b7280",
+              }}
+            >
+              Demographic breakdown of {totalAttendees} attendees
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "#f3f4f6",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              color: "#374151",
+              fontWeight: 500,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#e5e7eb";
+              e.target.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "#f3f4f6";
+              e.target.style.transform = "scale(1)";
+            }}
+          >
+            Close
+          </button>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          <DimensionInsight
+            title="Membership Type"
+            segments={membershipTypeSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.membershipType}
+            delay={0}
+          />
+          <DimensionInsight
+            title="Age Group"
+            segments={ageGroupSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.ageGroup}
+            delay={0.1}
+          />
+          <DimensionInsight
+            title="Education"
+            segments={educationSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.education}
+            delay={0.2}
+          />
+          <DimensionInsight
+            title="Province"
+            segments={provinceSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.province}
+            delay={0.3}
+          />
+          <DimensionInsight
+            title="Primary Reason"
+            segments={reasonSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.reason}
+            delay={0.4}
+          />
+        </div>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-          gap: "0.75rem",
-          fontSize: "0.75rem",
-        }}
-      >
-        <DimensionInsight
-          title="Membership Type"
-          segments={membershipTypeSegments}
-        />
-        <DimensionInsight title="Age Group" segments={ageGroupSegments} />
-        <DimensionInsight title="Education" segments={educationSegments} />
-        <DimensionInsight title="Province" segments={provinceSegments} />
-        <DimensionInsight
-          title="Primary Reason for Joining"
-          segments={reasonSegments}
-        />
-      </div>
-    </div>
+    </>
   );
 }
 
-function DimensionInsight({ title, segments }) {
-  const max = Math.max(...segments.map((s) => s.count), 1);
+function DimensionInsight({ title, segments, totalCount, colorPalette, delay }) {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  React.useEffect(() => {
+    setTimeout(() => setIsAnimated(true), delay * 1000 + 100);
+  }, [delay]);
+
   return (
     <div
       style={{
-        borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
-        padding: "0.4rem",
-        background: "#f9fafb",
+        borderRadius: "0.75rem",
+        border: "1px solid #d1d5db",
+        padding: "0.75rem",
+        background: "white",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        opacity: isAnimated ? 1 : 0,
+        transform: isAnimated ? "translateY(0)" : "translateY(10px)",
+        transition: `all 0.4s ease-out ${delay}s`,
       }}
     >
       <div
         style={{
-          fontSize: "0.75rem",
-          fontWeight: 600,
-          marginBottom: "0.25rem",
+          fontSize: "0.8rem",
+          fontWeight: 700,
+          marginBottom: "0.5rem",
+          color: "#111827",
+          letterSpacing: "-0.01em",
         }}
       >
         {title}
       </div>
-      {segments.map((s) => (
-        <div key={s.label} style={{ marginBottom: "0.15rem" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.7rem",
-              color: "#4b5563",
-            }}
-          >
-            <span>{s.label}</span>
-            <span>{s.count}</span>
-          </div>
-          <div
-            style={{
-              height: "4px",
-              borderRadius: "999px",
-              background: "#e5e7eb",
-              overflow: "hidden",
-            }}
-          >
+      <div style={{ marginBottom: "0.5rem" }}>
+        {segments.map((s, idx) => {
+          const percentage = ((s.count / totalCount) * 100).toFixed(1);
+          const color = colorPalette[idx % colorPalette.length];
+          return (
             <div
-              style={{
-                height: "100%",
-                width: `${(s.count / max) * 100}%`,
-                background: "#2563eb",
+              key={s.label}
+              style={{ marginBottom: "0.5rem" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
               }}
-            />
-          </div>
-        </div>
-      ))}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: "0.72rem",
+                  color: "#374151",
+                  marginBottom: "0.25rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {s.label}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {s.count}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.35rem",
+                    fontSize: "0.7rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  ({percentage}%)
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "6px",
+                  borderRadius: "999px",
+                  background: "#f3f4f6",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: isAnimated ? `${percentage}%` : "0%",
+                    background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                    borderRadius: "999px",
+                    transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    transitionDelay: `${delay + idx * 0.05}s`,
+                    boxShadow: `0 0 8px ${color}40`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
