@@ -20,6 +20,7 @@ import RecordListingResizable from './components/RecordListingResizable';
 import RecordListingAdvanced from './components/RecordListingAdvanced';
 import ContactList from './contactList';
 import PersonEssential from './personEssential';
+import CentralEventReportingDemo from './events/events';
 
 /**
  * Main App Component with Navigation
@@ -43,6 +44,7 @@ function App() {
     'record-listing-advanced': RecordListingAdvanced,
     'contact-list': ContactList,
     'person-essential': PersonEssential,
+    'events': CentralEventReportingDemo,
   };
 
   // Get the component to render

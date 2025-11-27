@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck
+  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck, Calendar
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -113,6 +113,14 @@ const Navigation = ({ onNavigate }) => {
       icon: UserCheck,
       color: 'bg-teal-500',
       features: ['Custom Widgets', 'Task Management', 'Drag & Drop', 'Report Builder']
+    },
+    {
+      id: 'events',
+      name: 'Events',
+      description: 'Event management with calendar, 1-click insights, people-centric listing reports, and correlation analysis.',
+      icon: Calendar,
+      color: 'bg-amber-500',
+      features: ['1-Click Insights', 'Listing Reports', 'Correlation Analysis', 'Calendar View']
     }
   ];
 
