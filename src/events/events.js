@@ -1,4 +1,15 @@
 import React, { useState, useMemo } from "react";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // -------------------- Mock Data --------------------
 
@@ -148,9 +159,423 @@ const MOCK_ATTENDEES = [
     ticketType: "Paid",
     renewed: false,
   },
+  {
+    id: 9,
+    name: "Jasmine Wong",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 10,
+    name: "Mohammed Hassan",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "Halal",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 11,
+    name: "Sarah Chen",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "Alberta",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 12,
+    name: "Pierre Dubois",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Quebec",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 13,
+    name: "Priya Patel",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Learning",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 14,
+    name: "James MacLeod",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "25-34",
+    province: "Nova Scotia",
+    education: "Bachelors",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "None",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 15,
+    name: "Emily Rodriguez",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "PhD",
+    primaryReason: "Thought Leadership",
+    registrationType: "Full Conference",
+    dietary: "Gluten-free",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 16,
+    name: "Kevin O'Brien",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "55-64",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 17,
+    name: "Aisha Mohammed",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "18-24",
+    province: "British Columbia",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "Halal",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 18,
+    name: "Robert Kim",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 19,
+    name: "Marie Tremblay",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "25-34",
+    province: "Quebec",
+    education: "Bachelors",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "Vegan",
+    session: "Ethics Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 20,
+    name: "David Singh",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Alberta",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 21,
+    name: "Lisa Anderson",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 22,
+    name: "Michael Nguyen",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "British Columbia",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 23,
+    name: "Sophie Gagnon",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Quebec",
+    education: "Masters",
+    primaryReason: "Learning",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 24,
+    name: "Thomas Murphy",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "55-64",
+    province: "Newfoundland and Labrador",
+    education: "Masters",
+    primaryReason: "Thought Leadership",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 25,
+    name: "Jennifer Lee",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "35-44",
+    province: "Alberta",
+    education: "Bachelors",
+    primaryReason: "Learning",
+    registrationType: "Workshop Only",
+    dietary: "Vegetarian",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 26,
+    name: "Antoine Levesque",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Quebec",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 27,
+    name: "Rachel Cohen",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "PhD",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "Kosher",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 28,
+    name: "Christopher Taylor",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "Newfoundland and Labrador",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 29,
+    name: "Natasha Ivanov",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "None",
+    session: "Ethics Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 30,
+    name: "William Fraser",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "65+",
+    province: "Nova Scotia",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 31,
+    name: "Olivia Martin",
+    memberType: "Guest",
+    membershipStatus: "Non-member",
+    isComplimentary: true,
+    isMember: false,
+    ageGroup: "35-44",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Guest",
+    registrationType: "Guest",
+    dietary: "Gluten-free",
+    session: "Social Events",
+    ticketType: "Complimentary",
+    renewed: false,
+  },
+  {
+    id: 32,
+    name: "Daniel Park",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "55-64",
+    province: "Nova Scotia",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
 ];
 
 // -------------------- Helper Functions --------------------
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined') return false;
+  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  return mediaQuery.matches;
+}
 
 function computeKpis(attendees) {
   const totalAttendees = attendees.length;
@@ -234,6 +659,89 @@ function computeRenewalByProvince(attendees, provinces, showAsShare) {
       total,
     };
   });
+}
+
+function computeSegmentsWithPercentage(segments, totalCount) {
+  return segments.map((seg) => ({
+    ...seg,
+    percentage: totalCount > 0 ? ((seg.count / totalCount) * 100).toFixed(1) : 0,
+  }));
+}
+
+function transformChartData(originalData, config, attendees) {
+  let data = [...originalData];
+
+  // Apply date range filter
+  if (config.dateRange === "last4") {
+    data = data.slice(-5); // Last 4 weeks + Event
+  } else if (config.dateRange === "last2") {
+    data = data.slice(-3); // Last 2 weeks + Event
+  }
+
+  // Apply membership type filter (affects revenue calculation conceptually)
+  // For demo, we'll adjust proportionally based on attendee mix
+  if (config.selectedMembershipTypes.length > 0) {
+    const filteredCount = attendees.filter((a) =>
+      config.selectedMembershipTypes.includes(a.memberType)
+    ).length;
+    const ratio = filteredCount / attendees.length;
+    data = data.map((item) => ({
+      ...item,
+      registrations: Math.round(item.registrations * ratio),
+      revenue: Math.round(item.revenue * ratio),
+    }));
+  }
+
+  // Apply view mode transformation
+  if (config.viewMode === "percentage") {
+    const maxReg = Math.max(...data.map((d) => d.registrations));
+    const maxRev = Math.max(...data.map((d) => d.revenue));
+    data = data.map((item) => ({
+      ...item,
+      registrations: maxReg > 0 ? Math.round((item.registrations / maxReg) * 100) : 0,
+      revenue: maxRev > 0 ? Math.round((item.revenue / maxRev) * 100) : 0,
+    }));
+  }
+
+  return data;
+}
+
+function computeCorrelation(attendees, dimension, metric) {
+  const map = new Map();
+
+  attendees.forEach((a) => {
+    const key = a[dimension] || "Unknown";
+    const existing = map.get(key) || { total: 0, renewed: 0 };
+    existing.total += 1;
+    if (metric === "renewal" && a.renewed) {
+      existing.renewed += 1;
+    }
+    map.set(key, existing);
+  });
+
+  const results = Array.from(map.entries()).map(([label, { total, renewed }]) => {
+    const renewalRate = total > 0 ? (renewed / total) * 100 : 0;
+    return {
+      label,
+      total,
+      renewed,
+      notRenewed: total - renewed,
+      renewalRate: renewalRate.toFixed(1),
+    };
+  });
+
+  // Sort by renewal rate descending
+  results.sort((a, b) => parseFloat(b.renewalRate) - parseFloat(a.renewalRate));
+
+  // Find key insight (highest vs lowest rate with meaningful sample size)
+  const significantResults = results.filter((r) => r.total >= 3);
+  const insight = significantResults.length >= 2
+    ? `${significantResults[0].label} shows ${significantResults[0].renewalRate}% renewal vs ${significantResults[significantResults.length - 1].renewalRate}% for ${significantResults[significantResults.length - 1].label}`
+    : significantResults.length === 1
+    ? `${significantResults[0].label}: ${significantResults[0].renewalRate}% renewal rate`
+    : "Insufficient data for correlation analysis";
+
+  return { results, insight };
 }
 
 // -------------------- Top-Level Demo Component --------------------
@@ -445,6 +953,17 @@ function CalendarView({ event, onEventClick }) {
 }
 
 function EventPeek({ event, kpis, onClose, onViewEvent }) {
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
     <div
       style={{
@@ -544,6 +1063,8 @@ function EventDetailLayout({
   setShowInsightsSlideout,
 }) {
   const [activeTab, setActiveTab] = useState("profile");
+  const [showChartPreview, setShowChartPreview] = useState(false);
+  const [chartPreviewData, setChartPreviewData] = useState(null);
 
   return (
     <div style={{ marginTop: "1rem" }}>
@@ -597,6 +1118,10 @@ function EventDetailLayout({
             attendees={attendees}
             kpis={kpis}
             onOpenInsights={() => setShowInsightsPanel(true)}
+            onOpenChartPreview={(data, title) => {
+              setChartPreviewData({ data, title, attendees });
+              setShowChartPreview(true);
+            }}
           />
         )}
         {activeTab === "activities" && <EventActivitiesTab />}
@@ -619,6 +1144,15 @@ function EventDetailLayout({
         <InsightsConfigSlideout
           attendees={attendees}
           onClose={() => setShowInsightsSlideout(false)}
+        />
+      )}
+
+      {showChartPreview && chartPreviewData && (
+        <ChartPreviewSlideout
+          data={chartPreviewData.data}
+          title={chartPreviewData.title}
+          attendees={chartPreviewData.attendees}
+          onClose={() => setShowChartPreview(false)}
         />
       )}
     </div>
@@ -665,20 +1199,20 @@ function EventTabs({ activeTab, onChange }) {
 
 // -------------------- Profile Tab --------------------
 
-function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
+function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPreview }) {
   const membershipSegments = useMemo(
     () => groupByField(attendees, "membershipStatus"),
     [attendees]
   );
 
   const fakeTrendData = [
-    { label: "Day -7", registrations: 20, revenue: 15000 },
-    { label: "Day -6", registrations: 40, revenue: 30000 },
-    { label: "Day -5", registrations: 80, revenue: 65000 },
-    { label: "Day -4", registrations: 120, revenue: 110000 },
-    { label: "Day -3", registrations: 200, revenue: 180000 },
-    { label: "Day -2", registrations: 300, revenue: 260000 },
-    { label: "Day -1", registrations: 400, revenue: 350000 },
+    { label: "Week -6", registrations: 3, revenue: 2400 },
+    { label: "Week -5", registrations: 8, revenue: 6400 },
+    { label: "Week -4", registrations: 15, revenue: 12000 },
+    { label: "Week -3", registrations: 22, revenue: 17600 },
+    { label: "Week -2", registrations: 28, revenue: 22400 },
+    { label: "Week -1", registrations: 32, revenue: 25600 },
+    { label: "Event", registrations: 32, revenue: 26000 },
   ];
 
   return (
@@ -692,7 +1226,22 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
           marginTop: "1rem",
         }}
       >
-        <ComboChartStub data={fakeTrendData} />
+        <div
+          onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
+          style={{ cursor: onOpenChartPreview ? "pointer" : "default" }}
+          onMouseEnter={(e) => {
+            if (onOpenChartPreview) {
+              e.currentTarget.style.opacity = "0.8";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (onOpenChartPreview) {
+              e.currentTarget.style.opacity = "1";
+            }
+          }}
+        >
+          <ComboChartWithRecharts data={fakeTrendData} />
+        </div>
         <VitalsRow event={event} kpis={kpis} membershipSegments={membershipSegments} />
       </div>
 
@@ -750,10 +1299,7 @@ function KpiRow({ kpis }) {
   );
 }
 
-function ComboChartStub({ data }) {
-  const maxReg = Math.max(...data.map((d) => d.registrations));
-  const maxRev = Math.max(...data.map((d) => d.revenue));
-
+function ComboChartWithRecharts({ data }) {
   return (
     <div
       style={{
@@ -767,48 +1313,87 @@ function ComboChartStub({ data }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          marginBottom: "0.5rem",
+          marginBottom: "0.75rem",
         }}
       >
         <strong style={{ fontSize: "0.875rem" }}>
-          Cumulative registrations & revenue
+          Cumulative Registrations & Revenue
         </strong>
-        <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Stub chart</div>
+        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+          Interactive chart
+        </div>
       </div>
-      <div style={{ fontSize: "0.75rem", color: "#4b5563" }}>
-        Simple bar indicators (replace with real chart later).
-      </div>
-      <div style={{ marginTop: "0.5rem", display: "grid", gap: "0.25rem" }}>
-        {data.map((d) => (
-          <div key={d.label}>
-            <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>{d.label}</div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.25rem",
-              }}
-            >
-              <div
-                style={{
-                  height: "6px",
-                  borderRadius: "999px",
-                  background: "#2563eb",
-                  width: `${(d.registrations / maxReg) * 80}%`,
-                }}
-              />
-              <div
-                style={{
-                  height: "6px",
-                  borderRadius: "999px",
-                  background: "#f97316",
-                  width: `${(d.revenue / maxRev) * 80}%`,
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+          />
+          <YAxis
+            yAxisId="left"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+            label={{
+              value: "Registrations",
+              angle: -90,
+              position: "insideLeft",
+              style: { fontSize: 11, fill: "#6b7280" },
+            }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+            label={{
+              value: "Revenue ($)",
+              angle: 90,
+              position: "insideRight",
+              style: { fontSize: 11, fill: "#6b7280" },
+            }}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "white",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.5rem",
+              fontSize: "0.75rem",
+              padding: "0.5rem",
+            }}
+            formatter={(value, name) => {
+              if (name === "Revenue ($)") {
+                return `$${value.toLocaleString()}`;
+              }
+              return value;
+            }}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem" }}
+            iconType="plainline"
+          />
+          <Bar
+            yAxisId="left"
+            dataKey="registrations"
+            fill="#2563eb"
+            name="Registrations"
+            radius={[4, 4, 0, 0]}
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="revenue"
+            stroke="#22c55e"
+            strokeWidth={2}
+            dot={{ fill: "#22c55e", r: 4 }}
+            name="Revenue ($)"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -860,6 +1445,20 @@ function EventActivitiesTab() {
 // -------------------- More / People Listing --------------------
 
 function EventMoreTab({ attendees, onOpenInsightsSlideout }) {
+  const [showCorrelationMenu, setShowCorrelationMenu] = useState(false);
+  const [correlationType, setCorrelationType] = useState(null);
+
+  const correlations = [
+    { id: "location", label: "Location vs Renewal", dimension: "province", metric: "renewal" },
+    { id: "age", label: "Age Group vs Renewal", dimension: "ageGroup", metric: "renewal" },
+    { id: "education", label: "Education vs Renewal", dimension: "education", metric: "renewal" },
+  ];
+
+  function handleCorrelationSelect(correlation) {
+    setCorrelationType(correlation);
+    setShowCorrelationMenu(false);
+  }
+
   return (
     <div>
       <div
@@ -867,23 +1466,88 @@ function EventMoreTab({ attendees, onOpenInsightsSlideout }) {
           display: "flex",
           justifyContent: "space-between",
           marginBottom: "0.5rem",
+          position: "relative",
         }}
       >
         <h3 style={{ margin: 0, fontSize: "0.95rem" }}>People</h3>
-        <button
-          onClick={onOpenInsightsSlideout}
-          style={{
-            border: "none",
-            background: "transparent",
-            color: "#2563eb",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-          }}
-        >
-          Open location vs renewal insights
-        </button>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowCorrelationMenu(!showCorrelationMenu)}
+            style={{
+              border: "1px solid #d1d5db",
+              background: "white",
+              borderRadius: "0.375rem",
+              padding: "0.375rem 0.75rem",
+              color: "#2563eb",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            Correlation Insights ▾
+          </button>
+          {showCorrelationMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "0.25rem",
+                background: "white",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                zIndex: 10,
+                minWidth: "200px",
+              }}
+            >
+              {correlations.map((corr) => (
+                <button
+                  key={corr.id}
+                  onClick={() => handleCorrelationSelect(corr)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "0.5rem 0.75rem",
+                    border: "none",
+                    background: "transparent",
+                    textAlign: "left",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    color: "#374151",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  {corr.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <MorePeopleListing attendees={attendees} />
+      {correlationType && correlationType.id === "location" && (
+        <InsightsConfigSlideout
+          attendees={attendees}
+          onClose={() => setCorrelationType(null)}
+        />
+      )}
+      {correlationType && correlationType.id !== "location" && (
+        <CorrelationSlideout
+          attendees={attendees}
+          dimension={correlationType.dimension}
+          dimensionLabel={correlationType.label.split(" vs ")[0]}
+          metric={correlationType.metric}
+          onClose={() => setCorrelationType(null)}
+        />
+      )}
     </div>
   );
 }
@@ -892,6 +1556,7 @@ function MorePeopleListing({ attendees }) {
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedView, setSelectedView] = useState("Default");
+  const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
 
   const cards = [
     { title: "Registration Types", field: "registrationType" },
@@ -904,6 +1569,18 @@ function MorePeopleListing({ attendees }) {
     { title: "Tenure", field: "tenure" }, // not in mock, will show "Unknown"
     { title: "Education", field: "education" },
   ];
+
+  const colorPalettes = {
+    registrationType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"],
+    dietary: ["#22c55e", "#10b981", "#14b8a6", "#06b6d4"],
+    session: ["#f59e0b", "#eab308", "#84cc16", "#22c55e"],
+    ticketType: ["#3b82f6", "#8b5cf6"],
+    memberType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
+    ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"],
+    province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4"],
+    tenure: ["#6b7280", "#9ca3af"],
+    education: ["#84cc16", "#22c55e", "#10b981", "#14b8a6"],
+  };
 
   const filteredAttendees = useMemo(
     () => filterAttendees(attendees, filters, searchTerm),
@@ -932,43 +1609,123 @@ function MorePeopleListing({ attendees }) {
     }
   }
 
+  function handleCardFilterClick(field, label) {
+    handleToggle(field, label);
+  }
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 2fr) minmax(0, 3fr)",
+        gridTemplateColumns: viewMode === "list" ? "minmax(0, 2fr) minmax(0, 3fr)" : "1fr",
         gap: "1rem",
         marginTop: "0.5rem",
       }}
     >
+      {viewMode === "list" && (
+        <div>
+          <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
+          <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: "0.75rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            {cards.map((card) => {
+              const segments = groupByField(attendees, card.field);
+              const selectedValues = filters[card.field] || [];
+              return (
+                <ListingCard
+                  key={card.title}
+                  title={card.title}
+                  segments={segments}
+                  selectedValues={selectedValues}
+                  onToggle={(segment) => handleToggle(card.field, segment)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div>
-        <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
-        <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "0.75rem",
-            marginTop: "0.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "0.75rem",
           }}
         >
-          {cards.map((card) => {
-            const segments = groupByField(attendees, card.field);
-            const selectedValues = filters[card.field] || [];
-            return (
-              <ListingCard
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+            {viewMode === "cards" ? "Demographic Overview" : `Showing ${filteredAttendees.length} attendee(s)`}
+          </div>
+          <div
+            style={{
+              display: "inline-flex",
+              borderRadius: "999px",
+              background: "#e5e7eb",
+              padding: "2px",
+            }}
+          >
+            <button
+              onClick={() => setViewMode("list")}
+              style={{
+                border: "none",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "999px",
+                background: viewMode === "list" ? "white" : "transparent",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                fontWeight: viewMode === "list" ? 600 : 400,
+                color: viewMode === "list" ? "#111827" : "#6b7280",
+                transition: "all 0.2s",
+              }}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode("cards")}
+              style={{
+                border: "none",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "999px",
+                background: viewMode === "cards" ? "white" : "transparent",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                fontWeight: viewMode === "cards" ? 600 : 400,
+                color: viewMode === "cards" ? "#111827" : "#6b7280",
+                transition: "all 0.2s",
+              }}
+            >
+              Cards
+            </button>
+          </div>
+        </div>
+        {viewMode === "list" ? (
+          <AttendeeList attendees={filteredAttendees} />
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {cards.map((card) => (
+              <DemographicCard
                 key={card.title}
                 title={card.title}
-                segments={segments}
-                selectedValues={selectedValues}
-                onToggle={(segment) => handleToggle(card.field, segment)}
+                field={card.field}
+                attendees={filteredAttendees}
+                colorPalette={colorPalettes[card.field]}
+                onFilterClick={handleCardFilterClick}
               />
-            );
-          })}
-        </div>
-      </div>
-      <div>
-        <AttendeeList attendees={filteredAttendees} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1150,9 +1907,939 @@ function AttendeeList({ attendees }) {
   );
 }
 
+function DemographicCard({ title, field, attendees, colorPalette, onFilterClick }) {
+  const segments = useMemo(() => groupByField(attendees, field), [attendees, field]);
+  const totalCount = attendees.length;
+  const segmentsWithPercentage = useMemo(
+    () => computeSegmentsWithPercentage(segments, totalCount),
+    [segments, totalCount]
+  );
+
+  const getColor = (idx) => colorPalette[idx % colorPalette.length];
+
+  return (
+    <div
+      style={{
+        borderRadius: "0.75rem",
+        border: "1px solid #e5e7eb",
+        padding: "0.75rem",
+        background: "white",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.85rem",
+          fontWeight: 700,
+          color: "#111827",
+          marginBottom: "0.25rem",
+        }}
+      >
+        {title}
+      </div>
+      <div style={{ fontSize: "0.7rem", color: "#6b7280", marginBottom: "0.25rem" }}>
+        {segments.length} options
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {segmentsWithPercentage.map((seg, idx) => {
+          const color = getColor(idx);
+          return (
+            <div
+              key={seg.label}
+              style={{
+                cursor: onFilterClick ? "pointer" : "default",
+                transition: "all 0.2s",
+              }}
+              onClick={() => onFilterClick && onFilterClick(field, seg.label)}
+              onMouseEnter={(e) => {
+                if (onFilterClick) {
+                  e.currentTarget.style.transform = "scale(1.02)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (onFilterClick) {
+                  e.currentTarget.style.transform = "scale(1)";
+                }
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: "0.72rem",
+                  color: "#374151",
+                  marginBottom: "0.25rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {seg.label}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {seg.count}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.35rem",
+                    fontSize: "0.7rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  ({seg.percentage}%)
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "6px",
+                  borderRadius: "999px",
+                  background: "#f3f4f6",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${seg.percentage}%`,
+                    background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                    borderRadius: "999px",
+                    transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: `0 0 8px ${color}40`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ChartPreviewSlideout({ data, title, attendees, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        if (showConfig) {
+          setShowConfig(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose, showConfig]);
+
+  const transformedData = useMemo(
+    () => transformChartData(data, config, attendees),
+    [data, config, attendees]
+  );
+
+  const totalRegistrations = transformedData[transformedData.length - 1]?.registrations || 0;
+  const totalRevenue = transformedData[transformedData.length - 1]?.revenue || 0;
+  const avgRevenuePerRegistrant = totalRegistrations > 0 ? (totalRevenue / totalRegistrations).toFixed(0) : 0;
+  const peakWeek = transformedData.reduce((max, item) => item.registrations > max.registrations ? item : max, transformedData[0]);
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 199,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "32rem",
+          background: "white",
+          boxShadow: "-6px 0 15px rgba(0,0,0,0.1)",
+          borderLeft: "1px solid #e5e7eb",
+          zIndex: 200,
+          display: "flex",
+          flexDirection: "column",
+          transform: isVisible ? "translateX(0)" : "translateX(100%)",
+          transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          overflowY: "auto",
+        }}
+      >
+        <div
+          style={{
+            padding: "1.5rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+              {title}
+            </h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+              Chart Preview & Analysis
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "#f3f4f6",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              color: "#374151",
+              fontWeight: 500,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#e5e7eb";
+              e.target.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "#f3f4f6";
+              e.target.style.transform = "scale(1)";
+            }}
+          >
+            Close
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem", flex: 1 }}>
+          <div
+            style={{
+              background: "#f9fafb",
+              borderRadius: "0.5rem",
+              padding: "1rem",
+              border: "1px solid #e5e7eb",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart
+                data={transformedData}
+                margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Registrations",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { fontSize: 11, fill: "#6b7280" },
+                  }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Revenue ($)",
+                    angle: 90,
+                    position: "insideRight",
+                    style: { fontSize: 11, fill: "#6b7280" },
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "white",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.75rem",
+                    padding: "0.5rem",
+                  }}
+                  formatter={(value, name) => {
+                    if (name === "Revenue ($)") {
+                      return `$${value.toLocaleString()}`;
+                    }
+                    return value;
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem" }}
+                  iconType="plainline"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="registrations"
+                  fill="#2563eb"
+                  name="Registrations"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={{ fill: "#22c55e", r: 4 }}
+                  name="Revenue ($)"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div
+            style={{
+              background: "#f0f9ff",
+              border: "1px solid #bae6fd",
+              borderRadius: "0.75rem",
+              padding: "1rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0c4a6e", marginBottom: "0.75rem" }}>
+              Summary Statistics
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Total Registrations</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  {totalRegistrations}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Total Revenue</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  ${totalRevenue.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Avg per Registrant</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  ${avgRevenuePerRegistrant}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>Peak Week</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0c4a6e" }}>
+                  {peakWeek.label}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              onClick={() => setShowConfig(true)}
+              style={{
+                flex: 1,
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #2563eb",
+                background: "white",
+                color: "#2563eb",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                fontWeight: 600,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#eff6ff";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "white";
+              }}
+            >
+              Configure Chart
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                background: "#e5e7eb",
+                color: "#374151",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                fontWeight: 600,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#d1d5db";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#e5e7eb";
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+      {showConfig && (
+        <ChartConfigPanel
+          config={config}
+          onConfigChange={setConfig}
+          onClose={() => setShowConfig(false)}
+          onApply={() => {}}
+        />
+      )}
+    </>
+  );
+}
+
+function ChartConfigPanel({ onClose, onApply, config, onConfigChange }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const membershipTypes = ["CPA", "Student", "Non-member", "Guest"];
+
+  function handleReset() {
+    onConfigChange({
+      viewMode: "count",
+      selectedMembershipTypes: [],
+      dateRange: "all",
+    });
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: "28rem",
+        background: "white",
+        boxShadow: "-6px 0 15px rgba(0,0,0,0.1)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 210,
+        display: "flex",
+        flexDirection: "column",
+        transform: isVisible ? "translateX(-32rem)" : "translateX(100%)",
+        transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        overflowY: "auto",
+      }}
+    >
+      <div
+        style={{
+          padding: "1.5rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+            Chart Configuration
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+            Customize chart display and filters
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: "1.5rem",
+            cursor: "pointer",
+            color: "#6b7280",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      <div style={{ padding: "1.5rem", flex: 1 }}>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            View Mode
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="count"
+                checked={config.viewMode === "count"}
+                onChange={(e) => onConfigChange({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Count
+            </label>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="percentage"
+                checked={config.viewMode === "percentage"}
+                onChange={(e) => onConfigChange({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Percentage
+            </label>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Filter by Membership Type
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {membershipTypes.map((type) => {
+              const isSelected = config.selectedMembershipTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    const updated = isSelected
+                      ? config.selectedMembershipTypes.filter((t) => t !== type)
+                      : [...config.selectedMembershipTypes, type];
+                    onConfigChange({ ...config, selectedMembershipTypes: updated });
+                  }}
+                  style={{
+                    padding: "0.4rem 0.75rem",
+                    borderRadius: "999px",
+                    border: "1px solid #d1d5db",
+                    background: isSelected ? "#2563eb" : "white",
+                    color: isSelected ? "white" : "#374151",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    fontWeight: isSelected ? 600 : 400,
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Date Range
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {[
+              { value: "all", label: "All Weeks" },
+              { value: "last4", label: "Last 4 Weeks" },
+              { value: "last2", label: "Last 2 Weeks" },
+            ].map((option) => (
+              <label
+                key={option.value}
+                style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                <input
+                  type="radio"
+                  name="dateRange"
+                  value={option.value}
+                  checked={config.dateRange === option.value}
+                  onChange={(e) => onConfigChange({ ...config, dateRange: e.target.value })}
+                  style={{ marginRight: "0.5rem" }}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "1.5rem",
+          borderTop: "1px solid #e5e7eb",
+          display: "flex",
+          gap: "0.75rem",
+        }}
+      >
+        <button
+          onClick={handleReset}
+          style={{
+            flex: 1,
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            border: "1px solid #d1d5db",
+            background: "white",
+            color: "#374151",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            fontWeight: 600,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#f9fafb";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "white";
+          }}
+        >
+          Reset
+        </button>
+        <button
+          onClick={() => {
+            onApply();
+            onClose();
+          }}
+          style={{
+            flex: 1,
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            fontWeight: 600,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#1d4ed8";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "#2563eb";
+          }}
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Correlation Slideout --------------------
+
+function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const { results, insight } = useMemo(
+    () => computeCorrelation(attendees, dimension, metric),
+    [attendees, dimension, metric]
+  );
+
+  const metricLabel = metric === "renewal" ? "Renewal Rate" : metric;
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 199,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "32rem",
+          maxWidth: "90vw",
+          background: "white",
+          boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
+          zIndex: 200,
+          display: "flex",
+          flexDirection: "column",
+          transform: isVisible ? "translateX(0)" : "translateX(100%)",
+          transition: reducedMotion
+            ? "transform 0.01s ease-in-out"
+            : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        }}
+      >
+        <div
+          style={{
+            padding: "1.5rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+              Correlation Analysis
+            </h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+              {dimensionLabel} vs {metricLabel}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+              color: "#6b7280",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}>
+          {/* Key Insight Box */}
+          <div
+            style={{
+              padding: "1rem",
+              borderRadius: "0.5rem",
+              background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+              border: "1px solid #fbbf24",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "#92400e",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Key Insight
+            </div>
+            <div style={{ fontSize: "0.9rem", color: "#78350f", fontWeight: 500 }}>
+              {insight}
+            </div>
+          </div>
+
+          {/* Correlation Results */}
+          <div style={{ marginBottom: "1rem" }}>
+            <div
+              style={{
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                color: "#374151",
+                marginBottom: "1rem",
+              }}
+            >
+              Breakdown by {dimensionLabel}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {results.map((result, idx) => {
+                const renewalRate = parseFloat(result.renewalRate);
+                const colorIntensity = Math.max(0.3, renewalRate / 100);
+                const barColor = `rgba(37, 99, 235, ${colorIntensity})`;
+
+                return (
+                  <div
+                    key={result.label}
+                    style={{
+                      padding: "1rem",
+                      borderRadius: "0.5rem",
+                      border: "1px solid #e5e7eb",
+                      background: "#f9fafb",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
+                        {result.label}
+                      </div>
+                      <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2563eb" }}>
+                        {result.renewalRate}%
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "0.5rem",
+                        background: "#e5e7eb",
+                        borderRadius: "999px",
+                        overflow: "hidden",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${result.renewalRate}%`,
+                          height: "100%",
+                          background: barColor,
+                          borderRadius: "999px",
+                          transition: "width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "1rem",
+                        fontSize: "0.75rem",
+                        color: "#6b7280",
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Total:</span> {result.total}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Renewed:</span> {result.renewed}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Not Renewed:</span> {result.notRenewed}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "1.5rem",
+            borderTop: "1px solid #e5e7eb",
+            display: "flex",
+            gap: "0.75rem",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "0.75rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #d1d5db",
+              background: "white",
+              color: "#374151",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              fontWeight: 600,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#f9fafb";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "white";
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // -------------------- Insights Bottom Panel --------------------
 
 function InsightsBottomPanel({ attendees, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const membershipTypeSegments = useMemo(
     () => groupByField(attendees, "memberType"),
     [attendees]
@@ -1174,116 +2861,261 @@ function InsightsBottomPanel({ attendees, onClose }) {
     [attendees]
   );
 
+  const totalAttendees = attendees.length;
+
+  const colorPalettes = {
+    membershipType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
+    ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6"],
+    education: ["#84cc16", "#22c55e", "#10b981", "#14b8a6"],
+    province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7"],
+    reason: ["#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981"],
+  };
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "white",
-        borderTop: "1px solid #e5e7eb",
-        boxShadow: "0 -6px 15px rgba(0,0,0,0.1)",
-        padding: "0.75rem 1rem 1rem",
-        zIndex: 30,
-      }}
-    >
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 29,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
+        }}
+      />
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "0.5rem",
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "linear-gradient(to top, #ffffff, #fefefe)",
+          borderTop: "1px solid #d1d5db",
+          boxShadow: "0 -10px 40px rgba(0,0,0,0.15)",
+          padding: "1.25rem 1.5rem 1.5rem",
+          zIndex: 30,
+          transform: isVisible ? "translateY(0)" : "translateY(100%)",
+          transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          maxHeight: "60vh",
+          overflowY: "auto",
         }}
       >
-        <strong style={{ fontSize: "0.9rem" }}>Insights</strong>
-        <button
-          onClick={onClose}
+        <div
           style={{
-            border: "none",
-            background: "transparent",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-            color: "#6b7280",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+            paddingBottom: "0.75rem",
+            borderBottom: "2px solid #e5e7eb",
           }}
         >
-          Close
-        </button>
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                color: "#111827",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Event Insights
+            </h3>
+            <p
+              style={{
+                margin: "0.25rem 0 0",
+                fontSize: "0.8rem",
+                color: "#6b7280",
+              }}
+            >
+              Demographic breakdown of {totalAttendees} attendees
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "#f3f4f6",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              color: "#374151",
+              fontWeight: 500,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#e5e7eb";
+              e.target.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "#f3f4f6";
+              e.target.style.transform = "scale(1)";
+            }}
+          >
+            Close
+          </button>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          <DimensionInsight
+            title="Membership Type"
+            segments={membershipTypeSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.membershipType}
+            delay={0}
+            reducedMotion={reducedMotion}
+          />
+          <DimensionInsight
+            title="Age Group"
+            segments={ageGroupSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.ageGroup}
+            delay={0.1}
+            reducedMotion={reducedMotion}
+          />
+          <DimensionInsight
+            title="Education"
+            segments={educationSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.education}
+            delay={0.2}
+            reducedMotion={reducedMotion}
+          />
+          <DimensionInsight
+            title="Province"
+            segments={provinceSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.province}
+            delay={0.3}
+            reducedMotion={reducedMotion}
+          />
+          <DimensionInsight
+            title="Primary Reason"
+            segments={reasonSegments}
+            totalCount={totalAttendees}
+            colorPalette={colorPalettes.reason}
+            delay={0.4}
+            reducedMotion={reducedMotion}
+          />
+        </div>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-          gap: "0.75rem",
-          fontSize: "0.75rem",
-        }}
-      >
-        <DimensionInsight
-          title="Membership Type"
-          segments={membershipTypeSegments}
-        />
-        <DimensionInsight title="Age Group" segments={ageGroupSegments} />
-        <DimensionInsight title="Education" segments={educationSegments} />
-        <DimensionInsight title="Province" segments={provinceSegments} />
-        <DimensionInsight
-          title="Primary Reason for Joining"
-          segments={reasonSegments}
-        />
-      </div>
-    </div>
+    </>
   );
 }
 
-function DimensionInsight({ title, segments }) {
-  const max = Math.max(...segments.map((s) => s.count), 1);
+function DimensionInsight({ title, segments, totalCount, colorPalette, delay, reducedMotion }) {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  React.useEffect(() => {
+    setTimeout(() => setIsAnimated(true), delay * 1000 + 100);
+  }, [delay]);
+
   return (
     <div
       style={{
-        borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
-        padding: "0.4rem",
-        background: "#f9fafb",
+        borderRadius: "0.75rem",
+        border: "1px solid #d1d5db",
+        padding: "0.75rem",
+        background: "white",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        opacity: isAnimated ? 1 : 0,
+        transform: isAnimated ? "translateY(0)" : "translateY(10px)",
+        transition: reducedMotion ? `all 0.01s ease-out` : `all 0.4s ease-out ${delay}s`,
       }}
     >
       <div
         style={{
-          fontSize: "0.75rem",
-          fontWeight: 600,
-          marginBottom: "0.25rem",
+          fontSize: "0.8rem",
+          fontWeight: 700,
+          marginBottom: "0.5rem",
+          color: "#111827",
+          letterSpacing: "-0.01em",
         }}
       >
         {title}
       </div>
-      {segments.map((s) => (
-        <div key={s.label} style={{ marginBottom: "0.15rem" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.7rem",
-              color: "#4b5563",
-            }}
-          >
-            <span>{s.label}</span>
-            <span>{s.count}</span>
-          </div>
-          <div
-            style={{
-              height: "4px",
-              borderRadius: "999px",
-              background: "#e5e7eb",
-              overflow: "hidden",
-            }}
-          >
+      <div style={{ marginBottom: "0.5rem" }}>
+        {segments.map((s, idx) => {
+          const percentage = ((s.count / totalCount) * 100).toFixed(1);
+          const color = colorPalette[idx % colorPalette.length];
+          return (
             <div
-              style={{
-                height: "100%",
-                width: `${(s.count / max) * 100}%`,
-                background: "#2563eb",
+              key={s.label}
+              style={{ marginBottom: "0.5rem" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
               }}
-            />
-          </div>
-        </div>
-      ))}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: "0.72rem",
+                  color: "#374151",
+                  marginBottom: "0.25rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {s.label}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {s.count}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "0.35rem",
+                    fontSize: "0.7rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  ({percentage}%)
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "6px",
+                  borderRadius: "999px",
+                  background: "#f3f4f6",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: isAnimated ? `${percentage}%` : "0%",
+                    background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                    borderRadius: "999px",
+                    transition: reducedMotion ? "width 0.01s ease-in-out" : "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    transitionDelay: reducedMotion ? "0s" : `${delay + idx * 0.05}s`,
+                    boxShadow: `0 0 8px ${color}40`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1295,6 +3127,17 @@ function InsightsConfigSlideout({ attendees, onClose }) {
     "Newfoundland and Labrador",
   ]);
   const [showAs, setShowAs] = useState("share"); // "raw" | "share"
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const allProvinces = useMemo(
     () => groupByField(attendees, "province").map((s) => s.label),
