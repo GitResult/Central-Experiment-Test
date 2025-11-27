@@ -571,6 +571,12 @@ const MOCK_ATTENDEES = [
 
 // -------------------- Helper Functions --------------------
 
+function prefersReducedMotion() {
+  if (typeof window === 'undefined') return false;
+  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  return mediaQuery.matches;
+}
+
 function computeKpis(attendees) {
   const totalAttendees = attendees.length;
   const currentMembers = attendees.filter((a) => a.membershipStatus === "Current")
@@ -864,6 +870,17 @@ function CalendarView({ event, onEventClick }) {
 }
 
 function EventPeek({ event, kpis, onClose, onViewEvent }) {
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
     <div
       style={{
@@ -1609,10 +1626,22 @@ function AttendeeList({ attendees }) {
 
 function InsightsBottomPanel({ attendees, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
 
   React.useEffect(() => {
     setTimeout(() => setIsVisible(true), 10);
   }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const membershipTypeSegments = useMemo(
     () => groupByField(attendees, "memberType"),
@@ -1655,7 +1684,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
           background: "rgba(0, 0, 0, 0.3)",
           zIndex: 29,
           opacity: isVisible ? 1 : 0,
-          transition: "opacity 0.3s ease-in-out",
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
         }}
       />
       <div
@@ -1670,7 +1699,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
           padding: "1.25rem 1.5rem 1.5rem",
           zIndex: 30,
           transform: isVisible ? "translateY(0)" : "translateY(100%)",
-          transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
           maxHeight: "60vh",
           overflowY: "auto",
         }}
@@ -1745,6 +1774,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
             totalCount={totalAttendees}
             colorPalette={colorPalettes.membershipType}
             delay={0}
+            reducedMotion={reducedMotion}
           />
           <DimensionInsight
             title="Age Group"
@@ -1752,6 +1782,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
             totalCount={totalAttendees}
             colorPalette={colorPalettes.ageGroup}
             delay={0.1}
+            reducedMotion={reducedMotion}
           />
           <DimensionInsight
             title="Education"
@@ -1759,6 +1790,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
             totalCount={totalAttendees}
             colorPalette={colorPalettes.education}
             delay={0.2}
+            reducedMotion={reducedMotion}
           />
           <DimensionInsight
             title="Province"
@@ -1766,6 +1798,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
             totalCount={totalAttendees}
             colorPalette={colorPalettes.province}
             delay={0.3}
+            reducedMotion={reducedMotion}
           />
           <DimensionInsight
             title="Primary Reason"
@@ -1773,6 +1806,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
             totalCount={totalAttendees}
             colorPalette={colorPalettes.reason}
             delay={0.4}
+            reducedMotion={reducedMotion}
           />
         </div>
       </div>
@@ -1780,7 +1814,7 @@ function InsightsBottomPanel({ attendees, onClose }) {
   );
 }
 
-function DimensionInsight({ title, segments, totalCount, colorPalette, delay }) {
+function DimensionInsight({ title, segments, totalCount, colorPalette, delay, reducedMotion }) {
   const [isAnimated, setIsAnimated] = useState(false);
 
   React.useEffect(() => {
@@ -1797,7 +1831,7 @@ function DimensionInsight({ title, segments, totalCount, colorPalette, delay }) 
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         opacity: isAnimated ? 1 : 0,
         transform: isAnimated ? "translateY(0)" : "translateY(10px)",
-        transition: `all 0.4s ease-out ${delay}s`,
+        transition: reducedMotion ? `all 0.01s ease-out` : `all 0.4s ease-out ${delay}s`,
       }}
     >
       <div
@@ -1875,8 +1909,8 @@ function DimensionInsight({ title, segments, totalCount, colorPalette, delay }) 
                     width: isAnimated ? `${percentage}%` : "0%",
                     background: `linear-gradient(90deg, ${color}, ${color}dd)`,
                     borderRadius: "999px",
-                    transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    transitionDelay: `${delay + idx * 0.05}s`,
+                    transition: reducedMotion ? "width 0.01s ease-in-out" : "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    transitionDelay: reducedMotion ? "0s" : `${delay + idx * 0.05}s`,
                     boxShadow: `0 0 8px ${color}40`,
                   }}
                 />
@@ -1896,6 +1930,17 @@ function InsightsConfigSlideout({ attendees, onClose }) {
     "Newfoundland and Labrador",
   ]);
   const [showAs, setShowAs] = useState("share"); // "raw" | "share"
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const allProvinces = useMemo(
     () => groupByField(attendees, "province").map((s) => s.label),
