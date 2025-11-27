@@ -1,4 +1,15 @@
 import React, { useState, useMemo } from "react";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // -------------------- Mock Data --------------------
 
@@ -145,6 +156,414 @@ const MOCK_ATTENDEES = [
     registrationType: "Full Conference",
     dietary: "None",
     session: "Audit Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 9,
+    name: "Jasmine Wong",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 10,
+    name: "Mohammed Hassan",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "Halal",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 11,
+    name: "Sarah Chen",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "Alberta",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 12,
+    name: "Pierre Dubois",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Quebec",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 13,
+    name: "Priya Patel",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Learning",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 14,
+    name: "James MacLeod",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "25-34",
+    province: "Nova Scotia",
+    education: "Bachelors",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "None",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 15,
+    name: "Emily Rodriguez",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "PhD",
+    primaryReason: "Thought Leadership",
+    registrationType: "Full Conference",
+    dietary: "Gluten-free",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 16,
+    name: "Kevin O'Brien",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "55-64",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 17,
+    name: "Aisha Mohammed",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "18-24",
+    province: "British Columbia",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "Halal",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 18,
+    name: "Robert Kim",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 19,
+    name: "Marie Tremblay",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "25-34",
+    province: "Quebec",
+    education: "Bachelors",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "Vegan",
+    session: "Ethics Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 20,
+    name: "David Singh",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "45-54",
+    province: "Alberta",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "Vegetarian",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 21,
+    name: "Lisa Anderson",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 22,
+    name: "Michael Nguyen",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "British Columbia",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 23,
+    name: "Sophie Gagnon",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Quebec",
+    education: "Masters",
+    primaryReason: "Learning",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Tax Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 24,
+    name: "Thomas Murphy",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "55-64",
+    province: "Newfoundland and Labrador",
+    education: "Masters",
+    primaryReason: "Thought Leadership",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 25,
+    name: "Jennifer Lee",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "35-44",
+    province: "Alberta",
+    education: "Bachelors",
+    primaryReason: "Learning",
+    registrationType: "Workshop Only",
+    dietary: "Vegetarian",
+    session: "Technology Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 26,
+    name: "Antoine Levesque",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Quebec",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Leadership Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 27,
+    name: "Rachel Cohen",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "35-44",
+    province: "Ontario",
+    education: "PhD",
+    primaryReason: "Professional Development",
+    registrationType: "Full Conference",
+    dietary: "Kosher",
+    session: "Research Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 28,
+    name: "Christopher Taylor",
+    memberType: "Student",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "25-34",
+    province: "Newfoundland and Labrador",
+    education: "Undergrad",
+    primaryReason: "Career",
+    registrationType: "Student Pass",
+    dietary: "None",
+    session: "Student Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 29,
+    name: "Natasha Ivanov",
+    memberType: "Non-member",
+    membershipStatus: "Non-member",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "45-54",
+    province: "Ontario",
+    education: "Masters",
+    primaryReason: "Exploring Membership",
+    registrationType: "Workshop Only",
+    dietary: "None",
+    session: "Ethics Track",
+    ticketType: "Paid",
+    renewed: false,
+  },
+  {
+    id: 30,
+    name: "William Fraser",
+    memberType: "CPA",
+    membershipStatus: "Current",
+    isComplimentary: false,
+    isMember: true,
+    ageGroup: "65+",
+    province: "Nova Scotia",
+    education: "Masters",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Audit Track",
+    ticketType: "Paid",
+    renewed: true,
+  },
+  {
+    id: 31,
+    name: "Olivia Martin",
+    memberType: "Guest",
+    membershipStatus: "Non-member",
+    isComplimentary: true,
+    isMember: false,
+    ageGroup: "35-44",
+    province: "Newfoundland and Labrador",
+    education: "Bachelors",
+    primaryReason: "Guest",
+    registrationType: "Guest",
+    dietary: "Gluten-free",
+    session: "Social Events",
+    ticketType: "Complimentary",
+    renewed: false,
+  },
+  {
+    id: 32,
+    name: "Daniel Park",
+    memberType: "CPA",
+    membershipStatus: "Lapsed",
+    isComplimentary: false,
+    isMember: false,
+    ageGroup: "55-64",
+    province: "Nova Scotia",
+    education: "Bachelors",
+    primaryReason: "Networking",
+    registrationType: "Full Conference",
+    dietary: "None",
+    session: "Tax Track",
     ticketType: "Paid",
     renewed: false,
   },
@@ -672,13 +1091,13 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
   );
 
   const fakeTrendData = [
-    { label: "Day -7", registrations: 20, revenue: 15000 },
-    { label: "Day -6", registrations: 40, revenue: 30000 },
-    { label: "Day -5", registrations: 80, revenue: 65000 },
-    { label: "Day -4", registrations: 120, revenue: 110000 },
-    { label: "Day -3", registrations: 200, revenue: 180000 },
-    { label: "Day -2", registrations: 300, revenue: 260000 },
-    { label: "Day -1", registrations: 400, revenue: 350000 },
+    { label: "Week -6", registrations: 3, revenue: 2400 },
+    { label: "Week -5", registrations: 8, revenue: 6400 },
+    { label: "Week -4", registrations: 15, revenue: 12000 },
+    { label: "Week -3", registrations: 22, revenue: 17600 },
+    { label: "Week -2", registrations: 28, revenue: 22400 },
+    { label: "Week -1", registrations: 32, revenue: 25600 },
+    { label: "Event", registrations: 32, revenue: 26000 },
   ];
 
   return (
@@ -692,7 +1111,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights }) {
           marginTop: "1rem",
         }}
       >
-        <ComboChartStub data={fakeTrendData} />
+        <ComboChartWithRecharts data={fakeTrendData} />
         <VitalsRow event={event} kpis={kpis} membershipSegments={membershipSegments} />
       </div>
 
@@ -750,10 +1169,7 @@ function KpiRow({ kpis }) {
   );
 }
 
-function ComboChartStub({ data }) {
-  const maxReg = Math.max(...data.map((d) => d.registrations));
-  const maxRev = Math.max(...data.map((d) => d.revenue));
-
+function ComboChartWithRecharts({ data }) {
   return (
     <div
       style={{
@@ -767,48 +1183,87 @@ function ComboChartStub({ data }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          marginBottom: "0.5rem",
+          marginBottom: "0.75rem",
         }}
       >
         <strong style={{ fontSize: "0.875rem" }}>
-          Cumulative registrations & revenue
+          Cumulative Registrations & Revenue
         </strong>
-        <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Stub chart</div>
+        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+          Interactive chart
+        </div>
       </div>
-      <div style={{ fontSize: "0.75rem", color: "#4b5563" }}>
-        Simple bar indicators (replace with real chart later).
-      </div>
-      <div style={{ marginTop: "0.5rem", display: "grid", gap: "0.25rem" }}>
-        {data.map((d) => (
-          <div key={d.label}>
-            <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>{d.label}</div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.25rem",
-              }}
-            >
-              <div
-                style={{
-                  height: "6px",
-                  borderRadius: "999px",
-                  background: "#2563eb",
-                  width: `${(d.registrations / maxReg) * 80}%`,
-                }}
-              />
-              <div
-                style={{
-                  height: "6px",
-                  borderRadius: "999px",
-                  background: "#f97316",
-                  width: `${(d.revenue / maxRev) * 80}%`,
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+          />
+          <YAxis
+            yAxisId="left"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+            label={{
+              value: "Registrations",
+              angle: -90,
+              position: "insideLeft",
+              style: { fontSize: 11, fill: "#6b7280" },
+            }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            stroke="#9ca3af"
+            label={{
+              value: "Revenue ($)",
+              angle: 90,
+              position: "insideRight",
+              style: { fontSize: 11, fill: "#6b7280" },
+            }}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "white",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.5rem",
+              fontSize: "0.75rem",
+              padding: "0.5rem",
+            }}
+            formatter={(value, name) => {
+              if (name === "Revenue ($)") {
+                return `$${value.toLocaleString()}`;
+              }
+              return value;
+            }}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem" }}
+            iconType="plainline"
+          />
+          <Bar
+            yAxisId="left"
+            dataKey="registrations"
+            fill="#2563eb"
+            name="Registrations"
+            radius={[4, 4, 0, 0]}
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="revenue"
+            stroke="#22c55e"
+            strokeWidth={2}
+            dot={{ fill: "#22c55e", r: 4 }}
+            name="Revenue ($)"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
