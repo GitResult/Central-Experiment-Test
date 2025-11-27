@@ -668,6 +668,82 @@ function computeSegmentsWithPercentage(segments, totalCount) {
   }));
 }
 
+function transformChartData(originalData, config, attendees) {
+  let data = [...originalData];
+
+  // Apply date range filter
+  if (config.dateRange === "last4") {
+    data = data.slice(-5); // Last 4 weeks + Event
+  } else if (config.dateRange === "last2") {
+    data = data.slice(-3); // Last 2 weeks + Event
+  }
+
+  // Apply membership type filter (affects revenue calculation conceptually)
+  // For demo, we'll adjust proportionally based on attendee mix
+  if (config.selectedMembershipTypes.length > 0) {
+    const filteredCount = attendees.filter((a) =>
+      config.selectedMembershipTypes.includes(a.memberType)
+    ).length;
+    const ratio = filteredCount / attendees.length;
+    data = data.map((item) => ({
+      ...item,
+      registrations: Math.round(item.registrations * ratio),
+      revenue: Math.round(item.revenue * ratio),
+    }));
+  }
+
+  // Apply view mode transformation
+  if (config.viewMode === "percentage") {
+    const maxReg = Math.max(...data.map((d) => d.registrations));
+    const maxRev = Math.max(...data.map((d) => d.revenue));
+    data = data.map((item) => ({
+      ...item,
+      registrations: maxReg > 0 ? Math.round((item.registrations / maxReg) * 100) : 0,
+      revenue: maxRev > 0 ? Math.round((item.revenue / maxRev) * 100) : 0,
+    }));
+  }
+
+  return data;
+}
+
+function computeCorrelation(attendees, dimension, metric) {
+  const map = new Map();
+
+  attendees.forEach((a) => {
+    const key = a[dimension] || "Unknown";
+    const existing = map.get(key) || { total: 0, renewed: 0 };
+    existing.total += 1;
+    if (metric === "renewal" && a.renewed) {
+      existing.renewed += 1;
+    }
+    map.set(key, existing);
+  });
+
+  const results = Array.from(map.entries()).map(([label, { total, renewed }]) => {
+    const renewalRate = total > 0 ? (renewed / total) * 100 : 0;
+    return {
+      label,
+      total,
+      renewed,
+      notRenewed: total - renewed,
+      renewalRate: renewalRate.toFixed(1),
+    };
+  });
+
+  // Sort by renewal rate descending
+  results.sort((a, b) => parseFloat(b.renewalRate) - parseFloat(a.renewalRate));
+
+  // Find key insight (highest vs lowest rate with meaningful sample size)
+  const significantResults = results.filter((r) => r.total >= 3);
+  const insight = significantResults.length >= 2
+    ? `${significantResults[0].label} shows ${significantResults[0].renewalRate}% renewal vs ${significantResults[significantResults.length - 1].renewalRate}% for ${significantResults[significantResults.length - 1].label}`
+    : significantResults.length === 1
+    ? `${significantResults[0].label}: ${significantResults[0].renewalRate}% renewal rate`
+    : "Insufficient data for correlation analysis";
+
+  return { results, insight };
+}
+
 // -------------------- Top-Level Demo Component --------------------
 
 function CentralEventReportingDemo() {
@@ -1043,7 +1119,7 @@ function EventDetailLayout({
             kpis={kpis}
             onOpenInsights={() => setShowInsightsPanel(true)}
             onOpenChartPreview={(data, title) => {
-              setChartPreviewData({ data, title });
+              setChartPreviewData({ data, title, attendees });
               setShowChartPreview(true);
             }}
           />
@@ -1075,6 +1151,7 @@ function EventDetailLayout({
         <ChartPreviewSlideout
           data={chartPreviewData.data}
           title={chartPreviewData.title}
+          attendees={chartPreviewData.attendees}
           onClose={() => setShowChartPreview(false)}
         />
       )}
@@ -1368,6 +1445,20 @@ function EventActivitiesTab() {
 // -------------------- More / People Listing --------------------
 
 function EventMoreTab({ attendees, onOpenInsightsSlideout }) {
+  const [showCorrelationMenu, setShowCorrelationMenu] = useState(false);
+  const [correlationType, setCorrelationType] = useState(null);
+
+  const correlations = [
+    { id: "location", label: "Location vs Renewal", dimension: "province", metric: "renewal" },
+    { id: "age", label: "Age Group vs Renewal", dimension: "ageGroup", metric: "renewal" },
+    { id: "education", label: "Education vs Renewal", dimension: "education", metric: "renewal" },
+  ];
+
+  function handleCorrelationSelect(correlation) {
+    setCorrelationType(correlation);
+    setShowCorrelationMenu(false);
+  }
+
   return (
     <div>
       <div
@@ -1375,23 +1466,88 @@ function EventMoreTab({ attendees, onOpenInsightsSlideout }) {
           display: "flex",
           justifyContent: "space-between",
           marginBottom: "0.5rem",
+          position: "relative",
         }}
       >
         <h3 style={{ margin: 0, fontSize: "0.95rem" }}>People</h3>
-        <button
-          onClick={onOpenInsightsSlideout}
-          style={{
-            border: "none",
-            background: "transparent",
-            color: "#2563eb",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-          }}
-        >
-          Open location vs renewal insights
-        </button>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowCorrelationMenu(!showCorrelationMenu)}
+            style={{
+              border: "1px solid #d1d5db",
+              background: "white",
+              borderRadius: "0.375rem",
+              padding: "0.375rem 0.75rem",
+              color: "#2563eb",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            Correlation Insights ▾
+          </button>
+          {showCorrelationMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "0.25rem",
+                background: "white",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                zIndex: 10,
+                minWidth: "200px",
+              }}
+            >
+              {correlations.map((corr) => (
+                <button
+                  key={corr.id}
+                  onClick={() => handleCorrelationSelect(corr)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "0.5rem 0.75rem",
+                    border: "none",
+                    background: "transparent",
+                    textAlign: "left",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    color: "#374151",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  {corr.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <MorePeopleListing attendees={attendees} />
+      {correlationType && correlationType.id === "location" && (
+        <InsightsConfigSlideout
+          attendees={attendees}
+          onClose={() => setCorrelationType(null)}
+        />
+      )}
+      {correlationType && correlationType.id !== "location" && (
+        <CorrelationSlideout
+          attendees={attendees}
+          dimension={correlationType.dimension}
+          dimensionLabel={correlationType.label.split(" vs ")[0]}
+          metric={correlationType.metric}
+          onClose={() => setCorrelationType(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1879,8 +2035,14 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick 
   );
 }
 
-function ChartPreviewSlideout({ data, title, onClose }) {
+function ChartPreviewSlideout({ data, title, attendees, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
   const reducedMotion = prefersReducedMotion();
 
   React.useEffect(() => {
@@ -1890,18 +2052,27 @@ function ChartPreviewSlideout({ data, title, onClose }) {
   React.useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
-        onClose();
+        if (showConfig) {
+          setShowConfig(false);
+        } else {
+          onClose();
+        }
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, showConfig]);
 
-  const totalRegistrations = data[data.length - 1]?.registrations || 0;
-  const totalRevenue = data[data.length - 1]?.revenue || 0;
+  const transformedData = useMemo(
+    () => transformChartData(data, config, attendees),
+    [data, config, attendees]
+  );
+
+  const totalRegistrations = transformedData[transformedData.length - 1]?.registrations || 0;
+  const totalRevenue = transformedData[transformedData.length - 1]?.revenue || 0;
   const avgRevenuePerRegistrant = totalRegistrations > 0 ? (totalRevenue / totalRegistrations).toFixed(0) : 0;
-  const peakWeek = data.reduce((max, item) => item.registrations > max.registrations ? item : max, data[0]);
+  const peakWeek = transformedData.reduce((max, item) => item.registrations > max.registrations ? item : max, transformedData[0]);
 
   return (
     <>
@@ -1989,7 +2160,7 @@ function ChartPreviewSlideout({ data, title, onClose }) {
           >
             <ResponsiveContainer width="100%" height={400}>
               <ComposedChart
-                data={data}
+                data={transformedData}
                 margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -2102,6 +2273,7 @@ function ChartPreviewSlideout({ data, title, onClose }) {
 
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <button
+              onClick={() => setShowConfig(true)}
               style={{
                 flex: 1,
                 padding: "0.75rem 1rem",
@@ -2121,7 +2293,7 @@ function ChartPreviewSlideout({ data, title, onClose }) {
                 e.target.style.background = "white";
               }}
             >
-              Add to Report
+              Configure Chart
             </button>
             <button
               onClick={onClose}
@@ -2147,6 +2319,500 @@ function ChartPreviewSlideout({ data, title, onClose }) {
               Close
             </button>
           </div>
+        </div>
+      </div>
+      {showConfig && (
+        <ChartConfigPanel
+          config={config}
+          onConfigChange={setConfig}
+          onClose={() => setShowConfig(false)}
+          onApply={() => {}}
+        />
+      )}
+    </>
+  );
+}
+
+function ChartConfigPanel({ onClose, onApply, config, onConfigChange }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const membershipTypes = ["CPA", "Student", "Non-member", "Guest"];
+
+  function handleReset() {
+    onConfigChange({
+      viewMode: "count",
+      selectedMembershipTypes: [],
+      dateRange: "all",
+    });
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: "28rem",
+        background: "white",
+        boxShadow: "-6px 0 15px rgba(0,0,0,0.1)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 210,
+        display: "flex",
+        flexDirection: "column",
+        transform: isVisible ? "translateX(-32rem)" : "translateX(100%)",
+        transition: reducedMotion ? "transform 0.01s ease-in-out" : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        overflowY: "auto",
+      }}
+    >
+      <div
+        style={{
+          padding: "1.5rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+            Chart Configuration
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+            Customize chart display and filters
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: "1.5rem",
+            cursor: "pointer",
+            color: "#6b7280",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      <div style={{ padding: "1.5rem", flex: 1 }}>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            View Mode
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="count"
+                checked={config.viewMode === "count"}
+                onChange={(e) => onConfigChange({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Count
+            </label>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="percentage"
+                checked={config.viewMode === "percentage"}
+                onChange={(e) => onConfigChange({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Percentage
+            </label>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Filter by Membership Type
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {membershipTypes.map((type) => {
+              const isSelected = config.selectedMembershipTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    const updated = isSelected
+                      ? config.selectedMembershipTypes.filter((t) => t !== type)
+                      : [...config.selectedMembershipTypes, type];
+                    onConfigChange({ ...config, selectedMembershipTypes: updated });
+                  }}
+                  style={{
+                    padding: "0.4rem 0.75rem",
+                    borderRadius: "999px",
+                    border: "1px solid #d1d5db",
+                    background: isSelected ? "#2563eb" : "white",
+                    color: isSelected ? "white" : "#374151",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    fontWeight: isSelected ? 600 : 400,
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Date Range
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {[
+              { value: "all", label: "All Weeks" },
+              { value: "last4", label: "Last 4 Weeks" },
+              { value: "last2", label: "Last 2 Weeks" },
+            ].map((option) => (
+              <label
+                key={option.value}
+                style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                <input
+                  type="radio"
+                  name="dateRange"
+                  value={option.value}
+                  checked={config.dateRange === option.value}
+                  onChange={(e) => onConfigChange({ ...config, dateRange: e.target.value })}
+                  style={{ marginRight: "0.5rem" }}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "1.5rem",
+          borderTop: "1px solid #e5e7eb",
+          display: "flex",
+          gap: "0.75rem",
+        }}
+      >
+        <button
+          onClick={handleReset}
+          style={{
+            flex: 1,
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            border: "1px solid #d1d5db",
+            background: "white",
+            color: "#374151",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            fontWeight: 600,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#f9fafb";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "white";
+          }}
+        >
+          Reset
+        </button>
+        <button
+          onClick={() => {
+            onApply();
+            onClose();
+          }}
+          style={{
+            flex: 1,
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            fontWeight: 600,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#1d4ed8";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "#2563eb";
+          }}
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Correlation Slideout --------------------
+
+function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onClose }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = prefersReducedMotion();
+
+  React.useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  React.useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const { results, insight } = useMemo(
+    () => computeCorrelation(attendees, dimension, metric),
+    [attendees, dimension, metric]
+  );
+
+  const metricLabel = metric === "renewal" ? "Renewal Rate" : metric;
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 199,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "opacity 0.01s ease-in-out" : "opacity 0.3s ease-in-out",
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "32rem",
+          maxWidth: "90vw",
+          background: "white",
+          boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
+          zIndex: 200,
+          display: "flex",
+          flexDirection: "column",
+          transform: isVisible ? "translateX(0)" : "translateX(100%)",
+          transition: reducedMotion
+            ? "transform 0.01s ease-in-out"
+            : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        }}
+      >
+        <div
+          style={{
+            padding: "1.5rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+              Correlation Analysis
+            </h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+              {dimensionLabel} vs {metricLabel}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+              color: "#6b7280",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}>
+          {/* Key Insight Box */}
+          <div
+            style={{
+              padding: "1rem",
+              borderRadius: "0.5rem",
+              background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+              border: "1px solid #fbbf24",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "#92400e",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Key Insight
+            </div>
+            <div style={{ fontSize: "0.9rem", color: "#78350f", fontWeight: 500 }}>
+              {insight}
+            </div>
+          </div>
+
+          {/* Correlation Results */}
+          <div style={{ marginBottom: "1rem" }}>
+            <div
+              style={{
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                color: "#374151",
+                marginBottom: "1rem",
+              }}
+            >
+              Breakdown by {dimensionLabel}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {results.map((result, idx) => {
+                const renewalRate = parseFloat(result.renewalRate);
+                const colorIntensity = Math.max(0.3, renewalRate / 100);
+                const barColor = `rgba(37, 99, 235, ${colorIntensity})`;
+
+                return (
+                  <div
+                    key={result.label}
+                    style={{
+                      padding: "1rem",
+                      borderRadius: "0.5rem",
+                      border: "1px solid #e5e7eb",
+                      background: "#f9fafb",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
+                        {result.label}
+                      </div>
+                      <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2563eb" }}>
+                        {result.renewalRate}%
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "0.5rem",
+                        background: "#e5e7eb",
+                        borderRadius: "999px",
+                        overflow: "hidden",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${result.renewalRate}%`,
+                          height: "100%",
+                          background: barColor,
+                          borderRadius: "999px",
+                          transition: "width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "1rem",
+                        fontSize: "0.75rem",
+                        color: "#6b7280",
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Total:</span> {result.total}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Renewed:</span> {result.renewed}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 600 }}>Not Renewed:</span> {result.notRenewed}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "1.5rem",
+            borderTop: "1px solid #e5e7eb",
+            display: "flex",
+            gap: "0.75rem",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "0.75rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #d1d5db",
+              background: "white",
+              color: "#374151",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              fontWeight: 600,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#f9fafb";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "white";
+            }}
+          >
+            Close
+          </button>
         </div>
       </div>
     </>
