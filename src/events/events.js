@@ -2951,7 +2951,13 @@ function EventDetailLayout({
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [showChartPreview, setShowChartPreview] = useState(false);
+  const [showChartConfig, setShowChartConfig] = useState(false);
   const [chartPreviewData, setChartPreviewData] = useState(null);
+
+  // Calculate panel widths for push behavior
+  const chartPanelWidth = showChartPreview ? 420 : 0;
+  const configPanelWidth = showChartConfig ? 380 : 0;
+  const totalPanelWidth = chartPanelWidth + configPanelWidth;
 
   // Determine if event is past
   const isPastEvent = new Date(event.endDate) < new Date();
@@ -2969,7 +2975,16 @@ function EventDetailLayout({
   };
 
   return (
-    <div>
+    <div style={{ display: "flex", minHeight: "calc(100vh - 48px)" }}>
+      {/* Main Content Area - Shrinks when panels are open */}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginRight: totalPanelWidth > 0 ? `${totalPanelWidth}px` : 0,
+        }}
+      >
       {/* Hero Header with Map Background */}
       <div
         style={{
@@ -3179,6 +3194,7 @@ function EventDetailLayout({
           />
         )}
       </div>
+      </div>
 
       {showInsightsPanel && (
         <InsightsStudioPanel
@@ -3194,14 +3210,26 @@ function EventDetailLayout({
         />
       )}
 
-      {showChartPreview && chartPreviewData && (
-        <ChartPreviewSlideout
-          data={chartPreviewData.data}
-          title={chartPreviewData.title}
-          attendees={chartPreviewData.attendees}
-          onClose={() => setShowChartPreview(false)}
-        />
-      )}
+      {/* Push Panel for Chart Preview */}
+      <ChartPreviewPushPanel
+        isOpen={showChartPreview}
+        data={chartPreviewData?.data}
+        title={chartPreviewData?.title}
+        attendees={chartPreviewData?.attendees}
+        onClose={() => {
+          setShowChartPreview(false);
+          setShowChartConfig(false);
+        }}
+        showConfig={showChartConfig}
+        onOpenConfig={() => setShowChartConfig(true)}
+        onCloseConfig={() => setShowChartConfig(false)}
+      />
+
+      {/* Push Panel for Chart Configuration */}
+      <ChartConfigPushPanel
+        isOpen={showChartConfig}
+        onClose={() => setShowChartConfig(false)}
+      />
     </div>
   );
 }
@@ -4174,6 +4202,7 @@ function AlertsPanel() {
 
 function UpcomingViewsPanel() {
   const [currentMonth, setCurrentMonth] = useState(5); // June = 5 (0-indexed)
+  const [selectedDate, setSelectedDate] = useState(12); // Default to June 12
   const currentYear = 2025;
 
   // Event dates to highlight (June 12-14, 2025)
@@ -4214,7 +4243,21 @@ function UpcomingViewsPanel() {
       location: "Main Hall",
       status: "SCHEDULED",
     },
+    {
+      id: 4,
+      month: "Jun",
+      day: 14,
+      dayName: "Sat",
+      time: "10:00 AM",
+      type: "Session",
+      title: "Closing Remarks",
+      location: "Main Hall",
+      status: "SCHEDULED",
+    },
   ];
+
+  // Filter events by selected date
+  const filteredEvents = upcomingEvents.filter(event => event.day === selectedDate);
 
   // Generate calendar days for the month
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -4243,6 +4286,12 @@ function UpcomingViewsPanel() {
 
   const handleNextMonth = () => {
     setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1));
+  };
+
+  const handleDateClick = (day) => {
+    if (day && currentMonth === 5 && eventDates.includes(day)) {
+      setSelectedDate(day);
+    }
   };
 
   return (
@@ -4338,19 +4387,22 @@ function UpcomingViewsPanel() {
         >
           {calendarDays.map((day, i) => {
             const isEventDate = currentMonth === 5 && eventDates.includes(day); // June only
+            const isSelected = currentMonth === 5 && day === selectedDate;
             const isWeekend = i % 7 === 0 || i % 7 === 6;
             return (
               <div
                 key={i}
+                onClick={() => handleDateClick(day)}
                 style={{
                   fontSize: "0.65rem",
                   textAlign: "center",
                   padding: "0.2rem",
                   borderRadius: "0.25rem",
-                  background: isEventDate ? "#3b82f6" : "transparent",
-                  color: isEventDate ? "white" : isWeekend ? "#3b82f6" : "#374151",
-                  fontWeight: isEventDate ? 600 : 400,
-                  cursor: day ? "pointer" : "default",
+                  background: isSelected ? "#3b82f6" : isEventDate ? "#dbeafe" : "transparent",
+                  color: isSelected ? "white" : isEventDate ? "#3b82f6" : isWeekend ? "#3b82f6" : "#374151",
+                  fontWeight: isSelected || isEventDate ? 600 : 400,
+                  cursor: isEventDate ? "pointer" : day ? "default" : "default",
+                  transition: "all 0.15s ease",
                 }}
               >
                 {day || ""}
@@ -4360,28 +4412,106 @@ function UpcomingViewsPanel() {
         </div>
       </div>
 
-      {/* Event Location Map Card */}
+      {/* Event Sessions List */}
+      <div style={{ display: "flex", flexDirection: "column", marginBottom: "1rem" }}>
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event, index) => (
+            <div
+              key={event.id}
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                padding: "0.5rem 0",
+                borderBottom: index < filteredEvents.length - 1 ? "1px solid #f3f4f6" : "none",
+              }}
+            >
+              {/* Date Badge */}
+              <div
+                style={{
+                  background: "#3b82f6",
+                  color: "white",
+                  borderRadius: "0.375rem",
+                  padding: "0.25rem 0.4rem",
+                  textAlign: "center",
+                  minWidth: "2.25rem",
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ fontSize: "0.6rem", fontWeight: 500, textTransform: "uppercase" }}>
+                  {event.month}
+                </div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, lineHeight: 1 }}>
+                  {event.day}
+                </div>
+                <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.8)" }}>
+                  {event.dayName}
+                </div>
+              </div>
+              {/* Event Details */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280" }}>
+                  {event.time} | {event.type}
+                </div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", marginTop: "0.125rem" }}>
+                  {event.title}
+                </div>
+                <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>
+                  {event.location}
+                </div>
+              </div>
+              {/* Status Badge */}
+              <div
+                style={{
+                  alignSelf: "center",
+                  fontSize: "0.55rem",
+                  fontWeight: 600,
+                  background: "#dbeafe",
+                  color: "#1d4ed8",
+                  borderRadius: "999px",
+                  padding: "0.125rem 0.4rem",
+                  textTransform: "uppercase",
+                  flexShrink: 0,
+                }}
+              >
+                {event.status}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div style={{ textAlign: "center", padding: "1rem", color: "#9ca3af", fontSize: "0.75rem" }}>
+            No events scheduled for this date
+          </div>
+        )}
+      </div>
+
+      {/* Event Location Card - Below Schedules */}
       <div
         style={{
           background: "#f8fafc",
           borderRadius: "0.5rem",
           border: "1px solid #e2e8f0",
           padding: "0.75rem",
-          marginBottom: "1rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-          <ICONS.mapPin size={14} color="#3b82f6" />
-          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151" }}>Event Location</span>
+        {/* Location Text First */}
+        <div style={{ marginBottom: "0.75rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <ICONS.mapPin size={14} color="#3b82f6" />
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151" }}>Event Location</span>
+          </div>
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>St. John's Convention Centre</div>
+          <div style={{ fontSize: "0.7rem", color: "#6b7280", marginTop: "0.25rem" }}>St. John's, Newfoundland and Labrador</div>
+          <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>123 Convention Way, St. John's, NL A1C 1A1</div>
         </div>
+        {/* Map Below */}
         <div
           style={{
             background: "#e2e8f0",
             borderRadius: "0.375rem",
-            height: "80px",
+            height: "120px",
             position: "relative",
             overflow: "hidden",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%23cbd5e1' width='200' height='100'/%3E%3Cpath d='M0 60 Q50 40 100 55 T200 50' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 60' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Ccircle cx='100' cy='40' r='8' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='40' r='4' fill='white'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Crect fill='%23cbd5e1' width='200' height='120'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 55' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 85 Q50 65 100 80 T200 70' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Cpath d='M0 100 Q50 80 100 95 T200 85' stroke='%2394a3b8' fill='none' stroke-width='1'/%3E%3Ccircle cx='100' cy='50' r='10' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='50' r='5' fill='white'/%3E%3Ccircle cx='60' cy='70' r='3' fill='%2394a3b8'/%3E%3Ccircle cx='140' cy='65' r='3' fill='%2394a3b8'/%3E%3C/svg%3E")`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -4390,98 +4520,23 @@ function UpcomingViewsPanel() {
             style={{
               position: "absolute",
               bottom: "0.5rem",
-              left: "0.5rem",
               right: "0.5rem",
               background: "rgba(255, 255, 255, 0.95)",
               borderRadius: "0.25rem",
-              padding: "0.375rem 0.5rem",
+              padding: "0.25rem 0.5rem",
+              fontSize: "0.6rem",
+              color: "#3b82f6",
+              fontWeight: 500,
+              cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              gap: "0.25rem",
             }}
           >
-            <div>
-              <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "#111827" }}>St. John's, NL</div>
-              <div style={{ fontSize: "0.6rem", color: "#6b7280" }}>Convention Centre</div>
-            </div>
-            <div
-              style={{
-                fontSize: "0.55rem",
-                color: "#3b82f6",
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
-            >
-              View Map →
-            </div>
+            <ICONS.mapPin size={10} color="#3b82f6" />
+            Open in Maps
           </div>
         </div>
-      </div>
-
-      {/* Event Sessions List */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {upcomingEvents.map((event, index) => (
-          <div
-            key={event.id}
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              padding: "0.5rem 0",
-              borderBottom: index < upcomingEvents.length - 1 ? "1px solid #f3f4f6" : "none",
-            }}
-          >
-            {/* Date Badge */}
-            <div
-              style={{
-                background: "#3b82f6",
-                color: "white",
-                borderRadius: "0.375rem",
-                padding: "0.25rem 0.4rem",
-                textAlign: "center",
-                minWidth: "2.25rem",
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ fontSize: "0.6rem", fontWeight: 500, textTransform: "uppercase" }}>
-                {event.month}
-              </div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, lineHeight: 1 }}>
-                {event.day}
-              </div>
-              <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.8)" }}>
-                {event.dayName}
-              </div>
-            </div>
-            {/* Event Details */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "0.65rem", color: "#6b7280" }}>
-                {event.time} | {event.type}
-              </div>
-              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", marginTop: "0.125rem" }}>
-                {event.title}
-              </div>
-              <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>
-                {event.location}
-              </div>
-            </div>
-            {/* Status Badge */}
-            <div
-              style={{
-                alignSelf: "center",
-                fontSize: "0.55rem",
-                fontWeight: 600,
-                background: "#dbeafe",
-                color: "#1d4ed8",
-                borderRadius: "999px",
-                padding: "0.125rem 0.4rem",
-                textTransform: "uppercase",
-                flexShrink: 0,
-              }}
-            >
-              {event.status}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -5987,6 +6042,420 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick,
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// -------------------- Push Panel Components --------------------
+
+function ChartPreviewPushPanel({ isOpen, data, title, attendees, onClose, showConfig, onOpenConfig, onCloseConfig }) {
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
+
+  const transformedData = useMemo(
+    () => data ? transformChartData(data, config, attendees) : [],
+    [data, config, attendees]
+  );
+
+  const totalRegistrations = transformedData.length > 0 ? transformedData[transformedData.length - 1]?.registrations || 0 : 0;
+  const totalRevenue = transformedData.length > 0 ? transformedData[transformedData.length - 1]?.revenue || 0 : 0;
+  const avgRevenuePerRegistrant = totalRegistrations > 0 ? (totalRevenue / totalRegistrations).toFixed(0) : 0;
+  const peakWeek = transformedData.length > 0 ? transformedData.reduce((max, item) => item.registrations > max.registrations ? item : max, transformedData[0]) : null;
+
+  // Calculate right position based on config panel
+  const rightPosition = showConfig ? 380 : 0;
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "48px",
+        right: `${rightPosition}px`,
+        bottom: 0,
+        width: "420px",
+        background: "white",
+        boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        transition: "right 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflowY: "auto",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "1.25rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#fafafa",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+            {title || "Chart Preview"}
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+            Chart Preview & Analysis
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "#f3f4f6",
+            borderRadius: "0.375rem",
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            color: "#374151",
+            fontWeight: 500,
+          }}
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Chart Content */}
+      <div style={{ padding: "1.25rem", flex: 1 }}>
+        {data && (
+          <>
+            <div
+              style={{
+                background: "#f9fafb",
+                borderRadius: "0.5rem",
+                padding: "1rem",
+                border: "1px solid #e5e7eb",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <ResponsiveContainer width="100%" height={320}>
+                <ComposedChart
+                  data={transformedData}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "0.5rem",
+                      fontSize: "0.75rem",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "0.7rem" }} />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="registrations"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="Registrations"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: "#10b981" }}
+                    name="Revenue ($)"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Stats */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "0.75rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Total Registrations</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>{totalRegistrations}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Total Revenue</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#10b981" }}>${totalRevenue.toLocaleString()}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Avg Revenue/Person</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>${avgRevenuePerRegistrant}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Peak Week</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>{peakWeek?.label || "N/A"}</div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button
+            onClick={onOpenConfig}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #3b82f6",
+              background: showConfig ? "#3b82f6" : "white",
+              color: showConfig ? "white" : "#3b82f6",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontWeight: 600,
+              transition: "all 0.2s",
+            }}
+          >
+            Configure Chart
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              background: "#e5e7eb",
+              color: "#374151",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartConfigPushPanel({ isOpen, onClose }) {
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
+
+  const membershipTypes = ["CPA", "Student", "Non-member", "Guest"];
+
+  function handleReset() {
+    setConfig({
+      viewMode: "count",
+      selectedMembershipTypes: [],
+      dateRange: "all",
+    });
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "48px",
+        right: 0,
+        bottom: 0,
+        width: "380px",
+        background: "white",
+        boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 101,
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "1.25rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#fafafa",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+            Chart Configuration
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+            Customize chart display and filters
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: "1.25rem",
+            cursor: "pointer",
+            color: "#6b7280",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Config Content */}
+      <div style={{ padding: "1.25rem", flex: 1 }}>
+        {/* View Mode */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            View Mode
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="count"
+                checked={config.viewMode === "count"}
+                onChange={(e) => setConfig({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Count
+            </label>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="percentage"
+                checked={config.viewMode === "percentage"}
+                onChange={(e) => setConfig({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Percentage
+            </label>
+          </div>
+        </div>
+
+        {/* Membership Filter */}
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Filter by Membership Type
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {membershipTypes.map((type) => {
+              const isSelected = config.selectedMembershipTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    const updated = isSelected
+                      ? config.selectedMembershipTypes.filter((t) => t !== type)
+                      : [...config.selectedMembershipTypes, type];
+                    setConfig({ ...config, selectedMembershipTypes: updated });
+                  }}
+                  style={{
+                    padding: "0.4rem 0.75rem",
+                    borderRadius: "999px",
+                    border: "1px solid #d1d5db",
+                    background: isSelected ? "#3b82f6" : "white",
+                    color: isSelected ? "white" : "#374151",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    fontWeight: isSelected ? 600 : 400,
+                  }}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Date Range */}
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Date Range
+          </div>
+          <select
+            value={config.dateRange}
+            onChange={(e) => setConfig({ ...config, dateRange: e.target.value })}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              borderRadius: "0.375rem",
+              border: "1px solid #d1d5db",
+              fontSize: "0.8rem",
+              color: "#374151",
+            }}
+          >
+            <option value="all">All Time</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="90days">Last 90 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div style={{ padding: "1.25rem", borderTop: "1px solid #e5e7eb", display: "flex", gap: "0.75rem" }}>
+        <button
+          onClick={handleReset}
+          style={{
+            flex: 1,
+            padding: "0.75rem",
+            borderRadius: "0.5rem",
+            border: "1px solid #d1d5db",
+            background: "white",
+            color: "#374151",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Reset
+        </button>
+        <button
+          onClick={onClose}
+          style={{
+            flex: 1,
+            padding: "0.75rem",
+            borderRadius: "0.5rem",
+            border: "none",
+            background: "#3b82f6",
+            color: "white",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Apply
+        </button>
+      </div>
     </div>
   );
 }
