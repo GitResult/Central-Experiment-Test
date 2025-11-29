@@ -3974,10 +3974,11 @@ function RegistrationFunnel() {
 
   // Funnel colors matching guideline style (varied colors for each stage)
   const stages = [
-    { id: 1, label: "Delivered", shortLabel: "Delivered", value: 47250, color: "#3b82f6" }, // Blue
-    { id: 2, label: "Opened", shortLabel: "Opened", value: 10442, color: "#14b8a6" }, // Teal
-    { id: 3, label: "Clicked", shortLabel: "Clicked", value: 1937, color: "#f59e0b" }, // Amber
-    { id: 4, label: "Converted", shortLabel: "Converted", value: 387, color: "#22c55e" }, // Green
+    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: "#3b82f6" }, // Blue
+    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: "#14b8a6" }, // Teal
+    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: "#f59e0b" }, // Amber
+    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: "#10b981" }, // Emerald
+    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: "#22c55e" }, // Green
   ];
 
   const baseValue = stages[0].value;
@@ -3998,7 +3999,7 @@ function RegistrationFunnel() {
           marginBottom: "0.75rem",
         }}
       >
-        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>Email Conversion Funnel</strong>
+        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>Registration Funnel</strong>
         <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
           Conversion flow
         </div>
@@ -4208,9 +4209,24 @@ function TypesAndRevenueSection({ attendees }) {
                   outerRadius={95}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ cx, cy, midAngle, outerRadius, name, percent }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = outerRadius + 18;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="#374151"
+                        textAnchor={x > cx ? "start" : "end"}
+                        dominantBaseline="central"
+                        style={{ fontSize: "0.55rem" }}
+                      >
+                        {`${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    );
+                  }}
                   labelLine={false}
                 >
                   {typeData.map((entry, index) => (
