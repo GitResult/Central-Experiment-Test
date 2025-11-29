@@ -2332,12 +2332,134 @@ function UpcomingViewsPanel() {
   );
 }
 
-// -------------------- Activities Tab (stub) --------------------
+// -------------------- Activities Tab (Timeline) --------------------
 
 function EventActivitiesTab() {
+  const [filter, setFilter] = useState("all");
+
+  const activities = [
+    { id: 1, type: "registration", title: "New Registration", desc: "Alice Member registered for Full Conference", time: "2 hours ago", icon: "👤", color: "#22c55e" },
+    { id: 2, type: "payment", title: "Payment Received", desc: "$800.00 received from Bob NonMember", time: "4 hours ago", icon: "💳", color: "#3b82f6" },
+    { id: 3, type: "update", title: "Registration Updated", desc: "Carol Lapsed changed session to Leadership Track", time: "Yesterday", icon: "✏️", color: "#f59e0b" },
+    { id: 4, type: "registration", title: "New Registration", desc: "David Complimentary added as Speaker", time: "Yesterday", icon: "👤", color: "#22c55e" },
+    { id: 5, type: "cancellation", title: "Registration Cancelled", desc: "Refund processed for James Wilson", time: "2 days ago", icon: "❌", color: "#ef4444" },
+    { id: 6, type: "registration", title: "Batch Import", desc: "15 registrations imported from CRM", time: "3 days ago", icon: "📥", color: "#8b5cf6" },
+    { id: 7, type: "update", title: "Event Updated", desc: "Venue details updated by admin", time: "1 week ago", icon: "📝", color: "#6b7280" },
+    { id: 8, type: "registration", title: "Early Bird Ended", desc: "Early bird registration period closed", time: "2 weeks ago", icon: "🎫", color: "#f59e0b" },
+  ];
+
+  const filters = [
+    { id: "all", label: "All Activities" },
+    { id: "registration", label: "Registrations" },
+    { id: "payment", label: "Payments" },
+    { id: "update", label: "Updates" },
+  ];
+
+  const filteredActivities = filter === "all"
+    ? activities
+    : activities.filter((a) => a.type === filter);
+
   return (
-    <div style={{ color: "#6b7280", fontSize: "0.875rem" }}>
-      Activities timeline could appear here (stub for this prototype).
+    <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "1.5rem" }}>
+      {/* Left Filter Panel */}
+      <div>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.75rem" }}>
+          Filter Activities
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              style={{
+                padding: "0.5rem 0.75rem",
+                borderRadius: "0.375rem",
+                border: "none",
+                background: filter === f.id ? "#eff6ff" : "transparent",
+                color: filter === f.id ? "#2563eb" : "#6b7280",
+                fontSize: "0.8rem",
+                fontWeight: filter === f.id ? 600 : 400,
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.75rem" }}>
+          Recent Activity ({filteredActivities.length})
+        </div>
+        <div style={{ position: "relative", paddingLeft: "1.5rem" }}>
+          {/* Timeline Line */}
+          <div
+            style={{
+              position: "absolute",
+              left: "0.4rem",
+              top: "0.5rem",
+              bottom: "0.5rem",
+              width: "2px",
+              background: "#e5e7eb",
+            }}
+          />
+
+          {/* Timeline Items */}
+          {filteredActivities.map((activity, idx) => (
+            <div
+              key={activity.id}
+              style={{
+                position: "relative",
+                paddingBottom: idx === filteredActivities.length - 1 ? 0 : "1.25rem",
+              }}
+            >
+              {/* Timeline Dot */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "-1.5rem",
+                  top: "0.25rem",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background: "white",
+                  border: `2px solid ${activity.color}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.65rem",
+                }}
+              >
+                {activity.icon}
+              </div>
+
+              {/* Content */}
+              <div
+                style={{
+                  background: "#f9fafb",
+                  borderRadius: "0.5rem",
+                  padding: "0.75rem 1rem",
+                  border: "1px solid #e5e7eb",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+                    {activity.title}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "#9ca3af" }}>{activity.time}</div>
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                  {activity.desc}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -3181,15 +3303,22 @@ function AttendeeList({ attendees, onAttendeeClick }) {
   );
 }
 
-function DemographicCard({ title, field, attendees, colorPalette, onFilterClick }) {
+function DemographicCard({ title, field, attendees, colorPalette, onFilterClick, onCountClick }) {
   const segments = useMemo(() => groupByField(attendees, field), [attendees, field]);
   const totalCount = attendees.length;
   const segmentsWithPercentage = useMemo(
     () => computeSegmentsWithPercentage(segments, totalCount),
     [segments, totalCount]
   );
+  const [peekSegment, setPeekSegment] = useState(null);
 
   const getColor = (idx) => colorPalette[idx % colorPalette.length];
+
+  // Get attendees for peek segment
+  const peekAttendees = useMemo(() => {
+    if (!peekSegment) return [];
+    return attendees.filter((a) => (a[field] || "Unknown") === peekSegment);
+  }, [attendees, field, peekSegment]);
 
   return (
     <div
@@ -3261,16 +3390,28 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick 
                 >
                   {seg.label}
                 </span>
-                <span
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPeekSegment(peekSegment === seg.label ? null : seg.label);
+                    if (onCountClick) onCountClick(field, seg.label);
+                  }}
                   style={{
                     marginLeft: "0.5rem",
                     fontWeight: 700,
-                    color: "#111827",
+                    color: peekSegment === seg.label ? "#2563eb" : "#111827",
                     fontSize: "0.75rem",
+                    background: peekSegment === seg.label ? "#eff6ff" : "transparent",
+                    border: "none",
+                    padding: "0.1rem 0.35rem",
+                    borderRadius: "0.25rem",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
                   }}
+                  title="Click to preview"
                 >
                   {seg.count}
-                </span>
+                </button>
                 <span
                   style={{
                     marginLeft: "0.35rem",
@@ -3305,6 +3446,66 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick 
           );
         })}
       </div>
+
+      {/* Count Click Peek Display */}
+      {peekSegment && (
+        <div
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.5rem",
+            background: "#eff6ff",
+            borderRadius: "0.5rem",
+            border: "1px solid #bfdbfe",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "0.35rem",
+            }}
+          >
+            <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#1e40af" }}>
+              {peekSegment} ({peekAttendees.length})
+            </span>
+            <button
+              onClick={() => setPeekSegment(null)}
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: "0.8rem",
+                color: "#6b7280",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ maxHeight: "100px", overflowY: "auto" }}>
+            {peekAttendees.slice(0, 5).map((a) => (
+              <div
+                key={a.id}
+                style={{
+                  fontSize: "0.7rem",
+                  color: "#374151",
+                  padding: "0.15rem 0",
+                  borderBottom: "1px solid #dbeafe",
+                }}
+              >
+                {a.name}
+              </div>
+            ))}
+            {peekAttendees.length > 5 && (
+              <div style={{ fontSize: "0.65rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                +{peekAttendees.length - 5} more...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
