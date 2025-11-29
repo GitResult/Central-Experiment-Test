@@ -3078,10 +3078,10 @@ function EventDetailLayout({
             bottom: 0,
             left: 0,
             right: 0,
-            padding: "20px 34px",
+            padding: "20px 48px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginTop: "8px" }}>
             {/* Calendar Icon */}
             <div
               style={{
@@ -4208,8 +4208,9 @@ function UpcomingViewsPanel() {
   // Event dates to highlight (June 12-14, 2025)
   const eventDates = [12, 13, 14];
 
-  // Upcoming sessions/events
+  // Upcoming sessions/events - 2 per day
   const upcomingEvents = [
+    // June 12
     {
       id: 1,
       month: "Jun",
@@ -4232,8 +4233,20 @@ function UpcomingViewsPanel() {
       location: "Grand Ballroom",
       status: "SCHEDULED",
     },
+    // June 13
     {
       id: 3,
+      month: "Jun",
+      day: 13,
+      dayName: "Fri",
+      time: "9:30 AM",
+      type: "Session",
+      title: "Leadership Workshop",
+      location: "Conference Room A",
+      status: "SCHEDULED",
+    },
+    {
+      id: 4,
       month: "Jun",
       day: 13,
       dayName: "Fri",
@@ -4243,12 +4256,24 @@ function UpcomingViewsPanel() {
       location: "Main Hall",
       status: "SCHEDULED",
     },
+    // June 14
     {
-      id: 4,
+      id: 5,
       month: "Jun",
       day: 14,
       dayName: "Sat",
       time: "10:00 AM",
+      type: "Session",
+      title: "Industry Panel",
+      location: "Conference Room B",
+      status: "SCHEDULED",
+    },
+    {
+      id: 6,
+      month: "Jun",
+      day: 14,
+      dayName: "Sat",
+      time: "3:00 PM",
       type: "Session",
       title: "Closing Remarks",
       location: "Main Hall",
