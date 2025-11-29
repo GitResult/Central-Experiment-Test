@@ -1216,6 +1216,7 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
     { id: "explorer", icon: "🔍", label: "Explorer", onClick: onOpenExplorer, priority: 2 },
     { id: "reports", icon: "📄", label: "Reports", onClick: () => {}, priority: 3 },
     { id: "timeline", icon: "📅", label: "Timeline", onClick: () => {}, priority: 2 },
+    { id: "ai", icon: "🤖", label: "AI Assistant", onClick: () => {}, priority: 1 },
   ];
 
   return (
@@ -3188,6 +3189,9 @@ function SegmentPeekList({ attendees, onAttendeeClick }) {
 }
 
 function AttendeeList({ attendees, onAttendeeClick }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const columns = [
     { key: "id", label: "ID", width: "60px" },
     { key: "name", label: "Name", width: "150px" },
@@ -3197,6 +3201,17 @@ function AttendeeList({ attendees, onAttendeeClick }) {
     { key: "confirmationId", label: "Confirmation ID", width: "120px" },
     { key: "registrationDate", label: "Reg. Date", width: "100px" },
   ];
+
+  // Calculate pagination
+  const totalPages = Math.ceil(attendees.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, attendees.length);
+  const paginatedAttendees = attendees.slice(startIndex, endIndex);
+
+  // Reset to page 1 when attendees change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [attendees.length]);
 
   if (!attendees.length) {
     return (
@@ -3222,10 +3237,84 @@ function AttendeeList({ attendees, onAttendeeClick }) {
         border: "1px solid #e5e7eb",
         background: "#f9fafb",
         fontSize: "0.75rem",
-        maxHeight: "480px",
-        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {/* Pagination Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "0.5rem 0.75rem",
+          borderBottom: "1px solid #e5e7eb",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+            {startIndex + 1}–{endIndex} of {attendees.length}
+          </span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            style={{
+              border: "1px solid #d1d5db",
+              borderRadius: "0.25rem",
+              padding: "0.15rem 0.35rem",
+              fontSize: "0.7rem",
+              background: "white",
+              cursor: "pointer",
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{
+              border: "1px solid #d1d5db",
+              borderRadius: "0.25rem",
+              padding: "0.25rem 0.5rem",
+              fontSize: "0.7rem",
+              background: currentPage === 1 ? "#f3f4f6" : "white",
+              color: currentPage === 1 ? "#9ca3af" : "#374151",
+              cursor: currentPage === 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            ‹
+          </button>
+          <span style={{ fontSize: "0.7rem", color: "#374151", padding: "0 0.35rem" }}>
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              border: "1px solid #d1d5db",
+              borderRadius: "0.25rem",
+              padding: "0.25rem 0.5rem",
+              fontSize: "0.7rem",
+              background: currentPage === totalPages ? "#f3f4f6" : "white",
+              color: currentPage === totalPages ? "#9ca3af" : "#374151",
+              cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            ›
+          </button>
+        </div>
+      </div>
+
+      {/* Table Content */}
+      <div style={{ maxHeight: "400px", overflow: "auto" }}>
       {/* Table Header */}
       <div
         style={{
@@ -3257,7 +3346,7 @@ function AttendeeList({ attendees, onAttendeeClick }) {
       </div>
 
       {/* Table Body */}
-      {attendees.map((a, idx) => (
+      {paginatedAttendees.map((a, idx) => (
         <div
           key={a.id}
           onClick={() => onAttendeeClick && onAttendeeClick(a)}
@@ -3299,6 +3388,7 @@ function AttendeeList({ attendees, onAttendeeClick }) {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -4773,17 +4863,18 @@ function InsightsConfigSlideout({ attendees, onClose }) {
     "Newfoundland and Labrador",
   ]);
   const [showAs, setShowAs] = useState("share"); // "raw" | "share"
+  const [isPinned, setIsPinned] = useState(false);
 
   React.useEffect(() => {
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isPinned) {
         onClose();
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, isPinned]);
 
   const allProvinces = useMemo(
     () => groupByField(attendees, "province").map((s) => s.label),
@@ -4833,18 +4924,37 @@ function InsightsConfigSlideout({ attendees, onClose }) {
             Location vs renewal patterns (prototype)
           </div>
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            border: "none",
-            background: "transparent",
-            fontSize: "1rem",
-            cursor: "pointer",
-            color: "#6b7280",
-          }}
-        >
-          ×
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {/* Pin Button */}
+          <button
+            onClick={() => setIsPinned(!isPinned)}
+            title={isPinned ? "Unpin panel" : "Pin panel open"}
+            style={{
+              border: "none",
+              background: isPinned ? "#dbeafe" : "transparent",
+              padding: "0.25rem",
+              borderRadius: "0.25rem",
+              cursor: "pointer",
+              color: isPinned ? "#2563eb" : "#6b7280",
+              fontSize: "0.9rem",
+              transition: "all 0.15s",
+            }}
+          >
+            📌
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "1rem",
+              cursor: "pointer",
+              color: "#6b7280",
+            }}
+          >
+            ×
+          </button>
+        </div>
       </header>
       <div
         style={{
