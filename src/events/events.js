@@ -2406,6 +2406,7 @@ function CentralEventReportingDemo() {
 // -------------------- Workspace + Calendar --------------------
 
 function WorkspaceNavigator({ onOpenCalendar }) {
+  const { theme } = useTheme();
   return (
     <header
       style={{
@@ -2416,8 +2417,8 @@ function WorkspaceNavigator({ onOpenCalendar }) {
       }}
     >
       <div>
-        <h1 style={{ margin: 0 }}>Workspace Navigator</h1>
-        <p style={{ margin: 0, fontSize: "0.875rem", color: "#4b5563" }}>
+        <h1 style={{ margin: 0, color: theme.textPrimary }}>Workspace Navigator</h1>
+        <p style={{ margin: 0, fontSize: "0.875rem", color: theme.textSecondary }}>
           Access key workspaces including Calendar, Events, and Reporting.
         </p>
       </div>
@@ -2427,7 +2428,7 @@ function WorkspaceNavigator({ onOpenCalendar }) {
           padding: "0.5rem 1rem",
           borderRadius: "999px",
           border: "none",
-          background: "#2563eb",
+          background: theme.primary,
           color: "white",
           fontSize: "0.875rem",
           cursor: "pointer",
@@ -2440,14 +2441,15 @@ function WorkspaceNavigator({ onOpenCalendar }) {
 }
 
 function CalendarView({ event, onEventClick }) {
+  const { theme } = useTheme();
   const [mode, setMode] = useState("month"); // "month" | "year"
   return (
     <div
       style={{
-        background: "white",
+        background: theme.background,
         borderRadius: "0.75rem",
         padding: "1rem",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        boxShadow: theme.shadow,
       }}
     >
       <div
@@ -2457,12 +2459,12 @@ function CalendarView({ event, onEventClick }) {
           marginBottom: "1rem",
         }}
       >
-        <h2 style={{ margin: 0 }}>Calendar</h2>
+        <h2 style={{ margin: 0, color: theme.textPrimary }}>Calendar</h2>
         <div
           style={{
             display: "inline-flex",
             borderRadius: "999px",
-            background: "#e5e7eb",
+            background: theme.backgroundTertiary,
           }}
         >
           <button
@@ -2471,7 +2473,8 @@ function CalendarView({ event, onEventClick }) {
               border: "none",
               padding: "0.25rem 0.75rem",
               borderRadius: "999px",
-              background: mode === "month" ? "white" : "transparent",
+              background: mode === "month" ? theme.background : "transparent",
+              color: theme.textPrimary,
               cursor: "pointer",
               fontSize: "0.75rem",
             }}
@@ -2484,7 +2487,8 @@ function CalendarView({ event, onEventClick }) {
               border: "none",
               padding: "0.25rem 0.75rem",
               borderRadius: "999px",
-              background: mode === "year" ? "white" : "transparent",
+              background: mode === "year" ? theme.background : "transparent",
+              color: theme.textPrimary,
               cursor: "pointer",
               fontSize: "0.75rem",
             }}
@@ -2498,7 +2502,7 @@ function CalendarView({ event, onEventClick }) {
           style={{
             padding: "2rem",
             textAlign: "center",
-            color: "#6b7280",
+            color: theme.textMuted,
             fontSize: "0.875rem",
           }}
         >
@@ -2510,19 +2514,20 @@ function CalendarView({ event, onEventClick }) {
             padding: "1rem",
           }}
         >
-          <h3 style={{ marginTop: 0, marginBottom: "0.5rem" }}>2025</h3>
+          <h3 style={{ marginTop: 0, marginBottom: "0.5rem", color: theme.textPrimary }}>2025</h3>
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
               gap: "0.75rem",
               fontSize: "0.75rem",
+              color: theme.textPrimary,
             }}
           >
             <div
               style={{
                 borderRadius: "0.5rem",
-                border: "1px solid #e5e7eb",
+                border: `1px solid ${theme.border}`,
                 padding: "0.5rem",
               }}
             >
@@ -2532,8 +2537,7 @@ function CalendarView({ event, onEventClick }) {
                   marginTop: "0.5rem",
                   padding: "0.5rem",
                   borderRadius: "0.5rem",
-                  background:
-                    "linear-gradient(to right, #2563eb, #0ea5e9, #22c55e)",
+                  background: `linear-gradient(to right, ${theme.primary}, #0ea5e9, ${theme.success})`,
                   color: "white",
                   cursor: "pointer",
                 }}
@@ -2556,6 +2560,7 @@ function CalendarView({ event, onEventClick }) {
 }
 
 function EventPeek({ event, kpis, onClose, onViewEvent }) {
+  const { theme } = useTheme();
   React.useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
@@ -2581,12 +2586,12 @@ function EventPeek({ event, kpis, onClose, onViewEvent }) {
     >
       <div
         style={{
-          background: "white",
+          background: theme.background,
           borderRadius: "0.75rem 0.75rem 0 0",
           padding: "1rem 1.25rem",
           width: "100%",
           maxWidth: "960px",
-          boxShadow: "0 -10px 30px rgba(0,0,0,0.15)",
+          boxShadow: theme.shadowLg,
         }}
       >
         <div
@@ -2597,8 +2602,8 @@ function EventPeek({ event, kpis, onClose, onViewEvent }) {
           }}
         >
           <div>
-            <h2 style={{ margin: 0 }}>{event.name}</h2>
-            <p style={{ margin: "0.25rem 0", fontSize: "0.875rem" }}>
+            <h2 style={{ margin: 0, color: theme.textPrimary }}>{event.name}</h2>
+            <p style={{ margin: "0.25rem 0", fontSize: "0.875rem", color: theme.textSecondary }}>
               {event.startDate} – {event.endDate} · {event.venue}
             </p>
             <div
@@ -2610,12 +2615,12 @@ function EventPeek({ event, kpis, onClose, onViewEvent }) {
               }}
             >
               <div>
-                <div style={{ color: "#6b7280" }}>Total Attendees</div>
-                <strong>{kpis.totalAttendees}</strong>
+                <div style={{ color: theme.textMuted }}>Total Attendees</div>
+                <strong style={{ color: theme.textPrimary }}>{kpis.totalAttendees}</strong>
               </div>
               <div>
-                <div style={{ color: "#6b7280" }}>Total Revenue</div>
-                <strong>${(event.totalRevenue / 1000).toFixed(1)}k</strong>
+                <div style={{ color: theme.textMuted }}>Total Revenue</div>
+                <strong style={{ color: theme.textPrimary }}>${(event.totalRevenue / 1000).toFixed(1)}k</strong>
               </div>
             </div>
           </div>
@@ -2627,7 +2632,7 @@ function EventPeek({ event, kpis, onClose, onViewEvent }) {
                 background: "transparent",
                 cursor: "pointer",
                 fontSize: "0.875rem",
-                color: "#6b7280",
+                color: theme.textMuted,
               }}
             >
               Close
@@ -2638,7 +2643,7 @@ function EventPeek({ event, kpis, onClose, onViewEvent }) {
                 padding: "0.5rem 1rem",
                 borderRadius: "999px",
                 border: "none",
-                background: "#2563eb",
+                background: theme.primary,
                 color: "white",
                 fontSize: "0.875rem",
                 cursor: "pointer",
@@ -2665,6 +2670,7 @@ function EventDetailLayout({
   showInsightsSlideout,
   setShowInsightsSlideout,
 }) {
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [showChartPreview, setShowChartPreview] = useState(false);
   const [chartPreviewData, setChartPreviewData] = useState(null);
@@ -2679,7 +2685,8 @@ function EventDetailLayout({
           padding: "0.25rem 0.75rem",
           borderRadius: "999px",
           fontSize: "0.75rem",
-          background: "#e5e7eb",
+          background: theme.backgroundTertiary,
+          color: theme.textPrimary,
           cursor: "pointer",
         }}
       >
@@ -2687,10 +2694,10 @@ function EventDetailLayout({
       </button>
       <div
         style={{
-          background: "white",
+          background: theme.background,
           borderRadius: "0.75rem",
           padding: "1rem",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          boxShadow: theme.shadow,
         }}
       >
         <header
@@ -2702,8 +2709,8 @@ function EventDetailLayout({
           }}
         >
           <div>
-            <h2 style={{ margin: 0 }}>{event.name}</h2>
-            <p style={{ margin: 0, fontSize: "0.875rem", color: "#4b5563" }}>
+            <h2 style={{ margin: 0, color: theme.textPrimary }}>{event.name}</h2>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: theme.textSecondary }}>
               {event.startDate} – {event.endDate} · {event.venue}
             </p>
           </div>
@@ -2715,8 +2722,8 @@ function EventDetailLayout({
             />
             {/* Countdown */}
             <div style={{ textAlign: "right", fontSize: "0.75rem" }}>
-              <div style={{ color: "#6b7280" }}>Countdown</div>
-              <div style={{ fontWeight: 600 }}>
+              <div style={{ color: theme.textMuted }}>Countdown</div>
+              <div style={{ fontWeight: 600, color: theme.textPrimary }}>
                 {(() => {
                   const eventDate = new Date(event.startDate);
                   const today = new Date();
@@ -2861,6 +2868,7 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
 }
 
 function EventTabs({ activeTab, onChange }) {
+  const { theme } = useTheme();
   const tabs = [
     { id: "profile", label: "Profile" },
     { id: "activities", label: "Activities" },
@@ -2872,7 +2880,7 @@ function EventTabs({ activeTab, onChange }) {
       style={{
         display: "flex",
         gap: "0.5rem",
-        borderBottom: "1px solid #e5e7eb",
+        borderBottom: `1px solid ${theme.border}`,
         marginBottom: "1rem",
       }}
     >
@@ -2883,12 +2891,12 @@ function EventTabs({ activeTab, onChange }) {
           style={{
             border: "none",
             borderBottom:
-              activeTab === tab.id ? "2px solid #2563eb" : "2px solid transparent",
+              activeTab === tab.id ? `2px solid ${theme.primary}` : "2px solid transparent",
             background: "transparent",
             padding: "0.5rem 0.75rem",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: activeTab === tab.id ? "#111827" : "#6b7280",
+            color: activeTab === tab.id ? theme.textPrimary : theme.textMuted,
           }}
         >
           {tab.label}
@@ -2959,6 +2967,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
 }
 
 function KpiRow({ kpis }) {
+  const { theme } = useTheme();
   const items = [
     { label: "Total attendees", value: kpis.totalAttendees },
     { label: "Current members", value: kpis.currentMembers },
@@ -2978,14 +2987,14 @@ function KpiRow({ kpis }) {
         <div
           key={item.label}
           style={{
-            background: "#f9fafb",
+            background: theme.backgroundSecondary,
             borderRadius: "0.5rem",
             padding: "0.5rem 0.75rem",
-            border: "1px solid #e5e7eb",
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{item.label}</div>
-          <div style={{ fontSize: "1.125rem", fontWeight: 600 }}>{item.value}</div>
+          <div style={{ fontSize: "0.75rem", color: theme.textMuted }}>{item.label}</div>
+          <div style={{ fontSize: "1.125rem", fontWeight: 600, color: theme.textPrimary }}>{item.value}</div>
         </div>
       ))}
     </div>
@@ -2993,13 +3002,14 @@ function KpiRow({ kpis }) {
 }
 
 function ComboChartWithRecharts({ data }) {
+  const { theme } = useTheme();
   return (
     <div
       style={{
-        background: "#f9fafb",
+        background: theme.backgroundSecondary,
         borderRadius: "0.5rem",
         padding: "0.75rem",
-        border: "1px solid #e5e7eb",
+        border: `1px solid ${theme.border}`,
       }}
     >
       <div
@@ -3009,10 +3019,10 @@ function ComboChartWithRecharts({ data }) {
           marginBottom: "0.75rem",
         }}
       >
-        <strong style={{ fontSize: "0.875rem" }}>
+        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>
           Cumulative Registrations & Revenue
         </strong>
-        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+        <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
           Interactive chart
         </div>
       </div>
@@ -3021,42 +3031,43 @@ function ComboChartWithRecharts({ data }) {
           data={data}
           margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.border} />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "#6b7280" }}
-            stroke="#9ca3af"
+            tick={{ fontSize: 11, fill: theme.textMuted }}
+            stroke={theme.textLight}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 11, fill: "#6b7280" }}
-            stroke="#9ca3af"
+            tick={{ fontSize: 11, fill: theme.textMuted }}
+            stroke={theme.textLight}
             label={{
               value: "Registrations",
               angle: -90,
               position: "insideLeft",
-              style: { fontSize: 11, fill: "#6b7280" },
+              style: { fontSize: 11, fill: theme.textMuted },
             }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fontSize: 11, fill: "#6b7280" }}
-            stroke="#9ca3af"
+            tick={{ fontSize: 11, fill: theme.textMuted }}
+            stroke={theme.textLight}
             label={{
               value: "Revenue ($)",
               angle: 90,
               position: "insideRight",
-              style: { fontSize: 11, fill: "#6b7280" },
+              style: { fontSize: 11, fill: theme.textMuted },
             }}
           />
           <Tooltip
             contentStyle={{
-              background: "white",
-              border: "1px solid #d1d5db",
+              background: theme.background,
+              border: `1px solid ${theme.border}`,
               borderRadius: "0.5rem",
               fontSize: "0.75rem",
               padding: "0.5rem",
+              color: theme.textPrimary,
             }}
             formatter={(value, name) => {
               if (name === "Revenue ($)") {
@@ -3066,13 +3077,13 @@ function ComboChartWithRecharts({ data }) {
             }}
           />
           <Legend
-            wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem" }}
+            wrapperStyle={{ fontSize: "0.75rem", paddingTop: "0.5rem", color: theme.textSecondary }}
             iconType="plainline"
           />
           <Bar
             yAxisId="left"
             dataKey="registrations"
-            fill="#2563eb"
+            fill={theme.primary}
             name="Registrations"
             radius={[4, 4, 0, 0]}
           />
@@ -3080,9 +3091,9 @@ function ComboChartWithRecharts({ data }) {
             yAxisId="right"
             type="monotone"
             dataKey="revenue"
-            stroke="#22c55e"
+            stroke={theme.success}
             strokeWidth={2}
-            dot={{ fill: "#22c55e", r: 4 }}
+            dot={{ fill: theme.success, r: 4 }}
             name="Revenue ($)"
           />
         </ComposedChart>
@@ -3092,13 +3103,14 @@ function ComboChartWithRecharts({ data }) {
 }
 
 function VitalsRow({ event, kpis, membershipSegments }) {
+  const { theme } = useTheme();
   return (
     <div
       style={{
-        background: "#f9fafb",
+        background: theme.backgroundSecondary,
         borderRadius: "0.5rem",
         padding: "0.75rem",
-        border: "1px solid #e5e7eb",
+        border: `1px solid ${theme.border}`,
         display: "flex",
         flexDirection: "column",
         gap: "0.75rem",
@@ -3106,14 +3118,14 @@ function VitalsRow({ event, kpis, membershipSegments }) {
       }}
     >
       <div>
-        <div style={{ color: "#6b7280" }}>Total revenue</div>
-        <div style={{ fontWeight: 600 }}>
+        <div style={{ color: theme.textMuted }}>Total revenue</div>
+        <div style={{ fontWeight: 600, color: theme.textPrimary }}>
           ${event.totalRevenue.toLocaleString()}
         </div>
       </div>
       <div>
-        <div style={{ color: "#6b7280" }}>Membership mix</div>
-        <ul style={{ paddingLeft: "1rem", margin: 0 }}>
+        <div style={{ color: theme.textMuted }}>Membership mix</div>
+        <ul style={{ paddingLeft: "1rem", margin: 0, color: theme.textPrimary }}>
           {membershipSegments.map((seg) => (
             <li key={seg.label}>
               {seg.label}: {seg.count}
@@ -3128,12 +3140,13 @@ function VitalsRow({ event, kpis, membershipSegments }) {
 // -------------------- Registration Funnel --------------------
 
 function RegistrationFunnel() {
+  const { theme } = useTheme();
   const stages = [
-    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: "#1e3a5f" },
-    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: "#3b82f6" },
-    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: "#f59e0b" },
-    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: "#ef4444" },
-    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: "#22c55e" },
+    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: theme.primaryLight },
+    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: theme.primary },
+    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: theme.warning },
+    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: theme.error },
+    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: theme.success },
   ];
 
   const baseValue = stages[0].value;
@@ -3141,10 +3154,10 @@ function RegistrationFunnel() {
   return (
     <div
       style={{
-        background: "#f9fafb",
+        background: theme.backgroundSecondary,
         borderRadius: "0.5rem",
         padding: "0.75rem",
-        border: "1px solid #e5e7eb",
+        border: `1px solid ${theme.border}`,
       }}
     >
       <div
@@ -3154,8 +3167,8 @@ function RegistrationFunnel() {
           marginBottom: "0.75rem",
         }}
       >
-        <strong style={{ fontSize: "0.875rem" }}>Registration Funnel</strong>
-        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>Registration Funnel</strong>
+        <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
           Conversion flow
         </div>
       </div>
@@ -4162,6 +4175,15 @@ function MorePeopleListing({ attendees }) {
   const { theme } = useTheme();
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [savedViews, setSavedViews] = useState(() => {
+    // Load saved views from localStorage on init
+    try {
+      const stored = localStorage.getItem('savedViews');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedView, setSelectedView] = useState("Default");
   const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
   const [selectedCard, setSelectedCard] = useState(null); // active card for vertical nav
@@ -4212,8 +4234,34 @@ function MorePeopleListing({ attendees }) {
   }
 
   function handleSaveView(viewData) {
+    // Save to localStorage
+    const newView = {
+      id: Date.now(),
+      name: viewData.name,
+      description: viewData.description,
+      filters: viewData.filters,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedViews = [...savedViews, newView];
+    setSavedViews(updatedViews);
+    localStorage.setItem('savedViews', JSON.stringify(updatedViews));
     setSelectedView(viewData.name);
     setShowSaveModal(false);
+  }
+
+  function handleLoadView(view) {
+    setFilters(view.filters || {});
+    setSelectedView(view.name);
+  }
+
+  function handleDeleteView(viewId) {
+    const updatedViews = savedViews.filter(v => v.id !== viewId);
+    setSavedViews(updatedViews);
+    localStorage.setItem('savedViews', JSON.stringify(updatedViews));
+    if (selectedView !== "Default") {
+      setSelectedView("Default");
+      setFilters({});
+    }
   }
 
   function handleCardSelect(cardField) {
@@ -4254,7 +4302,14 @@ function MorePeopleListing({ attendees }) {
       {/* Left Column - Vertical Card Navigation */}
       {viewMode === "list" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <ListingFilterHeader selectedView={selectedView} onSaveView={() => setShowSaveModal(true)} />
+          <ListingFilterHeader
+            selectedView={selectedView}
+            savedViews={savedViews}
+            onSaveView={() => setShowSaveModal(true)}
+            onLoadView={handleLoadView}
+            onDeleteView={handleDeleteView}
+            onResetView={() => { setFilters({}); setSelectedView("Default"); }}
+          />
           <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
           <div
             style={{
@@ -4392,8 +4447,22 @@ function MorePeopleListing({ attendees }) {
   );
 }
 
-function ListingFilterHeader({ selectedView, onSaveView }) {
+function ListingFilterHeader({ selectedView, savedViews = [], onSaveView, onLoadView, onDeleteView, onResetView }) {
   const { theme } = useTheme();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
   return (
     <div
       style={{
@@ -4403,8 +4472,104 @@ function ListingFilterHeader({ selectedView, onSaveView }) {
         gap: SPACING.sm,
       }}
     >
-      <div style={{ fontSize: "0.8rem", color: theme.textSecondary }}>
-        View: <strong style={{ color: theme.textPrimary }}>{selectedView}</strong>
+      <div style={{ position: "relative" }} ref={dropdownRef}>
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          style={{
+            fontSize: "0.8rem",
+            color: theme.textSecondary,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: SPACING.xs,
+          }}
+        >
+          View: <strong style={{ color: theme.textPrimary }}>{selectedView}</strong>
+          <ICONS.chevronDown size={12} />
+        </button>
+        {showDropdown && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              marginTop: SPACING.xs,
+              background: theme.background,
+              border: `1px solid ${theme.border}`,
+              borderRadius: SPACING.sm,
+              boxShadow: theme.shadowMd,
+              minWidth: "180px",
+              zIndex: 20,
+            }}
+          >
+            <button
+              onClick={() => { onResetView && onResetView(); setShowDropdown(false); }}
+              style={{
+                width: "100%",
+                padding: `${SPACING.sm} ${SPACING.md}`,
+                border: "none",
+                background: selectedView === "Default" ? theme.primaryLight : "transparent",
+                textAlign: "left",
+                fontSize: "0.75rem",
+                cursor: "pointer",
+                color: theme.textPrimary,
+              }}
+            >
+              Default
+            </button>
+            {savedViews.length > 0 && (
+              <div style={{ borderTop: `1px solid ${theme.border}`, padding: `${SPACING.xs} 0` }}>
+                <div style={{ padding: `${SPACING.xs} ${SPACING.md}`, fontSize: "0.65rem", color: theme.textMuted, textTransform: "uppercase" }}>
+                  Saved Views
+                </div>
+                {savedViews.map((view) => (
+                  <div
+                    key={view.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: `${SPACING.xs} ${SPACING.md}`,
+                      background: selectedView === view.name ? theme.primaryLight : "transparent",
+                    }}
+                  >
+                    <button
+                      onClick={() => { onLoadView && onLoadView(view); setShowDropdown(false); }}
+                      style={{
+                        flex: 1,
+                        border: "none",
+                        background: "transparent",
+                        textAlign: "left",
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                        color: theme.textPrimary,
+                        padding: 0,
+                      }}
+                    >
+                      {view.name}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteView && onDeleteView(view.id); }}
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        color: theme.textMuted,
+                        padding: "2px",
+                        fontSize: "0.7rem",
+                      }}
+                      title="Delete view"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <button
         onClick={onSaveView}
@@ -4794,6 +4959,7 @@ function SegmentPeekList({ attendees, onAttendeeClick }) {
 }
 
 function AttendeeList({ attendees, onAttendeeClick }) {
+  const { theme } = useTheme();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -4832,8 +4998,8 @@ function AttendeeList({ attendees, onAttendeeClick }) {
     <div
       style={{
         borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
-        background: "#f9fafb",
+        border: `1px solid ${theme.border}`,
+        background: theme.backgroundSecondary,
         fontSize: "0.75rem",
         display: "flex",
         flexDirection: "column",
@@ -4846,12 +5012,12 @@ function AttendeeList({ attendees, onAttendeeClick }) {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "0.5rem 0.75rem",
-          borderBottom: "1px solid #e5e7eb",
-          background: "#f9fafb",
+          borderBottom: `1px solid ${theme.border}`,
+          background: theme.backgroundSecondary,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+          <span style={{ color: theme.textMuted, fontSize: "0.75rem" }}>
             {startIndex + 1}–{endIndex} of {attendees.length}
           </span>
           <select
@@ -4861,11 +5027,12 @@ function AttendeeList({ attendees, onAttendeeClick }) {
               setCurrentPage(1);
             }}
             style={{
-              border: "1px solid #d1d5db",
+              border: `1px solid ${theme.border}`,
               borderRadius: "0.25rem",
               padding: "0.15rem 0.35rem",
               fontSize: "0.7rem",
-              background: "white",
+              background: theme.background,
+              color: theme.textPrimary,
               cursor: "pointer",
             }}
           >
@@ -4883,30 +5050,30 @@ function AttendeeList({ attendees, onAttendeeClick }) {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               style={{
-                border: "1px solid #d1d5db",
+                border: `1px solid ${theme.border}`,
                 borderRadius: "0.25rem",
                 padding: "0.25rem 0.5rem",
                 fontSize: "0.7rem",
-                background: currentPage === 1 ? "#f3f4f6" : "white",
-                color: currentPage === 1 ? "#9ca3af" : "#374151",
+                background: currentPage === 1 ? theme.backgroundTertiary : theme.background,
+                color: currentPage === 1 ? theme.textLight : theme.textSecondary,
                 cursor: currentPage === 1 ? "not-allowed" : "pointer",
               }}
             >
               ‹
             </button>
-            <span style={{ fontSize: "0.7rem", color: "#374151", padding: "0 0.35rem" }}>
+            <span style={{ fontSize: "0.7rem", color: theme.textSecondary, padding: "0 0.35rem" }}>
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               style={{
-                border: "1px solid #d1d5db",
+                border: `1px solid ${theme.border}`,
                 borderRadius: "0.25rem",
                 padding: "0.25rem 0.5rem",
                 fontSize: "0.7rem",
-                background: currentPage === totalPages ? "#f3f4f6" : "white",
-                color: currentPage === totalPages ? "#9ca3af" : "#374151",
+                background: currentPage === totalPages ? theme.backgroundTertiary : theme.background,
+                color: currentPage === totalPages ? theme.textLight : theme.textSecondary,
                 cursor: currentPage === totalPages ? "not-allowed" : "pointer",
               }}
             >
@@ -4923,8 +5090,8 @@ function AttendeeList({ attendees, onAttendeeClick }) {
         style={{
           display: "grid",
           gridTemplateColumns: columns.map((c) => c.width).join(" "),
-          background: "#f3f4f6",
-          borderBottom: "1px solid #d1d5db",
+          background: theme.backgroundTertiary,
+          borderBottom: `1px solid ${theme.border}`,
           position: "sticky",
           top: 0,
           zIndex: 1,
@@ -4936,8 +5103,8 @@ function AttendeeList({ attendees, onAttendeeClick }) {
             style={{
               padding: "0.5rem 0.5rem",
               fontWeight: 600,
-              color: "#374151",
-              borderRight: "1px solid #e5e7eb",
+              color: theme.textSecondary,
+              borderRight: `1px solid ${theme.border}`,
               fontSize: "0.7rem",
               textTransform: "uppercase",
               letterSpacing: "0.025em",
@@ -4956,37 +5123,37 @@ function AttendeeList({ attendees, onAttendeeClick }) {
           style={{
             display: "grid",
             gridTemplateColumns: columns.map((c) => c.width).join(" "),
-            borderBottom: "1px solid #e5e7eb",
-            background: idx % 2 === 0 ? "white" : "#fafafa",
+            borderBottom: `1px solid ${theme.border}`,
+            background: idx % 2 === 0 ? theme.background : theme.backgroundSecondary,
             cursor: onAttendeeClick ? "pointer" : "default",
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) => {
-            if (onAttendeeClick) e.currentTarget.style.background = "#eff6ff";
+            if (onAttendeeClick) e.currentTarget.style.background = theme.primaryLight;
           }}
           onMouseLeave={(e) => {
-            if (onAttendeeClick) e.currentTarget.style.background = idx % 2 === 0 ? "white" : "#fafafa";
+            if (onAttendeeClick) e.currentTarget.style.background = idx % 2 === 0 ? theme.background : theme.backgroundSecondary;
           }}
         >
-          <div style={{ padding: "0.5rem", color: "#6b7280", borderRight: "1px solid #e5e7eb" }}>
+          <div style={{ padding: "0.5rem", color: theme.textMuted, borderRight: `1px solid ${theme.border}` }}>
             {a.id}
           </div>
-          <div style={{ padding: "0.5rem", fontWeight: 500, color: "#111827", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ padding: "0.5rem", fontWeight: 500, color: theme.textPrimary, borderRight: `1px solid ${theme.border}`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {a.name}
           </div>
-          <div style={{ padding: "0.5rem", color: "#374151", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ padding: "0.5rem", color: theme.textSecondary, borderRight: `1px solid ${theme.border}`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {a.company || "—"}
           </div>
-          <div style={{ padding: "0.5rem", color: "#2563eb", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ padding: "0.5rem", color: theme.primary, borderRight: `1px solid ${theme.border}`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {a.email || "—"}
           </div>
-          <div style={{ padding: "0.5rem", color: "#374151", borderRight: "1px solid #e5e7eb" }}>
+          <div style={{ padding: "0.5rem", color: theme.textSecondary, borderRight: `1px solid ${theme.border}` }}>
             {a.phone || "—"}
           </div>
-          <div style={{ padding: "0.5rem", color: "#059669", fontFamily: "monospace", fontSize: "0.7rem", borderRight: "1px solid #e5e7eb" }}>
+          <div style={{ padding: "0.5rem", color: theme.success, fontFamily: "monospace", fontSize: "0.7rem", borderRight: `1px solid ${theme.border}` }}>
             {a.confirmationId || "—"}
           </div>
-          <div style={{ padding: "0.5rem", color: "#6b7280" }}>
+          <div style={{ padding: "0.5rem", color: theme.textMuted }}>
             {a.registrationDate || "—"}
           </div>
         </div>
