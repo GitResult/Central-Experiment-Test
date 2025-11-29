@@ -9,6 +9,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
 // -------------------- Mock Data --------------------
@@ -1243,7 +1246,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
             <ComboChartWithRecharts data={fakeTrendData} />
           </div>
           <RegistrationFunnel />
-          {/* Placeholder for Pie Chart + Revenue List - Feature 5 */}
+          <TypesAndRevenueSection attendees={attendees} />
         </div>
 
         {/* Right Column - Actions & Info Panels */}
@@ -1522,6 +1525,229 @@ function RegistrationFunnel() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Types and Revenue Section --------------------
+
+function TypesAndRevenueSection({ attendees }) {
+  // Color map for registration types
+  const COLORS = {
+    "Full Conference": "#3b82f6",
+    "Workshop Only": "#8b5cf6",
+    "Student Pass": "#22c55e",
+    "Speaker": "#f59e0b",
+    "Guest": "#ec4899",
+  };
+
+  // Mock pricing per registration type
+  const PRICING = {
+    "Full Conference": 800,
+    "Workshop Only": 350,
+    "Student Pass": 200,
+    "Speaker": 0,
+    "Guest": 0,
+  };
+
+  // Calculate type distribution
+  const typeData = useMemo(() => {
+    const counts = {};
+    attendees.forEach((a) => {
+      const type = a.registrationType || "Unknown";
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+      color: COLORS[name] || "#6b7280",
+    }));
+  }, [attendees]);
+
+  // Calculate revenue by type
+  const revenueData = useMemo(() => {
+    const revenue = {};
+    attendees.forEach((a) => {
+      const type = a.registrationType || "Unknown";
+      const price = PRICING[type] || 0;
+      revenue[type] = (revenue[type] || 0) + price;
+    });
+    return Object.entries(revenue)
+      .map(([name, amount]) => ({
+        name,
+        amount,
+        color: COLORS[name] || "#6b7280",
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [attendees]);
+
+  const totalRevenue = revenueData.reduce((sum, item) => sum + item.amount, 0);
+  const maxRevenue = Math.max(...revenueData.map((d) => d.amount), 1);
+
+  return (
+    <div
+      style={{
+        background: "#f9fafb",
+        borderRadius: "0.5rem",
+        padding: "0.75rem",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "1rem",
+        }}
+      >
+        {/* Pie Chart Section */}
+        <div>
+          <div
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+              color: "#111827",
+            }}
+          >
+            Registration Types
+          </div>
+          <div style={{ width: "100%", height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={typeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={35}
+                  outerRadius={60}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) =>
+                    `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`
+                  }
+                  labelLine={false}
+                >
+                  {typeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value, name) => [`${value} attendees`, name]}
+                  contentStyle={{
+                    background: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.375rem",
+                    fontSize: "0.75rem",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Legend */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.5rem",
+              marginTop: "0.5rem",
+              justifyContent: "center",
+            }}
+          >
+            {typeData.map((item) => (
+              <div
+                key={item.name}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  fontSize: "0.6rem",
+                  color: "#374151",
+                }}
+              >
+                <div
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: item.color,
+                  }}
+                />
+                <span>{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Revenue List Section */}
+        <div>
+          <div
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+              color: "#111827",
+            }}
+          >
+            Revenue by Type
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {revenueData.map((item) => (
+              <div key={item.name}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: "0.75rem",
+                    marginBottom: "0.25rem",
+                  }}
+                >
+                  <span style={{ color: "#374151" }}>{item.name}</span>
+                  <span style={{ fontWeight: 600, color: "#111827" }}>
+                    ${item.amount.toLocaleString()}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: "6px",
+                    background: "#e5e7eb",
+                    borderRadius: "999px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${(item.amount / maxRevenue) * 100}%`,
+                      background: item.color,
+                      borderRadius: "999px",
+                      transition: "width 0.5s ease-out",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Total */}
+          <div
+            style={{
+              marginTop: "0.75rem",
+              paddingTop: "0.5rem",
+              borderTop: "1px solid #e5e7eb",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: "0.8rem",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#374151" }}>Total</span>
+            <span style={{ fontWeight: 700, color: "#111827" }}>
+              ${totalRevenue.toLocaleString()}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
