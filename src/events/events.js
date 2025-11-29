@@ -271,6 +271,42 @@ const ICONS = {
       <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z" />
     </svg>
   ),
+  // P3 Icons
+  alertTriangle: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  info: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  ),
+  inbox: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  menu: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  ),
+  refresh: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </svg>
+  ),
+  fileText: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
+    </svg>
+  ),
+  table: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
+    </svg>
+  ),
 };
 
 // ==================== SKELETON LOADERS (P1.2) ====================
@@ -907,9 +943,924 @@ if (typeof document !== 'undefined') {
         from { opacity: 0; transform: translateX(20px); }
         to { opacity: 1; transform: translateX(0); }
       }
+      @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes slideOutRight {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(100%); }
+      }
     `;
     document.head.appendChild(style);
   }
+}
+
+// ==================== P3.7: TOAST NOTIFICATION SYSTEM ====================
+
+const ToastContext = createContext({ addToast: () => {} });
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((toast) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, ...toast }]);
+
+    if (toast.duration !== 0) {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, toast.duration || 4000);
+    }
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </ToastContext.Provider>
+  );
+}
+
+function useToast() {
+  return useContext(ToastContext);
+}
+
+function ToastContainer({ toasts, onRemove }) {
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: SPACING.lg,
+      right: SPACING.lg,
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACING.sm,
+      zIndex: 9999,
+      pointerEvents: "none",
+    }}>
+      {toasts.map(toast => (
+        <Toast key={toast.id} {...toast} onClose={() => onRemove(toast.id)} />
+      ))}
+    </div>
+  );
+}
+
+function Toast({ type = "info", title, message, onClose }) {
+  const { theme } = useTheme();
+
+  const types = {
+    success: { bg: theme.successLight, color: theme.success, Icon: ICONS.check },
+    error: { bg: theme.errorLight, color: theme.error, Icon: ICONS.x },
+    warning: { bg: theme.warningLight, color: theme.warning, Icon: ICONS.alertTriangle },
+    info: { bg: theme.primaryLight, color: theme.primary, Icon: ICONS.info },
+  };
+
+  const { bg, color, Icon } = types[type] || types.info;
+
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: SPACING.md,
+        padding: SPACING.md,
+        background: theme.background,
+        border: `1px solid ${theme.border}`,
+        borderLeft: `4px solid ${color}`,
+        borderRadius: SPACING.sm,
+        boxShadow: theme.shadowLg,
+        minWidth: "300px",
+        maxWidth: "400px",
+        pointerEvents: "auto",
+        animation: "slideInRight 0.3s ease-out",
+      }}
+    >
+      <div style={{
+        width: "24px",
+        height: "24px",
+        borderRadius: "50%",
+        background: bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}>
+        <Icon size={14} color={color} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {title && (
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: theme.textPrimary }}>
+            {title}
+          </div>
+        )}
+        {message && (
+          <div style={{ fontSize: "0.8rem", color: theme.textMuted, marginTop: title ? SPACING.xs : 0 }}>
+            {message}
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={onClose}
+        aria-label="Dismiss notification"
+        style={{
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          padding: SPACING.xs,
+          color: theme.textMuted,
+          flexShrink: 0,
+          transition: getTransition("color", "fast"),
+        }}
+      >
+        <ICONS.close size={14} />
+      </button>
+    </div>
+  );
+}
+
+// ==================== P3.6: EMPTY STATES ====================
+
+function EmptyState({
+  icon: Icon = ICONS.inbox,
+  title,
+  description,
+  action,
+  actionLabel,
+  variant = "default"
+}) {
+  const { theme } = useTheme();
+
+  const variants = {
+    default: { iconBg: theme.backgroundTertiary, iconColor: theme.textMuted },
+    search: { iconBg: theme.primaryLight, iconColor: theme.primary },
+    error: { iconBg: theme.errorLight, iconColor: theme.error },
+    filter: { iconBg: theme.warningLight, iconColor: theme.warning },
+  };
+
+  const { iconBg, iconColor } = variants[variant] || variants.default;
+
+  return (
+    <div style={{
+      padding: SPACING.xxxl,
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: SPACING.lg,
+      animation: "fadeIn 0.3s ease-out",
+    }}>
+      <div style={{
+        width: "80px",
+        height: "80px",
+        borderRadius: "50%",
+        background: iconBg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <Icon size={40} color={iconColor} />
+      </div>
+
+      <div>
+        <h3 style={{
+          margin: 0,
+          marginBottom: SPACING.xs,
+          fontSize: "1.125rem",
+          fontWeight: 600,
+          color: theme.textPrimary,
+        }}>
+          {title}
+        </h3>
+        <p style={{
+          margin: 0,
+          color: theme.textMuted,
+          fontSize: "0.875rem",
+          maxWidth: "320px",
+          lineHeight: 1.5,
+        }}>
+          {description}
+        </p>
+      </div>
+
+      {action && actionLabel && (
+        <button
+          onClick={action}
+          style={{
+            padding: `${SPACING.sm} ${SPACING.lg}`,
+            background: theme.primary,
+            color: "white",
+            border: "none",
+            borderRadius: SPACING.sm,
+            cursor: "pointer",
+            fontWeight: 500,
+            fontSize: "0.875rem",
+            transition: getTransition("background", "fast"),
+          }}
+        >
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const EMPTY_STATES = {
+  noResults: {
+    icon: ICONS.explorer,
+    title: "No results found",
+    description: "Try adjusting your search or filter criteria to find what you're looking for.",
+    variant: "search",
+  },
+  noAttendees: {
+    icon: ICONS.users,
+    title: "No attendees yet",
+    description: "Attendees will appear here once they register for this event.",
+    variant: "default",
+  },
+  noFiltersMatch: {
+    icon: ICONS.filter,
+    title: "No matches",
+    description: "No attendees match the current filter combination. Try removing some filters.",
+    variant: "filter",
+  },
+  error: {
+    icon: ICONS.alertTriangle,
+    title: "Failed to load data",
+    description: "Something went wrong while loading. Please try again.",
+    variant: "error",
+  },
+};
+
+// ==================== P3.8: DATA EXPORT ====================
+
+function exportToCSV(data, columns, filename = "export.csv") {
+  const headers = columns.map(c => c.label).join(",");
+  const rows = data.map(row =>
+    columns.map(c => {
+      const value = row[c.key] ?? "";
+      const escaped = String(value).replace(/"/g, '""');
+      return escaped.includes(",") || escaped.includes("\n") ? `"${escaped}"` : escaped;
+    }).join(",")
+  );
+
+  const csv = [headers, ...rows].join("\n");
+  downloadFile(csv, filename, "text/csv;charset=utf-8;");
+}
+
+function exportToExcel(data, columns, filename = "export.xlsx") {
+  const header = columns.map(c => `<th>${escapeXml(c.label)}</th>`).join("");
+  const rows = data.map(row =>
+    `<tr>${columns.map(c => `<td>${escapeXml(String(row[c.key] ?? ""))}</td>`).join("")}</tr>`
+  ).join("");
+
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Sheet1">
+<Table>
+<Row>${header}</Row>
+${rows}
+</Table>
+</Worksheet>
+</Workbook>`;
+
+  downloadFile(xml, filename, "application/vnd.ms-excel");
+}
+
+function escapeXml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function ExportMenu({ data, columns }) {
+  const { theme } = useTheme();
+  const { addToast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const handleExport = (format) => {
+    const filename = `attendees-${new Date().toISOString().split('T')[0]}`;
+
+    try {
+      if (format === "csv") {
+        exportToCSV(data, columns, `${filename}.csv`);
+      } else if (format === "excel") {
+        exportToExcel(data, columns, `${filename}.xlsx`);
+      }
+
+      addToast({
+        type: "success",
+        title: "Export complete",
+        message: `${data.length} records exported to ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Export failed",
+        message: "There was an error exporting the data. Please try again.",
+      });
+    }
+
+    setIsOpen(false);
+  };
+
+  return (
+    <div style={{ position: "relative" }} ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: SPACING.xs,
+          padding: `${SPACING.xs} ${SPACING.md}`,
+          background: theme.backgroundSecondary,
+          border: `1px solid ${theme.border}`,
+          borderRadius: SPACING.sm,
+          cursor: "pointer",
+          color: theme.textSecondary,
+          fontSize: "0.8rem",
+          transition: getTransition(["background", "border-color"], "fast"),
+        }}
+      >
+        <ICONS.download size={14} />
+        Export
+        <ICONS.chevronDown size={12} />
+      </button>
+
+      {isOpen && (
+        <div
+          role="menu"
+          style={{
+            position: "absolute",
+            top: "100%",
+            right: 0,
+            marginTop: SPACING.xs,
+            background: theme.background,
+            border: `1px solid ${theme.border}`,
+            borderRadius: SPACING.sm,
+            boxShadow: theme.shadowMd,
+            overflow: "hidden",
+            zIndex: 50,
+            minWidth: "160px",
+            animation: "slideInUp 0.15s ease-out",
+          }}
+        >
+          <button
+            role="menuitem"
+            onClick={() => handleExport("csv")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING.sm,
+              padding: `${SPACING.sm} ${SPACING.md}`,
+              width: "100%",
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: theme.textPrimary,
+              fontSize: "0.8rem",
+              textAlign: "left",
+              transition: getTransition("background", "fast"),
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = theme.backgroundSecondary}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            <ICONS.fileText size={16} color={theme.textMuted} />
+            Export as CSV
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => handleExport("excel")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING.sm,
+              padding: `${SPACING.sm} ${SPACING.md}`,
+              width: "100%",
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: theme.textPrimary,
+              fontSize: "0.8rem",
+              textAlign: "left",
+              borderTop: `1px solid ${theme.border}`,
+              transition: getTransition("background", "fast"),
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = theme.backgroundSecondary}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            <ICONS.table size={16} color={theme.textMuted} />
+            Export as Excel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==================== P3.4: ERROR BOUNDARY ====================
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ErrorFallback
+          error={this.state.error}
+          onRetry={() => this.setState({ hasError: false, error: null })}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function ErrorFallback({ error, onRetry, title = "Something went wrong" }) {
+  const { theme } = useTheme();
+
+  return (
+    <div style={{
+      padding: SPACING.xxl,
+      textAlign: "center",
+      background: theme.errorLight,
+      borderRadius: SPACING.md,
+      border: `1px solid ${theme.error}20`,
+      animation: "fadeIn 0.3s ease-out",
+    }}>
+      <div style={{
+        width: "64px",
+        height: "64px",
+        margin: "0 auto",
+        marginBottom: SPACING.lg,
+        background: theme.error,
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <ICONS.alertTriangle size={32} color="white" />
+      </div>
+
+      <h3 style={{
+        margin: 0,
+        marginBottom: SPACING.sm,
+        fontSize: "1.25rem",
+        color: theme.textPrimary,
+      }}>
+        {title}
+      </h3>
+
+      <p style={{
+        margin: 0,
+        marginBottom: SPACING.lg,
+        color: theme.textMuted,
+        fontSize: "0.875rem",
+      }}>
+        {error?.message || "An unexpected error occurred. Please try again."}
+      </p>
+
+      <button
+        onClick={onRetry}
+        style={{
+          padding: `${SPACING.sm} ${SPACING.lg}`,
+          background: theme.primary,
+          color: "white",
+          border: "none",
+          borderRadius: SPACING.sm,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: SPACING.sm,
+          fontWeight: 500,
+          transition: getTransition("background", "fast"),
+        }}
+      >
+        <ICONS.refresh size={16} />
+        Try Again
+      </button>
+    </div>
+  );
+}
+
+// ==================== P3.1: ACCESSIBILITY ====================
+
+function SkipLink({ targetId = "main-content", children = "Skip to main content" }) {
+  const { theme } = useTheme();
+
+  return (
+    <a
+      href={`#${targetId}`}
+      style={{
+        position: "absolute",
+        left: "-9999px",
+        top: "auto",
+        width: "1px",
+        height: "1px",
+        overflow: "hidden",
+        zIndex: 9999,
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.cssText = `
+          position: fixed; left: ${SPACING.lg}; top: ${SPACING.lg};
+          padding: ${SPACING.md} ${SPACING.lg}; background: ${theme.primary};
+          color: white; z-index: 9999; border-radius: ${SPACING.sm};
+          font-weight: 500; text-decoration: none; box-shadow: ${theme.shadowLg};
+        `;
+      }}
+      onBlur={(e) => {
+        e.currentTarget.style.cssText = `
+          position: absolute; left: -9999px; top: auto;
+          width: 1px; height: 1px; overflow: hidden;
+        `;
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+function LiveRegion({ message, politeness = "polite" }) {
+  return (
+    <div
+      role="status"
+      aria-live={politeness}
+      aria-atomic="true"
+      style={{
+        position: "absolute",
+        left: "-9999px",
+        width: "1px",
+        height: "1px",
+        overflow: "hidden",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
+function useFocusRing() {
+  const [isFocused, setIsFocused] = useState(false);
+
+  const focusProps = {
+    onFocus: () => setIsFocused(true),
+    onBlur: () => setIsFocused(false),
+  };
+
+  const getFocusStyle = (theme) => isFocused ? {
+    outline: "none",
+    boxShadow: `0 0 0 3px ${theme.primary}40`,
+  } : {
+    outline: "none",
+  };
+
+  return { isFocused, focusProps, getFocusStyle };
+}
+
+// ==================== P3.5: KEYBOARD NAVIGATION ====================
+
+function useRovingTabindex(itemCount, options = {}) {
+  const { orientation = "vertical", loop = true, onSelect } = options;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const itemRefs = useRef([]);
+
+  const handleKeyDown = useCallback((e) => {
+    const isVertical = orientation === "vertical";
+    const prevKey = isVertical ? "ArrowUp" : "ArrowLeft";
+    const nextKey = isVertical ? "ArrowDown" : "ArrowRight";
+
+    let newIndex = activeIndex;
+
+    if (e.key === prevKey) {
+      e.preventDefault();
+      newIndex = activeIndex - 1;
+      if (newIndex < 0) newIndex = loop ? itemCount - 1 : 0;
+    } else if (e.key === nextKey) {
+      e.preventDefault();
+      newIndex = activeIndex + 1;
+      if (newIndex >= itemCount) newIndex = loop ? 0 : itemCount - 1;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      newIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      newIndex = itemCount - 1;
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect?.(activeIndex);
+      return;
+    }
+
+    if (newIndex !== activeIndex) {
+      setActiveIndex(newIndex);
+    }
+  }, [activeIndex, itemCount, loop, orientation, onSelect]);
+
+  useEffect(() => {
+    itemRefs.current[activeIndex]?.focus();
+  }, [activeIndex]);
+
+  const getItemProps = useCallback((index) => ({
+    ref: (el) => { itemRefs.current[index] = el; },
+    tabIndex: index === activeIndex ? 0 : -1,
+    onKeyDown: handleKeyDown,
+    onFocus: () => setActiveIndex(index),
+    "aria-selected": index === activeIndex,
+  }), [activeIndex, handleKeyDown]);
+
+  return { activeIndex, setActiveIndex, getItemProps };
+}
+
+function useFocusTrap(isActive) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isActive || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const focusableElements = container.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleKeyDown = (e) => {
+      if (e.key !== "Tab") return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+    firstElement?.focus();
+
+    return () => container.removeEventListener("keydown", handleKeyDown);
+  }, [isActive]);
+
+  return containerRef;
+}
+
+// ==================== P3.3: RESPONSIVE DESIGN ====================
+
+const BREAKPOINTS = {
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  xxl: 1536,
+};
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia(query);
+    const handler = (e) => setMatches(e.matches);
+
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, [query]);
+
+  return matches;
+}
+
+function useBreakpoint() {
+  const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.sm - 1}px)`);
+  const isTablet = useMediaQuery(`(min-width: ${BREAKPOINTS.sm}px) and (max-width: ${BREAKPOINTS.lg - 1}px)`);
+  const isDesktop = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
+
+  return { isMobile, isTablet, isDesktop };
+}
+
+function ResponsiveGrid({ children, cols = { sm: 1, md: 2, lg: 3 }, gap = SPACING.lg }) {
+  const { isMobile, isTablet } = useBreakpoint();
+  const columns = isMobile ? cols.sm : isTablet ? cols.md : cols.lg;
+
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gap,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function MobileNav({ tabs, activeTab, onChange, isOpen, onClose }) {
+  const { theme } = useTheme();
+  const focusTrapRef = useFocusTrap(isOpen);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        animation: "fadeIn 0.2s ease-out",
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+        }}
+        onClick={onClose}
+      />
+
+      {/* Drawer */}
+      <nav
+        ref={focusTrapRef}
+        role="navigation"
+        aria-label="Main navigation"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: "280px",
+          maxWidth: "85vw",
+          background: theme.background,
+          padding: SPACING.lg,
+          boxShadow: theme.shadowLg,
+          animation: "slideInRight 0.25s ease-out",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: SPACING.xl,
+        }}>
+          <span style={{ fontWeight: 600, fontSize: "1rem", color: theme.textPrimary }}>
+            Navigation
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close navigation"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: SPACING.xs,
+              color: theme.textMuted,
+            }}
+          >
+            <ICONS.close size={20} />
+          </button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xs }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => { onChange(tab.id); onClose(); }}
+              style={{
+                width: "100%",
+                padding: `${SPACING.md} ${SPACING.lg}`,
+                textAlign: "left",
+                background: activeTab === tab.id ? theme.primaryLight : "transparent",
+                color: activeTab === tab.id ? theme.primary : theme.textPrimary,
+                border: "none",
+                borderRadius: SPACING.sm,
+                cursor: "pointer",
+                fontWeight: activeTab === tab.id ? 600 : 400,
+                fontSize: "0.9rem",
+                transition: getTransition(["background", "color"], "fast"),
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+// ==================== P3.2: VIRTUALIZED LIST ====================
+
+function VirtualList({
+  items,
+  itemHeight = 52,
+  containerHeight = 400,
+  renderItem,
+  overscan = 5,
+  className = "",
+}) {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef(null);
+
+  const totalHeight = items.length * itemHeight;
+  const visibleCount = Math.ceil(containerHeight / itemHeight);
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endIndex = Math.min(items.length, startIndex + visibleCount + overscan * 2);
+
+  const visibleItems = items.slice(startIndex, endIndex);
+  const offsetY = startIndex * itemHeight;
+
+  const handleScroll = useCallback((e) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      style={{
+        height: containerHeight,
+        overflow: "auto",
+        position: "relative",
+      }}
+      onScroll={handleScroll}
+      role="list"
+      aria-rowcount={items.length}
+    >
+      <div style={{ height: totalHeight, position: "relative" }}>
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          transform: `translateY(${offsetY}px)`,
+        }}>
+          {visibleItems.map((item, i) => (
+            <div
+              key={item.id || startIndex + i}
+              role="listitem"
+              aria-rowindex={startIndex + i + 1}
+              style={{ height: itemHeight }}
+            >
+              {renderItem(item, startIndex + i)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // -------------------- Mock Data --------------------
@@ -1717,16 +2668,21 @@ function CentralEventReportingDemoInner() {
   };
 
   return (
-    <div
-      style={{
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-        padding: SPACING.lg,
-        background: theme.backgroundPage,
-        minHeight: "100vh",
-        color: theme.textPrimary,
-        transition: getTransition(["background", "color"], "normal"),
-      }}
-    >
+    <>
+      {/* P3.1: Skip Link for Accessibility */}
+      <SkipLink targetId="main-content" />
+
+      <div
+        id="main-content"
+        style={{
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          padding: SPACING.lg,
+          background: theme.backgroundPage,
+          minHeight: "100vh",
+          color: theme.textPrimary,
+          transition: getTransition(["background", "color"], "normal"),
+        }}
+      >
       {/* Theme Toggle & Search Hint */}
       <div style={{
         position: "fixed",
@@ -1838,14 +2794,19 @@ function CentralEventReportingDemoInner() {
         attendees={enrichedAttendees}
       />
     </div>
+    </>
   );
 }
 
-// Wrap with ThemeProvider
+// Wrap with ThemeProvider and ToastProvider (P3 Integration)
 function CentralEventReportingDemo() {
   return (
     <ThemeProvider>
-      <CentralEventReportingDemoInner />
+      <ToastProvider>
+        <ErrorBoundary>
+          <CentralEventReportingDemoInner />
+        </ErrorBoundary>
+      </ToastProvider>
     </ThemeProvider>
   );
 }
@@ -4265,20 +5226,13 @@ function AttendeeList({ attendees, onAttendeeClick }) {
     setCurrentPage(1);
   }, [attendees.length]);
 
+  // P3.6: Use EmptyState component when no attendees
   if (!attendees.length) {
     return (
-      <div
-        style={{
-          borderRadius: "0.5rem",
-          border: "1px solid #e5e7eb",
-          padding: "0.75rem",
-          background: "#f9fafb",
-          fontSize: "0.8rem",
-          color: "#6b7280",
-        }}
-      >
-        No attendees match the current filters.
-      </div>
+      <EmptyState
+        {...EMPTY_STATES.noFiltersMatch}
+        variant="compact"
+      />
     );
   }
 
@@ -4328,40 +5282,45 @@ function AttendeeList({ attendees, onAttendeeClick }) {
             <option value={50}>50</option>
           </select>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            style={{
-              border: "1px solid #d1d5db",
-              borderRadius: "0.25rem",
-              padding: "0.25rem 0.5rem",
-              fontSize: "0.7rem",
-              background: currentPage === 1 ? "#f3f4f6" : "white",
-              color: currentPage === 1 ? "#9ca3af" : "#374151",
-              cursor: currentPage === 1 ? "not-allowed" : "pointer",
-            }}
-          >
-            ‹
-          </button>
-          <span style={{ fontSize: "0.7rem", color: "#374151", padding: "0 0.35rem" }}>
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            style={{
-              border: "1px solid #d1d5db",
-              borderRadius: "0.25rem",
-              padding: "0.25rem 0.5rem",
-              fontSize: "0.7rem",
-              background: currentPage === totalPages ? "#f3f4f6" : "white",
-              color: currentPage === totalPages ? "#9ca3af" : "#374151",
-              cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-            }}
-          >
-            ›
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {/* P3.8: Export Menu */}
+          <ExportMenu data={attendees} columns={columns} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.25rem 0.5rem",
+                fontSize: "0.7rem",
+                background: currentPage === 1 ? "#f3f4f6" : "white",
+                color: currentPage === 1 ? "#9ca3af" : "#374151",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+              }}
+            >
+              ‹
+            </button>
+            <span style={{ fontSize: "0.7rem", color: "#374151", padding: "0 0.35rem" }}>
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.25rem 0.5rem",
+                fontSize: "0.7rem",
+                background: currentPage === totalPages ? "#f3f4f6" : "white",
+                color: currentPage === totalPages ? "#9ca3af" : "#374151",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+              }}
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
