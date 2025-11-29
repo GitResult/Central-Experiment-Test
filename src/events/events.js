@@ -345,7 +345,7 @@ function GlobalTopNavBar({ onOpenCommandPalette }) {
         left: 0,
         right: 0,
         height: "48px",
-        background: "#1f2937",
+        background: "#4b5563",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -2974,7 +2974,7 @@ function EventDetailLayout({
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)",
+          background: "#4b5563",
           minHeight: "180px",
           borderRadius: 0,
           overflow: "hidden",
