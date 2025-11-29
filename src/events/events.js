@@ -394,15 +394,15 @@ function GlobalTopNavBar({ onOpenCommandPalette }) {
           display: "flex",
           alignItems: "center",
           gap: "8px",
-          background: "#374151",
+          background: "#e5e7eb",
           borderRadius: "6px",
           padding: "6px 12px",
-          minWidth: "280px",
+          minWidth: "560px",
           cursor: "pointer",
         }}
       >
-        <ICONS.explorer size={16} color="#6b7280" />
-        <span style={{ color: "#6b7280", fontSize: "13px" }}>Search Central</span>
+        <ICONS.explorer size={16} color="#9ca3af" />
+        <span style={{ color: "#9ca3af", fontSize: "13px" }}>Search Central</span>
       </div>
 
       {/* Right Section */}
@@ -3402,20 +3402,22 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
 
   return (
     <div>
-      {/* KPIs Row - Full Width */}
-      <KpiRow kpis={kpis} />
-
       {/* Main 2-Column Layout */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 2fr)",
           gap: "1rem",
-          marginTop: "1rem",
         }}
       >
-        {/* Left Column - Charts & Visualizations */}
+        {/* Left Column - Key Metrics */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <KeyMetricsPanel kpis={kpis} />
+        </div>
+
+        {/* Right Column - Quick Start & Charts */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <QuickLinksPanel />
           <ChartClickableWrapper
             onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
             isClickable={!!onOpenChartPreview}
@@ -3425,11 +3427,6 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           </ChartClickableWrapper>
           <RegistrationFunnel />
           <TypesAndRevenueSection attendees={attendees} />
-        </div>
-
-        {/* Right Column - Actions & Info Panels */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <QuickLinksPanel />
           <AlertsPanel />
           <UpcomingViewsPanel />
         </div>
@@ -3438,37 +3435,64 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
   );
 }
 
-function KpiRow({ kpis }) {
+function KeyMetricsPanel({ kpis }) {
   const { theme } = useTheme();
   const items = [
-    { label: "Total attendees", value: kpis.totalAttendees },
-    { label: "Current members", value: kpis.currentMembers },
-    { label: "Non-members", value: kpis.nonMembers },
-    { label: "Lapsed members", value: kpis.lapsedMembers },
-    { label: "Complimentary", value: kpis.complimentary },
+    { label: "Total Attendees", value: kpis.totalAttendees, change: 12.5, isUp: true },
+    { label: "Current Members", value: kpis.currentMembers, change: 8.3, isUp: true },
+    { label: "Non-Members", value: kpis.nonMembers, change: 3.2, isUp: false },
+    { label: "Lapsed Members", value: kpis.lapsedMembers, change: 5.1, isUp: false },
+    { label: "Complimentary", value: kpis.complimentary, change: 2.0, isUp: true },
   ];
   return (
     <div
       style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-        gap: "0.75rem",
+        background: theme.backgroundSecondary,
+        borderRadius: "0.5rem",
+        border: `1px solid ${theme.border}`,
+        padding: "1rem",
       }}
     >
-      {items.map((item) => (
-        <div
-          key={item.label}
-          style={{
-            background: theme.backgroundSecondary,
-            borderRadius: "0.5rem",
-            padding: "0.5rem 0.75rem",
-            border: `1px solid ${theme.border}`,
-          }}
-        >
-          <div style={{ fontSize: "0.75rem", color: theme.textMuted }}>{item.label}</div>
-          <div style={{ fontSize: "1.125rem", fontWeight: 600, color: theme.textPrimary }}>{item.value}</div>
-        </div>
-      ))}
+      <div
+        style={{
+          fontSize: "0.9rem",
+          fontWeight: 600,
+          color: theme.textPrimary,
+          marginBottom: "0.75rem",
+        }}
+      >
+        Key Metrics
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {items.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.125rem",
+            }}
+          >
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textPrimary, lineHeight: 1.2 }}>
+              {item.value}
+            </div>
+            <div style={{ fontSize: "0.8rem", color: theme.textMuted }}>{item.label}</div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                fontSize: "0.75rem",
+                color: item.isUp ? theme.success : theme.error,
+              }}
+            >
+              <span>{item.isUp ? "↑" : "↓"}</span>
+              <span>{item.change}%</span>
+              <span style={{ color: theme.textMuted }}>vs last event</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
