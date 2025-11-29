@@ -332,6 +332,32 @@ const ICONS = {
       <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
+  // Studio Dock Icons
+  capture: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
+  options: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+    </svg>
+  ),
+  pages: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  ),
+  toolbelt: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  ),
+  dock: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="15" x2="21" y2="15" />
+    </svg>
+  ),
 };
 
 // ==================== GLOBAL TOP NAVIGATION BAR ====================
@@ -3230,6 +3256,12 @@ function EventDetailLayout({
         isOpen={showChartConfig}
         onClose={() => setShowChartConfig(false)}
       />
+
+      {/* Bottom Left Studio Dock */}
+      <BottomLeftStudioDock
+        onOpenInsights={() => setShowInsightsPanel(true)}
+        onOpenExplorer={() => {}}
+      />
     </div>
   );
 }
@@ -3310,6 +3342,135 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// -------------------- Bottom Left Studio Dock --------------------
+
+function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
+  const { theme } = useTheme();
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+
+  // Vertical icons (left side, bottom to top)
+  const verticalIcons = [
+    { id: "capture", Icon: ICONS.capture, label: "Capture" },
+    { id: "options", Icon: ICONS.options, label: "Options" },
+    { id: "pages", Icon: ICONS.pages, label: "Pages" },
+    { id: "toolbelt", Icon: ICONS.toolbelt, label: "Toolbelt" },
+  ];
+
+  // Horizontal icons (bottom row, left to right)
+  const horizontalIcons = [
+    { id: "dock", Icon: ICONS.dock, label: "Dock" },
+    { id: "explorer", Icon: ICONS.explorer, label: "Explorer", onClick: onOpenExplorer },
+    { id: "insights", Icon: ICONS.insights, label: "Insights", onClick: onOpenInsights },
+    { id: "reports", Icon: ICONS.reports, label: "Reports" },
+    { id: "timeline", Icon: ICONS.timeline, label: "Timeline" },
+    { id: "ai", Icon: ICONS.ai, label: "AI" },
+  ];
+
+  const DockIcon = ({ item, tooltipPosition = "right" }) => {
+    const isHovered = hoveredIcon === item.id;
+    const isDock = item.id === "dock";
+
+    return (
+      <div
+        style={{ position: "relative" }}
+        onMouseEnter={() => setHoveredIcon(item.id)}
+        onMouseLeave={() => setHoveredIcon(null)}
+      >
+        <button
+          onClick={item.onClick || (() => {})}
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "10px",
+            border: "none",
+            background: isDock ? theme.primary : isHovered ? "rgba(59, 130, 246, 0.15)" : "transparent",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.15s ease",
+            transform: isHovered && !isDock ? "scale(1.08)" : "scale(1)",
+          }}
+        >
+          <item.Icon size={20} color={isDock ? "white" : isHovered ? theme.primary : theme.textMuted} />
+        </button>
+        {/* Tooltip */}
+        {isHovered && (
+          <div
+            style={{
+              position: "absolute",
+              ...(tooltipPosition === "right" ? { left: "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "8px" } : {}),
+              ...(tooltipPosition === "top" ? { bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: "8px" } : {}),
+              background: "#1f2937",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            {item.label}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "16px",
+        left: "16px",
+        zIndex: 90,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
+      {/* Vertical Icons (stacked above the horizontal row) */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+          background: theme.background,
+          borderRadius: "12px",
+          padding: "6px",
+          marginBottom: "4px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+          border: `1px solid ${theme.border}`,
+        }}
+      >
+        {verticalIcons.map((item) => (
+          <DockIcon key={item.id} item={item} tooltipPosition="right" />
+        ))}
+      </div>
+
+      {/* Horizontal Icons (bottom row) */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: "4px",
+          background: theme.background,
+          borderRadius: "12px",
+          padding: "6px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+          border: `1px solid ${theme.border}`,
+        }}
+      >
+        {horizontalIcons.map((item) => (
+          <DockIcon key={item.id} item={item} tooltipPosition="top" />
+        ))}
+      </div>
     </div>
   );
 }
