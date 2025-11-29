@@ -2376,17 +2376,20 @@ function MorePeopleListing({ attendees }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedView, setSelectedView] = useState("Default");
   const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
+  const [selectedCard, setSelectedCard] = useState(null); // active card for vertical nav
+  const [peekData, setPeekData] = useState(null); // { field, segment, attendees }
+  const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
 
   const cards = [
-    { title: "Registration Types", field: "registrationType" },
-    { title: "Dietary Restrictions", field: "dietary" },
-    { title: "Sessions", field: "session" },
-    { title: "Tickets", field: "ticketType" },
-    { title: "Membership Type", field: "memberType" },
-    { title: "Age Group", field: "ageGroup" },
-    { title: "Province", field: "province" },
-    { title: "Tenure", field: "tenure" }, // not in mock, will show "Unknown"
-    { title: "Education", field: "education" },
+    { title: "Registration Types", field: "registrationType", icon: "📋" },
+    { title: "Dietary Restrictions", field: "dietary", icon: "🍽" },
+    { title: "Sessions", field: "session", icon: "📅" },
+    { title: "Tickets", field: "ticketType", icon: "🎫" },
+    { title: "Membership Type", field: "memberType", icon: "👤" },
+    { title: "Age Group", field: "ageGroup", icon: "📊" },
+    { title: "Province", field: "province", icon: "📍" },
+    { title: "Tenure", field: "tenure", icon: "⏱" },
+    { title: "Education", field: "education", icon: "🎓" },
   ];
 
   const colorPalettes = {
@@ -2414,61 +2417,92 @@ function MorePeopleListing({ attendees }) {
         ? current.filter((v) => v !== segment)
         : [...current, segment];
       const updated = { ...prev, [field]: next };
-      // Remove empty arrays to keep object clean
       if (updated[field].length === 0) delete updated[field];
       return updated;
     });
   }
 
   function handleSaveView() {
-    // Basic stub: simply record the name in state; in real app this would persist.
     const name = window.prompt("Name for this view?", selectedView);
     if (name) {
       setSelectedView(name);
     }
   }
 
+  function handleCardSelect(cardField) {
+    setSelectedCard(selectedCard === cardField ? null : cardField);
+    setPeekData(null); // Close peek when changing cards
+  }
+
+  function handleSegmentPeek(field, segment) {
+    const segmentAttendees = attendees.filter((a) => (a[field] || "Unknown") === segment);
+    setPeekData({ field, segment, attendees: segmentAttendees });
+    setSelectedAttendee(null);
+  }
+
+  function handleAttendeeClick(attendee) {
+    setSelectedAttendee(attendee);
+  }
+
   function handleCardFilterClick(field, label) {
     handleToggle(field, label);
   }
+
+  // Determine if peek panel should show
+  const showPeek = peekData || selectedAttendee;
 
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: viewMode === "list" ? "minmax(0, 2fr) minmax(0, 3fr)" : "1fr",
+        gridTemplateColumns: viewMode === "list"
+          ? showPeek
+            ? "minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.5fr)"
+            : "minmax(0, 1fr) minmax(0, 3fr)"
+          : "1fr",
         gap: "1rem",
         marginTop: "0.5rem",
       }}
     >
+      {/* Left Column - Vertical Card Navigation */}
       {viewMode === "list" && (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
           <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: "0.75rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
               marginTop: "0.5rem",
+              maxHeight: "520px",
+              overflowY: "auto",
             }}
           >
             {cards.map((card) => {
               const segments = groupByField(attendees, card.field);
               const selectedValues = filters[card.field] || [];
+              const isActive = selectedCard === card.field;
               return (
-                <ListingCard
+                <VerticalNavCard
                   key={card.title}
                   title={card.title}
+                  icon={card.icon}
+                  field={card.field}
                   segments={segments}
                   selectedValues={selectedValues}
+                  isActive={isActive}
+                  onCardClick={() => handleCardSelect(card.field)}
                   onToggle={(segment) => handleToggle(card.field, segment)}
+                  onSegmentPeek={(segment) => handleSegmentPeek(card.field, segment)}
                 />
               );
             })}
           </div>
         </div>
       )}
+
+      {/* Middle Column - Attendee List */}
       <div>
         <div
           style={{
@@ -2524,7 +2558,7 @@ function MorePeopleListing({ attendees }) {
           </div>
         </div>
         {viewMode === "list" ? (
-          <AttendeeList attendees={filteredAttendees} />
+          <AttendeeList attendees={filteredAttendees} onAttendeeClick={handleAttendeeClick} />
         ) : (
           <div
             style={{
@@ -2546,6 +2580,19 @@ function MorePeopleListing({ attendees }) {
           </div>
         )}
       </div>
+
+      {/* Right Column - Peek Panel */}
+      {viewMode === "list" && showPeek && (
+        <PeekPanel
+          peekData={peekData}
+          selectedAttendee={selectedAttendee}
+          onClose={() => {
+            setPeekData(null);
+            setSelectedAttendee(null);
+          }}
+          onAttendeeClick={handleAttendeeClick}
+        />
+      )}
     </div>
   );
 }
@@ -2654,6 +2701,285 @@ function ListingCard({ title, segments, selectedValues, onToggle }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function VerticalNavCard({ title, icon, field, segments, selectedValues, isActive, onCardClick, onToggle, onSegmentPeek }) {
+  return (
+    <div
+      style={{
+        borderRadius: "0.5rem",
+        border: isActive ? "2px solid #2563eb" : "1px solid #e5e7eb",
+        background: isActive ? "#eff6ff" : "#f9fafb",
+        overflow: "hidden",
+        transition: "all 0.2s",
+      }}
+    >
+      {/* Card Header - Always Visible */}
+      <button
+        onClick={onCardClick}
+        style={{
+          width: "100%",
+          padding: "0.5rem 0.75rem",
+          border: "none",
+          background: "transparent",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ fontSize: "1rem" }}>{icon}</span>
+        <span style={{ flex: 1, fontSize: "0.8rem", fontWeight: 600, color: "#111827" }}>
+          {title}
+        </span>
+        <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+          {segments.length} options
+        </span>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: "#6b7280",
+            transform: isActive ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s",
+          }}
+        >
+          ▼
+        </span>
+      </button>
+
+      {/* Expanded Segments */}
+      {isActive && (
+        <div
+          style={{
+            padding: "0.25rem 0.75rem 0.5rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+            borderTop: "1px solid #e5e7eb",
+          }}
+        >
+          {segments.map((seg) => {
+            const isSelected = selectedValues.includes(seg.label);
+            return (
+              <div
+                key={seg.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <button
+                  onClick={() => onToggle(seg.label)}
+                  style={{
+                    flex: 1,
+                    borderRadius: "0.375rem",
+                    border: "1px solid #d1d5db",
+                    padding: "0.25rem 0.5rem",
+                    fontSize: "0.75rem",
+                    background: isSelected ? "#2563eb" : "white",
+                    color: isSelected ? "white" : "#111827",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {seg.label}
+                  </span>
+                  <span
+                    style={{
+                      marginLeft: "0.5rem",
+                      fontSize: "0.7rem",
+                      opacity: 0.8,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {seg.count}
+                  </span>
+                </button>
+                <button
+                  onClick={() => onSegmentPeek(seg.label)}
+                  title="Preview"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "0.25rem",
+                    border: "1px solid #d1d5db",
+                    background: "#f9fafb",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.7rem",
+                    color: "#6b7280",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#2563eb";
+                    e.currentTarget.style.color = "white";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#f9fafb";
+                    e.currentTarget.style.color = "#6b7280";
+                  }}
+                >
+                  ▶
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PeekPanel({ peekData, selectedAttendee, onClose, onAttendeeClick }) {
+  return (
+    <div
+      style={{
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        background: "white",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "560px",
+        overflow: "hidden",
+      }}
+    >
+      {/* Peek Header */}
+      <div
+        style={{
+          padding: "0.75rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#f9fafb",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "0.75rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            {selectedAttendee ? "Attendee Details" : "Segment Preview"}
+          </div>
+          <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
+            {selectedAttendee ? selectedAttendee.name : peekData?.segment || "—"}
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            width: "28px",
+            height: "28px",
+            borderRadius: "0.25rem",
+            border: "none",
+            background: "#e5e7eb",
+            cursor: "pointer",
+            fontSize: "1rem",
+            color: "#6b7280",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Peek Content */}
+      <div style={{ flex: 1, overflow: "auto", padding: "0.75rem" }}>
+        {selectedAttendee ? (
+          <AttendeePeekDetails attendee={selectedAttendee} />
+        ) : peekData ? (
+          <SegmentPeekList attendees={peekData.attendees} onAttendeeClick={onAttendeeClick} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function AttendeePeekDetails({ attendee }) {
+  const fields = [
+    { label: "ID", value: attendee.id },
+    { label: "Name", value: attendee.name },
+    { label: "Company", value: attendee.company || "—" },
+    { label: "Email", value: attendee.email || "—" },
+    { label: "Phone", value: attendee.phone || "—" },
+    { label: "Confirmation", value: attendee.confirmationId || "—" },
+    { label: "Registration Date", value: attendee.registrationDate || "—" },
+    { label: "Member Type", value: attendee.memberType },
+    { label: "Status", value: attendee.membershipStatus },
+    { label: "Province", value: attendee.province },
+    { label: "Registration Type", value: attendee.registrationType },
+    { label: "Dietary", value: attendee.dietary },
+    { label: "Session", value: attendee.session },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      {fields.map((f) => (
+        <div
+          key={f.label}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "0.35rem 0",
+            borderBottom: "1px solid #f3f4f6",
+          }}
+        >
+          <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>{f.label}</span>
+          <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#111827", textAlign: "right" }}>
+            {f.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SegmentPeekList({ attendees, onAttendeeClick }) {
+  return (
+    <div>
+      <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.5rem" }}>
+        {attendees.length} attendee(s) in this segment
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        {attendees.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => onAttendeeClick(a)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.375rem",
+              border: "1px solid #e5e7eb",
+              background: "#fafafa",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#eff6ff";
+              e.currentTarget.style.borderColor = "#2563eb";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#fafafa";
+              e.currentTarget.style.borderColor = "#e5e7eb";
+            }}
+          >
+            <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#111827" }}>{a.name}</div>
+            <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+              {a.memberType} · {a.province}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
