@@ -3752,6 +3752,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           <QuickLinksPanel />
           <AlertsPanel />
           <UpcomingViewsPanel />
+          <EventLocationCard />
         </div>
       </div>
     </div>
@@ -4732,7 +4733,7 @@ function UpcomingViewsPanel() {
       </div>
 
       {/* Event Sessions List */}
-      <div style={{ display: "flex", flexDirection: "column", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {filteredEvents.length > 0 ? (
           filteredEvents.map((event, index) => (
             <div
@@ -4802,59 +4803,68 @@ function UpcomingViewsPanel() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Event Location Card - Below Schedules */}
+// -------------------- Event Location Card --------------------
+
+function EventLocationCard() {
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        padding: "1rem",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+        <ICONS.mapPin size={16} color="#3b82f6" />
+        <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>Event Location</span>
+      </div>
+
+      {/* Location Details */}
+      <div style={{ marginBottom: "0.75rem" }}>
+        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>St. John's Convention Centre</div>
+        <div style={{ fontSize: "0.7rem", color: "#6b7280", marginTop: "0.25rem" }}>St. John's, Newfoundland and Labrador</div>
+        <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>123 Convention Way, St. John's, NL A1C 1A1</div>
+      </div>
+
+      {/* Map */}
       <div
         style={{
-          background: "#f8fafc",
-          borderRadius: "0.5rem",
-          border: "1px solid #e2e8f0",
-          padding: "0.75rem",
+          background: "#e2e8f0",
+          borderRadius: "0.375rem",
+          height: "120px",
+          position: "relative",
+          overflow: "hidden",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Crect fill='%23cbd5e1' width='200' height='120'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 55' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 85 Q50 65 100 80 T200 70' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Cpath d='M0 100 Q50 80 100 95 T200 85' stroke='%2394a3b8' fill='none' stroke-width='1'/%3E%3Ccircle cx='100' cy='50' r='10' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='50' r='5' fill='white'/%3E%3Ccircle cx='60' cy='70' r='3' fill='%2394a3b8'/%3E%3Ccircle cx='140' cy='65' r='3' fill='%2394a3b8'/%3E%3C/svg%3E")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
-        {/* Location Text First */}
-        <div style={{ marginBottom: "0.75rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <ICONS.mapPin size={14} color="#3b82f6" />
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151" }}>Event Location</span>
-          </div>
-          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>St. John's Convention Centre</div>
-          <div style={{ fontSize: "0.7rem", color: "#6b7280", marginTop: "0.25rem" }}>St. John's, Newfoundland and Labrador</div>
-          <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>123 Convention Way, St. John's, NL A1C 1A1</div>
-        </div>
-        {/* Map Below */}
         <div
           style={{
-            background: "#e2e8f0",
-            borderRadius: "0.375rem",
-            height: "120px",
-            position: "relative",
-            overflow: "hidden",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Crect fill='%23cbd5e1' width='200' height='120'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 55' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 85 Q50 65 100 80 T200 70' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Cpath d='M0 100 Q50 80 100 95 T200 85' stroke='%2394a3b8' fill='none' stroke-width='1'/%3E%3Ccircle cx='100' cy='50' r='10' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='50' r='5' fill='white'/%3E%3Ccircle cx='60' cy='70' r='3' fill='%2394a3b8'/%3E%3Ccircle cx='140' cy='65' r='3' fill='%2394a3b8'/%3E%3C/svg%3E")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            position: "absolute",
+            bottom: "0.5rem",
+            right: "0.5rem",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "0.25rem",
+            padding: "0.25rem 0.5rem",
+            fontSize: "0.6rem",
+            color: "#3b82f6",
+            fontWeight: 500,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              bottom: "0.5rem",
-              right: "0.5rem",
-              background: "rgba(255, 255, 255, 0.95)",
-              borderRadius: "0.25rem",
-              padding: "0.25rem 0.5rem",
-              fontSize: "0.6rem",
-              color: "#3b82f6",
-              fontWeight: 500,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.25rem",
-            }}
-          >
-            <ICONS.mapPin size={10} color="#3b82f6" />
-            Open in Maps
-          </div>
+          <ICONS.mapPin size={10} color="#3b82f6" />
+          Open in Maps
         </div>
       </div>
     </div>
