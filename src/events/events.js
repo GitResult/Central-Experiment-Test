@@ -1870,556 +1870,148 @@ const MOCK_EVENT = {
   name: "2025 CPA Annual National Convention",
   startDate: "2025-06-12",
   endDate: "2025-06-14",
-  venue: "St. John’s Convention Centre",
-  totalRevenue: 780000,
+  venue: "St. John's Convention Centre",
+  totalRevenue: 2340000, // Updated for 300 attendees
 };
 
-const MOCK_ATTENDEES = [
-  {
-    id: 1,
-    name: "Alice Member",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Newfoundland and Labrador",
-    education: "Masters",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 2,
-    name: "Bob NonMember",
-    memberType: "Non-member",
-    membershipStatus: "Non-member",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "25-34",
-    province: "Ontario",
-    education: "Bachelors",
-    primaryReason: "Learning",
-    registrationType: "Workshop Only",
-    dietary: "Vegetarian",
-    session: "Tax Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 3,
-    name: "Carol Lapsed",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "45-54",
-    province: "Newfoundland and Labrador",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Leadership Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 4,
-    name: "David Complimentary",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: true,
-    isMember: true,
-    ageGroup: "55-64",
-    province: "Nova Scotia",
-    education: "Masters",
-    primaryReason: "Speaker",
-    registrationType: "Speaker",
-    dietary: "Gluten-free",
-    session: "Keynote",
-    ticketType: "Complimentary",
-    renewed: true,
-  },
-  {
-    id: 5,
-    name: "Eva Student",
-    memberType: "Student",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "18-24",
-    province: "Ontario",
-    education: "Undergrad",
-    primaryReason: "Career",
-    registrationType: "Student Pass",
-    dietary: "None",
-    session: "Student Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 6,
-    name: "Farid Guest",
-    memberType: "Guest",
-    membershipStatus: "Non-member",
-    isComplimentary: true,
-    isMember: false,
-    ageGroup: "35-44",
-    province: "Quebec",
-    education: "Bachelors",
-    primaryReason: "Guest",
-    registrationType: "Guest",
-    dietary: "Halal",
-    session: "Social Events",
-    ticketType: "Complimentary",
-    renewed: false,
-  },
-  {
-    id: 7,
-    name: "Grace Member",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "45-54",
-    province: "Newfoundland and Labrador",
-    education: "PhD",
-    primaryReason: "Thought Leadership",
-    registrationType: "Full Conference",
-    dietary: "Vegan",
-    session: "Research Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 8,
-    name: "Henry Lapsed",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "55-64",
-    province: "Ontario",
-    education: "Masters",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 9,
-    name: "Jasmine Wong",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Ontario",
-    education: "Masters",
-    primaryReason: "Professional Development",
-    registrationType: "Full Conference",
-    dietary: "Vegetarian",
-    session: "Technology Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 10,
-    name: "Mohammed Hassan",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "45-54",
-    province: "Newfoundland and Labrador",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "Halal",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 11,
-    name: "Sarah Chen",
-    memberType: "Student",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "25-34",
-    province: "Alberta",
-    education: "Undergrad",
-    primaryReason: "Career",
-    registrationType: "Student Pass",
-    dietary: "None",
-    session: "Student Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 12,
-    name: "Pierre Dubois",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "45-54",
-    province: "Quebec",
-    education: "Masters",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Leadership Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 13,
-    name: "Priya Patel",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Newfoundland and Labrador",
-    education: "Bachelors",
-    primaryReason: "Learning",
-    registrationType: "Full Conference",
-    dietary: "Vegetarian",
-    session: "Tax Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 14,
-    name: "James MacLeod",
-    memberType: "Non-member",
-    membershipStatus: "Non-member",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "25-34",
-    province: "Nova Scotia",
-    education: "Bachelors",
-    primaryReason: "Exploring Membership",
-    registrationType: "Workshop Only",
-    dietary: "None",
-    session: "Tax Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 15,
-    name: "Emily Rodriguez",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "45-54",
-    province: "Ontario",
-    education: "PhD",
-    primaryReason: "Thought Leadership",
-    registrationType: "Full Conference",
-    dietary: "Gluten-free",
-    session: "Research Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 16,
-    name: "Kevin O'Brien",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "55-64",
-    province: "Newfoundland and Labrador",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 17,
-    name: "Aisha Mohammed",
-    memberType: "Student",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "18-24",
-    province: "British Columbia",
-    education: "Undergrad",
-    primaryReason: "Career",
-    registrationType: "Student Pass",
-    dietary: "Halal",
-    session: "Student Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 18,
-    name: "Robert Kim",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Ontario",
-    education: "Masters",
-    primaryReason: "Professional Development",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Technology Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 19,
-    name: "Marie Tremblay",
-    memberType: "Non-member",
-    membershipStatus: "Non-member",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "25-34",
-    province: "Quebec",
-    education: "Bachelors",
-    primaryReason: "Exploring Membership",
-    registrationType: "Workshop Only",
-    dietary: "Vegan",
-    session: "Ethics Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 20,
-    name: "David Singh",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "45-54",
-    province: "Alberta",
-    education: "Masters",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "Vegetarian",
-    session: "Leadership Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 21,
-    name: "Lisa Anderson",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "45-54",
-    province: "Ontario",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 22,
-    name: "Michael Nguyen",
-    memberType: "Student",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "25-34",
-    province: "British Columbia",
-    education: "Undergrad",
-    primaryReason: "Career",
-    registrationType: "Student Pass",
-    dietary: "None",
-    session: "Student Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 23,
-    name: "Sophie Gagnon",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Quebec",
-    education: "Masters",
-    primaryReason: "Learning",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Tax Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 24,
-    name: "Thomas Murphy",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "55-64",
-    province: "Newfoundland and Labrador",
-    education: "Masters",
-    primaryReason: "Thought Leadership",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Research Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 25,
-    name: "Jennifer Lee",
-    memberType: "Non-member",
-    membershipStatus: "Non-member",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "35-44",
-    province: "Alberta",
-    education: "Bachelors",
-    primaryReason: "Learning",
-    registrationType: "Workshop Only",
-    dietary: "Vegetarian",
-    session: "Technology Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 26,
-    name: "Antoine Levesque",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "45-54",
-    province: "Quebec",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Leadership Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 27,
-    name: "Rachel Cohen",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "35-44",
-    province: "Ontario",
-    education: "PhD",
-    primaryReason: "Professional Development",
-    registrationType: "Full Conference",
-    dietary: "Kosher",
-    session: "Research Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 28,
-    name: "Christopher Taylor",
-    memberType: "Student",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "25-34",
-    province: "Newfoundland and Labrador",
-    education: "Undergrad",
-    primaryReason: "Career",
-    registrationType: "Student Pass",
-    dietary: "None",
-    session: "Student Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 29,
-    name: "Natasha Ivanov",
-    memberType: "Non-member",
-    membershipStatus: "Non-member",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "45-54",
-    province: "Ontario",
-    education: "Masters",
-    primaryReason: "Exploring Membership",
-    registrationType: "Workshop Only",
-    dietary: "None",
-    session: "Ethics Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
-  {
-    id: 30,
-    name: "William Fraser",
-    memberType: "CPA",
-    membershipStatus: "Current",
-    isComplimentary: false,
-    isMember: true,
-    ageGroup: "65+",
-    province: "Nova Scotia",
-    education: "Masters",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Audit Track",
-    ticketType: "Paid",
-    renewed: true,
-  },
-  {
-    id: 31,
-    name: "Olivia Martin",
-    memberType: "Guest",
-    membershipStatus: "Non-member",
-    isComplimentary: true,
-    isMember: false,
-    ageGroup: "35-44",
-    province: "Newfoundland and Labrador",
-    education: "Bachelors",
-    primaryReason: "Guest",
-    registrationType: "Guest",
-    dietary: "Gluten-free",
-    session: "Social Events",
-    ticketType: "Complimentary",
-    renewed: false,
-  },
-  {
-    id: 32,
-    name: "Daniel Park",
-    memberType: "CPA",
-    membershipStatus: "Lapsed",
-    isComplimentary: false,
-    isMember: false,
-    ageGroup: "55-64",
-    province: "Nova Scotia",
-    education: "Bachelors",
-    primaryReason: "Networking",
-    registrationType: "Full Conference",
-    dietary: "None",
-    session: "Tax Track",
-    ticketType: "Paid",
-    renewed: false,
-  },
+// Deterministic pseudo-random generator for consistent data
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function weightedPick(seed, options) {
+  const rand = seededRandom(seed);
+  let cumulative = 0;
+  for (const [value, weight] of options) {
+    cumulative += weight;
+    if (rand < cumulative) return value;
+  }
+  return options[options.length - 1][0];
+}
+
+// First/Last name pools for generating realistic names
+const FIRST_NAMES = [
+  "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth",
+  "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen",
+  "Christopher", "Lisa", "Daniel", "Nancy", "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra",
+  "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle",
+  "Wei", "Priya", "Mohammed", "Fatima", "Raj", "Aisha", "Chen", "Yuki", "Ahmed", "Mei",
+  "Pierre", "Marie", "Jean", "Sophie", "François", "Isabelle", "André", "Nathalie", "Michel", "Julie",
+  "Liam", "Emma", "Noah", "Olivia", "Oliver", "Ava", "Ethan", "Sophia", "Lucas", "Isabella",
+  "Hiroshi", "Sakura", "Kenji", "Yuki", "Takeshi", "Hana", "Ravi", "Ananya", "Arjun", "Deepa"
 ];
+
+const LAST_NAMES = [
+  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+  "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+  "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson",
+  "Wang", "Li", "Zhang", "Chen", "Liu", "Yang", "Huang", "Wu", "Zhou", "Xu",
+  "Tremblay", "Gagnon", "Roy", "Côté", "Bouchard", "Gauthier", "Morin", "Lavoie", "Fortin", "Gagné",
+  "Patel", "Singh", "Kumar", "Sharma", "Gupta", "Khan", "Ali", "Ahmed", "Hassan", "Mohammed",
+  "Kim", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim", "Han",
+  "Tanaka", "Yamamoto", "Watanabe", "Suzuki", "Takahashi", "Sato", "Ito", "Nakamura", "Kobayashi", "Saito"
+];
+
+// Distribution configs (value, probability)
+const MEMBER_TYPE_DIST = [["CPA", 0.55], ["Non-member", 0.18], ["Student", 0.17], ["Guest", 0.10]];
+const AGE_GROUP_DIST = [["18-24", 0.12], ["25-34", 0.24], ["35-44", 0.28], ["45-54", 0.22], ["55-64", 0.10], ["65+", 0.04]];
+const PROVINCE_DIST = [
+  ["Ontario", 0.38], ["Quebec", 0.18], ["British Columbia", 0.14], ["Alberta", 0.12],
+  ["Manitoba", 0.04], ["Saskatchewan", 0.03], ["Nova Scotia", 0.04], ["New Brunswick", 0.02],
+  ["Newfoundland and Labrador", 0.03], ["Prince Edward Island", 0.02]
+];
+const EDUCATION_DIST = [["Undergrad", 0.15], ["Bachelors", 0.42], ["Masters", 0.33], ["PhD", 0.10]];
+const DIETARY_DIST = [["None", 0.62], ["Vegetarian", 0.15], ["Vegan", 0.08], ["Gluten-free", 0.06], ["Halal", 0.05], ["Kosher", 0.04]];
+const SESSION_DIST = [
+  ["Audit Track", 0.18], ["Tax Track", 0.20], ["Leadership Track", 0.15], ["Technology Track", 0.12],
+  ["Ethics Track", 0.10], ["Research Track", 0.08], ["Student Track", 0.10], ["Keynote", 0.04], ["Social Events", 0.03]
+];
+const PRIMARY_REASON_DIST = [
+  ["Networking", 0.30], ["Professional Development", 0.25], ["Learning", 0.20], ["Career", 0.10],
+  ["Thought Leadership", 0.05], ["Speaker", 0.03], ["Exploring Membership", 0.05], ["Guest", 0.02]
+];
+
+function generateAttendee(id) {
+  const seed1 = id * 13;
+  const seed2 = id * 17;
+  const seed3 = id * 23;
+  const seed4 = id * 29;
+  const seed5 = id * 31;
+  const seed6 = id * 37;
+  const seed7 = id * 41;
+  const seed8 = id * 43;
+  const seed9 = id * 47;
+
+  const firstName = FIRST_NAMES[Math.floor(seededRandom(seed1) * FIRST_NAMES.length)];
+  const lastName = LAST_NAMES[Math.floor(seededRandom(seed2) * LAST_NAMES.length)];
+  const memberType = weightedPick(seed3, MEMBER_TYPE_DIST);
+  const ageGroup = memberType === "Student" ? weightedPick(seed4, [["18-24", 0.7], ["25-34", 0.3]]) : weightedPick(seed4, AGE_GROUP_DIST);
+  const province = weightedPick(seed5, PROVINCE_DIST);
+  const education = memberType === "Student" ? "Undergrad" : weightedPick(seed6, EDUCATION_DIST);
+  const dietary = weightedPick(seed7, DIETARY_DIST);
+  const session = memberType === "Student" ? weightedPick(seed8, [["Student Track", 0.6], ["Keynote", 0.2], ["Technology Track", 0.2]]) : weightedPick(seed8, SESSION_DIST);
+  const primaryReason = memberType === "Student" ? "Career" : memberType === "Guest" ? "Guest" : weightedPick(seed9, PRIMARY_REASON_DIST);
+
+  // Determine membership status based on member type
+  let membershipStatus, isMember;
+  if (memberType === "CPA") {
+    const statusRand = seededRandom(id * 53);
+    if (statusRand < 0.70) { membershipStatus = "Current"; isMember = true; }
+    else { membershipStatus = "Lapsed"; isMember = false; }
+  } else if (memberType === "Student") {
+    membershipStatus = "Current"; isMember = true;
+  } else {
+    membershipStatus = "Non-member"; isMember = false;
+  }
+
+  // Registration type based on member type
+  let registrationType, ticketType, isComplimentary;
+  if (memberType === "Student") {
+    registrationType = "Student Pass"; ticketType = "Paid"; isComplimentary = false;
+  } else if (memberType === "Guest") {
+    registrationType = "Guest"; ticketType = "Complimentary"; isComplimentary = true;
+  } else if (primaryReason === "Speaker") {
+    registrationType = "Speaker"; ticketType = "Complimentary"; isComplimentary = true;
+  } else {
+    const regRand = seededRandom(id * 59);
+    if (regRand < 0.65) registrationType = "Full Conference";
+    else registrationType = "Workshop Only";
+    ticketType = "Paid"; isComplimentary = false;
+  }
+
+  // Renewal based on membership status (only meaningful for members)
+  let renewed = false;
+  if (membershipStatus === "Current") {
+    renewed = seededRandom(id * 61) < 0.75; // 75% renewal for current members
+  } else if (membershipStatus === "Lapsed") {
+    renewed = seededRandom(id * 61) < 0.20; // 20% renewal for lapsed
+  } else {
+    renewed = seededRandom(id * 61) < 0.08; // 8% conversion for non-members
+  }
+
+  return {
+    id,
+    name: `${firstName} ${lastName}`,
+    memberType,
+    membershipStatus,
+    isComplimentary,
+    isMember,
+    ageGroup,
+    province,
+    education,
+    primaryReason,
+    registrationType,
+    dietary,
+    session,
+    ticketType,
+    renewed,
+  };
+}
+
+// Generate 300 attendees
+const MOCK_ATTENDEES = Array.from({ length: 300 }, (_, i) => generateAttendee(i + 1));
+
 
 // -------------------- Attendee Data Enrichment --------------------
 
