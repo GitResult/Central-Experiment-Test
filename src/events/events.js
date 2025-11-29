@@ -3969,12 +3969,21 @@ function VitalsRow({ event, kpis, membershipSegments }) {
 
 function RegistrationFunnel() {
   const { theme } = useTheme();
+  // Blue gradient from light to deep
+  const blueGradient = [
+    "#dbeafe", // lightest blue
+    "#bfdbfe", // light blue
+    "#93c5fd", // medium light blue
+    "#60a5fa", // medium blue
+    "#3b82f6", // deep blue
+  ];
+
   const stages = [
-    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: theme.primaryLight },
-    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: theme.primary },
-    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: theme.warning },
-    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: theme.error },
-    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: theme.success },
+    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: blueGradient[0] },
+    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: blueGradient[1] },
+    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: blueGradient[2] },
+    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: blueGradient[3] },
+    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: blueGradient[4] },
   ];
 
   const baseValue = stages[0].value;
@@ -4014,7 +4023,7 @@ function RegistrationFunnel() {
               key={stage.id}
               style={{
                 background: stage.color,
-                color: "white",
+                color: "#111827",
                 borderRadius: "0.5rem",
                 padding: "0.75rem 0.5rem",
                 textAlign: "center",
@@ -4043,7 +4052,7 @@ function RegistrationFunnel() {
                 style={{
                   fontSize: "0.65rem",
                   marginTop: "0.25rem",
-                  opacity: 0.9,
+                  opacity: 0.85,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
