@@ -1109,7 +1109,17 @@ function EventDetailLayout({
           </div>
           <div style={{ textAlign: "right", fontSize: "0.75rem" }}>
             <div style={{ color: "#6b7280" }}>Countdown</div>
-            <div style={{ fontWeight: 600 }}>~ X days (demo)</div>
+            <div style={{ fontWeight: 600 }}>
+              {(() => {
+                const eventDate = new Date(event.startDate);
+                const today = new Date();
+                const diffTime = eventDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays > 0) return `${diffDays} days`;
+                if (diffDays === 0) return "Today!";
+                return "Event passed";
+              })()}
+            </div>
           </div>
         </header>
 
