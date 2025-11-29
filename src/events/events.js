@@ -3406,18 +3406,13 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 2fr)",
+          gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
           gap: "1rem",
         }}
       >
-        {/* Left Column - Key Metrics */}
+        {/* Left Column - Metrics & Charts */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <KeyMetricsPanel kpis={kpis} />
-        </div>
-
-        {/* Right Column - Quick Start & Charts */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <QuickLinksPanel />
           <ChartClickableWrapper
             onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
             isClickable={!!onOpenChartPreview}
@@ -3427,6 +3422,11 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           </ChartClickableWrapper>
           <RegistrationFunnel />
           <TypesAndRevenueSection attendees={attendees} />
+        </div>
+
+        {/* Right Column - Actions & Info Panels */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <QuickLinksPanel />
           <AlertsPanel />
           <UpcomingViewsPanel />
         </div>
@@ -3463,7 +3463,13 @@ function KeyMetricsPanel({ kpis }) {
       >
         Key Metrics
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "0.75rem",
+        }}
+      >
         {items.map((item) => (
           <div
             key={item.label}
@@ -3473,22 +3479,21 @@ function KeyMetricsPanel({ kpis }) {
               gap: "0.125rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textPrimary, lineHeight: 1.2 }}>
+            <div style={{ fontSize: "1.25rem", fontWeight: 700, color: theme.textPrimary, lineHeight: 1.2 }}>
               {item.value}
             </div>
-            <div style={{ fontSize: "0.8rem", color: theme.textMuted }}>{item.label}</div>
+            <div style={{ fontSize: "0.75rem", color: theme.textMuted }}>{item.label}</div>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.25rem",
-                fontSize: "0.75rem",
+                fontSize: "0.7rem",
                 color: item.isUp ? theme.success : theme.error,
               }}
             >
               <span>{item.isUp ? "↑" : "↓"}</span>
               <span>{item.change}%</span>
-              <span style={{ color: theme.textMuted }}>vs last event</span>
             </div>
           </div>
         ))}
