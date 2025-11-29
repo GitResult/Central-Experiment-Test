@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck, Calendar
+  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck, Calendar, FileCode, Link2
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -32,7 +32,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Board meeting management with PDF viewing, annotations, markers, and document collaboration.',
       icon: Briefcase,
       color: 'bg-slate-600',
-      features: ['PDF Viewing', 'Markers & Annotations', 'Document Upload', 'Meeting Management']
+      features: ['PDF Viewing', 'Markers & Annotations', 'Document Upload', 'Meeting Management'],
+      mainFile: 'src/components/BoardPacketPage.js',
+      linkedFiles: ['src/utils/documentConverter.js']
     },
     {
       id: 'compare-mode',
@@ -40,7 +42,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Main comparison interface with interactive data tables, visual markers, and AI-powered chat panel.',
       icon: BarChart3,
       color: 'bg-blue-500',
-      features: ['Visual Markers', 'AI Chat', 'Drag & Drop Tasks', 'Data Visualization']
+      features: ['Visual Markers', 'AI Chat', 'Drag & Drop Tasks', 'Data Visualization'],
+      mainFile: 'src/components/CompareModeDemo.js',
+      linkedFiles: []
     },
     {
       id: 'staff-details',
@@ -48,7 +52,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Staff management interface with drag-and-drop notes, tasks, and customizable dashboard widgets.',
       icon: Users,
       color: 'bg-purple-500',
-      features: ['Drag & Drop', 'Custom Widgets', 'Staff Cards', 'Templates']
+      features: ['Drag & Drop', 'Custom Widgets', 'Staff Cards', 'Templates'],
+      mainFile: 'src/components/StaffDetails.js',
+      linkedFiles: []
     },
     {
       id: 'usb-search',
@@ -56,7 +62,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Unified search interface with advanced visualizations, filters, and animated search experience.',
       icon: Search,
       color: 'bg-green-500',
-      features: ['Advanced Filters', 'Multiple Charts', 'Animations', 'Export Data']
+      features: ['Advanced Filters', 'Multiple Charts', 'Animations', 'Export Data'],
+      mainFile: 'src/components/USBSearch.js',
+      linkedFiles: []
     },
     {
       id: 'report-phrase',
@@ -64,7 +72,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Phrase-based search system with intelligent filtering and comprehensive result management.',
       icon: FileText,
       color: 'bg-orange-500',
-      features: ['Phrase Search', 'Quick Actions', 'Analytics', 'Search History']
+      features: ['Phrase Search', 'Quick Actions', 'Analytics', 'Search History'],
+      mainFile: 'src/components/ReportPhrase.js',
+      linkedFiles: []
     },
     {
       id: 'performance-listing',
@@ -72,7 +82,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Performance analytics dashboard with member charts, revenue panels, and metrics tracking.',
       icon: TrendingUp,
       color: 'bg-red-500',
-      features: ['Member Charts', 'Revenue Panels', 'Agents', 'Real-time Metrics']
+      features: ['Member Charts', 'Revenue Panels', 'Agents', 'Real-time Metrics'],
+      mainFile: 'src/components/PerformanceListing.js',
+      linkedFiles: []
     },
     {
       id: 'record-listing-basic',
@@ -80,7 +92,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Basic record listing with visual markers and essential data management features.',
       icon: Database,
       color: 'bg-cyan-500',
-      features: ['Record Table', 'Visual Markers', 'Filtering', 'Charts']
+      features: ['Record Table', 'Visual Markers', 'Filtering', 'Charts'],
+      mainFile: 'src/components/RecordListingBasic.js',
+      linkedFiles: []
     },
     {
       id: 'record-listing-resizable',
@@ -88,7 +102,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Enhanced record listing with resizable panels and improved layout controls.',
       icon: Maximize2,
       color: 'bg-indigo-500',
-      features: ['Resizable Panels', 'Heatmap', 'Agent Progress', 'All Basic Features']
+      features: ['Resizable Panels', 'Heatmap', 'Agent Progress', 'All Basic Features'],
+      mainFile: 'src/components/RecordListingResizable.js',
+      linkedFiles: []
     },
     {
       id: 'record-listing-advanced',
@@ -96,7 +112,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Full-featured listing with heatmap visualization, AI chat, and automated task generation.',
       icon: Cpu,
       color: 'bg-pink-500',
-      features: ['AI Chat', 'Heatmap', 'Task Generation', 'All Resizable Features']
+      features: ['AI Chat', 'Heatmap', 'Task Generation', 'All Resizable Features'],
+      mainFile: 'src/components/RecordListingAdvanced.js',
+      linkedFiles: []
     },
     {
       id: 'contact-list',
@@ -104,7 +122,16 @@ const Navigation = ({ onNavigate }) => {
       description: 'Advanced contact management with filtering, interactive charts, maps, and comprehensive analytics.',
       icon: ListFilter,
       color: 'bg-emerald-500',
-      features: ['Advanced Filtering', 'Interactive Charts', 'Map Visualization', 'Export Data']
+      features: ['Advanced Filtering', 'Interactive Charts', 'Map Visualization', 'Export Data'],
+      mainFile: 'src/contactList/index.js',
+      linkedFiles: [
+        'src/contactList/contact-list.jsx',
+        'src/components/UI/pagination',
+        'src/contactList/phraseSearchConfig.js',
+        'src/contactList/contactListUtils.js',
+        'src/contactList/components/LeafletMapComponent.jsx',
+        'src/contactList/components/HelperComponents.jsx'
+      ]
     },
     {
       id: 'person-essential',
@@ -112,7 +139,18 @@ const Navigation = ({ onNavigate }) => {
       description: 'Person essentials dashboard with customizable widgets, drag-and-drop tasks, and interactive features.',
       icon: UserCheck,
       color: 'bg-teal-500',
-      features: ['Custom Widgets', 'Task Management', 'Drag & Drop', 'Report Builder']
+      features: ['Custom Widgets', 'Task Management', 'Drag & Drop', 'Report Builder'],
+      mainFile: 'src/personEssential/index.js',
+      linkedFiles: [
+        'src/personEssential/person-essential.jsx',
+        'src/personEssential/components/reviewTask.js',
+        'src/personEssential/components/calendarView.js',
+        'src/personEssential/components/listView.js',
+        'src/personEssential/components/membershipStory.js',
+        'src/personEssential/reports/report-browse.tsx',
+        'src/personEssential/reports/new-report-prototype.tsx',
+        'src/personEssential/reports/report-list.tsx'
+      ]
     },
     {
       id: 'events',
@@ -120,7 +158,9 @@ const Navigation = ({ onNavigate }) => {
       description: 'Event management with calendar, 1-click insights, people-centric listing reports, and correlation analysis.',
       icon: Calendar,
       color: 'bg-amber-500',
-      features: ['1-Click Insights', 'Listing Reports', 'Correlation Analysis', 'Calendar View']
+      features: ['1-Click Insights', 'Listing Reports', 'Correlation Analysis', 'Calendar View'],
+      mainFile: 'src/events/events.js',
+      linkedFiles: []
     }
   ];
 
@@ -172,7 +212,7 @@ const Navigation = ({ onNavigate }) => {
                 </p>
 
                 {/* Features */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {component.features.slice(0, 3).map((feature, idx) => (
                     <span
                       key={idx}
@@ -185,6 +225,44 @@ const Navigation = ({ onNavigate }) => {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                       +{component.features.length - 3} more
                     </span>
+                  )}
+                </div>
+
+                {/* File Information */}
+                <div className="border-t border-gray-100 pt-3 space-y-2">
+                  {/* Main File */}
+                  <div className="flex items-start gap-2">
+                    <FileCode className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 font-medium mb-0.5">Main File:</p>
+                      <p className="text-xs text-gray-700 font-mono truncate" title={component.mainFile}>
+                        {component.mainFile}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Linked Files */}
+                  {component.linkedFiles && component.linkedFiles.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <Link2 className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500 font-medium mb-0.5">
+                          Linked Files: ({component.linkedFiles.length})
+                        </p>
+                        <div className="space-y-0.5">
+                          {component.linkedFiles.slice(0, 2).map((file, idx) => (
+                            <p key={idx} className="text-xs text-gray-600 font-mono truncate" title={file}>
+                              {file}
+                            </p>
+                          ))}
+                          {component.linkedFiles.length > 2 && (
+                            <p className="text-xs text-gray-500 italic">
+                              +{component.linkedFiles.length - 2} more files
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
