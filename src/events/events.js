@@ -1250,7 +1250,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <QuickLinksPanel />
           <AlertsPanel />
-          {/* Placeholder for Views Panel - Feature 3 */}
+          <UpcomingViewsPanel />
         </div>
       </div>
     </div>
@@ -1617,6 +1617,265 @@ function AlertsPanel() {
               >
                 {alert.timestamp}
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Upcoming Views Panel --------------------
+
+function UpcomingViewsPanel() {
+  const [currentMonth, setCurrentMonth] = useState(5); // June = 5 (0-indexed)
+  const currentYear = 2025;
+
+  // Event dates to highlight (June 12-14, 2025)
+  const eventDates = [12, 13, 14];
+
+  // Upcoming sessions/events
+  const upcomingEvents = [
+    {
+      id: 1,
+      month: "Jun",
+      day: 12,
+      dayName: "Thu",
+      time: "9:00 AM",
+      type: "Session",
+      title: "Opening Keynote",
+      location: "Main Hall",
+      status: "SCHEDULED",
+    },
+    {
+      id: 2,
+      month: "Jun",
+      day: 12,
+      dayName: "Thu",
+      time: "12:30 PM",
+      type: "Social",
+      title: "Networking Lunch",
+      location: "Grand Ballroom",
+      status: "SCHEDULED",
+    },
+    {
+      id: 3,
+      month: "Jun",
+      day: 13,
+      dayName: "Fri",
+      time: "2:00 PM",
+      type: "Session",
+      title: "Awards Ceremony",
+      location: "Main Hall",
+      status: "SCHEDULED",
+    },
+  ];
+
+  // Generate calendar days for the month
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const fullMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+
+  const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+  const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+
+  // Create calendar grid
+  const calendarDays = [];
+  // Add empty cells for days before the 1st
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.push(null);
+  }
+  // Add days of the month
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push(day);
+  }
+
+  const handlePrevMonth = () => {
+    setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1));
+  };
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        padding: "1rem",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
+          Upcoming Events
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <button
+            onClick={handlePrevMonth}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: "#6b7280",
+              fontSize: "0.8rem",
+              padding: "0.125rem 0.25rem",
+            }}
+          >
+            ‹
+          </button>
+          <span style={{ fontSize: "0.75rem", color: "#374151", minWidth: "4rem", textAlign: "center" }}>
+            {monthNames[currentMonth]} {currentYear}
+          </span>
+          <button
+            onClick={handleNextMonth}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: "#6b7280",
+              fontSize: "0.8rem",
+              padding: "0.125rem 0.25rem",
+            }}
+          >
+            ›
+          </button>
+        </div>
+      </div>
+
+      {/* Mini Calendar */}
+      <div style={{ marginBottom: "1rem" }}>
+        <div style={{ fontSize: "0.75rem", fontWeight: 500, textAlign: "center", marginBottom: "0.5rem", color: "#374151" }}>
+          {fullMonthNames[currentMonth]} {currentYear}
+        </div>
+        {/* Day headers */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "0.125rem",
+            marginBottom: "0.25rem",
+          }}
+        >
+          {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
+            <div
+              key={i}
+              style={{
+                fontSize: "0.6rem",
+                color: "#9ca3af",
+                textAlign: "center",
+                fontWeight: 500,
+              }}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+        {/* Calendar grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "0.125rem",
+          }}
+        >
+          {calendarDays.map((day, i) => {
+            const isEventDate = currentMonth === 5 && eventDates.includes(day); // June only
+            const isWeekend = i % 7 === 0 || i % 7 === 6;
+            return (
+              <div
+                key={i}
+                style={{
+                  fontSize: "0.65rem",
+                  textAlign: "center",
+                  padding: "0.2rem",
+                  borderRadius: "0.25rem",
+                  background: isEventDate ? "#3b82f6" : "transparent",
+                  color: isEventDate ? "white" : isWeekend ? "#3b82f6" : "#374151",
+                  fontWeight: isEventDate ? 600 : 400,
+                  cursor: day ? "pointer" : "default",
+                }}
+              >
+                {day || ""}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Upcoming Events List */}
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {upcomingEvents.map((event, index) => (
+          <div
+            key={event.id}
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              padding: "0.5rem 0",
+              borderBottom: index < upcomingEvents.length - 1 ? "1px solid #f3f4f6" : "none",
+            }}
+          >
+            {/* Date Badge */}
+            <div
+              style={{
+                background: "#3b82f6",
+                color: "white",
+                borderRadius: "0.375rem",
+                padding: "0.25rem 0.4rem",
+                textAlign: "center",
+                minWidth: "2.25rem",
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ fontSize: "0.6rem", fontWeight: 500, textTransform: "uppercase" }}>
+                {event.month}
+              </div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 700, lineHeight: 1 }}>
+                {event.day}
+              </div>
+              <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.8)" }}>
+                {event.dayName}
+              </div>
+            </div>
+            {/* Event Details */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "0.65rem", color: "#6b7280" }}>
+                {event.time} | {event.type}
+              </div>
+              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", marginTop: "0.125rem" }}>
+                {event.title}
+              </div>
+              <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>
+                {event.location}
+              </div>
+            </div>
+            {/* Status Badge */}
+            <div
+              style={{
+                alignSelf: "center",
+                fontSize: "0.55rem",
+                fontWeight: 600,
+                background: "#dbeafe",
+                color: "#1d4ed8",
+                borderRadius: "999px",
+                padding: "0.125rem 0.4rem",
+                textTransform: "uppercase",
+                flexShrink: 0,
+              }}
+            >
+              {event.status}
             </div>
           </div>
         ))}
