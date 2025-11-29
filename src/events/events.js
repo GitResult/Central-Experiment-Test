@@ -2146,9 +2146,11 @@ function generateAttendee(id) {
     registrationType = "Speaker"; ticketType = "Complimentary"; isComplimentary = true;
   } else {
     const regRand = seededRandom(id * 59);
-    if (regRand < 0.65) registrationType = "Full Conference";
-    else registrationType = "Workshop Only";
-    ticketType = "Paid"; isComplimentary = false;
+    if (regRand < 0.40) { registrationType = "Full Conference"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.55) { registrationType = "Workshop Only"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.70) { registrationType = "Virtual Pass"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.85) { registrationType = "One Day Pass"; ticketType = "Paid"; isComplimentary = false; }
+    else { registrationType = "VIP"; ticketType = "Paid"; isComplimentary = false; }
   }
 
   // Renewal based on membership status (only meaningful for members)
@@ -3969,21 +3971,13 @@ function VitalsRow({ event, kpis, membershipSegments }) {
 
 function RegistrationFunnel() {
   const { theme } = useTheme();
-  // Blue gradient from light to deep
-  const blueGradient = [
-    "#dbeafe", // lightest blue
-    "#bfdbfe", // light blue
-    "#93c5fd", // medium light blue
-    "#60a5fa", // medium blue
-    "#3b82f6", // deep blue
-  ];
 
+  // Funnel colors matching guideline style (varied colors for each stage)
   const stages = [
-    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: blueGradient[0] },
-    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: blueGradient[1] },
-    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: blueGradient[2] },
-    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: blueGradient[3] },
-    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: blueGradient[4] },
+    { id: 1, label: "Delivered", shortLabel: "Delivered", value: 47250, color: "#3b82f6" }, // Blue
+    { id: 2, label: "Opened", shortLabel: "Opened", value: 10442, color: "#14b8a6" }, // Teal
+    { id: 3, label: "Clicked", shortLabel: "Clicked", value: 1937, color: "#f59e0b" }, // Amber
+    { id: 4, label: "Converted", shortLabel: "Converted", value: 387, color: "#22c55e" }, // Green
   ];
 
   const baseValue = stages[0].value;
@@ -4004,72 +3998,108 @@ function RegistrationFunnel() {
           marginBottom: "0.75rem",
         }}
       >
-        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>Registration Funnel</strong>
+        <strong style={{ fontSize: "0.875rem", color: theme.textPrimary }}>Email Conversion Funnel</strong>
         <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
           Conversion flow
         </div>
       </div>
+
+      {/* Funnel visualization - connected bars style */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "0.5rem",
+          display: "flex",
+          alignItems: "stretch",
+          gap: "0",
+          height: "90px",
         }}
       >
-        {stages.map((stage) => {
-          const percentage = ((stage.value / baseValue) * 100).toFixed(1);
+        {stages.map((stage, index) => {
+          const percentage = ((stage.value / baseValue) * 100).toFixed(index === 0 ? 0 : 1);
+          const isLast = index === stages.length - 1;
+          const nextColor = !isLast ? stages[index + 1].color : null;
+
           return (
             <div
               key={stage.id}
               style={{
-                background: stage.color,
-                color: "#111827",
-                borderRadius: "0.5rem",
-                padding: "0.75rem 0.5rem",
-                textAlign: "center",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow = `0 4px 12px ${stage.color}40`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "none";
+                display: "flex",
+                alignItems: "stretch",
+                flex: 1,
               }}
             >
+              {/* Main segment */}
               <div
                 style={{
-                  fontSize: "1.25rem",
-                  fontWeight: 700,
-                  lineHeight: 1,
+                  background: stage.color,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0.5rem",
+                  borderRadius: index === 0 ? "0.5rem 0 0 0.5rem" : isLast ? "0 0.5rem 0.5rem 0" : "0",
+                  transition: "transform 0.2s, filter 0.2s",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = "brightness(1.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = "brightness(1)";
                 }}
               >
-                {stage.value.toLocaleString()}
+                <div
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: 700,
+                    color: "#fff",
+                    lineHeight: 1,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {stage.value.toLocaleString()}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "rgba(255,255,255,0.9)",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  {stage.shortLabel}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.95)",
+                    marginTop: "0.125rem",
+                  }}
+                >
+                  {percentage}%
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: "0.65rem",
-                  marginTop: "0.25rem",
-                  opacity: 0.85,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={stage.label}
-              >
-                {stage.shortLabel}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  marginTop: "0.25rem",
-                }}
-              >
-                {percentage}%
-              </div>
+
+              {/* Connector arrow between segments */}
+              {!isLast && (
+                <svg
+                  width="20"
+                  height="100%"
+                  viewBox="0 0 20 90"
+                  preserveAspectRatio="none"
+                  style={{ display: "block", flexShrink: 0 }}
+                >
+                  <polygon
+                    points="0,0 20,20 20,70 0,90"
+                    fill={stage.color}
+                  />
+                  <polygon
+                    points="0,20 20,20 20,70 0,70"
+                    fill={nextColor}
+                  />
+                </svg>
+              )}
             </div>
           );
         })}
@@ -4081,13 +4111,16 @@ function RegistrationFunnel() {
 // -------------------- Types and Revenue Section --------------------
 
 function TypesAndRevenueSection({ attendees }) {
-  // Color map for registration types
+  // Color map for registration types - expanded with more types
   const COLORS = {
     "Full Conference": "#3b82f6",
     "Workshop Only": "#8b5cf6",
     "Student Pass": "#22c55e",
     "Speaker": "#f59e0b",
     "Guest": "#ec4899",
+    "Virtual Pass": "#06b6d4",
+    "One Day Pass": "#84cc16",
+    "VIP": "#dc2626",
   };
 
   // Mock pricing per registration type
@@ -4097,6 +4130,9 @@ function TypesAndRevenueSection({ attendees }) {
     "Student Pass": 200,
     "Speaker": 0,
     "Guest": 0,
+    "Virtual Pass": 150,
+    "One Day Pass": 250,
+    "VIP": 1500,
   };
 
   // Calculate type distribution
@@ -4161,15 +4197,15 @@ function TypesAndRevenueSection({ attendees }) {
           >
             Registration Types
           </div>
-          <div style={{ width: "100%", height: 180 }}>
+          <div style={{ width: "100%", height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={typeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={60}
+                  innerRadius={55}
+                  outerRadius={95}
                   paddingAngle={2}
                   dataKey="value"
                   label={({ name, percent }) =>
@@ -4193,14 +4229,13 @@ function TypesAndRevenueSection({ attendees }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          {/* Legend */}
+          {/* Legend - Vertical layout for more types */}
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.5rem",
-              marginTop: "0.5rem",
-              justifyContent: "center",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: "0.375rem",
+              marginTop: "0.75rem",
             }}
           >
             {typeData.map((item) => (
@@ -4209,20 +4244,24 @@ function TypesAndRevenueSection({ attendees }) {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.25rem",
-                  fontSize: "0.6rem",
+                  gap: "0.375rem",
+                  fontSize: "0.7rem",
                   color: "#374151",
+                  padding: "0.25rem 0",
                 }}
               >
                 <div
                   style={{
-                    width: "8px",
-                    height: "8px",
+                    width: "10px",
+                    height: "10px",
                     borderRadius: "50%",
                     background: item.color,
+                    flexShrink: 0,
                   }}
                 />
-                <span>{item.name}</span>
+                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {item.name} ({item.value})
+                </span>
               </div>
             ))}
           </div>
