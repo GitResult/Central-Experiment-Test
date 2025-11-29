@@ -2443,6 +2443,30 @@ function WorkspaceNavigator({ onOpenCalendar }) {
 function CalendarView({ event, onEventClick }) {
   const { theme } = useTheme();
   const [mode, setMode] = useState("month"); // "month" | "year"
+  const [hoveredDay, setHoveredDay] = useState(null);
+
+  // June 2025 calendar data - June 1, 2025 is a Sunday (dayOfWeek = 0)
+  const daysInJune = 30;
+  const startDayOfWeek = 0; // Sunday
+  const eventDays = [12, 13, 14]; // Event spans June 12-14
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Build calendar grid
+  const calendarDays = [];
+  // Empty cells before June 1
+  for (let i = 0; i < startDayOfWeek; i++) {
+    calendarDays.push(null);
+  }
+  // Days of June
+  for (let day = 1; day <= daysInJune; day++) {
+    calendarDays.push(day);
+  }
+
+  const isEventDay = (day) => eventDays.includes(day);
+  const isEventStart = (day) => day === 12;
+  const isEventEnd = (day) => day === 14;
+  const isEventMiddle = (day) => day === 13;
+
   return (
     <div
       style={{
@@ -2498,15 +2522,148 @@ function CalendarView({ event, onEventClick }) {
         </div>
       </div>
       {mode === "month" ? (
-        <div
-          style={{
-            padding: "2rem",
-            textAlign: "center",
-            color: theme.textMuted,
-            fontSize: "0.875rem",
-          }}
-        >
-          Month view placeholder (for demo, switch to Year to see event).
+        <div style={{ padding: "0.5rem" }}>
+          {/* Month Header */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1rem",
+            marginBottom: "1rem"
+          }}>
+            <button style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: theme.textMuted,
+              fontSize: "1rem",
+              padding: "0.25rem 0.5rem",
+            }}>←</button>
+            <h3 style={{ margin: 0, color: theme.textPrimary, fontSize: "1rem" }}>June 2025</h3>
+            <button style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: theme.textMuted,
+              fontSize: "1rem",
+              padding: "0.25rem 0.5rem",
+            }}>→</button>
+          </div>
+
+          {/* Week Day Headers */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "2px",
+            marginBottom: "0.5rem",
+          }}>
+            {weekDays.map((day) => (
+              <div
+                key={day}
+                style={{
+                  textAlign: "center",
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  color: theme.textMuted,
+                  padding: "0.25rem",
+                }}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "2px",
+          }}>
+            {calendarDays.map((day, idx) => {
+              if (day === null) {
+                return <div key={`empty-${idx}`} style={{ height: "3rem" }} />;
+              }
+              const hasEvent = isEventDay(day);
+              const isStart = isEventStart(day);
+              const isEnd = isEventEnd(day);
+              const isMiddle = isEventMiddle(day);
+              const isHovered = hoveredDay === day && hasEvent;
+
+              return (
+                <div
+                  key={day}
+                  onClick={hasEvent ? onEventClick : undefined}
+                  onMouseEnter={() => hasEvent && setHoveredDay(day)}
+                  onMouseLeave={() => setHoveredDay(null)}
+                  style={{
+                    height: "3rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    paddingTop: "0.25rem",
+                    borderRadius: hasEvent ? (isStart ? "0.5rem 0 0 0.5rem" : isEnd ? "0 0.5rem 0.5rem 0" : "0") : "0.25rem",
+                    background: hasEvent
+                      ? isHovered
+                        ? `linear-gradient(135deg, ${theme.primary}, #0ea5e9)`
+                        : `linear-gradient(135deg, ${theme.primary}dd, #0ea5e9dd)`
+                      : "transparent",
+                    cursor: hasEvent ? "pointer" : "default",
+                    transition: getTransition(["background", "transform"], "fast"),
+                    transform: isHovered ? "scale(1.02)" : "scale(1)",
+                    position: "relative",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: hasEvent ? 600 : 400,
+                      color: hasEvent ? "white" : theme.textPrimary,
+                    }}
+                  >
+                    {day}
+                  </span>
+                  {isStart && (
+                    <span style={{
+                      fontSize: "0.55rem",
+                      color: "white",
+                      marginTop: "2px",
+                      textAlign: "center",
+                      lineHeight: 1.1,
+                    }}>
+                      Conference
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Event Legend */}
+          <div style={{
+            marginTop: "1rem",
+            padding: "0.75rem",
+            background: theme.backgroundSecondary,
+            borderRadius: "0.5rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+          }}>
+            <div style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "3px",
+              background: `linear-gradient(135deg, ${theme.primary}, #0ea5e9)`,
+            }} />
+            <div>
+              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: theme.textPrimary }}>
+                {event.name}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
+                {event.startDate} – {event.endDate} · Click to preview
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div
@@ -2762,7 +2919,7 @@ function EventDetailLayout({
       </div>
 
       {showInsightsPanel && (
-        <InsightsBottomPanel
+        <InsightsStudioPanel
           attendees={attendees}
           onClose={() => setShowInsightsPanel(false)}
         />
@@ -2906,6 +3063,69 @@ function EventTabs({ activeTab, onChange }) {
   );
 }
 
+// -------------------- Chart Clickable Wrapper (P7: Visual Affordance) --------------------
+
+function ChartClickableWrapper({ children, onClick, isClickable, hintText = "Click to explore" }) {
+  const { theme } = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
+
+  if (!isClickable) {
+    return <div>{children}</div>;
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        position: "relative",
+        cursor: "pointer",
+        borderRadius: SPACING.sm,
+        transition: getTransition(["box-shadow", "transform"], "fast"),
+        boxShadow: isHovered ? `0 0 0 2px ${theme.primary}, ${theme.shadowMd}` : "none",
+        transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+      }}
+    >
+      {children}
+
+      {/* Hover Overlay with Hint */}
+      {isHovered && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `${theme.primary}10`,
+            borderRadius: SPACING.sm,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              background: theme.primary,
+              color: "white",
+              padding: `${SPACING.xs} ${SPACING.md}`,
+              borderRadius: SPACING.sm,
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING.xs,
+              boxShadow: theme.shadowMd,
+            }}
+          >
+            <ICONS.insights size={14} />
+            {hintText}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -------------------- Profile Tab --------------------
 
 function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPreview }) {
@@ -2935,22 +3155,13 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
       >
         {/* Left Column - Charts & Visualizations */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div
+          <ChartClickableWrapper
             onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
-            style={{ cursor: onOpenChartPreview ? "pointer" : "default" }}
-            onMouseEnter={(e) => {
-              if (onOpenChartPreview) {
-                e.currentTarget.style.opacity = "0.8";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (onOpenChartPreview) {
-                e.currentTarget.style.opacity = "1";
-              }
-            }}
+            isClickable={!!onOpenChartPreview}
+            hintText="Click to explore data"
           >
             <ComboChartWithRecharts data={fakeTrendData} />
-          </div>
+          </ChartClickableWrapper>
           <RegistrationFunnel />
           <TypesAndRevenueSection attendees={attendees} />
         </div>
@@ -4919,9 +5130,19 @@ function AttendeePeekDetails({ attendee }) {
 }
 
 function SegmentPeekList({ attendees, onAttendeeClick }) {
+  const { theme } = useTheme();
+  const [hoveredAttendee, setHoveredAttendee] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (e, attendee) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoverPosition({ x: rect.left - 220, y: rect.top });
+    setHoveredAttendee(attendee);
+  };
+
   return (
-    <div>
-      <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.5rem" }}>
+    <div style={{ position: "relative" }}>
+      <div style={{ fontSize: "0.75rem", color: theme.textMuted, marginBottom: "0.5rem" }}>
         {attendees.length} attendee(s) in this segment
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -4929,31 +5150,79 @@ function SegmentPeekList({ attendees, onAttendeeClick }) {
           <button
             key={a.id}
             onClick={() => onAttendeeClick(a)}
+            onMouseEnter={(e) => handleMouseEnter(e, a)}
+            onMouseLeave={() => setHoveredAttendee(null)}
             style={{
               padding: "0.5rem",
               borderRadius: "0.375rem",
-              border: "1px solid #e5e7eb",
-              background: "#fafafa",
+              border: `1px solid ${theme.border}`,
+              background: theme.backgroundSecondary,
               cursor: "pointer",
               textAlign: "left",
-              transition: "all 0.15s",
+              transition: getTransition(["background", "border-color", "box-shadow"], "fast"),
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#eff6ff";
-              e.currentTarget.style.borderColor = "#2563eb";
+            onFocus={(e) => {
+              e.currentTarget.style.background = theme.primaryLight;
+              e.currentTarget.style.borderColor = theme.primary;
+              e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.primary}40`;
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#fafafa";
-              e.currentTarget.style.borderColor = "#e5e7eb";
+            onBlur={(e) => {
+              e.currentTarget.style.background = theme.backgroundSecondary;
+              e.currentTarget.style.borderColor = theme.border;
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#111827" }}>{a.name}</div>
-            <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 500, color: theme.textPrimary }}>{a.name}</div>
+            <div style={{ fontSize: "0.7rem", color: theme.textMuted }}>
               {a.memberType} · {a.province}
             </div>
           </button>
         ))}
       </div>
+
+      {/* Hover Preview Tooltip */}
+      {hoveredAttendee && (
+        <div
+          style={{
+            position: "fixed",
+            left: Math.max(10, hoverPosition.x),
+            top: hoverPosition.y,
+            width: "200px",
+            background: theme.background,
+            border: `1px solid ${theme.border}`,
+            borderRadius: SPACING.sm,
+            boxShadow: theme.shadowLg,
+            padding: SPACING.sm,
+            zIndex: 100,
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ fontSize: "0.75rem", fontWeight: 600, color: theme.textPrimary, marginBottom: SPACING.xs }}>
+            {hoveredAttendee.name}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.65rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: theme.textMuted }}>Company</span>
+              <span style={{ color: theme.textSecondary }}>{hoveredAttendee.company || "—"}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: theme.textMuted }}>Email</span>
+              <span style={{ color: theme.textSecondary, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis" }}>{hoveredAttendee.email || "—"}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: theme.textMuted }}>Status</span>
+              <span style={{ color: theme.textSecondary }}>{hoveredAttendee.membershipStatus}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: theme.textMuted }}>Registration</span>
+              <span style={{ color: theme.textSecondary }}>{hoveredAttendee.registrationType}</span>
+            </div>
+          </div>
+          <div style={{ marginTop: SPACING.xs, paddingTop: SPACING.xs, borderTop: `1px solid ${theme.border}`, fontSize: "0.6rem", color: theme.textMuted, textAlign: "center" }}>
+            Click for full details
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -6325,7 +6594,643 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
   );
 }
 
-// -------------------- Insights Bottom Panel --------------------
+// -------------------- Insights Studio Panel (Studio Dock → Panel → Correlation) --------------------
+
+function InsightsStudioPanel({ attendees, onClose }) {
+  const { theme } = useTheme();
+  const [isVisible, setIsVisible] = useState(false);
+  const [showCorrelationConfig, setShowCorrelationConfig] = useState(false);
+  const [showCorrelationPreview, setShowCorrelationPreview] = useState(false);
+  const [correlationConfig, setCorrelationConfig] = useState({
+    dimension: "province",
+    selectedValues: [],
+    showAs: "share",
+  });
+  const reducedMotion = prefersReducedMotion();
+
+  useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        if (showCorrelationPreview) {
+          setShowCorrelationPreview(false);
+        } else if (showCorrelationConfig) {
+          setShowCorrelationConfig(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose, showCorrelationConfig, showCorrelationPreview]);
+
+  const insightOptions = [
+    { id: "correlation", label: "Correlation Analysis", description: "Analyze renewal patterns by dimension", icon: ICONS.insights },
+    { id: "demographics", label: "Event Demographics", description: "Attendee breakdown by category", icon: ICONS.users },
+    { id: "trends", label: "Trend Analysis", description: "Registration and revenue trends", icon: ICONS.timeline },
+  ];
+
+  const handleOptionClick = (optionId) => {
+    if (optionId === "correlation") {
+      setShowCorrelationConfig(true);
+    }
+    // Other options can be added later
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 49,
+          opacity: isVisible ? 1 : 0,
+          transition: reducedMotion ? "none" : "opacity 0.3s ease-in-out",
+        }}
+      />
+
+      {/* Main Insights Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "320px",
+          background: theme.background,
+          borderLeft: `1px solid ${theme.border}`,
+          boxShadow: theme.shadowLg,
+          zIndex: 50,
+          display: "flex",
+          flexDirection: "column",
+          transform: isVisible ? "translateX(0)" : "translateX(100%)",
+          transition: reducedMotion ? "none" : "transform 0.3s ease-out",
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: SPACING.lg,
+          borderBottom: `1px solid ${theme.border}`,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: theme.textPrimary }}>
+              Insights Studio
+            </h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: theme.textMuted }}>
+              Select an insight type to explore
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: theme.backgroundTertiary,
+              borderRadius: SPACING.xs,
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: theme.textMuted,
+            }}
+          >
+            <ICONS.close size={16} />
+          </button>
+        </div>
+
+        {/* Insight Options */}
+        <div style={{ flex: 1, padding: SPACING.lg, overflowY: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: SPACING.sm }}>
+            {insightOptions.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => handleOptionClick(option.id)}
+                style={{
+                  padding: SPACING.md,
+                  borderRadius: SPACING.sm,
+                  border: `1px solid ${theme.border}`,
+                  background: theme.backgroundSecondary,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: SPACING.md,
+                  transition: getTransition(["background", "border-color", "box-shadow"], "fast"),
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.primaryLight;
+                  e.currentTarget.style.borderColor = theme.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = theme.backgroundSecondary;
+                  e.currentTarget.style.borderColor = theme.border;
+                }}
+              >
+                <div style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: SPACING.sm,
+                  background: theme.primary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <option.icon size={18} color="white" />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: theme.textPrimary }}>
+                    {option.label}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted, marginTop: "2px" }}>
+                    {option.description}
+                  </div>
+                </div>
+                <div style={{ marginLeft: "auto", color: theme.textMuted }}>
+                  <ICONS.chevronRight size={16} />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Correlation Config Slideout (Input Panel First) */}
+      {showCorrelationConfig && (
+        <CorrelationConfigSlideout
+          attendees={attendees}
+          config={correlationConfig}
+          onConfigChange={setCorrelationConfig}
+          onPreview={() => {
+            setShowCorrelationConfig(false);
+            setShowCorrelationPreview(true);
+          }}
+          onClose={() => setShowCorrelationConfig(false)}
+        />
+      )}
+
+      {/* Correlation Preview Slideout (Chart Preview) */}
+      {showCorrelationPreview && (
+        <CorrelationPreviewSlideout
+          attendees={attendees}
+          config={correlationConfig}
+          onBack={() => {
+            setShowCorrelationPreview(false);
+            setShowCorrelationConfig(true);
+          }}
+          onClose={() => setShowCorrelationPreview(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// -------------------- Correlation Config Slideout (Input Panel) --------------------
+
+function CorrelationConfigSlideout({ attendees, config, onConfigChange, onPreview, onClose }) {
+  const { theme } = useTheme();
+  const reducedMotion = prefersReducedMotion();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  const dimensions = [
+    { id: "province", label: "Province" },
+    { id: "memberType", label: "Member Type" },
+    { id: "ageGroup", label: "Age Group" },
+    { id: "education", label: "Education" },
+  ];
+
+  const allValues = useMemo(
+    () => groupByField(attendees, config.dimension).map((s) => s.label),
+    [attendees, config.dimension]
+  );
+
+  const toggleValue = (value) => {
+    const current = config.selectedValues;
+    const next = current.includes(value)
+      ? current.filter((v) => v !== value)
+      : [...current, value];
+    onConfigChange({ ...config, selectedValues: next });
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: "360px",
+        background: theme.background,
+        borderLeft: `1px solid ${theme.border}`,
+        boxShadow: theme.shadowLg,
+        zIndex: 60,
+        display: "flex",
+        flexDirection: "column",
+        transform: isVisible ? "translateX(0)" : "translateX(100%)",
+        transition: reducedMotion ? "none" : "transform 0.3s ease-out",
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        padding: SPACING.lg,
+        borderBottom: `1px solid ${theme.border}`,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: theme.textPrimary }}>
+            Correlation Configuration
+          </h4>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: theme.textMuted }}>
+            Configure analysis parameters
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: theme.backgroundTertiary,
+            borderRadius: SPACING.xs,
+            width: "28px",
+            height: "28px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: theme.textMuted,
+          }}
+        >
+          <ICONS.close size={16} />
+        </button>
+      </div>
+
+      {/* Config Form */}
+      <div style={{ flex: 1, padding: SPACING.lg, overflowY: "auto" }}>
+        {/* Dimension Selection */}
+        <div style={{ marginBottom: SPACING.lg }}>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: theme.textSecondary, marginBottom: SPACING.sm }}>
+            Break down by
+          </label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: SPACING.xs }}>
+            {dimensions.map((dim) => (
+              <button
+                key={dim.id}
+                onClick={() => onConfigChange({ ...config, dimension: dim.id, selectedValues: [] })}
+                style={{
+                  padding: `${SPACING.xs} ${SPACING.md}`,
+                  borderRadius: SPACING.sm,
+                  border: config.dimension === dim.id ? `2px solid ${theme.primary}` : `1px solid ${theme.border}`,
+                  background: config.dimension === dim.id ? theme.primaryLight : theme.background,
+                  color: config.dimension === dim.id ? theme.primary : theme.textPrimary,
+                  fontSize: "0.75rem",
+                  fontWeight: config.dimension === dim.id ? 600 : 400,
+                  cursor: "pointer",
+                }}
+              >
+                {dim.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Value Selection (Checkboxes) */}
+        <div style={{ marginBottom: SPACING.lg }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: SPACING.sm }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 600, color: theme.textSecondary }}>
+              Select values to include
+            </label>
+            <div style={{ display: "flex", gap: SPACING.sm }}>
+              <button
+                onClick={() => onConfigChange({ ...config, selectedValues: allValues })}
+                style={{ border: "none", background: "transparent", color: theme.primary, fontSize: "0.7rem", cursor: "pointer", fontWeight: 600 }}
+              >
+                Select All
+              </button>
+              <button
+                onClick={() => onConfigChange({ ...config, selectedValues: [] })}
+                style={{ border: "none", background: "transparent", color: theme.primary, fontSize: "0.7rem", cursor: "pointer", fontWeight: 600 }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div style={{
+            maxHeight: "200px",
+            overflowY: "auto",
+            border: `1px solid ${theme.border}`,
+            borderRadius: SPACING.sm,
+            padding: SPACING.sm,
+          }}>
+            {allValues.map((value) => {
+              const isSelected = config.selectedValues.includes(value);
+              return (
+                <label
+                  key={value}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: SPACING.sm,
+                    padding: SPACING.xs,
+                    cursor: "pointer",
+                    borderRadius: SPACING.xs,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleValue(value)}
+                    style={{ accentColor: theme.primary }}
+                  />
+                  <span style={{ fontSize: "0.75rem", color: theme.textPrimary }}>{value}</span>
+                </label>
+              );
+            })}
+          </div>
+          {config.selectedValues.length > 0 && (
+            <div style={{ fontSize: "0.65rem", color: theme.textMuted, marginTop: SPACING.xs }}>
+              {config.selectedValues.length} of {allValues.length} selected
+            </div>
+          )}
+        </div>
+
+        {/* Show As */}
+        <div style={{ marginBottom: SPACING.lg }}>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: theme.textSecondary, marginBottom: SPACING.sm }}>
+            Show as
+          </label>
+          <div style={{ display: "flex", gap: SPACING.lg }}>
+            <label style={{ display: "flex", alignItems: "center", gap: SPACING.xs, fontSize: "0.75rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="showAs"
+                value="raw"
+                checked={config.showAs === "raw"}
+                onChange={() => onConfigChange({ ...config, showAs: "raw" })}
+                style={{ accentColor: theme.primary }}
+              />
+              Raw numbers
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: SPACING.xs, fontSize: "0.75rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="showAs"
+                value="share"
+                checked={config.showAs === "share"}
+                onChange={() => onConfigChange({ ...config, showAs: "share" })}
+                style={{ accentColor: theme.primary }}
+              />
+              Share of total
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer with Preview Button */}
+      <div style={{
+        padding: SPACING.lg,
+        borderTop: `1px solid ${theme.border}`,
+      }}>
+        <button
+          onClick={onPreview}
+          disabled={config.selectedValues.length === 0}
+          style={{
+            width: "100%",
+            padding: `${SPACING.md} ${SPACING.lg}`,
+            borderRadius: SPACING.sm,
+            border: "none",
+            background: config.selectedValues.length > 0 ? theme.primary : theme.backgroundTertiary,
+            color: config.selectedValues.length > 0 ? "white" : theme.textMuted,
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            cursor: config.selectedValues.length > 0 ? "pointer" : "not-allowed",
+            transition: getTransition("background", "fast"),
+          }}
+        >
+          Preview Analysis
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Correlation Preview Slideout (Chart) --------------------
+
+function CorrelationPreviewSlideout({ attendees, config, onBack, onClose }) {
+  const { theme } = useTheme();
+  const reducedMotion = prefersReducedMotion();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  // Compute correlation results
+  const results = useMemo(() => {
+    const filteredAttendees = config.selectedValues.length > 0
+      ? attendees.filter((a) => config.selectedValues.includes(a[config.dimension] || "Unknown"))
+      : attendees;
+
+    const grouped = {};
+    filteredAttendees.forEach((a) => {
+      const key = a[config.dimension] || "Unknown";
+      if (!grouped[key]) grouped[key] = { total: 0, renewed: 0 };
+      grouped[key].total++;
+      if (a.renewed) grouped[key].renewed++;
+    });
+
+    return Object.entries(grouped).map(([label, data]) => ({
+      label,
+      total: data.total,
+      renewed: data.renewed,
+      notRenewed: data.total - data.renewed,
+      renewalRate: data.total > 0 ? ((data.renewed / data.total) * 100).toFixed(1) : "0.0",
+    })).sort((a, b) => parseFloat(b.renewalRate) - parseFloat(a.renewalRate));
+  }, [attendees, config]);
+
+  // Find insight
+  const insight = results.length >= 2
+    ? `${results[0].label} shows ${results[0].renewalRate}% renewal vs ${results[results.length - 1].renewalRate}% for ${results[results.length - 1].label}`
+    : results.length === 1
+    ? `${results[0].label}: ${results[0].renewalRate}% renewal rate`
+    : "Select values to see analysis";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: "400px",
+        background: theme.background,
+        borderLeft: `1px solid ${theme.border}`,
+        boxShadow: theme.shadowLg,
+        zIndex: 70,
+        display: "flex",
+        flexDirection: "column",
+        transform: isVisible ? "translateX(0)" : "translateX(100%)",
+        transition: reducedMotion ? "none" : "transform 0.3s ease-out",
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        padding: SPACING.lg,
+        borderBottom: `1px solid ${theme.border}`,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}>
+        <div>
+          <button
+            onClick={onBack}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: theme.primary,
+              fontSize: "0.7rem",
+              cursor: "pointer",
+              padding: 0,
+              marginBottom: SPACING.xs,
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING.xs,
+            }}
+          >
+            ← Back to Configuration
+          </button>
+          <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: theme.textPrimary }}>
+            Correlation Preview
+          </h4>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: theme.backgroundTertiary,
+            borderRadius: SPACING.xs,
+            width: "28px",
+            height: "28px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: theme.textMuted,
+          }}
+        >
+          <ICONS.close size={16} />
+        </button>
+      </div>
+
+      {/* Key Insight */}
+      <div style={{ padding: SPACING.lg }}>
+        <div style={{
+          padding: SPACING.md,
+          borderRadius: SPACING.sm,
+          background: `linear-gradient(135deg, ${theme.warningLight} 0%, ${theme.warning}20 100%)`,
+          border: `1px solid ${theme.warning}`,
+        }}>
+          <div style={{ fontSize: "0.65rem", fontWeight: 700, color: theme.warning, textTransform: "uppercase", marginBottom: SPACING.xs }}>
+            Key Insight
+          </div>
+          <div style={{ fontSize: "0.8rem", color: theme.textPrimary, fontWeight: 500 }}>
+            {insight}
+          </div>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div style={{ flex: 1, padding: `0 ${SPACING.lg} ${SPACING.lg}`, overflowY: "auto" }}>
+        <div style={{ fontSize: "0.75rem", fontWeight: 600, color: theme.textSecondary, marginBottom: SPACING.md }}>
+          Breakdown by {config.dimension}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: SPACING.sm }}>
+          {results.map((result) => (
+            <div
+              key={result.label}
+              style={{
+                padding: SPACING.md,
+                borderRadius: SPACING.sm,
+                border: `1px solid ${theme.border}`,
+                background: theme.backgroundSecondary,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: SPACING.xs }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: theme.textPrimary }}>
+                  {result.label}
+                </span>
+                <span style={{ fontSize: "1rem", fontWeight: 700, color: theme.primary }}>
+                  {result.renewalRate}%
+                </span>
+              </div>
+              <div style={{
+                width: "100%",
+                height: "6px",
+                background: theme.backgroundTertiary,
+                borderRadius: "999px",
+                overflow: "hidden",
+                marginBottom: SPACING.xs,
+              }}>
+                <div style={{
+                  width: `${result.renewalRate}%`,
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${theme.primary}, ${theme.primaryHover})`,
+                  borderRadius: "999px",
+                  transition: "width 0.6s ease-out",
+                }} />
+              </div>
+              <div style={{ display: "flex", gap: SPACING.md, fontSize: "0.65rem", color: theme.textMuted }}>
+                <span>Total: {result.total}</span>
+                <span>Renewed: {result.renewed}</span>
+                <span>Not Renewed: {result.notRenewed}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: SPACING.lg,
+        borderTop: `1px solid ${theme.border}`,
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            padding: `${SPACING.md} ${SPACING.lg}`,
+            borderRadius: SPACING.sm,
+            border: `1px solid ${theme.border}`,
+            background: theme.background,
+            color: theme.textPrimary,
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Insights Bottom Panel (Event Insights - Demographics) --------------------
 
 function InsightsBottomPanel({ attendees, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
