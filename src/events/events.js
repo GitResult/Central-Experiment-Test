@@ -572,6 +572,34 @@ const MOCK_ATTENDEES = [
   },
 ];
 
+// -------------------- Attendee Data Enrichment --------------------
+
+const COMPANY_LIST = [
+  "Deloitte Canada", "KPMG LLP", "PwC Canada", "Ernst & Young",
+  "BDO Canada", "Grant Thornton", "MNP LLP", "RSM Canada",
+  "Baker Tilly Canada", "Crowe Soberman", "Collins Barrow", "Richter LLP"
+];
+
+function enrichAttendeesWithListData(attendees) {
+  return attendees.map((a) => {
+    const nameParts = a.name.split(" ");
+    const firstName = nameParts[0]?.toLowerCase() || "user";
+    const lastName = nameParts[nameParts.length - 1]?.toLowerCase() || "unknown";
+    const companyIdx = (a.id * 7) % COMPANY_LIST.length;
+    const regDay = 1 + (a.id % 28);
+    const regMonth = 3 + Math.floor(a.id / 10);
+
+    return {
+      ...a,
+      company: a.memberType === "Student" ? "N/A - Student" : COMPANY_LIST[companyIdx],
+      email: `${firstName}.${lastName}@example.com`,
+      phone: `(${500 + (a.id % 400)}) ${100 + (a.id * 3) % 900}-${1000 + (a.id * 7) % 9000}`,
+      confirmationId: `CPA2025-${String(a.id).padStart(4, "0")}`,
+      registrationDate: `2025-${String(regMonth).padStart(2, "0")}-${String(regDay).padStart(2, "0")}`,
+    };
+  });
+}
+
 // -------------------- Helper Functions --------------------
 
 function prefersReducedMotion() {
@@ -790,7 +818,7 @@ function CentralEventReportingDemo() {
       {view === "event" && (
         <EventDetailLayout
           event={MOCK_EVENT}
-          attendees={MOCK_ATTENDEES}
+          attendees={enrichAttendeesWithListData(MOCK_ATTENDEES)}
           kpis={kpis}
           onBackToCalendar={() => setView("calendar")}
           showInsightsPanel={showInsightsPanel}
@@ -2630,7 +2658,17 @@ function ListingCard({ title, segments, selectedValues, onToggle }) {
   );
 }
 
-function AttendeeList({ attendees }) {
+function AttendeeList({ attendees, onAttendeeClick }) {
+  const columns = [
+    { key: "id", label: "ID", width: "60px" },
+    { key: "name", label: "Name", width: "150px" },
+    { key: "company", label: "Company", width: "140px" },
+    { key: "email", label: "Email", width: "180px" },
+    { key: "phone", label: "Phone", width: "130px" },
+    { key: "confirmationId", label: "Confirmation ID", width: "120px" },
+    { key: "registrationDate", label: "Reg. Date", width: "100px" },
+  ];
+
   if (!attendees.length) {
     return (
       <div
@@ -2653,47 +2691,85 @@ function AttendeeList({ attendees }) {
       style={{
         borderRadius: "0.5rem",
         border: "1px solid #e5e7eb",
-        padding: "0.75rem",
         background: "#f9fafb",
-        fontSize: "0.8rem",
-        maxHeight: "420px",
+        fontSize: "0.75rem",
+        maxHeight: "480px",
         overflow: "auto",
       }}
     >
+      {/* Table Header */}
       <div
         style={{
-          marginBottom: "0.5rem",
-          fontSize: "0.8rem",
-          color: "#6b7280",
+          display: "grid",
+          gridTemplateColumns: columns.map((c) => c.width).join(" "),
+          background: "#f3f4f6",
+          borderBottom: "1px solid #d1d5db",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
         }}
       >
-        Showing {attendees.length} attendee(s)
-      </div>
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {attendees.map((a) => (
-          <li
-            key={a.id}
+        {columns.map((col) => (
+          <div
+            key={col.key}
             style={{
-              padding: "0.4rem 0.35rem",
-              borderBottom: "1px solid #e5e7eb",
-              display: "flex",
-              justifyContent: "space-between",
-              gap: "0.5rem",
+              padding: "0.5rem 0.5rem",
+              fontWeight: 600,
+              color: "#374151",
+              borderRight: "1px solid #e5e7eb",
+              fontSize: "0.7rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.025em",
             }}
           >
-            <div>
-              <div style={{ fontWeight: 500 }}>{a.name}</div>
-              <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                {a.memberType} · {a.membershipStatus}
-              </div>
-            </div>
-            <div style={{ fontSize: "0.7rem", textAlign: "right" }}>
-              <div>{a.province}</div>
-              <div>{a.registrationType}</div>
-            </div>
-          </li>
+            {col.label}
+          </div>
         ))}
-      </ul>
+      </div>
+
+      {/* Table Body */}
+      {attendees.map((a, idx) => (
+        <div
+          key={a.id}
+          onClick={() => onAttendeeClick && onAttendeeClick(a)}
+          style={{
+            display: "grid",
+            gridTemplateColumns: columns.map((c) => c.width).join(" "),
+            borderBottom: "1px solid #e5e7eb",
+            background: idx % 2 === 0 ? "white" : "#fafafa",
+            cursor: onAttendeeClick ? "pointer" : "default",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            if (onAttendeeClick) e.currentTarget.style.background = "#eff6ff";
+          }}
+          onMouseLeave={(e) => {
+            if (onAttendeeClick) e.currentTarget.style.background = idx % 2 === 0 ? "white" : "#fafafa";
+          }}
+        >
+          <div style={{ padding: "0.5rem", color: "#6b7280", borderRight: "1px solid #e5e7eb" }}>
+            {a.id}
+          </div>
+          <div style={{ padding: "0.5rem", fontWeight: 500, color: "#111827", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {a.name}
+          </div>
+          <div style={{ padding: "0.5rem", color: "#374151", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {a.company || "—"}
+          </div>
+          <div style={{ padding: "0.5rem", color: "#2563eb", borderRight: "1px solid #e5e7eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {a.email || "—"}
+          </div>
+          <div style={{ padding: "0.5rem", color: "#374151", borderRight: "1px solid #e5e7eb" }}>
+            {a.phone || "—"}
+          </div>
+          <div style={{ padding: "0.5rem", color: "#059669", fontFamily: "monospace", fontSize: "0.7rem", borderRight: "1px solid #e5e7eb" }}>
+            {a.confirmationId || "—"}
+          </div>
+          <div style={{ padding: "0.5rem", color: "#6b7280" }}>
+            {a.registrationDate || "—"}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
