@@ -307,7 +307,152 @@ const ICONS = {
       <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
     </svg>
   ),
+  bell: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+  plus: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  ),
+  arrowLeft: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+    </svg>
+  ),
+  calendar: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  settings: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  ),
 };
+
+// ==================== GLOBAL TOP NAVIGATION BAR ====================
+
+function GlobalTopNavBar({ onOpenCommandPalette }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "48px",
+        background: "#1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 16px",
+        zIndex: 1000,
+      }}
+    >
+      {/* Left Section */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <button
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ICONS.menu size={20} color="#9ca3af" />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ color: "#ffffff", fontSize: "14px", fontWeight: 500 }}>Central</span>
+          <ICONS.chevronDown size={16} color="#9ca3af" />
+        </div>
+        <button
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ICONS.plus size={18} color="#9ca3af" />
+        </button>
+      </div>
+
+      {/* Center Section - Search */}
+      <div
+        onClick={onOpenCommandPalette}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          background: "#374151",
+          borderRadius: "6px",
+          padding: "6px 12px",
+          minWidth: "280px",
+          cursor: "pointer",
+        }}
+      >
+        <ICONS.explorer size={16} color="#6b7280" />
+        <span style={{ color: "#6b7280", fontSize: "13px" }}>Search Central</span>
+      </div>
+
+      {/* Right Section */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ICONS.bell size={20} color="#9ca3af" />
+        </button>
+        <div
+          style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: "#4b5563",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: 600,
+          }}
+        >
+          JD
+        </div>
+        <button
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ICONS.settings size={20} color="#9ca3af" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ==================== SKELETON LOADERS (P1.2) ====================
 
@@ -2264,65 +2409,41 @@ function CentralEventReportingDemoInner() {
       {/* P3.1: Skip Link for Accessibility */}
       <SkipLink targetId="main-content" />
 
+      {/* Global Top Navigation Bar */}
+      <GlobalTopNavBar onOpenCommandPalette={() => setShowCommandPalette(true)} />
+
       <div
         id="main-content"
         style={{
           fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-          padding: SPACING.lg,
+          paddingTop: "48px", // Account for fixed nav bar
           background: theme.backgroundPage,
           minHeight: "100vh",
           color: theme.textPrimary,
           transition: getTransition(["background", "color"], "normal"),
         }}
       >
-      {/* Theme Toggle & Search Hint */}
+      {/* Theme Toggle */}
       <div style={{
         position: "fixed",
-        top: SPACING.lg,
+        bottom: SPACING.lg,
         right: SPACING.lg,
-        display: "flex",
-        alignItems: "center",
-        gap: SPACING.sm,
         zIndex: 50,
       }}>
         <button
-          onClick={() => setShowCommandPalette(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: SPACING.sm,
-            padding: `${SPACING.xs} ${SPACING.md}`,
-            background: theme.backgroundSecondary,
-            border: `1px solid ${theme.border}`,
-            borderRadius: SPACING.sm,
-            color: theme.textMuted,
-            fontSize: "0.75rem",
-            cursor: "pointer",
-            transition: getTransition(["background", "border-color"], "fast"),
-          }}
-        >
-          <ICONS.explorer size={14} />
-          Search
-          <kbd style={{
-            padding: `2px ${SPACING.xs}`,
-            background: theme.backgroundTertiary,
-            borderRadius: "3px",
-            fontSize: "0.65rem",
-          }}>⌘K</kbd>
-        </button>
-        <button
           onClick={toggleTheme}
           style={{
-            width: "36px",
-            height: "36px",
+            width: "40px",
+            height: "40px",
             borderRadius: "50%",
             border: `1px solid ${theme.border}`,
-            background: theme.backgroundSecondary,
+            background: theme.background,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: theme.textMuted,
+            boxShadow: theme.shadowMd,
             transition: getTransition(["background", "color", "transform"], "fast"),
           }}
           title={isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -2331,7 +2452,7 @@ function CentralEventReportingDemoInner() {
         </button>
       </div>
 
-      <WorkspaceNavigator onOpenCalendar={() => setView("calendar")} />
+      {view === "calendar" && <WorkspaceNavigator onOpenCalendar={() => setView("calendar")} />}
 
       {isLoading ? (
         <div style={{ marginTop: SPACING.xl }}>
@@ -2832,70 +2953,210 @@ function EventDetailLayout({
   const [showChartPreview, setShowChartPreview] = useState(false);
   const [chartPreviewData, setChartPreviewData] = useState(null);
 
+  // Determine if event is past
+  const isPastEvent = new Date(event.endDate) < new Date();
+
+  // Format date for display
+  const formatEventDate = () => {
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const options = { month: 'long', day: 'numeric', year: 'numeric' };
+    const startStr = start.toLocaleDateString('en-US', options);
+    const endDay = end.getDate();
+    // Extract location from venue
+    const location = event.venue.includes("St. John") ? "St. John's, NL" : event.venue;
+    return `${startStr.replace(/\d+,/, `${start.getDate()} - ${endDay},`)} · ${location}`;
+  };
+
   return (
-    <div style={{ marginTop: "1rem" }}>
-      <button
-        onClick={onBackToCalendar}
-        style={{
-          marginBottom: "0.5rem",
-          border: "none",
-          padding: "0.25rem 0.75rem",
-          borderRadius: "999px",
-          fontSize: "0.75rem",
-          background: theme.backgroundTertiary,
-          color: theme.textPrimary,
-          cursor: "pointer",
-        }}
-      >
-        ← Back to Calendar
-      </button>
+    <div>
+      {/* Hero Header with Map Background */}
       <div
         style={{
-          background: theme.background,
-          borderRadius: "0.75rem",
-          padding: "1rem",
-          boxShadow: theme.shadow,
+          position: "relative",
+          background: "linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)",
+          minHeight: "180px",
+          borderRadius: 0,
+          overflow: "hidden",
         }}
       >
-        <header
+        {/* Map Background Pattern */}
+        <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: "1rem",
-            marginBottom: "1rem",
+            position: "absolute",
+            inset: 0,
+            opacity: 0.15,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cpath d='M50 150 Q100 100 150 120 T250 100 T350 130' stroke='%23fff' fill='none' stroke-width='2'/%3E%3Cpath d='M30 200 Q80 170 130 180 T230 160 T330 190' stroke='%23fff' fill='none' stroke-width='1.5'/%3E%3Ccircle cx='200' cy='80' r='3' fill='%23fff'/%3E%3Ccircle cx='280' cy='120' r='2' fill='%23fff'/%3E%3Ccircle cx='120' cy='140' r='2' fill='%23fff'/%3E%3C/svg%3E")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+
+        {/* City Name Watermark */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: "10%",
+            transform: "translateY(-50%)",
+            fontSize: "3rem",
+            fontWeight: 300,
+            color: "rgba(255, 255, 255, 0.08)",
+            letterSpacing: "0.5rem",
+            textTransform: "uppercase",
+            pointerEvents: "none",
           }}
         >
-          <div>
-            <h2 style={{ margin: 0, color: theme.textPrimary }}>{event.name}</h2>
-            <p style={{ margin: 0, fontSize: "0.875rem", color: theme.textSecondary }}>
-              {event.startDate} – {event.endDate} · {event.venue}
-            </p>
+          ST. JOHN'S
+        </div>
+
+        {/* Back to Calendar Link */}
+        <button
+          onClick={onBackToCalendar}
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            background: "transparent",
+            border: "none",
+            color: "#d1d5db",
+            fontSize: "13px",
+            cursor: "pointer",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            transition: "background 0.15s ease",
+          }}
+          onMouseEnter={(e) => e.target.style.background = "rgba(255,255,255,0.1)"}
+          onMouseLeave={(e) => e.target.style.background = "transparent"}
+        >
+          <ICONS.arrowLeft size={16} color="#d1d5db" />
+          Back to Calendar
+        </button>
+
+        {/* Past Event Badge */}
+        {isPastEvent && (
+          <div
+            style={{
+              position: "absolute",
+              top: "16px",
+              right: "16px",
+              background: "#3b82f6",
+              color: "#ffffff",
+              fontSize: "12px",
+              fontWeight: 500,
+              padding: "6px 14px",
+              borderRadius: "4px",
+            }}
+          >
+            Past Event
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            {/* Studio Dock Icons */}
-            <StudioDock
-              onOpenInsights={() => setShowInsightsPanel(true)}
-              onOpenExplorer={() => setShowInsightsSlideout(true)}
-            />
-            {/* Countdown */}
-            <div style={{ textAlign: "right", fontSize: "0.75rem" }}>
-              <div style={{ color: theme.textMuted }}>Countdown</div>
-              <div style={{ fontWeight: 600, color: theme.textPrimary }}>
-                {(() => {
-                  const eventDate = new Date(event.startDate);
-                  const today = new Date();
-                  const diffTime = eventDate - today;
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays > 0) return `${diffDays} days`;
-                  if (diffDays === 0) return "Today!";
-                  return "Event passed";
-                })()}
+        )}
+
+        {/* Event Info Section */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "20px 24px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+            {/* Calendar Icon */}
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <ICONS.calendar size={24} color="#ffffff" />
+            </div>
+
+            {/* Event Details */}
+            <div style={{ flex: 1 }}>
+              <h1
+                style={{
+                  margin: 0,
+                  color: "#ffffff",
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  marginBottom: "4px",
+                }}
+              >
+                {event.name}
+              </h1>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#9ca3af",
+                  fontSize: "0.875rem",
+                }}
+              >
+                <ICONS.calendar size={14} color="#9ca3af" />
+                <span>June 12 - 14, 2025</span>
+                <span style={{ margin: "0 4px" }}>·</span>
+                <ICONS.mapPin size={14} color="#9ca3af" />
+                <span>St. John's, NL</span>
               </div>
             </div>
           </div>
-        </header>
 
-        <EventTabs activeTab={activeTab} onChange={setActiveTab} />
+          {/* Tabs */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0",
+              marginTop: "16px",
+              borderBottom: "none",
+            }}
+          >
+            {[
+              { id: "profile", label: "Profile" },
+              { id: "activities", label: "Activities" },
+              { id: "more", label: "More" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: activeTab === tab.id ? 500 : 400,
+                  color: activeTab === tab.id ? "#ffffff" : "#9ca3af",
+                  borderBottom: activeTab === tab.id ? "2px solid #ffffff" : "2px solid transparent",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div
+        style={{
+          background: theme.background,
+          padding: "24px",
+          minHeight: "calc(100vh - 228px)",
+        }}
+      >
 
         {activeTab === "profile" && (
           <EventProfileTab
