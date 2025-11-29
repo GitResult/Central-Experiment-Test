@@ -1249,7 +1249,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
         {/* Right Column - Actions & Info Panels */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <QuickLinksPanel />
-          {/* Placeholder for Alerts Panel - Feature 2 */}
+          <AlertsPanel />
           {/* Placeholder for Views Panel - Feature 3 */}
         </div>
       </div>
@@ -1509,6 +1509,116 @@ function QuickLinksPanel() {
             <span style={{ fontSize: "1rem", lineHeight: 1 }}>{action.icon}</span>
             <span>{action.label}</span>
           </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Alerts Panel --------------------
+
+function AlertsPanel() {
+  const alerts = [
+    {
+      id: 1,
+      type: "warning",
+      icon: "⚠",
+      message: "47 incomplete registrations detected. Follow up to complete checkout.",
+      timestamp: "2 hours ago",
+    },
+    {
+      id: 2,
+      type: "info",
+      icon: "ℹ",
+      message: "12 new registrations this week! Consider sending welcome details.",
+      timestamp: "1 day ago",
+    },
+    {
+      id: 3,
+      type: "success",
+      icon: "✓",
+      message: "Revenue target 85% achieved. Event on track for full capacity.",
+      timestamp: "3 days ago",
+    },
+  ];
+
+  const getIconColor = (type) => {
+    switch (type) {
+      case "warning":
+        return "#f59e0b";
+      case "info":
+        return "#3b82f6";
+      case "success":
+        return "#22c55e";
+      default:
+        return "#6b7280";
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        padding: "1rem",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.9rem",
+          fontWeight: 600,
+          color: "#111827",
+          marginBottom: "0.75rem",
+        }}
+      >
+        Alerts & Insights
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {alerts.map((alert, index) => (
+          <div
+            key={alert.id}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "0.5rem",
+              padding: "0.5rem 0",
+              borderBottom: index < alerts.length - 1 ? "1px solid #f3f4f6" : "none",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "1rem",
+                lineHeight: 1,
+                color: getIconColor(alert.type),
+                flexShrink: 0,
+                marginTop: "0.1rem",
+              }}
+            >
+              {alert.icon}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#374151",
+                  lineHeight: 1.4,
+                }}
+              >
+                {alert.message}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.7rem",
+                  color: "#9ca3af",
+                  marginTop: "0.25rem",
+                }}
+              >
+                {alert.timestamp}
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>
