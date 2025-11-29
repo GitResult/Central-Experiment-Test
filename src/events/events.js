@@ -1135,18 +1135,26 @@ function EventDetailLayout({
               {event.startDate} – {event.endDate} · {event.venue}
             </p>
           </div>
-          <div style={{ textAlign: "right", fontSize: "0.75rem" }}>
-            <div style={{ color: "#6b7280" }}>Countdown</div>
-            <div style={{ fontWeight: 600 }}>
-              {(() => {
-                const eventDate = new Date(event.startDate);
-                const today = new Date();
-                const diffTime = eventDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays > 0) return `${diffDays} days`;
-                if (diffDays === 0) return "Today!";
-                return "Event passed";
-              })()}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* Studio Dock Icons */}
+            <StudioDock
+              onOpenInsights={() => setShowInsightsPanel(true)}
+              onOpenExplorer={() => setShowInsightsSlideout(true)}
+            />
+            {/* Countdown */}
+            <div style={{ textAlign: "right", fontSize: "0.75rem" }}>
+              <div style={{ color: "#6b7280" }}>Countdown</div>
+              <div style={{ fontWeight: 600 }}>
+                {(() => {
+                  const eventDate = new Date(event.startDate);
+                  const today = new Date();
+                  const diffTime = eventDate - today;
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  if (diffDays > 0) return `${diffDays} days`;
+                  if (diffDays === 0) return "Today!";
+                  return "Event passed";
+                })()}
+              </div>
             </div>
           </div>
         </header>
@@ -1196,6 +1204,79 @@ function EventDetailLayout({
           onClose={() => setShowChartPreview(false)}
         />
       )}
+    </div>
+  );
+}
+
+function StudioDock({ onOpenInsights, onOpenExplorer }) {
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+
+  const icons = [
+    { id: "insights", icon: "📊", label: "Insights", onClick: onOpenInsights, priority: 1 },
+    { id: "explorer", icon: "🔍", label: "Explorer", onClick: onOpenExplorer, priority: 2 },
+    { id: "reports", icon: "📄", label: "Reports", onClick: () => {}, priority: 3 },
+    { id: "timeline", icon: "📅", label: "Timeline", onClick: () => {}, priority: 2 },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.25rem",
+        background: "#f3f4f6",
+        borderRadius: "0.5rem",
+        padding: "0.25rem",
+      }}
+    >
+      {icons.map((item) => (
+        <div
+          key={item.id}
+          style={{ position: "relative" }}
+          onMouseEnter={() => setHoveredIcon(item.id)}
+          onMouseLeave={() => setHoveredIcon(null)}
+        >
+          <button
+            onClick={item.onClick}
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "0.375rem",
+              border: "none",
+              background: hoveredIcon === item.id ? "#2563eb" : "transparent",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1rem",
+              transition: "all 0.15s",
+            }}
+          >
+            {item.icon}
+          </button>
+          {/* Tooltip */}
+          {hoveredIcon === item.id && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                marginTop: "0.35rem",
+                background: "#1f2937",
+                color: "white",
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem",
+                fontSize: "0.7rem",
+                whiteSpace: "nowrap",
+                zIndex: 100,
+              }}
+            >
+              {item.label}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -3767,6 +3848,7 @@ function ChartConfigPanel({ onClose, onApply, config, onConfigChange }) {
 
 function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [drilldownSegment, setDrilldownSegment] = useState(null);
   const reducedMotion = prefersReducedMotion();
 
   React.useEffect(() => {
@@ -3776,12 +3858,16 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
   React.useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
-        onClose();
+        if (drilldownSegment) {
+          setDrilldownSegment(null);
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, drilldownSegment]);
 
   const { results, insight } = useMemo(
     () => computeCorrelation(attendees, dimension, metric),
@@ -3789,6 +3875,12 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
   );
 
   const metricLabel = metric === "renewal" ? "Renewal Rate" : metric;
+
+  // Get attendees for drilldown segment
+  const drilldownAttendees = useMemo(() => {
+    if (!drilldownSegment) return [];
+    return attendees.filter((a) => (a[dimension] || "Unknown") === drilldownSegment);
+  }, [attendees, dimension, drilldownSegment]);
 
   return (
     <>
@@ -3902,15 +3994,26 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
                 const renewalRate = parseFloat(result.renewalRate);
                 const colorIntensity = Math.max(0.3, renewalRate / 100);
                 const barColor = `rgba(37, 99, 235, ${colorIntensity})`;
+                const isSelected = drilldownSegment === result.label;
 
                 return (
-                  <div
+                  <button
                     key={result.label}
+                    onClick={() => setDrilldownSegment(isSelected ? null : result.label)}
                     style={{
                       padding: "1rem",
                       borderRadius: "0.5rem",
-                      border: "1px solid #e5e7eb",
-                      background: "#f9fafb",
+                      border: isSelected ? "2px solid #2563eb" : "1px solid #e5e7eb",
+                      background: isSelected ? "#eff6ff" : "#f9fafb",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) e.currentTarget.style.borderColor = "#93c5fd";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.borderColor = "#e5e7eb";
                     }}
                   >
                     <div
@@ -3921,8 +4024,9 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
                         marginBottom: "0.5rem",
                       }}
                     >
-                      <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
+                      <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {result.label}
+                        <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>→ View details</span>
                       </div>
                       <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2563eb" }}>
                         {result.renewalRate}%
@@ -3968,7 +4072,7 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
                         <span style={{ fontWeight: 600 }}>Not Renewed:</span> {result.notRenewed}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -4008,6 +4112,154 @@ function CorrelationSlideout({ attendees, dimension, dimensionLabel, metric, onC
           </button>
         </div>
       </div>
+
+      {/* Double Slide Panel - Drilldown Details */}
+      {drilldownSegment && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: "26rem",
+            maxWidth: "80vw",
+            background: "white",
+            boxShadow: "-4px 0 20px rgba(0,0,0,0.2)",
+            zIndex: 201,
+            display: "flex",
+            flexDirection: "column",
+            transform: drilldownSegment ? "translateX(0)" : "translateX(100%)",
+            transition: reducedMotion
+              ? "transform 0.01s ease-in-out"
+              : "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}
+        >
+          {/* Nested Panel Header */}
+          <div
+            style={{
+              padding: "1.25rem",
+              borderBottom: "1px solid #e5e7eb",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "#f9fafb",
+            }}
+          >
+            <div>
+              <button
+                onClick={() => setDrilldownSegment(null)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "0.75rem",
+                  color: "#2563eb",
+                  padding: 0,
+                  marginBottom: "0.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                }}
+              >
+                ← Back to Analysis
+              </button>
+              <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+                {drilldownSegment}
+              </h4>
+              <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+                {drilldownAttendees.length} attendee(s) in this segment
+              </p>
+            </div>
+            <button
+              onClick={() => setDrilldownSegment(null)}
+              style={{
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "1rem",
+                cursor: "pointer",
+                color: "#6b7280",
+                width: "28px",
+                height: "28px",
+                borderRadius: "0.25rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Nested Panel Content - Attendee List */}
+          <div style={{ flex: 1, overflow: "auto", padding: "1rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {drilldownAttendees.map((attendee) => (
+                <div
+                  key={attendee.id}
+                  style={{
+                    padding: "0.75rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #e5e7eb",
+                    background: "#fafafa",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+                        {attendee.name}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                        {attendee.memberType} · {attendee.membershipStatus}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        padding: "0.15rem 0.5rem",
+                        borderRadius: "999px",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        background: attendee.renewed ? "#dcfce7" : "#fee2e2",
+                        color: attendee.renewed ? "#166534" : "#991b1b",
+                      }}
+                    >
+                      {attendee.renewed ? "Renewed" : "Not Renewed"}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "0.5rem" }}>
+                    {attendee.email || "—"} · {attendee.province}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Nested Panel Footer */}
+          <div
+            style={{
+              padding: "1rem",
+              borderTop: "1px solid #e5e7eb",
+              background: "#f9fafb",
+            }}
+          >
+            <button
+              onClick={() => setDrilldownSegment(null)}
+              style={{
+                width: "100%",
+                padding: "0.6rem 1rem",
+                borderRadius: "0.375rem",
+                border: "1px solid #d1d5db",
+                background: "white",
+                color: "#374151",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                fontWeight: 500,
+              }}
+            >
+              Close Details
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
