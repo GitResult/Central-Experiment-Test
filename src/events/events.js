@@ -5406,6 +5406,16 @@ function MorePeopleListing({ attendees }) {
   // Determine if peek panel should show
   const showPeek = peekData || selectedAttendee;
 
+  // Refs for scrolling to cards
+  const cardRefs = useRef({});
+
+  const scrollToCard = (field) => {
+    if (cardRefs.current[field]) {
+      cardRefs.current[field].scrollIntoView({ behavior: "smooth", block: "center" });
+      setSelectedCard(field);
+    }
+  };
+
   return (
     <div
       style={{
@@ -5414,12 +5424,79 @@ function MorePeopleListing({ attendees }) {
           ? showPeek
             ? "minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.5fr)"
             : "minmax(0, 1fr) minmax(0, 3fr)"
-          : "1fr",
+          : "180px minmax(0, 1fr)",
         gap: "1rem",
         marginTop: "0.5rem",
       }}
     >
-      {/* Left Column - Vertical Card Navigation */}
+      {/* Left Column - Cards Mode Navigation */}
+      {viewMode === "cards" && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+            position: "sticky",
+            top: "1rem",
+            alignSelf: "start",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: theme.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              padding: "0.5rem 0.75rem",
+              marginBottom: "0.25rem",
+            }}
+          >
+            Categories
+          </div>
+          {cards.map((card) => {
+            const isActive = selectedCard === card.field;
+            return (
+              <button
+                key={card.field}
+                onClick={() => scrollToCard(card.field)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 0.75rem",
+                  border: "none",
+                  borderRadius: "0.375rem",
+                  background: isActive ? theme.primaryLight : "transparent",
+                  color: isActive ? theme.primary : theme.textPrimary,
+                  fontSize: "0.8rem",
+                  fontWeight: isActive ? 600 : 400,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = theme.backgroundSecondary;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                <card.Icon size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {card.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Left Column - List Mode Vertical Card Navigation */}
       {viewMode === "list" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <ListingFilterHeader
@@ -5530,14 +5607,23 @@ function MorePeopleListing({ attendees }) {
             }}
           >
             {cards.map((card) => (
-              <DemographicCard
+              <div
                 key={card.title}
-                title={card.title}
-                field={card.field}
-                attendees={filteredAttendees}
-                colorPalette={colorPalettes[card.field]}
-                onFilterClick={handleCardFilterClick}
-              />
+                ref={(el) => (cardRefs.current[card.field] = el)}
+                style={{
+                  borderRadius: "0.5rem",
+                  transition: "box-shadow 0.2s ease",
+                  boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                }}
+              >
+                <DemographicCard
+                  title={card.title}
+                  field={card.field}
+                  attendees={filteredAttendees}
+                  colorPalette={colorPalettes[card.field]}
+                  onFilterClick={handleCardFilterClick}
+                />
+              </div>
             ))}
           </div>
         )}
