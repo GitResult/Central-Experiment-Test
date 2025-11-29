@@ -1242,7 +1242,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           >
             <ComboChartWithRecharts data={fakeTrendData} />
           </div>
-          {/* Placeholder for Funnel - Feature 4 */}
+          <RegistrationFunnel />
           {/* Placeholder for Pie Chart + Revenue List - Feature 5 */}
         </div>
 
@@ -1419,6 +1419,109 @@ function VitalsRow({ event, kpis, membershipSegments }) {
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Registration Funnel --------------------
+
+function RegistrationFunnel() {
+  const stages = [
+    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: "#1e3a5f" },
+    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: "#3b82f6" },
+    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: "#f59e0b" },
+    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: "#ef4444" },
+    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: "#22c55e" },
+  ];
+
+  const baseValue = stages[0].value;
+
+  return (
+    <div
+      style={{
+        background: "#f9fafb",
+        borderRadius: "0.5rem",
+        padding: "0.75rem",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <strong style={{ fontSize: "0.875rem" }}>Registration Funnel</strong>
+        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+          Conversion flow
+        </div>
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "0.5rem",
+        }}
+      >
+        {stages.map((stage) => {
+          const percentage = ((stage.value / baseValue) * 100).toFixed(1);
+          return (
+            <div
+              key={stage.id}
+              style={{
+                background: stage.color,
+                color: "white",
+                borderRadius: "0.5rem",
+                padding: "0.75rem 0.5rem",
+                textAlign: "center",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
+                e.currentTarget.style.boxShadow = `0 4px 12px ${stage.color}40`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+              >
+                {stage.value.toLocaleString()}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.65rem",
+                  marginTop: "0.25rem",
+                  opacity: 0.9,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={stage.label}
+              >
+                {stage.shortLabel}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  marginTop: "0.25rem",
+                }}
+              >
+                {percentage}%
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
