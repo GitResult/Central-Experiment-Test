@@ -1200,11 +1200,6 @@ function EventTabs({ activeTab, onChange }) {
 // -------------------- Profile Tab --------------------
 
 function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPreview }) {
-  const membershipSegments = useMemo(
-    () => groupByField(attendees, "membershipStatus"),
-    [attendees]
-  );
-
   const fakeTrendData = [
     { label: "Week -6", registrations: 3, revenue: 2400 },
     { label: "Week -5", registrations: 8, revenue: 6400 },
@@ -1217,7 +1212,10 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
 
   return (
     <div>
+      {/* KPIs Row - Full Width */}
       <KpiRow kpis={kpis} />
+
+      {/* Main 2-Column Layout */}
       <div
         style={{
           display: "grid",
@@ -1226,40 +1224,34 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           marginTop: "1rem",
         }}
       >
-        <div
-          onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
-          style={{ cursor: onOpenChartPreview ? "pointer" : "default" }}
-          onMouseEnter={(e) => {
-            if (onOpenChartPreview) {
-              e.currentTarget.style.opacity = "0.8";
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (onOpenChartPreview) {
-              e.currentTarget.style.opacity = "1";
-            }
-          }}
-        >
-          <ComboChartWithRecharts data={fakeTrendData} />
+        {/* Left Column - Charts & Visualizations */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div
+            onClick={() => onOpenChartPreview && onOpenChartPreview(fakeTrendData, "Cumulative Registrations & Revenue")}
+            style={{ cursor: onOpenChartPreview ? "pointer" : "default" }}
+            onMouseEnter={(e) => {
+              if (onOpenChartPreview) {
+                e.currentTarget.style.opacity = "0.8";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (onOpenChartPreview) {
+                e.currentTarget.style.opacity = "1";
+              }
+            }}
+          >
+            <ComboChartWithRecharts data={fakeTrendData} />
+          </div>
+          {/* Placeholder for Funnel - Feature 4 */}
+          {/* Placeholder for Pie Chart + Revenue List - Feature 5 */}
         </div>
-        <VitalsRow event={event} kpis={kpis} membershipSegments={membershipSegments} />
-      </div>
 
-      <div style={{ marginTop: "1.5rem", textAlign: "right" }}>
-        <button
-          onClick={onOpenInsights}
-          style={{
-            padding: "0.5rem 1rem",
-            borderRadius: "999px",
-            border: "1px solid #2563eb",
-            background: "white",
-            color: "#2563eb",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-          }}
-        >
-          Open Insights
-        </button>
+        {/* Right Column - Actions & Info Panels */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <QuickLinksPanel />
+          {/* Placeholder for Alerts Panel - Feature 2 */}
+          {/* Placeholder for Views Panel - Feature 3 */}
+        </div>
       </div>
     </div>
   );
@@ -1427,6 +1419,97 @@ function VitalsRow({ event, kpis, membershipSegments }) {
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Quick Links Panel --------------------
+
+function QuickLinksPanel() {
+  const actions = [
+    {
+      id: "add-attendee",
+      label: "Add Attendee",
+      icon: "+",
+      primary: true,
+      onClick: () => alert("Add Attendee clicked - implement registration form")
+    },
+    {
+      id: "view-registrations",
+      label: "View All Registrations",
+      icon: "▤",
+      primary: false,
+      onClick: () => alert("View All Registrations clicked - navigate to registrations list")
+    },
+    {
+      id: "manage-event",
+      label: "Manage Event",
+      icon: "⚙",
+      primary: false,
+      onClick: () => alert("Manage Event clicked - open event settings")
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        padding: "1rem",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.9rem",
+          fontWeight: 600,
+          color: "#111827",
+          marginBottom: "0.75rem",
+        }}
+      >
+        Quick Actions
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            onClick={action.onClick}
+            style={{
+              background: action.primary ? "#1e3a5f" : "white",
+              color: action.primary ? "white" : "#374151",
+              border: action.primary ? "none" : "1px solid #e5e7eb",
+              borderRadius: "0.375rem",
+              padding: "0.5rem 0.75rem",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              width: "100%",
+              textAlign: "left",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (action.primary) {
+                e.currentTarget.style.background = "#2d4a6f";
+              } else {
+                e.currentTarget.style.background = "#f9fafb";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (action.primary) {
+                e.currentTarget.style.background = "#1e3a5f";
+              } else {
+                e.currentTarget.style.background = "white";
+              }
+            }}
+          >
+            <span style={{ fontSize: "1rem", lineHeight: 1 }}>{action.icon}</span>
+            <span>{action.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
