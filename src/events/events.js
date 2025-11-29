@@ -3349,20 +3349,22 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
 // -------------------- Bottom Left Studio Dock --------------------
 
 function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [isDockExpanded, setIsDockExpanded] = useState(false);
+  const [showThemeToggle, setShowThemeToggle] = useState(false);
 
-  // Vertical icons (left side, bottom to top)
+  // Vertical icons (left side, bottom to top) - includes Settings
   const verticalIcons = [
     { id: "capture", Icon: ICONS.capture, label: "Capture" },
     { id: "options", Icon: ICONS.options, label: "Options" },
     { id: "pages", Icon: ICONS.pages, label: "Pages" },
     { id: "toolbelt", Icon: ICONS.toolbelt, label: "Toolbelt" },
+    { id: "settings", Icon: ICONS.settings, label: "Settings", onClick: () => setShowThemeToggle(!showThemeToggle) },
   ];
 
-  // Horizontal icons (bottom row, left to right)
+  // Horizontal icons (bottom row, left to right) - Dock is separate
   const horizontalIcons = [
-    { id: "dock", Icon: ICONS.dock, label: "Dock" },
     { id: "explorer", Icon: ICONS.explorer, label: "Explorer", onClick: onOpenExplorer },
     { id: "insights", Icon: ICONS.insights, label: "Insights", onClick: onOpenInsights },
     { id: "reports", Icon: ICONS.reports, label: "Reports" },
@@ -3370,13 +3372,21 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
     { id: "ai", Icon: ICONS.ai, label: "AI" },
   ];
 
-  const DockIcon = ({ item, tooltipPosition = "right" }) => {
+  const handleDockClick = () => {
+    setIsDockExpanded(!isDockExpanded);
+    if (isDockExpanded) {
+      setShowThemeToggle(false); // Close theme toggle when collapsing
+    }
+  };
+
+  const DockIcon = ({ item, tooltipPosition = "right", showThemeToggleIcon = false }) => {
     const isHovered = hoveredIcon === item.id;
     const isDock = item.id === "dock";
+    const isSettings = item.id === "settings";
 
     return (
       <div
-        style={{ position: "relative" }}
+        style={{ position: "relative", display: "flex", alignItems: "center" }}
         onMouseEnter={() => setHoveredIcon(item.id)}
         onMouseLeave={() => setHoveredIcon(null)}
       >
@@ -3398,12 +3408,43 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
         >
           <item.Icon size={20} color={isDock ? "white" : isHovered ? theme.primary : theme.textMuted} />
         </button>
+        {/* Theme Toggle Icon - appears to the right of Settings */}
+        {isSettings && showThemeToggleIcon && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleTheme();
+            }}
+            onMouseEnter={() => setHoveredIcon("theme")}
+            onMouseLeave={() => setHoveredIcon(null)}
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              border: "none",
+              background: hoveredIcon === "theme" ? "rgba(59, 130, 246, 0.15)" : "transparent",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: "6px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: hoveredIcon === "theme" ? "scale(1.08)" : "scale(1)",
+            }}
+          >
+            {isDark ? (
+              <ICONS.sun size={18} color={hoveredIcon === "theme" ? theme.primary : theme.textMuted} />
+            ) : (
+              <ICONS.moon size={18} color={hoveredIcon === "theme" ? theme.primary : theme.textMuted} />
+            )}
+          </button>
+        )}
         {/* Tooltip */}
         {isHovered && (
           <div
             style={{
               position: "absolute",
-              ...(tooltipPosition === "right" ? { left: "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "8px" } : {}),
+              ...(tooltipPosition === "right" ? { left: showThemeToggleIcon && isSettings ? "calc(100% + 42px)" : "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "8px" } : {}),
               ...(tooltipPosition === "top" ? { bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: "8px" } : {}),
               background: "#1f2937",
               color: "white",
@@ -3417,6 +3458,29 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
             }}
           >
             {item.label}
+          </div>
+        )}
+        {/* Theme tooltip */}
+        {hoveredIcon === "theme" && isSettings && (
+          <div
+            style={{
+              position: "absolute",
+              left: "calc(100% + 42px)",
+              top: "50%",
+              transform: "translateY(-50%)",
+              marginLeft: "8px",
+              background: "#1f2937",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            {isDark ? "Light Mode" : "Dark Mode"}
           </div>
         )}
       </div>
@@ -3435,7 +3499,7 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
         alignItems: "flex-start",
       }}
     >
-      {/* Vertical Icons (stacked above the horizontal row) */}
+      {/* Vertical Icons (stacked above the horizontal row) - animated */}
       <div
         style={{
           display: "flex",
@@ -3443,18 +3507,28 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
           gap: "4px",
           background: theme.background,
           borderRadius: "12px",
-          padding: "6px",
-          marginBottom: "4px",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
-          border: `1px solid ${theme.border}`,
+          padding: isDockExpanded ? "6px" : "0px",
+          marginBottom: isDockExpanded ? "4px" : "0px",
+          boxShadow: isDockExpanded ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
+          border: isDockExpanded ? `1px solid ${theme.border}` : "none",
+          overflow: "hidden",
+          maxHeight: isDockExpanded ? "300px" : "0px",
+          opacity: isDockExpanded ? 1 : 0,
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transformOrigin: "bottom left",
         }}
       >
         {verticalIcons.map((item) => (
-          <DockIcon key={item.id} item={item} tooltipPosition="right" />
+          <DockIcon
+            key={item.id}
+            item={item}
+            tooltipPosition="right"
+            showThemeToggleIcon={item.id === "settings" && showThemeToggle}
+          />
         ))}
       </div>
 
-      {/* Horizontal Icons (bottom row) */}
+      {/* Horizontal Icons (bottom row) - includes Dock button at start */}
       <div
         style={{
           display: "flex",
@@ -3467,8 +3541,67 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
           border: `1px solid ${theme.border}`,
         }}
       >
-        {horizontalIcons.map((item) => (
-          <DockIcon key={item.id} item={item} tooltipPosition="top" />
+        {/* Dock button - always visible */}
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setHoveredIcon("dock")}
+          onMouseLeave={() => setHoveredIcon(null)}
+        >
+          <button
+            onClick={handleDockClick}
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              border: "none",
+              background: theme.primary,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: isDockExpanded ? "rotate(45deg)" : "rotate(0deg)",
+            }}
+          >
+            <ICONS.dock size={20} color="white" />
+          </button>
+          {hoveredIcon === "dock" && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                marginBottom: "8px",
+                background: "#1f2937",
+                color: "white",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                zIndex: 1000,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            >
+              {isDockExpanded ? "Close" : "Open"} Dock
+            </div>
+          )}
+        </div>
+
+        {/* Other horizontal icons - animated */}
+        {horizontalIcons.map((item, index) => (
+          <div
+            key={item.id}
+            style={{
+              overflow: "hidden",
+              maxWidth: isDockExpanded ? "40px" : "0px",
+              opacity: isDockExpanded ? 1 : 0,
+              transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s`,
+            }}
+          >
+            <DockIcon item={item} tooltipPosition="top" />
+          </div>
         ))}
       </div>
     </div>
