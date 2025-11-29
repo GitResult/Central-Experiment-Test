@@ -3612,11 +3612,42 @@ function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
 
 function EventTabs({ activeTab, onChange }) {
   const { theme } = useTheme();
+  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
   const tabs = [
     { id: "profile", label: "Profile" },
     { id: "activities", label: "Activities" },
-    { id: "more", label: "More ▾" },
   ];
+
+  const moreNavItems = [
+    { id: "registration-types", label: "Registration Types", Icon: ICONS.reports },
+    { id: "dietary", label: "Dietary Restrictions", Icon: ICONS.users },
+    { id: "sessions", label: "Sessions", Icon: ICONS.timeline },
+    { id: "tickets", label: "Tickets", Icon: ICONS.ticket },
+    { id: "membership", label: "Membership Type", Icon: ICONS.user },
+    { id: "age-group", label: "Age Group", Icon: ICONS.insights },
+    { id: "province", label: "Province", Icon: ICONS.mapPin },
+    { id: "tenure", label: "Tenure", Icon: ICONS.briefcase },
+    { id: "education", label: "Education", Icon: ICONS.graduation },
+  ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showMoreDropdown) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowMoreDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreDropdown]);
+
+  const handleMoreItemClick = (itemId) => {
+    onChange("more", itemId);
+    setShowMoreDropdown(false);
+  };
 
   return (
     <div
@@ -3645,6 +3676,84 @@ function EventTabs({ activeTab, onChange }) {
           {tab.label}
         </button>
       ))}
+
+      {/* More dropdown */}
+      <div style={{ position: "relative" }} ref={dropdownRef}>
+        <button
+          onClick={() => setShowMoreDropdown(!showMoreDropdown)}
+          style={{
+            border: "none",
+            borderBottom:
+              activeTab === "more" ? `2px solid ${theme.primary}` : "2px solid transparent",
+            background: "transparent",
+            padding: "0.5rem 0.75rem",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            color: activeTab === "more" ? theme.textPrimary : theme.textMuted,
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+          }}
+        >
+          More
+          <ICONS.chevronDown
+            size={14}
+            style={{
+              transform: showMoreDropdown ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s ease",
+            }}
+          />
+        </button>
+
+        {showMoreDropdown && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              marginTop: "0.25rem",
+              background: theme.background,
+              border: `1px solid ${theme.border}`,
+              borderRadius: "0.5rem",
+              boxShadow: theme.shadowLg,
+              minWidth: "200px",
+              zIndex: 50,
+              overflow: "hidden",
+            }}
+          >
+            {moreNavItems.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => handleMoreItemClick(item.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  width: "100%",
+                  padding: "0.625rem 0.875rem",
+                  border: "none",
+                  borderBottom: index < moreNavItems.length - 1 ? `1px solid ${theme.border}` : "none",
+                  background: "transparent",
+                  textAlign: "left",
+                  fontSize: "0.8rem",
+                  color: theme.textPrimary,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = theme.backgroundSecondary;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "transparent";
+                }}
+              >
+                <item.Icon size={16} style={{ color: theme.textMuted, flexShrink: 0 }} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
