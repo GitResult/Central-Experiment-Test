@@ -3041,14 +3041,15 @@ function EventDetailLayout({
           <div
             style={{
               position: "absolute",
-              top: "16px",
-              right: "16px",
-              background: "#3b82f6",
+              bottom: "50px",
+              right: "34px",
+              background: "rgba(255, 255, 255, 0.15)",
               color: "#ffffff",
               fontSize: "12px",
               fontWeight: 500,
               padding: "6px 14px",
               borderRadius: "4px",
+              backdropFilter: "blur(4px)",
             }}
           >
             Past Event
@@ -3062,7 +3063,7 @@ function EventDetailLayout({
             bottom: 0,
             left: 0,
             right: 0,
-            padding: "20px 24px",
+            padding: "20px 34px",
           }}
         >
           <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
@@ -3476,6 +3477,8 @@ function KeyMetricsPanel({ kpis }) {
             style={{
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
               gap: "0.125rem",
             }}
           >
@@ -3487,6 +3490,7 @@ function KeyMetricsPanel({ kpis }) {
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "0.25rem",
                 fontSize: "0.7rem",
                 color: item.isUp ? theme.success : theme.error,
@@ -4261,7 +4265,7 @@ function UpcomingViewsPanel() {
         }}
       >
         <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
-          Upcoming Events
+          Event Schedules
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <button
@@ -4356,7 +4360,65 @@ function UpcomingViewsPanel() {
         </div>
       </div>
 
-      {/* Upcoming Events List */}
+      {/* Event Location Map Card */}
+      <div
+        style={{
+          background: "#f8fafc",
+          borderRadius: "0.5rem",
+          border: "1px solid #e2e8f0",
+          padding: "0.75rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+          <ICONS.mapPin size={14} color="#3b82f6" />
+          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151" }}>Event Location</span>
+        </div>
+        <div
+          style={{
+            background: "#e2e8f0",
+            borderRadius: "0.375rem",
+            height: "80px",
+            position: "relative",
+            overflow: "hidden",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%23cbd5e1' width='200' height='100'/%3E%3Cpath d='M0 60 Q50 40 100 55 T200 50' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 60' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Ccircle cx='100' cy='40' r='8' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='40' r='4' fill='white'/%3E%3C/svg%3E")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              bottom: "0.5rem",
+              left: "0.5rem",
+              right: "0.5rem",
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "0.25rem",
+              padding: "0.375rem 0.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "#111827" }}>St. John's, NL</div>
+              <div style={{ fontSize: "0.6rem", color: "#6b7280" }}>Convention Centre</div>
+            </div>
+            <div
+              style={{
+                fontSize: "0.55rem",
+                color: "#3b82f6",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              View Map →
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Event Sessions List */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         {upcomingEvents.map((event, index) => (
           <div
