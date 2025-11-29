@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import {
   ComposedChart,
   Bar,
@@ -13,6 +13,904 @@ import {
   Pie,
   Cell,
 } from "recharts";
+
+// ==================== DESIGN SYSTEM TOKENS ====================
+
+// Spacing Scale (P2.4)
+const SPACING = {
+  xs: "0.25rem",   // 4px
+  sm: "0.5rem",    // 8px
+  md: "0.75rem",   // 12px
+  lg: "1rem",      // 16px
+  xl: "1.5rem",    // 24px
+  xxl: "2rem",     // 32px
+  xxxl: "3rem",    // 48px
+};
+
+// Motion Tokens (P2.2)
+const MOTION = {
+  duration: {
+    instant: "0ms",
+    fast: "150ms",
+    normal: "250ms",
+    slow: "400ms",
+  },
+  easing: {
+    linear: "linear",
+    easeOut: "cubic-bezier(0.0, 0.0, 0.2, 1)",
+    easeIn: "cubic-bezier(0.4, 0.0, 1, 1)",
+    easeInOut: "cubic-bezier(0.4, 0.0, 0.2, 1)",
+    spring: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  },
+};
+
+// Theme Colors (P2.1)
+const LIGHT_THEME = {
+  background: "#ffffff",
+  backgroundSecondary: "#f9fafb",
+  backgroundTertiary: "#f3f4f6",
+  backgroundPage: "#f5f5f7",
+  textPrimary: "#111827",
+  textSecondary: "#4b5563",
+  textMuted: "#6b7280",
+  textLight: "#9ca3af",
+  border: "#e5e7eb",
+  borderLight: "#f3f4f6",
+  primary: "#2563eb",
+  primaryHover: "#1d4ed8",
+  primaryLight: "#eff6ff",
+  success: "#22c55e",
+  successLight: "#dcfce7",
+  warning: "#f59e0b",
+  warningLight: "#fef3c7",
+  error: "#ef4444",
+  errorLight: "#fee2e2",
+  shadow: "0 1px 3px rgba(0,0,0,0.08)",
+  shadowMd: "0 4px 6px -1px rgba(0,0,0,0.1)",
+  shadowLg: "0 10px 15px -3px rgba(0,0,0,0.1)",
+};
+
+const DARK_THEME = {
+  background: "#1f2937",
+  backgroundSecondary: "#111827",
+  backgroundTertiary: "#374151",
+  backgroundPage: "#0f172a",
+  textPrimary: "#f9fafb",
+  textSecondary: "#d1d5db",
+  textMuted: "#9ca3af",
+  textLight: "#6b7280",
+  border: "#374151",
+  borderLight: "#4b5563",
+  primary: "#3b82f6",
+  primaryHover: "#60a5fa",
+  primaryLight: "#1e3a5f",
+  success: "#34d399",
+  successLight: "#064e3b",
+  warning: "#fbbf24",
+  warningLight: "#78350f",
+  error: "#f87171",
+  errorLight: "#7f1d1d",
+  shadow: "0 1px 3px rgba(0,0,0,0.3)",
+  shadowMd: "0 4px 6px -1px rgba(0,0,0,0.4)",
+  shadowLg: "0 10px 15px -3px rgba(0,0,0,0.5)",
+};
+
+// Theme Context (P2.1)
+const ThemeContext = createContext({ theme: LIGHT_THEME, isDark: false, toggleTheme: () => {} });
+
+function ThemeProvider({ children }) {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  const toggleTheme = useCallback(() => {
+    setIsDark(prev => {
+      const newValue = !prev;
+      localStorage.setItem('theme', newValue ? 'dark' : 'light');
+      return newValue;
+    });
+  }, []);
+
+  const theme = isDark ? DARK_THEME : LIGHT_THEME;
+
+  return (
+    <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+function useTheme() {
+  return useContext(ThemeContext);
+}
+
+// Motion Helper (P2.2)
+function getTransition(properties, speed = "normal") {
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return "none";
+  }
+  const props = Array.isArray(properties) ? properties : [properties];
+  return props.map(p => `${p} ${MOTION.duration[speed]} ${MOTION.easing.easeOut}`).join(", ");
+}
+
+// ==================== SVG ICON SYSTEM (P1.1) ====================
+
+const ICONS = {
+  insights: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
+    </svg>
+  ),
+  explorer: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+    </svg>
+  ),
+  reports: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
+  timeline: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  ai: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
+    </svg>
+  ),
+  users: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  briefcase: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
+  graduation: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
+    </svg>
+  ),
+  mapPin: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  filter: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  ),
+  sort: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="4" y1="6" x2="11" y2="6" /><line x1="4" y1="12" x2="11" y2="12" /><line x1="4" y1="18" x2="13" y2="18" /><polyline points="15 9 18 6 21 9" /><polyline points="21 15 18 18 15 15" />
+    </svg>
+  ),
+  save: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+    </svg>
+  ),
+  pin: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+    </svg>
+  ),
+  close: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  chevronDown: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  ),
+  chevronRight: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  ),
+  check: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  sun: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  ),
+  moon: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
+  user: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  creditCard: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  ),
+  edit: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  ),
+  x: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  download: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  ticket: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /><path d="M13 5v2" /><path d="M13 17v2" /><path d="M13 11v2" />
+    </svg>
+  ),
+  command: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z" />
+    </svg>
+  ),
+};
+
+// ==================== SKELETON LOADERS (P1.2) ====================
+
+function SkeletonLoader({ width = "100%", height = "1rem", borderRadius = "0.25rem", style = {} }) {
+  const { theme } = useTheme();
+  return (
+    <div
+      style={{
+        width,
+        height,
+        borderRadius,
+        background: `linear-gradient(90deg, ${theme.backgroundTertiary} 25%, ${theme.border} 50%, ${theme.backgroundTertiary} 75%)`,
+        backgroundSize: "200% 100%",
+        animation: "shimmer 1.5s ease-in-out infinite",
+        ...style,
+      }}
+    />
+  );
+}
+
+function TableSkeleton({ rows = 5, columns = 7 }) {
+  const { theme } = useTheme();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: SPACING.sm }}>
+      {/* Header */}
+      <div style={{ display: "flex", gap: SPACING.md, padding: SPACING.md, background: theme.backgroundTertiary, borderRadius: SPACING.sm }}>
+        {Array.from({ length: columns }).map((_, i) => (
+          <SkeletonLoader key={i} width={i === 0 ? "60px" : "120px"} height="0.875rem" />
+        ))}
+      </div>
+      {/* Rows */}
+      {Array.from({ length: rows }).map((_, rowIdx) => (
+        <div key={rowIdx} style={{ display: "flex", gap: SPACING.md, padding: SPACING.md }}>
+          {Array.from({ length: columns }).map((_, colIdx) => (
+            <SkeletonLoader key={colIdx} width={colIdx === 0 ? "60px" : "120px"} height="0.875rem" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CardSkeleton() {
+  const { theme } = useTheme();
+  return (
+    <div style={{
+      padding: SPACING.xl,
+      background: theme.background,
+      borderRadius: SPACING.md,
+      boxShadow: theme.shadow,
+    }}>
+      <SkeletonLoader width="60%" height="1rem" style={{ marginBottom: SPACING.md }} />
+      <SkeletonLoader width="40%" height="0.75rem" style={{ marginBottom: SPACING.lg }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: SPACING.sm }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: SPACING.sm }}>
+            <SkeletonLoader width="100%" height="1.5rem" borderRadius="999px" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChartSkeleton({ height = "200px" }) {
+  const { theme } = useTheme();
+  return (
+    <div style={{
+      height,
+      background: theme.backgroundSecondary,
+      borderRadius: SPACING.md,
+      display: "flex",
+      alignItems: "flex-end",
+      justifyContent: "space-around",
+      padding: SPACING.lg,
+      gap: SPACING.sm,
+    }}>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <SkeletonLoader
+          key={i}
+          width="40px"
+          height={`${30 + Math.random() * 50}%`}
+          borderRadius={SPACING.xs}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ==================== URL STATE PERSISTENCE (P1.3) ====================
+
+function useURLState(key, defaultValue) {
+  const [value, setValue] = useState(() => {
+    if (typeof window === 'undefined') return defaultValue;
+    const params = new URLSearchParams(window.location.search);
+    const urlValue = params.get(key);
+    if (urlValue === null) return defaultValue;
+    try {
+      return JSON.parse(urlValue);
+    } catch {
+      return urlValue;
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const serialized = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const defaultSerialized = typeof defaultValue === 'object' ? JSON.stringify(defaultValue) : String(defaultValue);
+
+    if (serialized === defaultSerialized) {
+      params.delete(key);
+    } else {
+      params.set(key, serialized);
+    }
+    const newURL = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    window.history.replaceState({}, '', newURL);
+  }, [key, value, defaultValue]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlValue = params.get(key);
+      if (urlValue === null) {
+        setValue(defaultValue);
+      } else {
+        try {
+          setValue(JSON.parse(urlValue));
+        } catch {
+          setValue(urlValue);
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [key, defaultValue]);
+
+  return [value, setValue];
+}
+
+// ==================== SAVE VIEW MODAL (P2.3) ====================
+
+function SaveViewModal({ isOpen, onClose, onSave, currentFilters }) {
+  const { theme } = useTheme();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName("");
+      setDescription("");
+      setError("");
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, name]);
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      setError("View name is required");
+      return;
+    }
+    onSave({ name: name.trim(), description: description.trim(), filters: currentFilters });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        animation: "fadeIn 0.15s ease-out",
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        style={{
+          background: theme.background,
+          borderRadius: SPACING.md,
+          boxShadow: theme.shadowLg,
+          width: "400px",
+          maxWidth: "90vw",
+          animation: "scaleIn 0.2s ease-out",
+        }}
+      >
+        <div style={{
+          padding: SPACING.xl,
+          borderBottom: `1px solid ${theme.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: theme.textPrimary }}>
+            Save Current View
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              padding: SPACING.xs,
+              borderRadius: SPACING.xs,
+              color: theme.textMuted,
+              transition: getTransition("color", "fast"),
+            }}
+          >
+            <ICONS.close size={18} />
+          </button>
+        </div>
+
+        <div style={{ padding: SPACING.xl, display: "flex", flexDirection: "column", gap: SPACING.lg }}>
+          <div>
+            <label style={{
+              display: "block",
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              color: theme.textSecondary,
+              marginBottom: SPACING.xs,
+            }}>
+              View Name <span style={{ color: theme.error }}>*</span>
+            </label>
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(e) => { setName(e.target.value); setError(""); }}
+              placeholder="e.g., Active Members Only"
+              maxLength={50}
+              style={{
+                width: "100%",
+                padding: `${SPACING.sm} ${SPACING.md}`,
+                border: `1px solid ${error ? theme.error : theme.border}`,
+                borderRadius: SPACING.sm,
+                fontSize: "0.875rem",
+                background: theme.background,
+                color: theme.textPrimary,
+                outline: "none",
+                transition: getTransition("border-color", "fast"),
+              }}
+            />
+            {error && (
+              <p style={{ margin: `${SPACING.xs} 0 0`, fontSize: "0.75rem", color: theme.error }}>
+                {error}
+              </p>
+            )}
+            <p style={{ margin: `${SPACING.xs} 0 0`, fontSize: "0.7rem", color: theme.textLight, textAlign: "right" }}>
+              {name.length}/50
+            </p>
+          </div>
+
+          <div>
+            <label style={{
+              display: "block",
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              color: theme.textSecondary,
+              marginBottom: SPACING.xs,
+            }}>
+              Description (optional)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add a description for this view..."
+              maxLength={200}
+              rows={2}
+              style={{
+                width: "100%",
+                padding: `${SPACING.sm} ${SPACING.md}`,
+                border: `1px solid ${theme.border}`,
+                borderRadius: SPACING.sm,
+                fontSize: "0.875rem",
+                background: theme.background,
+                color: theme.textPrimary,
+                outline: "none",
+                resize: "none",
+                fontFamily: "inherit",
+                transition: getTransition("border-color", "fast"),
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{
+          padding: SPACING.xl,
+          borderTop: `1px solid ${theme.border}`,
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: SPACING.sm,
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: `${SPACING.sm} ${SPACING.lg}`,
+              border: `1px solid ${theme.border}`,
+              borderRadius: SPACING.sm,
+              background: theme.background,
+              color: theme.textSecondary,
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: getTransition(["background", "border-color"], "fast"),
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            style={{
+              padding: `${SPACING.sm} ${SPACING.lg}`,
+              border: "none",
+              borderRadius: SPACING.sm,
+              background: theme.primary,
+              color: "white",
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING.xs,
+              transition: getTransition("background", "fast"),
+            }}
+          >
+            <ICONS.save size={14} />
+            Save View
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== COMMAND PALETTE (P1.4) ====================
+
+function CommandPalette({ isOpen, onClose, onNavigate, attendees = [], tabs = [] }) {
+  const { theme } = useTheme();
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRef = useRef(null);
+
+  const defaultTabs = [
+    { id: "profile", label: "Profile", type: "tab" },
+    { id: "activities", label: "Activities", type: "tab" },
+    { id: "more", label: "More", type: "tab" },
+  ];
+
+  const actions = [
+    { id: "action-export", label: "Export Attendees", type: "action", icon: "download" },
+    { id: "action-filter", label: "Filter Attendees", type: "action", icon: "filter" },
+    { id: "action-insights", label: "Open Insights", type: "action", icon: "insights" },
+  ];
+
+  const results = useMemo(() => {
+    if (!query.trim()) {
+      return [
+        ...defaultTabs.map(t => ({ ...t, category: "Tabs" })),
+        ...actions.map(a => ({ ...a, category: "Actions" })),
+      ];
+    }
+
+    const q = query.toLowerCase();
+    const matches = [];
+
+    // Match tabs
+    defaultTabs.forEach(tab => {
+      if (tab.label.toLowerCase().includes(q)) {
+        matches.push({ ...tab, category: "Tabs" });
+      }
+    });
+
+    // Match attendees
+    attendees.slice(0, 50).forEach(a => {
+      if (a.name.toLowerCase().includes(q) ||
+          (a.email && a.email.toLowerCase().includes(q)) ||
+          (a.company && a.company.toLowerCase().includes(q))) {
+        matches.push({
+          id: `attendee-${a.id}`,
+          label: a.name,
+          sublabel: a.company || a.memberType,
+          type: "attendee",
+          data: a,
+          category: "Attendees"
+        });
+      }
+    });
+
+    // Match actions
+    actions.forEach(action => {
+      if (action.label.toLowerCase().includes(q)) {
+        matches.push({ ...action, category: "Actions" });
+      }
+    });
+
+    return matches.slice(0, 10);
+  }, [query, attendees]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuery("");
+      setSelectedIndex(0);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && results[selectedIndex]) {
+        e.preventDefault();
+        handleSelect(results[selectedIndex]);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, results, selectedIndex]);
+
+  const handleSelect = (item) => {
+    onNavigate(item);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  // Group results by category
+  const grouped = results.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = [];
+    acc[item.category].push(item);
+    return acc;
+  }, {});
+
+  let flatIndex = 0;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        paddingTop: "15vh",
+        zIndex: 1000,
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        style={{
+          background: theme.background,
+          borderRadius: SPACING.md,
+          boxShadow: theme.shadowLg,
+          width: "560px",
+          maxWidth: "90vw",
+          maxHeight: "60vh",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Search Input */}
+        <div style={{
+          padding: SPACING.lg,
+          borderBottom: `1px solid ${theme.border}`,
+          display: "flex",
+          alignItems: "center",
+          gap: SPACING.md,
+        }}>
+          <ICONS.explorer size={20} color={theme.textMuted} />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+            placeholder="Search tabs, attendees, actions..."
+            style={{
+              flex: 1,
+              border: "none",
+              outline: "none",
+              fontSize: "1rem",
+              background: "transparent",
+              color: theme.textPrimary,
+            }}
+          />
+          <kbd style={{
+            padding: `${SPACING.xs} ${SPACING.sm}`,
+            background: theme.backgroundTertiary,
+            borderRadius: SPACING.xs,
+            fontSize: "0.7rem",
+            color: theme.textMuted,
+          }}>
+            ESC
+          </kbd>
+        </div>
+
+        {/* Results */}
+        <div style={{ overflow: "auto", flex: 1 }}>
+          {Object.entries(grouped).map(([category, items]) => (
+            <div key={category}>
+              <div style={{
+                padding: `${SPACING.sm} ${SPACING.lg}`,
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                color: theme.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}>
+                {category}
+              </div>
+              {items.map((item) => {
+                const currentFlatIndex = flatIndex++;
+                const isSelected = currentFlatIndex === selectedIndex;
+                const IconComponent = ICONS[item.icon] || ICONS.chevronRight;
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelect(item)}
+                    style={{
+                      width: "100%",
+                      padding: `${SPACING.md} ${SPACING.lg}`,
+                      border: "none",
+                      background: isSelected ? theme.primaryLight : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: SPACING.md,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: getTransition("background", "fast"),
+                    }}
+                  >
+                    <IconComponent size={18} color={isSelected ? theme.primary : theme.textMuted} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "0.875rem", color: theme.textPrimary, fontWeight: 500 }}>
+                        {item.label}
+                      </div>
+                      {item.sublabel && (
+                        <div style={{ fontSize: "0.75rem", color: theme.textMuted }}>
+                          {item.sublabel}
+                        </div>
+                      )}
+                    </div>
+                    {item.type === "tab" && (
+                      <span style={{ fontSize: "0.7rem", color: theme.textLight }}>Go to tab</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+
+          {results.length === 0 && (
+            <div style={{
+              padding: SPACING.xxl,
+              textAlign: "center",
+              color: theme.textMuted,
+              fontSize: "0.875rem",
+            }}>
+              No results found for "{query}"
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: `${SPACING.sm} ${SPACING.lg}`,
+          borderTop: `1px solid ${theme.border}`,
+          display: "flex",
+          gap: SPACING.lg,
+          fontSize: "0.7rem",
+          color: theme.textMuted,
+        }}>
+          <span><kbd style={{ background: theme.backgroundTertiary, padding: "2px 4px", borderRadius: "2px" }}>↑↓</kbd> Navigate</span>
+          <span><kbd style={{ background: theme.backgroundTertiary, padding: "2px 4px", borderRadius: "2px" }}>Enter</kbd> Select</span>
+          <span><kbd style={{ background: theme.backgroundTertiary, padding: "2px 4px", borderRadius: "2px" }}>Esc</kbd> Close</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Inject CSS animations
+if (typeof document !== 'undefined') {
+  const styleId = 'events-animations';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
 
 // -------------------- Mock Data --------------------
 
@@ -777,57 +1675,178 @@ function computeCorrelation(attendees, dimension, metric) {
 
 // -------------------- Top-Level Demo Component --------------------
 
-function CentralEventReportingDemo() {
+function CentralEventReportingDemoInner() {
+  const { theme, isDark, toggleTheme } = useTheme();
   const [view, setView] = useState("calendar"); // "calendar" | "event"
   const [showPeek, setShowPeek] = useState(false);
   const [showInsightsPanel, setShowInsightsPanel] = useState(false);
   const [showInsightsSlideout, setShowInsightsSlideout] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const enrichedAttendees = useMemo(() => enrichAttendeesWithListData(MOCK_ATTENDEES), []);
   const kpis = useMemo(() => computeKpis(MOCK_ATTENDEES), []);
+
+  // P1.2: Simulate loading state
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // P1.4: Command palette keyboard shortcut (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleCommandNavigate = (item) => {
+    if (item.type === 'tab') {
+      // Navigate to tab - would need to pass down to EventDetailLayout
+      setView("event");
+    } else if (item.type === 'action') {
+      if (item.id === 'action-insights') {
+        setShowInsightsSlideout(true);
+      }
+    }
+  };
 
   return (
     <div
       style={{
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-        padding: "1rem",
-        background: "#f5f5f7",
+        padding: SPACING.lg,
+        background: theme.backgroundPage,
         minHeight: "100vh",
-        color: "#111827",
+        color: theme.textPrimary,
+        transition: getTransition(["background", "color"], "normal"),
       }}
     >
-      <WorkspaceNavigator onOpenCalendar={() => setView("calendar")} />
-      {view === "calendar" && (
-        <CalendarView
-          event={MOCK_EVENT}
-          onEventClick={() => setShowPeek(true)}
-        />
-      )}
-
-      {showPeek && (
-        <EventPeek
-          event={MOCK_EVENT}
-          kpis={kpis}
-          onClose={() => setShowPeek(false)}
-          onViewEvent={() => {
-            setShowPeek(false);
-            setView("event");
+      {/* Theme Toggle & Search Hint */}
+      <div style={{
+        position: "fixed",
+        top: SPACING.lg,
+        right: SPACING.lg,
+        display: "flex",
+        alignItems: "center",
+        gap: SPACING.sm,
+        zIndex: 50,
+      }}>
+        <button
+          onClick={() => setShowCommandPalette(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: SPACING.sm,
+            padding: `${SPACING.xs} ${SPACING.md}`,
+            background: theme.backgroundSecondary,
+            border: `1px solid ${theme.border}`,
+            borderRadius: SPACING.sm,
+            color: theme.textMuted,
+            fontSize: "0.75rem",
+            cursor: "pointer",
+            transition: getTransition(["background", "border-color"], "fast"),
           }}
-        />
+        >
+          <ICONS.explorer size={14} />
+          Search
+          <kbd style={{
+            padding: `2px ${SPACING.xs}`,
+            background: theme.backgroundTertiary,
+            borderRadius: "3px",
+            fontSize: "0.65rem",
+          }}>⌘K</kbd>
+        </button>
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            border: `1px solid ${theme.border}`,
+            background: theme.backgroundSecondary,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: theme.textMuted,
+            transition: getTransition(["background", "color", "transform"], "fast"),
+          }}
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDark ? <ICONS.sun size={18} /> : <ICONS.moon size={18} />}
+        </button>
+      </div>
+
+      <WorkspaceNavigator onOpenCalendar={() => setView("calendar")} />
+
+      {isLoading ? (
+        <div style={{ marginTop: SPACING.xl }}>
+          <ChartSkeleton height="300px" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: SPACING.lg, marginTop: SPACING.lg }}>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
+      ) : (
+        <>
+          {view === "calendar" && (
+            <CalendarView
+              event={MOCK_EVENT}
+              onEventClick={() => setShowPeek(true)}
+            />
+          )}
+
+          {showPeek && (
+            <EventPeek
+              event={MOCK_EVENT}
+              kpis={kpis}
+              onClose={() => setShowPeek(false)}
+              onViewEvent={() => {
+                setShowPeek(false);
+                setView("event");
+              }}
+            />
+          )}
+
+          {view === "event" && (
+            <EventDetailLayout
+              event={MOCK_EVENT}
+              attendees={enrichedAttendees}
+              kpis={kpis}
+              onBackToCalendar={() => setView("calendar")}
+              showInsightsPanel={showInsightsPanel}
+              setShowInsightsPanel={setShowInsightsPanel}
+              showInsightsSlideout={showInsightsSlideout}
+              setShowInsightsSlideout={setShowInsightsSlideout}
+            />
+          )}
+        </>
       )}
 
-      {view === "event" && (
-        <EventDetailLayout
-          event={MOCK_EVENT}
-          attendees={enrichAttendeesWithListData(MOCK_ATTENDEES)}
-          kpis={kpis}
-          onBackToCalendar={() => setView("calendar")}
-          showInsightsPanel={showInsightsPanel}
-          setShowInsightsPanel={setShowInsightsPanel}
-          showInsightsSlideout={showInsightsSlideout}
-          setShowInsightsSlideout={setShowInsightsSlideout}
-        />
-      )}
+      {/* P1.4: Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNavigate={handleCommandNavigate}
+        attendees={enrichedAttendees}
+      />
     </div>
+  );
+}
+
+// Wrap with ThemeProvider
+function CentralEventReportingDemo() {
+  return (
+    <ThemeProvider>
+      <CentralEventReportingDemoInner />
+    </ThemeProvider>
   );
 }
 
@@ -1209,14 +2228,15 @@ function EventDetailLayout({
 }
 
 function StudioDock({ onOpenInsights, onOpenExplorer }) {
+  const { theme } = useTheme();
   const [hoveredIcon, setHoveredIcon] = useState(null);
 
   const icons = [
-    { id: "insights", icon: "📊", label: "Insights", onClick: onOpenInsights, priority: 1 },
-    { id: "explorer", icon: "🔍", label: "Explorer", onClick: onOpenExplorer, priority: 2 },
-    { id: "reports", icon: "📄", label: "Reports", onClick: () => {}, priority: 3 },
-    { id: "timeline", icon: "📅", label: "Timeline", onClick: () => {}, priority: 2 },
-    { id: "ai", icon: "🤖", label: "AI Assistant", onClick: () => {}, priority: 1 },
+    { id: "insights", Icon: ICONS.insights, label: "Insights", onClick: onOpenInsights, priority: 1 },
+    { id: "explorer", Icon: ICONS.explorer, label: "Explorer", onClick: onOpenExplorer, priority: 2 },
+    { id: "reports", Icon: ICONS.reports, label: "Reports", onClick: () => {}, priority: 3 },
+    { id: "timeline", Icon: ICONS.timeline, label: "Timeline", onClick: () => {}, priority: 2 },
+    { id: "ai", Icon: ICONS.ai, label: "AI Assistant", onClick: () => {}, priority: 1 },
   ];
 
   return (
@@ -1224,60 +2244,65 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "0.25rem",
-        background: "#f3f4f6",
-        borderRadius: "0.5rem",
-        padding: "0.25rem",
+        gap: SPACING.xs,
+        background: theme.backgroundTertiary,
+        borderRadius: SPACING.sm,
+        padding: SPACING.xs,
       }}
     >
-      {icons.map((item) => (
-        <div
-          key={item.id}
-          style={{ position: "relative" }}
-          onMouseEnter={() => setHoveredIcon(item.id)}
-          onMouseLeave={() => setHoveredIcon(null)}
-        >
-          <button
-            onClick={item.onClick}
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "0.375rem",
-              border: "none",
-              background: hoveredIcon === item.id ? "#2563eb" : "transparent",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1rem",
-              transition: "all 0.15s",
-            }}
+      {icons.map((item) => {
+        const isHovered = hoveredIcon === item.id;
+        return (
+          <div
+            key={item.id}
+            style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredIcon(item.id)}
+            onMouseLeave={() => setHoveredIcon(null)}
           >
-            {item.icon}
-          </button>
-          {/* Tooltip */}
-          {hoveredIcon === item.id && (
-            <div
+            <button
+              onClick={item.onClick}
               style={{
-                position: "absolute",
-                top: "100%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                marginTop: "0.35rem",
-                background: "#1f2937",
-                color: "white",
-                padding: "0.25rem 0.5rem",
-                borderRadius: "0.25rem",
-                fontSize: "0.7rem",
-                whiteSpace: "nowrap",
-                zIndex: 100,
+                width: "36px",
+                height: "36px",
+                borderRadius: SPACING.sm,
+                border: "none",
+                background: isHovered ? theme.primary : "transparent",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: getTransition(["background", "transform"], "fast"),
+                transform: isHovered ? "scale(1.05)" : "scale(1)",
               }}
             >
-              {item.label}
-            </div>
-          )}
-        </div>
-      ))}
+              <item.Icon size={18} color={isHovered ? "white" : theme.textMuted} />
+            </button>
+            {/* Tooltip */}
+            {isHovered && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  marginTop: SPACING.sm,
+                  background: theme.textPrimary,
+                  color: theme.background,
+                  padding: `${SPACING.xs} ${SPACING.sm}`,
+                  borderRadius: SPACING.xs,
+                  fontSize: "0.7rem",
+                  whiteSpace: "nowrap",
+                  zIndex: 100,
+                  boxShadow: theme.shadowMd,
+                  animation: "fadeIn 0.1s ease-out",
+                }}
+              >
+                {item.label}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -2336,17 +3361,18 @@ function UpcomingViewsPanel() {
 // -------------------- Activities Tab (Timeline) --------------------
 
 function EventActivitiesTab() {
+  const { theme } = useTheme();
   const [filter, setFilter] = useState("all");
 
   const activities = [
-    { id: 1, type: "registration", title: "New Registration", desc: "Alice Member registered for Full Conference", time: "2 hours ago", icon: "👤", color: "#22c55e" },
-    { id: 2, type: "payment", title: "Payment Received", desc: "$800.00 received from Bob NonMember", time: "4 hours ago", icon: "💳", color: "#3b82f6" },
-    { id: 3, type: "update", title: "Registration Updated", desc: "Carol Lapsed changed session to Leadership Track", time: "Yesterday", icon: "✏️", color: "#f59e0b" },
-    { id: 4, type: "registration", title: "New Registration", desc: "David Complimentary added as Speaker", time: "Yesterday", icon: "👤", color: "#22c55e" },
-    { id: 5, type: "cancellation", title: "Registration Cancelled", desc: "Refund processed for James Wilson", time: "2 days ago", icon: "❌", color: "#ef4444" },
-    { id: 6, type: "registration", title: "Batch Import", desc: "15 registrations imported from CRM", time: "3 days ago", icon: "📥", color: "#8b5cf6" },
-    { id: 7, type: "update", title: "Event Updated", desc: "Venue details updated by admin", time: "1 week ago", icon: "📝", color: "#6b7280" },
-    { id: 8, type: "registration", title: "Early Bird Ended", desc: "Early bird registration period closed", time: "2 weeks ago", icon: "🎫", color: "#f59e0b" },
+    { id: 1, type: "registration", title: "New Registration", desc: "Alice Member registered for Full Conference", time: "2 hours ago", Icon: ICONS.user, color: theme.success },
+    { id: 2, type: "payment", title: "Payment Received", desc: "$800.00 received from Bob NonMember", time: "4 hours ago", Icon: ICONS.creditCard, color: theme.primary },
+    { id: 3, type: "update", title: "Registration Updated", desc: "Carol Lapsed changed session to Leadership Track", time: "Yesterday", Icon: ICONS.edit, color: theme.warning },
+    { id: 4, type: "registration", title: "New Registration", desc: "David Complimentary added as Speaker", time: "Yesterday", Icon: ICONS.user, color: theme.success },
+    { id: 5, type: "cancellation", title: "Registration Cancelled", desc: "Refund processed for James Wilson", time: "2 days ago", Icon: ICONS.x, color: theme.error },
+    { id: 6, type: "registration", title: "Batch Import", desc: "15 registrations imported from CRM", time: "3 days ago", Icon: ICONS.download, color: "#8b5cf6" },
+    { id: 7, type: "update", title: "Event Updated", desc: "Venue details updated by admin", time: "1 week ago", Icon: ICONS.edit, color: theme.textMuted },
+    { id: 8, type: "registration", title: "Early Bird Ended", desc: "Early bird registration period closed", time: "2 weeks ago", Icon: ICONS.ticket, color: theme.warning },
   ];
 
   const filters = [
@@ -2361,28 +3387,28 @@ function EventActivitiesTab() {
     : activities.filter((a) => a.type === filter);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "1.5rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: SPACING.xl }}>
       {/* Left Filter Panel */}
       <div>
-        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.75rem" }}>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: theme.textSecondary, marginBottom: SPACING.md }}>
           Filter Activities
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xs }}>
           {filters.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
               style={{
-                padding: "0.5rem 0.75rem",
-                borderRadius: "0.375rem",
+                padding: `${SPACING.sm} ${SPACING.md}`,
+                borderRadius: SPACING.sm,
                 border: "none",
-                background: filter === f.id ? "#eff6ff" : "transparent",
-                color: filter === f.id ? "#2563eb" : "#6b7280",
+                background: filter === f.id ? theme.primaryLight : "transparent",
+                color: filter === f.id ? theme.primary : theme.textMuted,
                 fontSize: "0.8rem",
                 fontWeight: filter === f.id ? 600 : 400,
                 textAlign: "left",
                 cursor: "pointer",
-                transition: "all 0.15s",
+                transition: getTransition(["background", "color"], "fast"),
               }}
             >
               {f.label}
@@ -2393,19 +3419,19 @@ function EventActivitiesTab() {
 
       {/* Timeline */}
       <div>
-        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.75rem" }}>
+        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: theme.textSecondary, marginBottom: SPACING.md }}>
           Recent Activity ({filteredActivities.length})
         </div>
-        <div style={{ position: "relative", paddingLeft: "1.5rem" }}>
+        <div style={{ position: "relative", paddingLeft: SPACING.xl }}>
           {/* Timeline Line */}
           <div
             style={{
               position: "absolute",
               left: "0.4rem",
-              top: "0.5rem",
-              bottom: "0.5rem",
+              top: SPACING.sm,
+              bottom: SPACING.sm,
               width: "2px",
-              background: "#e5e7eb",
+              background: theme.border,
             }}
           />
 
@@ -2415,7 +3441,10 @@ function EventActivitiesTab() {
               key={activity.id}
               style={{
                 position: "relative",
-                paddingBottom: idx === filteredActivities.length - 1 ? 0 : "1.25rem",
+                paddingBottom: idx === filteredActivities.length - 1 ? 0 : SPACING.lg,
+                animation: "slideInRight 0.3s ease-out",
+                animationDelay: `${idx * 50}ms`,
+                animationFillMode: "both",
               }}
             >
               {/* Timeline Dot */}
@@ -2423,37 +3452,38 @@ function EventActivitiesTab() {
                 style={{
                   position: "absolute",
                   left: "-1.5rem",
-                  top: "0.25rem",
-                  width: "20px",
-                  height: "20px",
+                  top: SPACING.xs,
+                  width: "24px",
+                  height: "24px",
                   borderRadius: "50%",
-                  background: "white",
+                  background: theme.background,
                   border: `2px solid ${activity.color}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "0.65rem",
+                  boxShadow: theme.shadow,
                 }}
               >
-                {activity.icon}
+                <activity.Icon size={12} color={activity.color} />
               </div>
 
               {/* Content */}
               <div
                 style={{
-                  background: "#f9fafb",
-                  borderRadius: "0.5rem",
-                  padding: "0.75rem 1rem",
-                  border: "1px solid #e5e7eb",
+                  background: theme.backgroundSecondary,
+                  borderRadius: SPACING.sm,
+                  padding: `${SPACING.md} ${SPACING.lg}`,
+                  boxShadow: theme.shadow,
+                  transition: getTransition("transform", "fast"),
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: theme.textPrimary }}>
                     {activity.title}
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: "#9ca3af" }}>{activity.time}</div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textLight }}>{activity.time}</div>
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                <div style={{ fontSize: "0.75rem", color: theme.textMuted, marginTop: SPACING.xs }}>
                   {activity.desc}
                 </div>
               </div>
@@ -2576,6 +3606,7 @@ function EventMoreTab({ attendees, onOpenInsightsSlideout }) {
 }
 
 function MorePeopleListing({ attendees }) {
+  const { theme } = useTheme();
   const [filters, setFilters] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedView, setSelectedView] = useState("Default");
@@ -2583,17 +3614,18 @@ function MorePeopleListing({ attendees }) {
   const [selectedCard, setSelectedCard] = useState(null); // active card for vertical nav
   const [peekData, setPeekData] = useState(null); // { field, segment, attendees }
   const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
+  const [showSaveModal, setShowSaveModal] = useState(false); // P2.3: Save View Modal
 
   const cards = [
-    { title: "Registration Types", field: "registrationType", icon: "📋" },
-    { title: "Dietary Restrictions", field: "dietary", icon: "🍽" },
-    { title: "Sessions", field: "session", icon: "📅" },
-    { title: "Tickets", field: "ticketType", icon: "🎫" },
-    { title: "Membership Type", field: "memberType", icon: "👤" },
-    { title: "Age Group", field: "ageGroup", icon: "📊" },
-    { title: "Province", field: "province", icon: "📍" },
-    { title: "Tenure", field: "tenure", icon: "⏱" },
-    { title: "Education", field: "education", icon: "🎓" },
+    { title: "Registration Types", field: "registrationType", Icon: ICONS.reports },
+    { title: "Dietary Restrictions", field: "dietary", Icon: ICONS.users },
+    { title: "Sessions", field: "session", Icon: ICONS.timeline },
+    { title: "Tickets", field: "ticketType", Icon: ICONS.ticket },
+    { title: "Membership Type", field: "memberType", Icon: ICONS.user },
+    { title: "Age Group", field: "ageGroup", Icon: ICONS.insights },
+    { title: "Province", field: "province", Icon: ICONS.mapPin },
+    { title: "Tenure", field: "tenure", Icon: ICONS.briefcase },
+    { title: "Education", field: "education", Icon: ICONS.graduation },
   ];
 
   const colorPalettes = {
@@ -2626,11 +3658,9 @@ function MorePeopleListing({ attendees }) {
     });
   }
 
-  function handleSaveView() {
-    const name = window.prompt("Name for this view?", selectedView);
-    if (name) {
-      setSelectedView(name);
-    }
+  function handleSaveView(viewData) {
+    setSelectedView(viewData.name);
+    setShowSaveModal(false);
   }
 
   function handleCardSelect(cardField) {
@@ -2671,7 +3701,7 @@ function MorePeopleListing({ attendees }) {
       {/* Left Column - Vertical Card Navigation */}
       {viewMode === "list" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <ListingFilterHeader selectedView={selectedView} onSaveView={handleSaveView} />
+          <ListingFilterHeader selectedView={selectedView} onSaveView={() => setShowSaveModal(true)} />
           <ListingSearchInput value={searchTerm} onChange={setSearchTerm} />
           <div
             style={{
@@ -2691,7 +3721,7 @@ function MorePeopleListing({ attendees }) {
                 <VerticalNavCard
                   key={card.title}
                   title={card.title}
-                  icon={card.icon}
+                  Icon={card.Icon}
                   field={card.field}
                   segments={segments}
                   selectedValues={selectedValues}
@@ -2797,34 +3827,49 @@ function MorePeopleListing({ attendees }) {
           onAttendeeClick={handleAttendeeClick}
         />
       )}
+
+      {/* P2.3: Save View Modal */}
+      <SaveViewModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveView}
+        currentFilters={filters}
+      />
     </div>
   );
 }
 
 function ListingFilterHeader({ selectedView, onSaveView }) {
+  const { theme } = useTheme();
   return (
     <div
       style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        gap: "0.5rem",
+        gap: SPACING.sm,
       }}
     >
-      <div style={{ fontSize: "0.8rem" }}>
-        View: <strong>{selectedView}</strong>
+      <div style={{ fontSize: "0.8rem", color: theme.textSecondary }}>
+        View: <strong style={{ color: theme.textPrimary }}>{selectedView}</strong>
       </div>
       <button
         onClick={onSaveView}
         style={{
           border: "none",
-          background: "#e5e7eb",
+          background: theme.backgroundTertiary,
           borderRadius: "999px",
-          padding: "0.25rem 0.75rem",
+          padding: `${SPACING.xs} ${SPACING.md}`,
           fontSize: "0.75rem",
           cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: SPACING.xs,
+          color: theme.textSecondary,
+          transition: getTransition(["background", "color"], "fast"),
         }}
       >
+        <ICONS.save size={12} />
         Save view
       </button>
     </div>
@@ -2909,15 +3954,17 @@ function ListingCard({ title, segments, selectedValues, onToggle }) {
   );
 }
 
-function VerticalNavCard({ title, icon, field, segments, selectedValues, isActive, onCardClick, onToggle, onSegmentPeek }) {
+function VerticalNavCard({ title, Icon, field, segments, selectedValues, isActive, onCardClick, onToggle, onSegmentPeek }) {
+  const { theme } = useTheme();
   return (
     <div
       style={{
-        borderRadius: "0.5rem",
-        border: isActive ? "2px solid #2563eb" : "1px solid #e5e7eb",
-        background: isActive ? "#eff6ff" : "#f9fafb",
+        borderRadius: SPACING.sm,
+        border: isActive ? `2px solid ${theme.primary}` : "none",
+        background: isActive ? theme.primaryLight : theme.backgroundSecondary,
         overflow: "hidden",
-        transition: "all 0.2s",
+        transition: getTransition(["background", "border", "box-shadow"], "fast"),
+        boxShadow: theme.shadow,
       }}
     >
       {/* Card Header - Always Visible */}
@@ -2925,32 +3972,35 @@ function VerticalNavCard({ title, icon, field, segments, selectedValues, isActiv
         onClick={onCardClick}
         style={{
           width: "100%",
-          padding: "0.5rem 0.75rem",
+          padding: `${SPACING.sm} ${SPACING.md}`,
           border: "none",
           background: "transparent",
           display: "flex",
           alignItems: "center",
-          gap: "0.5rem",
+          gap: SPACING.sm,
           cursor: "pointer",
           textAlign: "left",
         }}
       >
-        <span style={{ fontSize: "1rem" }}>{icon}</span>
-        <span style={{ flex: 1, fontSize: "0.8rem", fontWeight: 600, color: "#111827" }}>
+        <span style={{ display: "flex", alignItems: "center", color: isActive ? theme.primary : theme.textMuted }}>
+          <Icon size={18} />
+        </span>
+        <span style={{ flex: 1, fontSize: "0.8rem", fontWeight: 600, color: theme.textPrimary }}>
           {title}
         </span>
-        <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>
-          {segments.length} options
+        <span style={{ fontSize: "0.7rem", color: theme.textMuted }}>
+          {segments.length}
         </span>
         <span
           style={{
-            fontSize: "0.75rem",
-            color: "#6b7280",
+            display: "flex",
+            alignItems: "center",
+            color: theme.textMuted,
             transform: isActive ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s",
+            transition: getTransition("transform", "fast"),
           }}
         >
-          ▼
+          <ICONS.chevronDown size={14} />
         </span>
       </button>
 
@@ -2958,11 +4008,11 @@ function VerticalNavCard({ title, icon, field, segments, selectedValues, isActiv
       {isActive && (
         <div
           style={{
-            padding: "0.25rem 0.75rem 0.5rem",
+            padding: `${SPACING.xs} ${SPACING.md} ${SPACING.sm}`,
             display: "flex",
             flexDirection: "column",
-            gap: "0.25rem",
-            borderTop: "1px solid #e5e7eb",
+            gap: SPACING.xs,
+            borderTop: `1px solid ${theme.border}`,
           }}
         >
           {segments.map((seg) => {
@@ -2973,24 +4023,25 @@ function VerticalNavCard({ title, icon, field, segments, selectedValues, isActiv
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: SPACING.sm,
                 }}
               >
                 <button
                   onClick={() => onToggle(seg.label)}
                   style={{
                     flex: 1,
-                    borderRadius: "0.375rem",
-                    border: "1px solid #d1d5db",
-                    padding: "0.25rem 0.5rem",
+                    borderRadius: SPACING.sm,
+                    border: "none",
+                    padding: `${SPACING.xs} ${SPACING.sm}`,
                     fontSize: "0.75rem",
-                    background: isSelected ? "#2563eb" : "white",
-                    color: isSelected ? "white" : "#111827",
+                    background: isSelected ? theme.primary : theme.background,
+                    color: isSelected ? "white" : theme.textPrimary,
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                     cursor: "pointer",
-                    transition: "all 0.15s",
+                    transition: getTransition(["background", "color"], "fast"),
+                    boxShadow: isSelected ? "none" : theme.shadow,
                   }}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -2998,7 +4049,7 @@ function VerticalNavCard({ title, icon, field, segments, selectedValues, isActiv
                   </span>
                   <span
                     style={{
-                      marginLeft: "0.5rem",
+                      marginLeft: SPACING.sm,
                       fontSize: "0.7rem",
                       opacity: 0.8,
                       fontWeight: 600,
@@ -3011,29 +4062,30 @@ function VerticalNavCard({ title, icon, field, segments, selectedValues, isActiv
                   onClick={() => onSegmentPeek(seg.label)}
                   title="Preview"
                   style={{
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "0.25rem",
-                    border: "1px solid #d1d5db",
-                    background: "#f9fafb",
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: SPACING.xs,
+                    border: "none",
+                    background: theme.backgroundTertiary,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "0.7rem",
-                    color: "#6b7280",
-                    transition: "all 0.15s",
+                    color: theme.textMuted,
+                    transition: getTransition(["background", "color", "transform"], "fast"),
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#2563eb";
+                    e.currentTarget.style.background = theme.primary;
                     e.currentTarget.style.color = "white";
+                    e.currentTarget.style.transform = "scale(1.05)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#f9fafb";
-                    e.currentTarget.style.color = "#6b7280";
+                    e.currentTarget.style.background = theme.backgroundTertiary;
+                    e.currentTarget.style.color = theme.textMuted;
+                    e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
-                  ▶
+                  <ICONS.chevronRight size={14} />
                 </button>
               </div>
             );
