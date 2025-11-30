@@ -5961,24 +5961,11 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.3)",
-          zIndex: 999,
-        }}
-      />
-      {/* Slide-out Panel */}
+      {/* Slide-out Push Panel - No overlay, starts below top bar */}
       <div
         style={{
           position: "fixed",
-          top: 0,
+          top: "48px",
           right: 0,
           bottom: 0,
           width: "420px",
@@ -6197,26 +6184,11 @@ function AttendeeOverviewPanel({ isOpen, attendee, onClose, isNested = false }) 
 
   return (
     <>
-      {/* Overlay - only show for non-nested panels */}
-      {!isNested && (
-        <div
-          onClick={onClose}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.2)",
-            zIndex: 1001,
-          }}
-        />
-      )}
-      {/* Panel */}
+      {/* Push Panel - No overlay, starts below top bar */}
       <div
         style={{
           position: "fixed",
-          top: 0,
+          top: "48px",
           right: 0,
           bottom: 0,
           width: isNested ? "380px" : "400px",
