@@ -1,0 +1,102 @@
+[
+  {
+    "id": "contact-1",
+    "name": "John Doe",
+    "email": "john@acme.com",
+    "phone": "(555) 123-4567",
+    "company": "Acme Corp",
+    "role": "Senior Engineer",
+    "tags": ["enterprise", "hot-lead"],
+    "createdAt": "2025-11-15"
+  },
+  {
+    "id": "contact-2",
+    "name": "Sarah Johnson",
+    "email": "sarah@techstart.io",
+    "phone": "(555) 234-5678",
+    "company": "TechStart",
+    "role": "Founder & CEO",
+    "tags": ["startup", "qualified"],
+    "createdAt": "2025-11-16"
+  },
+  {
+    "id": "contact-3",
+    "name": "Michael Chen",
+    "email": "mchen@globalsoft.com",
+    "phone": "(555) 345-6789",
+    "company": "GlobalSoft",
+    "role": "VP Engineering",
+    "tags": ["enterprise", "decision-maker"],
+    "createdAt": "2025-11-17"
+  },
+  {
+    "id": "contact-4",
+    "name": "Emily Rodriguez",
+    "email": "emily@innovatelabs.io",
+    "phone": "(555) 456-7890",
+    "company": "Innovate Labs",
+    "role": "Product Manager",
+    "tags": ["mid-market", "champion"],
+    "createdAt": "2025-11-18"
+  },
+  {
+    "id": "contact-5",
+    "name": "David Kim",
+    "email": "david@fastgrow.com",
+    "phone": "(555) 567-8901",
+    "company": "FastGrow Inc",
+    "role": "CTO",
+    "tags": ["growth-stage", "technical"],
+    "createdAt": "2025-11-18"
+  },
+  {
+    "id": "contact-6",
+    "name": "Lisa Wang",
+    "email": "lisa@designco.studio",
+    "phone": "(555) 678-9012",
+    "company": "DesignCo",
+    "role": "Creative Director",
+    "tags": ["agency", "interested"],
+    "createdAt": "2025-11-19"
+  },
+  {
+    "id": "contact-7",
+    "name": "Robert Martinez",
+    "email": "robert@venturesvc.com",
+    "phone": "(555) 789-0123",
+    "company": "Ventures VC",
+    "role": "Partner",
+    "tags": ["investor", "warm"],
+    "createdAt": "2025-11-19"
+  },
+  {
+    "id": "contact-8",
+    "name": "Jennifer Lee",
+    "email": "jennifer@edutech.edu",
+    "phone": "(555) 890-1234",
+    "company": "EduTech",
+    "role": "Director of IT",
+    "tags": ["education", "evaluation"],
+    "createdAt": "2025-11-20"
+  },
+  {
+    "id": "contact-9",
+    "name": "Tom Anderson",
+    "email": "tom@healthplus.org",
+    "phone": "(555) 901-2345",
+    "company": "HealthPlus",
+    "role": "Operations Manager",
+    "tags": ["healthcare", "pilot"],
+    "createdAt": "2025-11-20"
+  },
+  {
+    "id": "contact-10",
+    "name": "Maria Garcia",
+    "email": "maria@retailmax.com",
+    "phone": "(555) 012-3456",
+    "company": "RetailMax",
+    "role": "VP Marketing",
+    "tags": ["retail", "cold"],
+    "createdAt": "2025-11-21"
+  }
+]

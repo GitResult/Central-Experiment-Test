@@ -1,0 +1,1118 @@
+{
+  "id": "magazine-article",
+  "name": "The Future of AI",
+  "type": "Editorial",
+  "description": "Long-form magazine article with rich typography, hero image, TOC sidebar, and pull quotes - Medium/Substack inspired",
+  "zones": [
+    {
+      "id": "hero",
+      "maxWidth": "full",
+      "padding": 0,
+      "rows": [
+        {
+          "id": "hero-row",
+          "marginBottom": 0,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "record",
+                  "data": {
+                    "src": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1920&h=800&fit=crop",
+                    "alt": "Artificial Intelligence concept visualization"
+                  },
+                  "settings": {
+                    "record": {
+                      "recordType": "image",
+                      "aspectRatio": "21/9",
+                      "fit": "cover",
+                      "rounded": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "article-content",
+      "maxWidth": "xl",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "main-row",
+          "gap": 8,
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.6"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "The Future of AI"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.2",
+                              "align": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "By Sarah Johnson"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "•"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "12 min read"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "•"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "November 21, 2025"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "divider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Artificial intelligence has evolved from a niche technology to a transformative force reshaping every aspect of modern society. From healthcare breakthroughs to creative endeavors, AI systems are becoming increasingly sophisticated, raising profound questions about the future of work, creativity, and human autonomy."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "In the past decade, we've witnessed remarkable progress in machine learning capabilities. Large language models can now engage in nuanced conversations, generate creative content, and assist with complex problem-solving. Computer vision systems can diagnose medical conditions with accuracy rivaling human experts. Autonomous systems are navigating our roads and skies."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The Early Days"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The journey of artificial intelligence began in the 1950s with pioneering researchers like Alan Turing and John McCarthy. These visionaries imagined machines that could think, reason, and solve problems like humans. Early AI systems were rule-based and limited, capable of playing simple games or solving mathematical proofs, but they laid the groundwork for everything that followed."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The field experienced several \"AI winters\" – periods of reduced funding and interest – as early promises failed to materialize. Computing power was insufficient, data was scarce, and algorithms were primitive by today's standards. But researchers persisted, refining techniques and waiting for technology to catch up to their ambitions."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": {
+                        "src": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=600&fit=crop",
+                        "alt": "Historical computing and AI development"
+                      },
+                      "settings": {
+                        "record": {
+                          "recordType": "image",
+                          "aspectRatio": "2/1",
+                          "fit": "cover",
+                          "rounded": true,
+                          "caption": "Early computing machines that laid the foundation for modern AI"
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "lg",
+                          "border": true,
+                          "shadow": "none",
+                          "background": "secondary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "\"The future is already here — it's just not very evenly distributed.\""
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 4,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "— William Gibson"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The Modern AI Revolution"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The breakthrough came in the 2010s with the convergence of three critical factors: massive datasets from the internet era, powerful GPU computing, and revolutionary deep learning techniques. Neural networks with millions or billions of parameters could now be trained on unprecedented scales, leading to capabilities that seemed almost magical."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Companies like Google, OpenAI, and Anthropic began developing increasingly sophisticated language models. Image generation systems like DALL-E and Midjourney demonstrated that AI could create original artwork. AlphaFold solved the protein folding problem, a challenge that had stumped biologists for decades. Each advancement seemed to unlock new possibilities."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Yet with great power comes great responsibility. As AI systems become more capable, society grapples with questions of ethics, bias, privacy, and control. How do we ensure AI benefits humanity broadly rather than concentrating power? How do we maintain human agency in an AI-augmented world? These questions will define the next chapter of the AI story."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Looking Ahead"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The path forward requires collaboration between technologists, policymakers, ethicists, and citizens. We must build AI systems that are transparent, accountable, and aligned with human values. We need frameworks for governance that can keep pace with rapid technological change. And we must ensure the benefits of AI are distributed equitably across society."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "The future of AI is not predetermined. It will be shaped by the choices we make today – in research labs, boardrooms, legislative chambers, and everyday conversations. By approaching this technology with wisdom, care, and foresight, we can create a future where AI enhances human flourishing rather than diminishing it."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.6"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm",
+                          "sticky": true
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Table of Contents"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.2"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Introduction"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#intro"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "The Early Days"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#early"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "The Modern AI Revolution"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#modern"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Looking Ahead"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#future"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Share"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.2"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Share on Twitter"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "button",
+                                      "variant": "secondary",
+                                      "size": "sm"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Share on LinkedIn"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "button",
+                                      "variant": "secondary",
+                                      "size": "sm"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Copy Link"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "button",
+                                      "variant": "secondary",
+                                      "size": "sm"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Related Articles"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "record",
+                              "data": [
+                                {
+                                  "id": "1",
+                                  "title": "Machine Learning Basics",
+                                  "meta": "10 min read"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Ethics in AI Development",
+                                  "meta": "8 min read"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "The AGI Debate",
+                                  "meta": "15 min read"
+                                }
+                              ],
+                              "settings": {
+                                "record": {
+                                  "recordType": "association-list",
+                                  "showAvatar": false,
+                                  "showIcon": false,
+                                  "showChevron": true,
+                                  "compact": true,
+                                  "dividers": true
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "author-bio",
+      "maxWidth": "xl",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "bio-row",
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "divider"
+                    }
+                  }
+                },
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm",
+                      "background": "secondary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "record",
+                          "data": {
+                            "src": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
+                            "alt": "Sarah Johnson headshot"
+                          },
+                          "settings": {
+                            "record": {
+                              "recordType": "image",
+                              "aspectRatio": "1/1",
+                              "fit": "cover",
+                              "rounded": true
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "About the Author"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 5
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Sarah Johnson** is a technology journalist and AI researcher based in San Francisco. She has covered the intersection of technology and society for over a decade, writing for publications including Wired, The Atlantic, and MIT Technology Review."
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "gap": "@spacing.2"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "Follow on Twitter"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "•"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "More Articles"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "link",
+                                      "href": "#"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "newsletter",
+      "maxWidth": "xl",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "newsletter-row",
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "xl",
+                      "border": true,
+                      "shadow": "md",
+                      "background": "primary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "📬 Subscribe to Our Newsletter"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 4,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Get the latest insights on AI, technology, and innovation delivered weekly."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.2",
+                              "justify": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "field",
+                              "data": { "value": "" },
+                              "settings": {
+                                "field": {
+                                  "fieldType": "email",
+                                  "label": "",
+                                  "placeholder": "Enter your email address",
+                                  "required": true
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Subscribe"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "primary",
+                                  "size": "md"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Join 50,000+ readers. Unsubscribe anytime."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tags",
+      "maxWidth": "xl",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "tags-row",
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.3"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Topics"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "gap": "@spacing.2",
+                          "wrap": true
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Artificial Intelligence"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "primary",
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Machine Learning"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "secondary",
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Ethics"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "secondary",
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Technology"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "secondary",
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Future of Work"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "secondary",
+                              "size": "md"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comments",
+      "maxWidth": "xl",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "comments-row",
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "divider"
+                    }
+                  }
+                },
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Comments (12)"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 4
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": "1",
+                          "avatar": "JD",
+                          "title": "John Doe",
+                          "subtitle": "2 hours ago",
+                          "description": "Excellent article! The section on ethics was particularly thought-provoking. I'd love to see more discussion on how we balance innovation with responsibility."
+                        },
+                        {
+                          "id": "2",
+                          "avatar": "EL",
+                          "title": "Emily Lee",
+                          "subtitle": "5 hours ago",
+                          "description": "This reminds me of the early days of the internet. We're at another inflection point in technology history."
+                        },
+                        {
+                          "id": "3",
+                          "avatar": "MR",
+                          "title": "Michael Rodriguez",
+                          "subtitle": "1 day ago",
+                          "description": "Great overview of the AI landscape. The protein folding example really demonstrates the practical impact of these advances."
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "association-list",
+                          "showAvatar": true,
+                          "showIcon": false,
+                          "showChevron": false,
+                          "compact": false,
+                          "dividers": true
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "View all 12 comments →"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "link",
+                          "href": "#"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

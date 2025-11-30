@@ -1,0 +1,9 @@
+Name,Email,Phone,Member Type,Join Date,Status,City,State
+John Smith,john.smith@example.com,555-0101,Premium,2024-01-15,Active,New York,NY
+Sarah Johnson,sarah.j@example.com,555-0102,Standard,2024-02-20,Active,Los Angeles,CA
+Michael Chen,m.chen@example.com,555-0103,Premium,2024-01-10,Active,San Francisco,CA
+Emily Davis,emily.d@example.com,555-0104,Basic,2024-03-05,Active,Chicago,IL
+Robert Wilson,r.wilson@example.com,555-0105,Standard,2023-12-01,Active,Boston,MA
+Jennifer Lee,jen.lee@example.com,555-0106,Premium,2024-02-14,Active,Seattle,WA
+David Martinez,d.martinez@example.com,555-0107,Basic,2024-03-20,Inactive,Austin,TX
+Lisa Anderson,l.anderson@example.com,555-0108,Standard,2024-01-25,Active,Denver,CO
