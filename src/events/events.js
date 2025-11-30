@@ -5305,11 +5305,12 @@ function MorePeopleListing({ attendees }) {
     }
   });
   const [selectedView, setSelectedView] = useState("Default");
-  const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
+  const [viewMode, setViewMode] = useState("cards"); // "list" | "cards"
   const [selectedCard, setSelectedCard] = useState(null); // active card for vertical nav
   const [peekData, setPeekData] = useState(null); // { field, segment, attendees }
   const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
   const [showSaveModal, setShowSaveModal] = useState(false); // P2.3: Save View Modal
+  const [contactsSlideout, setContactsSlideout] = useState(null); // { field, segment, attendees }
 
   const cards = [
     { title: "Registration Types", field: "registrationType", Icon: ICONS.reports },
@@ -5401,6 +5402,17 @@ function MorePeopleListing({ attendees }) {
 
   function handleCardFilterClick(field, label) {
     handleToggle(field, label);
+  }
+
+  function handleCardCountClick(field, segment) {
+    const segmentAttendees = attendees.filter((a) => (a[field] || "Unknown") === segment);
+    const cardInfo = cards.find(c => c.field === field);
+    setContactsSlideout({
+      field,
+      segment,
+      title: cardInfo ? cardInfo.title : field,
+      attendees: segmentAttendees,
+    });
   }
 
   // Determine if peek panel should show
@@ -5622,6 +5634,7 @@ function MorePeopleListing({ attendees }) {
                   attendees={filteredAttendees}
                   colorPalette={colorPalettes[card.field]}
                   onFilterClick={handleCardFilterClick}
+                  onCountClick={handleCardCountClick}
                 />
               </div>
             ))}
@@ -5649,7 +5662,225 @@ function MorePeopleListing({ attendees }) {
         onSave={handleSaveView}
         currentFilters={filters}
       />
+
+      {/* Contacts Slideout Panel for Card Count Clicks */}
+      {contactsSlideout && (
+        <ContactsSlideoutPanel
+          isOpen={!!contactsSlideout}
+          segment={contactsSlideout.segment}
+          categoryTitle={contactsSlideout.title}
+          attendees={contactsSlideout.attendees}
+          onClose={() => setContactsSlideout(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// -------------------- Contacts Slideout Panel --------------------
+
+function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose }) {
+  const { theme } = useTheme();
+
+  // Generate dummy registration numbers
+  const generateRegNumber = (id) => {
+    const prefix = "REG";
+    const year = "2024";
+    const num = String(id).padStart(5, "0");
+    return `${prefix}-${year}-${num}`;
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 999,
+        }}
+      />
+      {/* Slide-out Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "420px",
+          background: "white",
+          boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.15)",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideInRight 0.3s ease-out",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "1rem 1.25rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: theme.primaryLight || "#eff6ff",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "0.75rem", color: theme.textMuted || "#6b7280", marginBottom: "0.25rem" }}>
+              {categoryTitle}
+            </div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600, color: theme.textPrimary || "#111827" }}>
+              {segment}
+            </h3>
+            <div style={{ fontSize: "0.8rem", color: theme.textSecondary || "#374151", marginTop: "0.25rem" }}>
+              {attendees.length} contact{attendees.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: "1.5rem",
+              color: theme.textMuted || "#6b7280",
+              padding: "0.25rem",
+              lineHeight: 1,
+              borderRadius: "0.25rem",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#e5e7eb"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Contacts List */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "0.5rem",
+          }}
+        >
+          {attendees.map((attendee, idx) => (
+            <div
+              key={attendee.id || idx}
+              style={{
+                padding: "0.875rem 1rem",
+                borderBottom: "1px solid #f3f4f6",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#f9fafb"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              {/* Name */}
+              <div
+                style={{
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  color: theme.textPrimary || "#111827",
+                  marginBottom: "0.375rem",
+                }}
+              >
+                {attendee.name || "Unknown"}
+              </div>
+
+              {/* Details Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.25rem 1rem",
+                  fontSize: "0.8rem",
+                }}
+              >
+                {/* Email */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Email</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.email || `${(attendee.name || "user").toLowerCase().replace(/\s+/g, ".")}@example.com`}
+                  </span>
+                </div>
+
+                {/* Position */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Position</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.position || attendee.title || "Member"}
+                  </span>
+                </div>
+
+                {/* Company */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Company</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.company || attendee.organization || "—"}
+                  </span>
+                </div>
+
+                {/* Reg Number */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Reg #</span>
+                  <span style={{ color: theme.primary || "#2563eb", fontFamily: "monospace", fontSize: "0.75rem" }}>
+                    {generateRegNumber(attendee.id || idx + 1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {attendees.length === 0 && (
+            <div
+              style={{
+                padding: "2rem",
+                textAlign: "center",
+                color: theme.textMuted || "#9ca3af",
+                fontSize: "0.85rem",
+              }}
+            >
+              No contacts found
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: "0.75rem 1.25rem",
+            borderTop: "1px solid #e5e7eb",
+            background: "#f9fafb",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #d1d5db",
+              background: "white",
+              borderRadius: "0.375rem",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              color: theme.textPrimary || "#374151",
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
