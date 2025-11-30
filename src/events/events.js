@@ -358,6 +358,16 @@ const ICONS = {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="15" x2="21" y2="15" />
     </svg>
   ),
+  building: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" /><path d="M12 10h.01" /><path d="M12 14h.01" /><path d="M16 10h.01" /><path d="M16 14h.01" /><path d="M8 10h.01" /><path d="M8 14h.01" />
+    </svg>
+  ),
+  award: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+    </svg>
+  ),
 };
 
 // ==================== GLOBAL TOP NAVIGATION BAR ====================
@@ -2102,6 +2112,14 @@ const PRIMARY_REASON_DIST = [
   ["Networking", 0.30], ["Professional Development", 0.25], ["Learning", 0.20], ["Career", 0.10],
   ["Thought Leadership", 0.05], ["Speaker", 0.03], ["Exploring Membership", 0.05], ["Guest", 0.02]
 ];
+const VENUE_ROOM_DIST = [
+  ["Grand Ballroom", 0.25], ["Conference Hall A", 0.20], ["Conference Hall B", 0.18],
+  ["Breakout Room 1", 0.12], ["Breakout Room 2", 0.10], ["Innovation Lab", 0.08], ["Executive Suite", 0.07]
+];
+const SPONSOR_DIST = [
+  ["Gold Sponsor - Deloitte", 0.25], ["Silver Sponsor - KPMG", 0.22], ["Bronze Sponsor - PwC", 0.20],
+  ["Partner - CPA Canada", 0.18], ["Exhibitor - TechFirm", 0.15]
+];
 
 function generateAttendee(id) {
   const seed1 = id * 13;
@@ -2123,6 +2141,8 @@ function generateAttendee(id) {
   const dietary = weightedPick(seed7, DIETARY_DIST);
   const session = memberType === "Student" ? weightedPick(seed8, [["Student Track", 0.6], ["Keynote", 0.2], ["Technology Track", 0.2]]) : weightedPick(seed8, SESSION_DIST);
   const primaryReason = memberType === "Student" ? "Career" : memberType === "Guest" ? "Guest" : weightedPick(seed9, PRIMARY_REASON_DIST);
+  const venueRoom = weightedPick(id * 67, VENUE_ROOM_DIST);
+  const sponsor = weightedPick(id * 71, SPONSOR_DIST);
 
   // Determine membership status based on member type
   let membershipStatus, isMember;
@@ -2179,6 +2199,8 @@ function generateAttendee(id) {
     session,
     ticketType,
     renewed,
+    venueRoom,
+    sponsor,
   };
 }
 
@@ -5311,12 +5333,20 @@ function MorePeopleListing({ attendees }) {
   const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
   const [showSaveModal, setShowSaveModal] = useState(false); // P2.3: Save View Modal
   const [contactsSlideout, setContactsSlideout] = useState(null); // { field, segment, attendees }
+  const [showInsightCards, setShowInsightCards] = useState(false); // Toggle for insight cards visibility
 
-  const cards = [
+  // Event-specific cards (shown by default)
+  const eventCards = [
     { title: "Registration Types", field: "registrationType", Icon: ICONS.reports },
     { title: "Dietary Restrictions", field: "dietary", Icon: ICONS.users },
     { title: "Sessions", field: "session", Icon: ICONS.timeline },
     { title: "Tickets", field: "ticketType", Icon: ICONS.ticket },
+    { title: "Venue Room", field: "venueRoom", Icon: ICONS.building },
+    { title: "Sponsors", field: "sponsor", Icon: ICONS.award },
+  ];
+
+  // Insight/demographic cards (hidden until user requests)
+  const insightCards = [
     { title: "Membership Type", field: "memberType", Icon: ICONS.user },
     { title: "Age Group", field: "ageGroup", Icon: ICONS.insights },
     { title: "Province", field: "province", Icon: ICONS.mapPin },
@@ -5324,11 +5354,16 @@ function MorePeopleListing({ attendees }) {
     { title: "Education", field: "education", Icon: ICONS.graduation },
   ];
 
+  // Combined cards based on visibility state
+  const cards = showInsightCards ? [...eventCards, ...insightCards] : eventCards;
+
   const colorPalettes = {
     registrationType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"],
     dietary: ["#22c55e", "#10b981", "#14b8a6", "#06b6d4"],
     session: ["#f59e0b", "#eab308", "#84cc16", "#22c55e"],
     ticketType: ["#3b82f6", "#8b5cf6"],
+    venueRoom: ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"],
+    sponsor: ["#f59e0b", "#eab308", "#fbbf24", "#fcd34d"],
     memberType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
     ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"],
     province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4"],
@@ -5464,9 +5499,9 @@ function MorePeopleListing({ attendees }) {
               marginBottom: "0.25rem",
             }}
           >
-            Categories
+            Event Cards
           </div>
-          {cards.map((card) => {
+          {eventCards.map((card) => {
             const isActive = selectedCard === card.field;
             return (
               <button
@@ -5505,6 +5540,66 @@ function MorePeopleListing({ attendees }) {
               </button>
             );
           })}
+          {/* Insight Cards Section - Only show when expanded */}
+          {showInsightCards && (
+            <>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  color: theme.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  padding: "0.5rem 0.75rem",
+                  marginTop: "0.75rem",
+                  marginBottom: "0.25rem",
+                  borderTop: `1px solid ${theme.border || "#e5e7eb"}`,
+                  paddingTop: "0.75rem",
+                }}
+              >
+                Insight Cards
+              </div>
+              {insightCards.map((card) => {
+                const isActive = selectedCard === card.field;
+                return (
+                  <button
+                    key={card.field}
+                    onClick={() => scrollToCard(card.field)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.5rem 0.75rem",
+                      border: "none",
+                      borderRadius: "0.375rem",
+                      background: isActive ? theme.primaryLight : "transparent",
+                      color: isActive ? theme.primary : theme.textPrimary,
+                      fontSize: "0.8rem",
+                      fontWeight: isActive ? 600 : 400,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = theme.backgroundSecondary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    <card.Icon size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {card.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
 
@@ -5530,7 +5625,8 @@ function MorePeopleListing({ attendees }) {
               overflowY: "auto",
             }}
           >
-            {cards.map((card) => {
+            {/* Event Cards */}
+            {eventCards.map((card) => {
               const segments = groupByField(attendees, card.field);
               const selectedValues = filters[card.field] || [];
               const isActive = selectedCard === card.field;
@@ -5549,6 +5645,64 @@ function MorePeopleListing({ attendees }) {
                 />
               );
             })}
+            {/* Insight Cards - Only show when expanded */}
+            {showInsightCards && insightCards.map((card) => {
+              const segments = groupByField(attendees, card.field);
+              const selectedValues = filters[card.field] || [];
+              const isActive = selectedCard === card.field;
+              return (
+                <VerticalNavCard
+                  key={card.title}
+                  title={card.title}
+                  Icon={card.Icon}
+                  field={card.field}
+                  segments={segments}
+                  selectedValues={selectedValues}
+                  isActive={isActive}
+                  onCardClick={() => handleCardSelect(card.field)}
+                  onToggle={(segment) => handleToggle(card.field, segment)}
+                  onSegmentPeek={(segment) => handleSegmentPeek(card.field, segment)}
+                />
+              );
+            })}
+            {/* Add/Hide Insight Cards Toggle for List Mode */}
+            <button
+              onClick={() => setShowInsightCards(!showInsightCards)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "0.5rem 0.75rem",
+                marginTop: "0.5rem",
+                border: `1px dashed ${theme.border || "#e5e7eb"}`,
+                background: "transparent",
+                color: theme.primary || "#2563eb",
+                fontSize: "0.8rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                borderRadius: "0.375rem",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.primaryLight || "#eff6ff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {showInsightCards ? (
+                <>
+                  <span style={{ fontSize: "1rem" }}>−</span>
+                  Hide insight cards
+                </>
+              ) : (
+                <>
+                  <ICONS.plus size={14} />
+                  Add insight cards
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -5611,34 +5765,83 @@ function MorePeopleListing({ attendees }) {
         {viewMode === "list" ? (
           <AttendeeList attendees={filteredAttendees} onAttendeeClick={handleAttendeeClick} />
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {cards.map((card) => (
-              <div
-                key={card.title}
-                ref={(el) => (cardRefs.current[card.field] = el)}
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "1rem",
+              }}
+            >
+              {cards.map((card) => (
+                <div
+                  key={card.title}
+                  ref={(el) => (cardRefs.current[card.field] = el)}
+                  style={{
+                    borderRadius: "0.5rem",
+                    transition: "box-shadow 0.2s ease",
+                    boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                  }}
+                >
+                  <DemographicCard
+                    title={card.title}
+                    field={card.field}
+                    attendees={filteredAttendees}
+                    colorPalette={colorPalettes[card.field]}
+                    onFilterClick={handleCardFilterClick}
+                    onCountClick={handleCardCountClick}
+                  />
+                </div>
+              ))}
+            </div>
+            {/* Add/Hide Insight Cards Toggle Link */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: "1.5rem",
+                paddingTop: "1rem",
+                borderTop: `1px dashed ${theme.border || "#e5e7eb"}`,
+              }}
+            >
+              <button
+                onClick={() => setShowInsightCards(!showInsightCards)}
                 style={{
-                  borderRadius: "0.5rem",
-                  transition: "box-shadow 0.2s ease",
-                  boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  border: "none",
+                  background: "transparent",
+                  color: theme.primary || "#2563eb",
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  borderRadius: "0.375rem",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.primaryLight || "#eff6ff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
-                <DemographicCard
-                  title={card.title}
-                  field={card.field}
-                  attendees={filteredAttendees}
-                  colorPalette={colorPalettes[card.field]}
-                  onFilterClick={handleCardFilterClick}
-                  onCountClick={handleCardCountClick}
-                />
-              </div>
-            ))}
-          </div>
+                {showInsightCards ? (
+                  <>
+                    <span style={{ fontSize: "1rem" }}>−</span>
+                    Hide insight cards
+                  </>
+                ) : (
+                  <>
+                    <ICONS.plus size={16} />
+                    Add insight cards
+                  </>
+                )}
+              </button>
+            </div>
+          </>
         )}
       </div>
 
