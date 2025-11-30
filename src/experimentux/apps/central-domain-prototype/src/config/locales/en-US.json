@@ -1,0 +1,32 @@
+{
+  "locale": "en-US",
+  "name": "English (United States)",
+  "translations": {
+    "elements": {
+      "title": {
+        "placeholder": "Untitled",
+        "emptyState": "Click to add title"
+      },
+      "description": {
+        "placeholder": "Add a description...",
+        "emptyState": "Click to add description"
+      },
+      "pageIcon": {
+        "addButton": "Add icon",
+        "changeButton": "Change",
+        "removeButton": "Remove"
+      }
+    },
+    "common": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "close": "Close"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email"
+    }
+  }
+}

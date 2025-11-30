@@ -1,0 +1,152 @@
+[
+  {
+    "id": "task-1",
+    "title": "Follow up with John Doe",
+    "description": "Send proposal and schedule demo",
+    "status": "todo",
+    "priority": "high",
+    "dueDate": "2025-11-22",
+    "assignee": "Demo User",
+    "tags": ["sales"]
+  },
+  {
+    "id": "task-2",
+    "title": "Send proposal to Sarah Johnson",
+    "description": "Include pricing and timeline",
+    "status": "in-progress",
+    "priority": "high",
+    "dueDate": "2025-11-23",
+    "assignee": "Demo User",
+    "tags": ["sales"]
+  },
+  {
+    "id": "task-3",
+    "title": "Schedule demo with Michael Chen",
+    "description": "Coordinate calendar and prepare materials",
+    "status": "todo",
+    "priority": "medium",
+    "dueDate": "2025-11-24",
+    "assignee": "Demo User",
+    "tags": ["sales", "demo"]
+  },
+  {
+    "id": "task-4",
+    "title": "Prepare Q4 presentation",
+    "description": "Create slides for quarterly review",
+    "status": "in-progress",
+    "priority": "high",
+    "dueDate": "2025-11-25",
+    "assignee": "Demo User",
+    "tags": ["internal", "presentation"]
+  },
+  {
+    "id": "task-5",
+    "title": "Update CRM contact records",
+    "description": "Clean up and update contact information",
+    "status": "todo",
+    "priority": "low",
+    "dueDate": "2025-11-26",
+    "assignee": "Demo User",
+    "tags": ["admin"]
+  },
+  {
+    "id": "task-6",
+    "title": "Review Emily's product roadmap",
+    "description": "Provide feedback on proposed features",
+    "status": "todo",
+    "priority": "medium",
+    "dueDate": "2025-11-27",
+    "assignee": "Demo User",
+    "tags": ["product", "review"]
+  },
+  {
+    "id": "task-7",
+    "title": "Onboard new team member",
+    "description": "Set up accounts and schedule orientation",
+    "status": "in-progress",
+    "priority": "high",
+    "dueDate": "2025-11-28",
+    "assignee": "Demo User",
+    "tags": ["hr", "onboarding"]
+  },
+  {
+    "id": "task-8",
+    "title": "Finalize conference booth design",
+    "description": "Review and approve final design from DesignCo",
+    "status": "todo",
+    "priority": "medium",
+    "dueDate": "2025-11-29",
+    "assignee": "Demo User",
+    "tags": ["marketing", "events"]
+  },
+  {
+    "id": "task-9",
+    "title": "Prepare investor update",
+    "description": "Draft monthly update email for Robert",
+    "status": "in-progress",
+    "priority": "high",
+    "dueDate": "2025-11-30",
+    "assignee": "Demo User",
+    "tags": ["investor-relations"]
+  },
+  {
+    "id": "task-10",
+    "title": "Research EduTech compliance requirements",
+    "description": "Understand education sector regulations",
+    "status": "todo",
+    "priority": "medium",
+    "dueDate": "2025-12-01",
+    "assignee": "Demo User",
+    "tags": ["research", "compliance"]
+  },
+  {
+    "id": "task-11",
+    "title": "Set up pilot program for HealthPlus",
+    "description": "Configure trial workspace and training materials",
+    "status": "in-progress",
+    "priority": "high",
+    "dueDate": "2025-12-02",
+    "assignee": "Demo User",
+    "tags": ["implementation", "pilot"]
+  },
+  {
+    "id": "task-12",
+    "title": "Create marketing campaign for RetailMax",
+    "description": "Draft email campaign and social posts",
+    "status": "todo",
+    "priority": "low",
+    "dueDate": "2025-12-03",
+    "assignee": "Demo User",
+    "tags": ["marketing", "campaign"]
+  },
+  {
+    "id": "task-13",
+    "title": "Write blog post about new features",
+    "description": "Announce latest platform updates",
+    "status": "done",
+    "priority": "medium",
+    "dueDate": "2025-11-10",
+    "assignee": "Demo User",
+    "tags": ["content", "marketing"]
+  },
+  {
+    "id": "task-14",
+    "title": "Fix bug in dashboard view",
+    "description": "Resolve chart rendering issue",
+    "status": "done",
+    "priority": "high",
+    "dueDate": "2025-11-12",
+    "assignee": "Demo User",
+    "tags": ["engineering", "bug"]
+  },
+  {
+    "id": "task-15",
+    "title": "Update user documentation",
+    "description": "Refresh help docs with latest UI changes",
+    "status": "done",
+    "priority": "medium",
+    "dueDate": "2025-11-15",
+    "assignee": "Demo User",
+    "tags": ["documentation"]
+  }
+]

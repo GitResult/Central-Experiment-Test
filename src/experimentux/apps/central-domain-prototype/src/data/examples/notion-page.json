@@ -1,0 +1,1200 @@
+{
+  "id": "notion-page",
+  "name": "Product Roadmap Q1 2025",
+  "type": "CMS",
+  "description": "Block-based document editor with slash commands, databases, callouts, and rich content - Notion inspired",
+  "zones": [
+    {
+      "id": "page-header",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "header-row",
+          "marginBottom": 2,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "flex",
+                      "direction": "row",
+                      "justify": "space-between",
+                      "align": "center"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "breadcrumb",
+                      "data": {
+                        "items": [
+                          { "label": "Projects", "href": "/projects" },
+                          { "label": "Product Roadmap", "current": true }
+                        ]
+                      },
+                      "settings": {
+                        "breadcrumb": {
+                          "showHome": true,
+                          "separator": "chevron"
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Share"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button",
+                              "variant": "secondary",
+                              "size": "sm"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "•••"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button",
+                              "variant": "secondary",
+                              "size": "sm"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-content",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "content-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "📄 Product Roadmap Q1 2025"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 1
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "sm",
+                          "border": true,
+                          "shadow": "none",
+                          "background": "secondary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Type \"/\" for commands..."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Overview"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "This quarter we're focusing on three key initiatives to improve our product and deliver exceptional value to our customers. Each initiative has been carefully selected based on user feedback, market demand, and strategic business objectives."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• **Initiative 1:** Improve performance and scalability"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• **Initiative 2:** Add real-time collaboration features"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• **Initiative 3:** Launch mobile app for iOS and Android"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Timeline"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Project Timeline & Tasks"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 6
+                            }
+                          }
+                        },
+                        {
+                          "type": "record",
+                          "data": [
+                            {
+                              "id": "1",
+                              "task": "Performance audit",
+                              "owner": "Sarah Chen",
+                              "status": "Done",
+                              "statusColor": "@colors.success.500",
+                              "due": "Jan 15"
+                            },
+                            {
+                              "id": "2",
+                              "task": "Collaboration UI design",
+                              "owner": "Mike Rodriguez",
+                              "status": "In Progress",
+                              "statusColor": "@colors.primary.500",
+                              "due": "Jan 30"
+                            },
+                            {
+                              "id": "3",
+                              "task": "Mobile prototype",
+                              "owner": "Emma Watson",
+                              "status": "Todo",
+                              "statusColor": "@colors.neutral.400",
+                              "due": "Feb 15"
+                            },
+                            {
+                              "id": "4",
+                              "task": "Backend API optimization",
+                              "owner": "David Kim",
+                              "status": "In Progress",
+                              "statusColor": "@colors.primary.500",
+                              "due": "Feb 1"
+                            }
+                          ],
+                          "settings": {
+                            "record": {
+                              "recordType": "data-grid",
+                              "columns": [
+                                {
+                                  "key": "task",
+                                  "label": "Task",
+                                  "type": "text",
+                                  "sortable": true
+                                },
+                                {
+                                  "key": "owner",
+                                  "label": "Owner",
+                                  "type": "text",
+                                  "sortable": true
+                                },
+                                {
+                                  "key": "status",
+                                  "label": "Status",
+                                  "type": "status",
+                                  "sortable": true
+                                },
+                                {
+                                  "key": "due",
+                                  "label": "Due Date",
+                                  "type": "text",
+                                  "sortable": true
+                                }
+                              ],
+                              "sortable": true,
+                              "striped": true,
+                              "compact": true,
+                              "hoverable": true,
+                              "bordered": true
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "+ New Task"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "none",
+                          "background": "tertiary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.3",
+                              "align": "start"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "💡"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 4
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.1"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "**Note:** We'll need to hire 2 mobile engineers before we can start the mobile app work. HR has approved the headcount and recruitment is underway."
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Design Mockups"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": {
+                        "src": "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=600&fit=crop",
+                        "alt": "Mobile app design mockup"
+                      },
+                      "settings": {
+                        "record": {
+                          "recordType": "image",
+                          "aspectRatio": "2/1",
+                          "fit": "cover",
+                          "rounded": true,
+                          "caption": "Initial design mockup for the mobile app showing the main navigation and dashboard view"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Success Metrics"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "We'll measure success for this quarter using the following key performance indicators:"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "grid",
+                          "columns": 3,
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "kpi",
+                          "data": {
+                            "label": "Page Load Time",
+                            "value": "-40%",
+                            "change": -40,
+                            "changeType": "positive",
+                            "description": "Target improvement"
+                          },
+                          "settings": {
+                            "kpi": {
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "kpi",
+                          "data": {
+                            "label": "Collaboration Users",
+                            "value": "+500",
+                            "change": 500,
+                            "changeType": "positive",
+                            "description": "New active users"
+                          },
+                          "settings": {
+                            "kpi": {
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "kpi",
+                          "data": {
+                            "label": "Mobile Downloads",
+                            "value": "10K",
+                            "change": 10000,
+                            "changeType": "positive",
+                            "description": "First month goal"
+                          },
+                          "settings": {
+                            "kpi": {
+                              "size": "md"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "none",
+                          "background": "secondary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.3",
+                              "align": "start"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "⚠️"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 4
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.1"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "**Risk Alert:** The mobile app timeline is aggressive. If we don't have engineers onboarded by mid-January, we may need to push the launch to Q2."
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "divider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "none",
+                          "background": "secondary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "justify": "center",
+                              "align": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "+ Add a block"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-properties",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "properties-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm",
+                      "background": "secondary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Page Properties"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 6
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "grid",
+                              "columns": 2,
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Created:** Jan 10, 2025"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Last Edited:** Jan 23, 2025"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Owner:** Product Team"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Status:** In Progress"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.2",
+                              "wrap": true
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Tags:**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Q1 2025"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "primary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Roadmap"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Product"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "technical-specs",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "specs-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Technical Specifications"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm",
+                          "background": "tertiary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.3",
+                              "align": "start"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "📝"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 4
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.1"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "**Toggle Block:** Click to expand/collapse additional details"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "This section contains detailed technical requirements and implementation notes that can be hidden when not needed. This helps keep the page organized and scannable."
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm",
+                          "background": "secondary"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Code Block:** Example API endpoint"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "```javascript\nconst response = await fetch('/api/roadmap', {\n  method: 'GET',\n  headers: { 'Authorization': 'Bearer token' }\n});\nconst data = await response.json();\n```"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "> \"The best way to predict the future is to invent it.\" — Alan Kay"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "attachments",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "attachments-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Attachments & Resources"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "record",
+                          "data": [
+                            {
+                              "id": "1",
+                              "icon": "📄",
+                              "title": "Product Requirements Document.pdf",
+                              "meta": "2.4 MB • Uploaded Jan 15"
+                            },
+                            {
+                              "id": "2",
+                              "icon": "🎨",
+                              "title": "Design Mockups.figma",
+                              "meta": "Link • Updated Jan 20"
+                            },
+                            {
+                              "id": "3",
+                              "icon": "📊",
+                              "title": "Market Research Data.xlsx",
+                              "meta": "1.8 MB • Uploaded Jan 12"
+                            },
+                            {
+                              "id": "4",
+                              "icon": "📹",
+                              "title": "Product Demo Video.mp4",
+                              "meta": "45 MB • Uploaded Jan 18"
+                            }
+                          ],
+                          "settings": {
+                            "record": {
+                              "recordType": "association-list",
+                              "showAvatar": false,
+                              "showIcon": true,
+                              "showChevron": true,
+                              "compact": false,
+                              "dividers": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collaboration",
+      "maxWidth": "md",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "collaboration-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Team Collaboration"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Active Contributors**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "record",
+                              "data": [
+                                {
+                                  "id": "1",
+                                  "avatar": "SC",
+                                  "title": "Sarah Chen",
+                                  "subtitle": "Product Lead",
+                                  "meta": "Last edited 2 hours ago"
+                                },
+                                {
+                                  "id": "2",
+                                  "avatar": "MR",
+                                  "title": "Mike Rodriguez",
+                                  "subtitle": "Design Lead",
+                                  "meta": "Last edited 1 day ago"
+                                },
+                                {
+                                  "id": "3",
+                                  "avatar": "EW",
+                                  "title": "Emma Watson",
+                                  "subtitle": "Engineering Lead",
+                                  "meta": "Last edited 3 days ago"
+                                }
+                              ],
+                              "settings": {
+                                "record": {
+                                  "recordType": "association-list",
+                                  "showAvatar": true,
+                                  "showIcon": false,
+                                  "showChevron": false,
+                                  "compact": true,
+                                  "dividers": true
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
