@@ -5517,6 +5517,7 @@ function MorePeopleListing({ attendees }) {
 
   // Calculate margin-right for push panel behavior
   const getPanelMargin = () => {
+    if (contactsSlideout && attendeeOverview) return "800px"; // Both panels: 420px + 380px
     if (contactsSlideout) return "420px"; // Contacts panel width
     if (attendeeOverview) return "400px"; // Attendee panel width (non-nested)
     return "0";
@@ -6193,17 +6194,17 @@ function AttendeeOverviewPanel({ isOpen, attendee, onClose, isNested = false }) 
 
   return (
     <>
-      {/* Push Panel - No overlay, starts below top bar */}
+      {/* Push Panel - No overlay, starts below top bar, positioned next to contacts panel when nested */}
       <div
         style={{
           position: "fixed",
           top: "48px",
-          right: 0,
+          right: isNested ? "420px" : 0, // Position next to ContactsSlideoutPanel when nested
           bottom: 0,
           width: isNested ? "380px" : "400px",
           background: "white",
           boxShadow: "-4px 0 24px rgba(0, 0, 0, 0.15)",
-          zIndex: isNested ? 1002 : 1001,
+          zIndex: 1001,
           display: "flex",
           flexDirection: "column",
           animation: "slideInRight 0.25s ease-out",
