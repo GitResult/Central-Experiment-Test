@@ -5936,7 +5936,7 @@ function MorePeopleListing({ attendees }) {
           segment={contactsSlideout.segment}
           categoryTitle={contactsSlideout.title}
           attendees={contactsSlideout.attendees}
-          onClose={() => setContactsSlideout(null)}
+          onClose={() => { setContactsSlideout(null); setAttendeeOverview(null); }}
           onAttendeeClick={(attendee) => setAttendeeOverview(attendee)}
           hasNestedPanel={!!attendeeOverview}
         />
@@ -6139,32 +6139,6 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
           )}
         </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            padding: "0.75rem 1.25rem",
-            borderTop: "1px solid #e5e7eb",
-            background: "#f9fafb",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.5rem",
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #d1d5db",
-              background: "white",
-              borderRadius: "0.375rem",
-              fontSize: "0.8rem",
-              cursor: "pointer",
-              color: theme.textPrimary || "#374151",
-            }}
-          >
-            Close
-          </button>
-        </div>
       </div>
     </>
   );
@@ -6393,35 +6367,6 @@ function AttendeeOverviewPanel({ isOpen, attendee, onClose, isNested = false }) 
           </div>
         </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            padding: "0.875rem 1.25rem",
-            borderTop: "1px solid #e5e7eb",
-            background: "#f9fafb",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.5rem",
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #d1d5db",
-              background: "white",
-              borderRadius: "0.375rem",
-              fontSize: "0.8rem",
-              cursor: "pointer",
-              color: theme.textPrimary || "#374151",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#f3f4f6"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
-          >
-            Close
-          </button>
-        </div>
       </div>
     </>
   );
