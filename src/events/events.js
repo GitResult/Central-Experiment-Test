@@ -5938,6 +5938,7 @@ function MorePeopleListing({ attendees }) {
           attendees={contactsSlideout.attendees}
           onClose={() => setContactsSlideout(null)}
           onAttendeeClick={(attendee) => setAttendeeOverview(attendee)}
+          hasNestedPanel={!!attendeeOverview}
         />
       )}
 
@@ -5956,7 +5957,7 @@ function MorePeopleListing({ attendees }) {
 
 // -------------------- Contacts Slideout Panel --------------------
 
-function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose, onAttendeeClick }) {
+function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose, onAttendeeClick, hasNestedPanel = false }) {
   const { theme } = useTheme();
 
   // Generate dummy registration numbers
@@ -5971,12 +5972,12 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
 
   return (
     <>
-      {/* Slide-out Push Panel - No overlay, starts below top bar */}
+      {/* Slide-out Push Panel - No overlay, starts below top bar, shifts left when overview panel opens */}
       <div
         style={{
           position: "fixed",
           top: "48px",
-          right: 0,
+          right: hasNestedPanel ? "380px" : 0, // Shift left when AttendeeOverviewPanel is open
           bottom: 0,
           width: "420px",
           background: "white",
@@ -5984,7 +5985,7 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
           zIndex: 1000,
           display: "flex",
           flexDirection: "column",
-          animation: "slideInRight 0.3s ease-out",
+          transition: "right 0.25s ease-out",
         }}
       >
         {/* Header */}
@@ -6194,12 +6195,12 @@ function AttendeeOverviewPanel({ isOpen, attendee, onClose, isNested = false }) 
 
   return (
     <>
-      {/* Push Panel - No overlay, starts below top bar, positioned next to contacts panel when nested */}
+      {/* Push Panel - No overlay, starts below top bar, always on the right */}
       <div
         style={{
           position: "fixed",
           top: "48px",
-          right: isNested ? "420px" : 0, // Position next to ContactsSlideoutPanel when nested
+          right: 0, // Always on the far right
           bottom: 0,
           width: isNested ? "380px" : "400px",
           background: "white",
