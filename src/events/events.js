@@ -332,6 +332,32 @@ const ICONS = {
       <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
+  // Studio Dock Icons
+  capture: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
+  options: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+    </svg>
+  ),
+  pages: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  ),
+  toolbelt: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  ),
+  dock: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="15" x2="21" y2="15" />
+    </svg>
+  ),
 };
 
 // ==================== GLOBAL TOP NAVIGATION BAR ====================
@@ -2120,9 +2146,11 @@ function generateAttendee(id) {
     registrationType = "Speaker"; ticketType = "Complimentary"; isComplimentary = true;
   } else {
     const regRand = seededRandom(id * 59);
-    if (regRand < 0.65) registrationType = "Full Conference";
-    else registrationType = "Workshop Only";
-    ticketType = "Paid"; isComplimentary = false;
+    if (regRand < 0.40) { registrationType = "Full Conference"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.55) { registrationType = "Workshop Only"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.70) { registrationType = "Virtual Pass"; ticketType = "Paid"; isComplimentary = false; }
+    else if (regRand < 0.85) { registrationType = "One Day Pass"; ticketType = "Paid"; isComplimentary = false; }
+    else { registrationType = "VIP"; ticketType = "Paid"; isComplimentary = false; }
   }
 
   // Renewal based on membership status (only meaningful for members)
@@ -2951,7 +2979,13 @@ function EventDetailLayout({
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [showChartPreview, setShowChartPreview] = useState(false);
+  const [showChartConfig, setShowChartConfig] = useState(false);
   const [chartPreviewData, setChartPreviewData] = useState(null);
+
+  // Calculate panel widths for push behavior
+  const chartPanelWidth = showChartPreview ? 420 : 0;
+  const configPanelWidth = showChartConfig ? 380 : 0;
+  const totalPanelWidth = chartPanelWidth + configPanelWidth;
 
   // Determine if event is past
   const isPastEvent = new Date(event.endDate) < new Date();
@@ -2969,7 +3003,16 @@ function EventDetailLayout({
   };
 
   return (
-    <div>
+    <div style={{ display: "flex", minHeight: "calc(100vh - 48px)" }}>
+      {/* Main Content Area - Shrinks when panels are open */}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginRight: totalPanelWidth > 0 ? `${totalPanelWidth}px` : 0,
+        }}
+      >
       {/* Hero Header with Map Background */}
       <div
         style={{
@@ -3041,14 +3084,15 @@ function EventDetailLayout({
           <div
             style={{
               position: "absolute",
-              top: "16px",
-              right: "16px",
-              background: "#3b82f6",
+              bottom: "50px",
+              right: "34px",
+              background: "rgba(255, 255, 255, 0.15)",
               color: "#ffffff",
               fontSize: "12px",
               fontWeight: 500,
               padding: "6px 14px",
               borderRadius: "4px",
+              backdropFilter: "blur(4px)",
             }}
           >
             Past Event
@@ -3062,10 +3106,10 @@ function EventDetailLayout({
             bottom: 0,
             left: 0,
             right: 0,
-            padding: "20px 24px",
+            padding: "20px 48px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginTop: "8px" }}>
             {/* Calendar Icon */}
             <div
               style={{
@@ -3178,6 +3222,7 @@ function EventDetailLayout({
           />
         )}
       </div>
+      </div>
 
       {showInsightsPanel && (
         <InsightsStudioPanel
@@ -3193,14 +3238,32 @@ function EventDetailLayout({
         />
       )}
 
-      {showChartPreview && chartPreviewData && (
-        <ChartPreviewSlideout
-          data={chartPreviewData.data}
-          title={chartPreviewData.title}
-          attendees={chartPreviewData.attendees}
-          onClose={() => setShowChartPreview(false)}
-        />
-      )}
+      {/* Push Panel for Chart Preview */}
+      <ChartPreviewPushPanel
+        isOpen={showChartPreview}
+        data={chartPreviewData?.data}
+        title={chartPreviewData?.title}
+        attendees={chartPreviewData?.attendees}
+        onClose={() => {
+          setShowChartPreview(false);
+          setShowChartConfig(false);
+        }}
+        showConfig={showChartConfig}
+        onOpenConfig={() => setShowChartConfig(true)}
+        onCloseConfig={() => setShowChartConfig(false)}
+      />
+
+      {/* Push Panel for Chart Configuration */}
+      <ChartConfigPushPanel
+        isOpen={showChartConfig}
+        onClose={() => setShowChartConfig(false)}
+      />
+
+      {/* Bottom Left Studio Dock */}
+      <BottomLeftStudioDock
+        onOpenInsights={() => setShowInsightsPanel(true)}
+        onOpenExplorer={() => {}}
+      />
     </div>
   );
 }
@@ -3285,13 +3348,306 @@ function StudioDock({ onOpenInsights, onOpenExplorer }) {
   );
 }
 
+// -------------------- Bottom Left Studio Dock --------------------
+
+function BottomLeftStudioDock({ onOpenInsights, onOpenExplorer }) {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [isDockExpanded, setIsDockExpanded] = useState(false);
+  const [showThemeToggle, setShowThemeToggle] = useState(false);
+
+  // Vertical icons (left side, bottom to top) - includes Settings
+  const verticalIcons = [
+    { id: "capture", Icon: ICONS.capture, label: "Capture" },
+    { id: "options", Icon: ICONS.options, label: "Options" },
+    { id: "pages", Icon: ICONS.pages, label: "Pages" },
+    { id: "toolbelt", Icon: ICONS.toolbelt, label: "Toolbelt" },
+    { id: "settings", Icon: ICONS.settings, label: "Settings", onClick: () => setShowThemeToggle(!showThemeToggle) },
+  ];
+
+  // Horizontal icons (bottom row, left to right) - Dock is separate
+  const horizontalIcons = [
+    { id: "explorer", Icon: ICONS.explorer, label: "Explorer", onClick: onOpenExplorer },
+    { id: "insights", Icon: ICONS.insights, label: "Insights", onClick: onOpenInsights },
+    { id: "reports", Icon: ICONS.reports, label: "Reports" },
+    { id: "timeline", Icon: ICONS.timeline, label: "Timeline" },
+    { id: "ai", Icon: ICONS.ai, label: "AI" },
+  ];
+
+  const handleDockClick = () => {
+    setIsDockExpanded(!isDockExpanded);
+    if (isDockExpanded) {
+      setShowThemeToggle(false); // Close theme toggle when collapsing
+    }
+  };
+
+  const DockIcon = ({ item, tooltipPosition = "right", showThemeToggleIcon = false }) => {
+    const isHovered = hoveredIcon === item.id;
+    const isDock = item.id === "dock";
+    const isSettings = item.id === "settings";
+
+    return (
+      <div
+        style={{ position: "relative", display: "flex", alignItems: "center" }}
+        onMouseEnter={() => setHoveredIcon(item.id)}
+        onMouseLeave={() => setHoveredIcon(null)}
+      >
+        <button
+          onClick={item.onClick || (() => {})}
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "10px",
+            border: "none",
+            background: isDock ? theme.primary : isHovered ? "rgba(59, 130, 246, 0.15)" : "transparent",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.15s ease",
+            transform: isHovered && !isDock ? "scale(1.08)" : "scale(1)",
+          }}
+        >
+          <item.Icon size={20} color={isDock ? "white" : isHovered ? theme.primary : theme.textMuted} />
+        </button>
+        {/* Theme Toggle Icon - appears to the right of Settings */}
+        {isSettings && showThemeToggleIcon && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleTheme();
+            }}
+            onMouseEnter={() => setHoveredIcon("theme")}
+            onMouseLeave={() => setHoveredIcon(null)}
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              border: "none",
+              background: hoveredIcon === "theme" ? "rgba(59, 130, 246, 0.15)" : "transparent",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: "6px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: hoveredIcon === "theme" ? "scale(1.08)" : "scale(1)",
+            }}
+          >
+            {isDark ? (
+              <ICONS.sun size={18} color={hoveredIcon === "theme" ? theme.primary : theme.textMuted} />
+            ) : (
+              <ICONS.moon size={18} color={hoveredIcon === "theme" ? theme.primary : theme.textMuted} />
+            )}
+          </button>
+        )}
+        {/* Tooltip */}
+        {isHovered && (
+          <div
+            style={{
+              position: "absolute",
+              ...(tooltipPosition === "right" ? { left: showThemeToggleIcon && isSettings ? "calc(100% + 42px)" : "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "8px" } : {}),
+              ...(tooltipPosition === "top" ? { bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: "8px" } : {}),
+              background: "#1f2937",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            {item.label}
+          </div>
+        )}
+        {/* Theme tooltip */}
+        {hoveredIcon === "theme" && isSettings && (
+          <div
+            style={{
+              position: "absolute",
+              left: "calc(100% + 42px)",
+              top: "50%",
+              transform: "translateY(-50%)",
+              marginLeft: "8px",
+              background: "#1f2937",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            {isDark ? "Light Mode" : "Dark Mode"}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "16px",
+        left: "16px",
+        zIndex: 90,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
+      {/* Vertical Icons (stacked above the horizontal row) - animated */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+          background: theme.background,
+          borderRadius: "12px",
+          padding: isDockExpanded ? "6px" : "0px",
+          marginBottom: isDockExpanded ? "4px" : "0px",
+          boxShadow: isDockExpanded ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
+          border: isDockExpanded ? `1px solid ${theme.border}` : "none",
+          overflow: "hidden",
+          maxHeight: isDockExpanded ? "300px" : "0px",
+          opacity: isDockExpanded ? 1 : 0,
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transformOrigin: "bottom left",
+        }}
+      >
+        {verticalIcons.map((item) => (
+          <DockIcon
+            key={item.id}
+            item={item}
+            tooltipPosition="right"
+            showThemeToggleIcon={item.id === "settings" && showThemeToggle}
+          />
+        ))}
+      </div>
+
+      {/* Horizontal Icons (bottom row) - includes Dock button at start */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: "4px",
+          background: theme.background,
+          borderRadius: "12px",
+          padding: "6px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+          border: `1px solid ${theme.border}`,
+        }}
+      >
+        {/* Dock button - always visible */}
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setHoveredIcon("dock")}
+          onMouseLeave={() => setHoveredIcon(null)}
+        >
+          <button
+            onClick={handleDockClick}
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              border: "none",
+              background: theme.primary,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: isDockExpanded ? "rotate(45deg)" : "rotate(0deg)",
+            }}
+          >
+            <ICONS.dock size={20} color="white" />
+          </button>
+          {hoveredIcon === "dock" && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                marginBottom: "8px",
+                background: "#1f2937",
+                color: "white",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                zIndex: 1000,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            >
+              {isDockExpanded ? "Close" : "Open"} Dock
+            </div>
+          )}
+        </div>
+
+        {/* Other horizontal icons - animated */}
+        {horizontalIcons.map((item, index) => (
+          <div
+            key={item.id}
+            style={{
+              overflow: "hidden",
+              maxWidth: isDockExpanded ? "40px" : "0px",
+              opacity: isDockExpanded ? 1 : 0,
+              transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s`,
+            }}
+          >
+            <DockIcon item={item} tooltipPosition="top" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EventTabs({ activeTab, onChange }) {
   const { theme } = useTheme();
+  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
   const tabs = [
     { id: "profile", label: "Profile" },
     { id: "activities", label: "Activities" },
-    { id: "more", label: "More ▾" },
   ];
+
+  const moreNavItems = [
+    { id: "registration-types", label: "Registration Types", Icon: ICONS.reports },
+    { id: "dietary", label: "Dietary Restrictions", Icon: ICONS.users },
+    { id: "sessions", label: "Sessions", Icon: ICONS.timeline },
+    { id: "tickets", label: "Tickets", Icon: ICONS.ticket },
+    { id: "membership", label: "Membership Type", Icon: ICONS.user },
+    { id: "age-group", label: "Age Group", Icon: ICONS.insights },
+    { id: "province", label: "Province", Icon: ICONS.mapPin },
+    { id: "tenure", label: "Tenure", Icon: ICONS.briefcase },
+    { id: "education", label: "Education", Icon: ICONS.graduation },
+  ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showMoreDropdown) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowMoreDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreDropdown]);
+
+  const handleMoreItemClick = (itemId) => {
+    onChange("more", itemId);
+    setShowMoreDropdown(false);
+  };
 
   return (
     <div
@@ -3320,6 +3676,84 @@ function EventTabs({ activeTab, onChange }) {
           {tab.label}
         </button>
       ))}
+
+      {/* More dropdown */}
+      <div style={{ position: "relative" }} ref={dropdownRef}>
+        <button
+          onClick={() => setShowMoreDropdown(!showMoreDropdown)}
+          style={{
+            border: "none",
+            borderBottom:
+              activeTab === "more" ? `2px solid ${theme.primary}` : "2px solid transparent",
+            background: "transparent",
+            padding: "0.5rem 0.75rem",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            color: activeTab === "more" ? theme.textPrimary : theme.textMuted,
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+          }}
+        >
+          More
+          <ICONS.chevronDown
+            size={14}
+            style={{
+              transform: showMoreDropdown ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s ease",
+            }}
+          />
+        </button>
+
+        {showMoreDropdown && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              marginTop: "0.25rem",
+              background: theme.background,
+              border: `1px solid ${theme.border}`,
+              borderRadius: "0.5rem",
+              boxShadow: theme.shadowLg,
+              minWidth: "200px",
+              zIndex: 50,
+              overflow: "hidden",
+            }}
+          >
+            {moreNavItems.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => handleMoreItemClick(item.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  width: "100%",
+                  padding: "0.625rem 0.875rem",
+                  border: "none",
+                  borderBottom: index < moreNavItems.length - 1 ? `1px solid ${theme.border}` : "none",
+                  background: "transparent",
+                  textAlign: "left",
+                  fontSize: "0.8rem",
+                  color: theme.textPrimary,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = theme.backgroundSecondary;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "transparent";
+                }}
+              >
+                <item.Icon size={16} style={{ color: theme.textMuted, flexShrink: 0 }} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -3429,6 +3863,7 @@ function EventProfileTab({ event, attendees, kpis, onOpenInsights, onOpenChartPr
           <QuickLinksPanel />
           <AlertsPanel />
           <UpcomingViewsPanel />
+          <EventLocationCard />
         </div>
       </div>
     </div>
@@ -3476,6 +3911,8 @@ function KeyMetricsPanel({ kpis }) {
             style={{
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
               gap: "0.125rem",
             }}
           >
@@ -3487,6 +3924,7 @@ function KeyMetricsPanel({ kpis }) {
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "0.25rem",
                 fontSize: "0.7rem",
                 color: item.isUp ? theme.success : theme.error,
@@ -3642,12 +4080,14 @@ function VitalsRow({ event, kpis, membershipSegments }) {
 
 function RegistrationFunnel() {
   const { theme } = useTheme();
+
+  // Funnel colors matching guideline style (varied colors for each stage)
   const stages = [
-    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: theme.primaryLight },
-    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: theme.primary },
-    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: theme.warning },
-    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: theme.error },
-    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: theme.success },
+    { id: 1, label: "Registration Page", shortLabel: "Page", value: 500, color: "#3b82f6" }, // Blue
+    { id: 2, label: "Registration Type", shortLabel: "Type", value: 320, color: "#14b8a6" }, // Teal
+    { id: 3, label: "Registration Options", shortLabel: "Options", value: 180, color: "#f59e0b" }, // Amber
+    { id: 4, label: "Checkout", shortLabel: "Checkout", value: 85, color: "#10b981" }, // Emerald
+    { id: 5, label: "Confirmed", shortLabel: "Confirmed", value: 32, color: "#22c55e" }, // Green
   ];
 
   const baseValue = stages[0].value;
@@ -3673,67 +4113,103 @@ function RegistrationFunnel() {
           Conversion flow
         </div>
       </div>
+
+      {/* Funnel visualization - connected bars style */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "0.5rem",
+          display: "flex",
+          alignItems: "stretch",
+          gap: "0",
+          height: "90px",
         }}
       >
-        {stages.map((stage) => {
-          const percentage = ((stage.value / baseValue) * 100).toFixed(1);
+        {stages.map((stage, index) => {
+          const percentage = ((stage.value / baseValue) * 100).toFixed(index === 0 ? 0 : 1);
+          const isLast = index === stages.length - 1;
+          const nextColor = !isLast ? stages[index + 1].color : null;
+
           return (
             <div
               key={stage.id}
               style={{
-                background: stage.color,
-                color: "white",
-                borderRadius: "0.5rem",
-                padding: "0.75rem 0.5rem",
-                textAlign: "center",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow = `0 4px 12px ${stage.color}40`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "none";
+                display: "flex",
+                alignItems: "stretch",
+                flex: 1,
               }}
             >
+              {/* Main segment */}
               <div
                 style={{
-                  fontSize: "1.25rem",
-                  fontWeight: 700,
-                  lineHeight: 1,
+                  background: stage.color,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0.5rem",
+                  borderRadius: index === 0 ? "0.5rem 0 0 0.5rem" : isLast ? "0 0.5rem 0.5rem 0" : "0",
+                  transition: "transform 0.2s, filter 0.2s",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = "brightness(1.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = "brightness(1)";
                 }}
               >
-                {stage.value.toLocaleString()}
+                <div
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: 700,
+                    color: "#fff",
+                    lineHeight: 1,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {stage.value.toLocaleString()}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "rgba(255,255,255,0.9)",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  {stage.shortLabel}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.95)",
+                    marginTop: "0.125rem",
+                  }}
+                >
+                  {percentage}%
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: "0.65rem",
-                  marginTop: "0.25rem",
-                  opacity: 0.9,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={stage.label}
-              >
-                {stage.shortLabel}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  marginTop: "0.25rem",
-                }}
-              >
-                {percentage}%
-              </div>
+
+              {/* Connector arrow between segments */}
+              {!isLast && (
+                <svg
+                  width="20"
+                  height="100%"
+                  viewBox="0 0 20 90"
+                  preserveAspectRatio="none"
+                  style={{ display: "block", flexShrink: 0 }}
+                >
+                  <polygon
+                    points="0,0 20,20 20,70 0,90"
+                    fill={stage.color}
+                  />
+                  <polygon
+                    points="0,20 20,20 20,70 0,70"
+                    fill={nextColor}
+                  />
+                </svg>
+              )}
             </div>
           );
         })}
@@ -3745,13 +4221,16 @@ function RegistrationFunnel() {
 // -------------------- Types and Revenue Section --------------------
 
 function TypesAndRevenueSection({ attendees }) {
-  // Color map for registration types
+  // Color map for registration types - expanded with more types
   const COLORS = {
     "Full Conference": "#3b82f6",
     "Workshop Only": "#8b5cf6",
     "Student Pass": "#22c55e",
     "Speaker": "#f59e0b",
     "Guest": "#ec4899",
+    "Virtual Pass": "#06b6d4",
+    "One Day Pass": "#84cc16",
+    "VIP": "#dc2626",
   };
 
   // Mock pricing per registration type
@@ -3761,6 +4240,9 @@ function TypesAndRevenueSection({ attendees }) {
     "Student Pass": 200,
     "Speaker": 0,
     "Guest": 0,
+    "Virtual Pass": 150,
+    "One Day Pass": 250,
+    "VIP": 1500,
   };
 
   // Calculate type distribution
@@ -3825,20 +4307,35 @@ function TypesAndRevenueSection({ attendees }) {
           >
             Registration Types
           </div>
-          <div style={{ width: "100%", height: 180 }}>
+          <div style={{ width: "100%", height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={typeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={60}
+                  innerRadius={55}
+                  outerRadius={95}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ cx, cy, midAngle, outerRadius, name, percent }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = outerRadius + 18;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="#374151"
+                        textAnchor={x > cx ? "start" : "end"}
+                        dominantBaseline="central"
+                        style={{ fontSize: "0.55rem" }}
+                      >
+                        {`${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    );
+                  }}
                   labelLine={false}
                 >
                   {typeData.map((entry, index) => (
@@ -3857,14 +4354,13 @@ function TypesAndRevenueSection({ attendees }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          {/* Legend */}
+          {/* Legend - Vertical layout for more types */}
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.5rem",
-              marginTop: "0.5rem",
-              justifyContent: "center",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: "0.375rem",
+              marginTop: "0.75rem",
             }}
           >
             {typeData.map((item) => (
@@ -3873,20 +4369,24 @@ function TypesAndRevenueSection({ attendees }) {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.25rem",
-                  fontSize: "0.6rem",
+                  gap: "0.375rem",
+                  fontSize: "0.7rem",
                   color: "#374151",
+                  padding: "0.25rem 0",
                 }}
               >
                 <div
                   style={{
-                    width: "8px",
-                    height: "8px",
+                    width: "10px",
+                    height: "10px",
                     borderRadius: "50%",
                     background: item.color,
+                    flexShrink: 0,
                   }}
                 />
-                <span>{item.name}</span>
+                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {item.name} ({item.value})
+                </span>
               </div>
             ))}
           </div>
@@ -4170,13 +4670,15 @@ function AlertsPanel() {
 
 function UpcomingViewsPanel() {
   const [currentMonth, setCurrentMonth] = useState(5); // June = 5 (0-indexed)
+  const [selectedDate, setSelectedDate] = useState(12); // Default to June 12
   const currentYear = 2025;
 
   // Event dates to highlight (June 12-14, 2025)
   const eventDates = [12, 13, 14];
 
-  // Upcoming sessions/events
+  // Upcoming sessions/events - 2 per day
   const upcomingEvents = [
+    // June 12
     {
       id: 1,
       month: "Jun",
@@ -4199,8 +4701,20 @@ function UpcomingViewsPanel() {
       location: "Grand Ballroom",
       status: "SCHEDULED",
     },
+    // June 13
     {
       id: 3,
+      month: "Jun",
+      day: 13,
+      dayName: "Fri",
+      time: "9:30 AM",
+      type: "Session",
+      title: "Leadership Workshop",
+      location: "Conference Room A",
+      status: "SCHEDULED",
+    },
+    {
+      id: 4,
       month: "Jun",
       day: 13,
       dayName: "Fri",
@@ -4210,7 +4724,33 @@ function UpcomingViewsPanel() {
       location: "Main Hall",
       status: "SCHEDULED",
     },
+    // June 14
+    {
+      id: 5,
+      month: "Jun",
+      day: 14,
+      dayName: "Sat",
+      time: "10:00 AM",
+      type: "Session",
+      title: "Industry Panel",
+      location: "Conference Room B",
+      status: "SCHEDULED",
+    },
+    {
+      id: 6,
+      month: "Jun",
+      day: 14,
+      dayName: "Sat",
+      time: "3:00 PM",
+      type: "Session",
+      title: "Closing Remarks",
+      location: "Main Hall",
+      status: "SCHEDULED",
+    },
   ];
+
+  // Filter events by selected date
+  const filteredEvents = upcomingEvents.filter(event => event.day === selectedDate);
 
   // Generate calendar days for the month
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -4241,6 +4781,12 @@ function UpcomingViewsPanel() {
     setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1));
   };
 
+  const handleDateClick = (day) => {
+    if (day && currentMonth === 5 && eventDates.includes(day)) {
+      setSelectedDate(day);
+    }
+  };
+
   return (
     <div
       style={{
@@ -4261,7 +4807,7 @@ function UpcomingViewsPanel() {
         }}
       >
         <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>
-          Upcoming Events
+          Event Schedules
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <button
@@ -4334,19 +4880,22 @@ function UpcomingViewsPanel() {
         >
           {calendarDays.map((day, i) => {
             const isEventDate = currentMonth === 5 && eventDates.includes(day); // June only
+            const isSelected = currentMonth === 5 && day === selectedDate;
             const isWeekend = i % 7 === 0 || i % 7 === 6;
             return (
               <div
                 key={i}
+                onClick={() => handleDateClick(day)}
                 style={{
                   fontSize: "0.65rem",
                   textAlign: "center",
                   padding: "0.2rem",
                   borderRadius: "0.25rem",
-                  background: isEventDate ? "#3b82f6" : "transparent",
-                  color: isEventDate ? "white" : isWeekend ? "#3b82f6" : "#374151",
-                  fontWeight: isEventDate ? 600 : 400,
-                  cursor: day ? "pointer" : "default",
+                  background: isSelected ? "#3b82f6" : isEventDate ? "#dbeafe" : "transparent",
+                  color: isSelected ? "white" : isEventDate ? "#3b82f6" : isWeekend ? "#3b82f6" : "#374151",
+                  fontWeight: isSelected || isEventDate ? 600 : 400,
+                  cursor: isEventDate ? "pointer" : day ? "default" : "default",
+                  transition: "all 0.15s ease",
                 }}
               >
                 {day || ""}
@@ -4356,70 +4905,140 @@ function UpcomingViewsPanel() {
         </div>
       </div>
 
-      {/* Upcoming Events List */}
+      {/* Event Sessions List */}
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {upcomingEvents.map((event, index) => (
-          <div
-            key={event.id}
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              padding: "0.5rem 0",
-              borderBottom: index < upcomingEvents.length - 1 ? "1px solid #f3f4f6" : "none",
-            }}
-          >
-            {/* Date Badge */}
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event, index) => (
             <div
+              key={event.id}
               style={{
-                background: "#3b82f6",
-                color: "white",
-                borderRadius: "0.375rem",
-                padding: "0.25rem 0.4rem",
-                textAlign: "center",
-                minWidth: "2.25rem",
-                flexShrink: 0,
+                display: "flex",
+                gap: "0.5rem",
+                padding: "0.5rem 0",
+                borderBottom: index < filteredEvents.length - 1 ? "1px solid #f3f4f6" : "none",
               }}
             >
-              <div style={{ fontSize: "0.6rem", fontWeight: 500, textTransform: "uppercase" }}>
-                {event.month}
+              {/* Date Badge */}
+              <div
+                style={{
+                  background: "#3b82f6",
+                  color: "white",
+                  borderRadius: "0.375rem",
+                  padding: "0.25rem 0.4rem",
+                  textAlign: "center",
+                  minWidth: "2.25rem",
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ fontSize: "0.6rem", fontWeight: 500, textTransform: "uppercase" }}>
+                  {event.month}
+                </div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, lineHeight: 1 }}>
+                  {event.day}
+                </div>
+                <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.8)" }}>
+                  {event.dayName}
+                </div>
               </div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, lineHeight: 1 }}>
-                {event.day}
+              {/* Event Details */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280" }}>
+                  {event.time} | {event.type}
+                </div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", marginTop: "0.125rem" }}>
+                  {event.title}
+                </div>
+                <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>
+                  {event.location}
+                </div>
               </div>
-              <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.8)" }}>
-                {event.dayName}
+              {/* Status Badge */}
+              <div
+                style={{
+                  alignSelf: "center",
+                  fontSize: "0.55rem",
+                  fontWeight: 600,
+                  background: "#dbeafe",
+                  color: "#1d4ed8",
+                  borderRadius: "999px",
+                  padding: "0.125rem 0.4rem",
+                  textTransform: "uppercase",
+                  flexShrink: 0,
+                }}
+              >
+                {event.status}
               </div>
             </div>
-            {/* Event Details */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "0.65rem", color: "#6b7280" }}>
-                {event.time} | {event.type}
-              </div>
-              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", marginTop: "0.125rem" }}>
-                {event.title}
-              </div>
-              <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>
-                {event.location}
-              </div>
-            </div>
-            {/* Status Badge */}
-            <div
-              style={{
-                alignSelf: "center",
-                fontSize: "0.55rem",
-                fontWeight: 600,
-                background: "#dbeafe",
-                color: "#1d4ed8",
-                borderRadius: "999px",
-                padding: "0.125rem 0.4rem",
-                textTransform: "uppercase",
-                flexShrink: 0,
-              }}
-            >
-              {event.status}
-            </div>
+          ))
+        ) : (
+          <div style={{ textAlign: "center", padding: "1rem", color: "#9ca3af", fontSize: "0.75rem" }}>
+            No events scheduled for this date
           </div>
-        ))}
+        )}
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Event Location Card --------------------
+
+function EventLocationCard() {
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "0.5rem",
+        border: "1px solid #e5e7eb",
+        padding: "1rem",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+        <ICONS.mapPin size={16} color="#3b82f6" />
+        <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827" }}>Event Location</span>
+      </div>
+
+      {/* Location Details */}
+      <div style={{ marginBottom: "0.75rem" }}>
+        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>St. John's Convention Centre</div>
+        <div style={{ fontSize: "0.7rem", color: "#6b7280", marginTop: "0.25rem" }}>St. John's, Newfoundland and Labrador</div>
+        <div style={{ fontSize: "0.65rem", color: "#9ca3af", marginTop: "0.125rem" }}>123 Convention Way, St. John's, NL A1C 1A1</div>
+      </div>
+
+      {/* Map */}
+      <div
+        style={{
+          background: "#e2e8f0",
+          borderRadius: "0.375rem",
+          height: "120px",
+          position: "relative",
+          overflow: "hidden",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Crect fill='%23cbd5e1' width='200' height='120'/%3E%3Cpath d='M0 70 Q50 50 100 65 T200 55' stroke='%2394a3b8' fill='none' stroke-width='2'/%3E%3Cpath d='M0 85 Q50 65 100 80 T200 70' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3Cpath d='M0 100 Q50 80 100 95 T200 85' stroke='%2394a3b8' fill='none' stroke-width='1'/%3E%3Ccircle cx='100' cy='50' r='10' fill='%233b82f6'/%3E%3Ccircle cx='100' cy='50' r='5' fill='white'/%3E%3Ccircle cx='60' cy='70' r='3' fill='%2394a3b8'/%3E%3Ccircle cx='140' cy='65' r='3' fill='%2394a3b8'/%3E%3C/svg%3E")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            bottom: "0.5rem",
+            right: "0.5rem",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "0.25rem",
+            padding: "0.25rem 0.5rem",
+            fontSize: "0.6rem",
+            color: "#3b82f6",
+            fontWeight: 500,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+          }}
+        >
+          <ICONS.mapPin size={10} color="#3b82f6" />
+          Open in Maps
+        </div>
       </div>
     </div>
   );
@@ -4686,11 +5305,12 @@ function MorePeopleListing({ attendees }) {
     }
   });
   const [selectedView, setSelectedView] = useState("Default");
-  const [viewMode, setViewMode] = useState("list"); // "list" | "cards"
+  const [viewMode, setViewMode] = useState("cards"); // "list" | "cards"
   const [selectedCard, setSelectedCard] = useState(null); // active card for vertical nav
   const [peekData, setPeekData] = useState(null); // { field, segment, attendees }
   const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
   const [showSaveModal, setShowSaveModal] = useState(false); // P2.3: Save View Modal
+  const [contactsSlideout, setContactsSlideout] = useState(null); // { field, segment, attendees }
 
   const cards = [
     { title: "Registration Types", field: "registrationType", Icon: ICONS.reports },
@@ -4784,8 +5404,29 @@ function MorePeopleListing({ attendees }) {
     handleToggle(field, label);
   }
 
+  function handleCardCountClick(field, segment) {
+    const segmentAttendees = attendees.filter((a) => (a[field] || "Unknown") === segment);
+    const cardInfo = cards.find(c => c.field === field);
+    setContactsSlideout({
+      field,
+      segment,
+      title: cardInfo ? cardInfo.title : field,
+      attendees: segmentAttendees,
+    });
+  }
+
   // Determine if peek panel should show
   const showPeek = peekData || selectedAttendee;
+
+  // Refs for scrolling to cards
+  const cardRefs = useRef({});
+
+  const scrollToCard = (field) => {
+    if (cardRefs.current[field]) {
+      cardRefs.current[field].scrollIntoView({ behavior: "smooth", block: "center" });
+      setSelectedCard(field);
+    }
+  };
 
   return (
     <div
@@ -4795,12 +5436,79 @@ function MorePeopleListing({ attendees }) {
           ? showPeek
             ? "minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.5fr)"
             : "minmax(0, 1fr) minmax(0, 3fr)"
-          : "1fr",
+          : "180px minmax(0, 1fr)",
         gap: "1rem",
         marginTop: "0.5rem",
       }}
     >
-      {/* Left Column - Vertical Card Navigation */}
+      {/* Left Column - Cards Mode Navigation */}
+      {viewMode === "cards" && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+            position: "sticky",
+            top: "1rem",
+            alignSelf: "start",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: theme.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              padding: "0.5rem 0.75rem",
+              marginBottom: "0.25rem",
+            }}
+          >
+            Categories
+          </div>
+          {cards.map((card) => {
+            const isActive = selectedCard === card.field;
+            return (
+              <button
+                key={card.field}
+                onClick={() => scrollToCard(card.field)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 0.75rem",
+                  border: "none",
+                  borderRadius: "0.375rem",
+                  background: isActive ? theme.primaryLight : "transparent",
+                  color: isActive ? theme.primary : theme.textPrimary,
+                  fontSize: "0.8rem",
+                  fontWeight: isActive ? 600 : 400,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = theme.backgroundSecondary;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                <card.Icon size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {card.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Left Column - List Mode Vertical Card Navigation */}
       {viewMode === "list" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <ListingFilterHeader
@@ -4911,14 +5619,24 @@ function MorePeopleListing({ attendees }) {
             }}
           >
             {cards.map((card) => (
-              <DemographicCard
+              <div
                 key={card.title}
-                title={card.title}
-                field={card.field}
-                attendees={filteredAttendees}
-                colorPalette={colorPalettes[card.field]}
-                onFilterClick={handleCardFilterClick}
-              />
+                ref={(el) => (cardRefs.current[card.field] = el)}
+                style={{
+                  borderRadius: "0.5rem",
+                  transition: "box-shadow 0.2s ease",
+                  boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                }}
+              >
+                <DemographicCard
+                  title={card.title}
+                  field={card.field}
+                  attendees={filteredAttendees}
+                  colorPalette={colorPalettes[card.field]}
+                  onFilterClick={handleCardFilterClick}
+                  onCountClick={handleCardCountClick}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -4944,7 +5662,225 @@ function MorePeopleListing({ attendees }) {
         onSave={handleSaveView}
         currentFilters={filters}
       />
+
+      {/* Contacts Slideout Panel for Card Count Clicks */}
+      {contactsSlideout && (
+        <ContactsSlideoutPanel
+          isOpen={!!contactsSlideout}
+          segment={contactsSlideout.segment}
+          categoryTitle={contactsSlideout.title}
+          attendees={contactsSlideout.attendees}
+          onClose={() => setContactsSlideout(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// -------------------- Contacts Slideout Panel --------------------
+
+function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose }) {
+  const { theme } = useTheme();
+
+  // Generate dummy registration numbers
+  const generateRegNumber = (id) => {
+    const prefix = "REG";
+    const year = "2024";
+    const num = String(id).padStart(5, "0");
+    return `${prefix}-${year}-${num}`;
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.3)",
+          zIndex: 999,
+        }}
+      />
+      {/* Slide-out Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "420px",
+          background: "white",
+          boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.15)",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideInRight 0.3s ease-out",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "1rem 1.25rem",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: theme.primaryLight || "#eff6ff",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "0.75rem", color: theme.textMuted || "#6b7280", marginBottom: "0.25rem" }}>
+              {categoryTitle}
+            </div>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600, color: theme.textPrimary || "#111827" }}>
+              {segment}
+            </h3>
+            <div style={{ fontSize: "0.8rem", color: theme.textSecondary || "#374151", marginTop: "0.25rem" }}>
+              {attendees.length} contact{attendees.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: "1.5rem",
+              color: theme.textMuted || "#6b7280",
+              padding: "0.25rem",
+              lineHeight: 1,
+              borderRadius: "0.25rem",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#e5e7eb"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Contacts List */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "0.5rem",
+          }}
+        >
+          {attendees.map((attendee, idx) => (
+            <div
+              key={attendee.id || idx}
+              style={{
+                padding: "0.875rem 1rem",
+                borderBottom: "1px solid #f3f4f6",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#f9fafb"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              {/* Name */}
+              <div
+                style={{
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  color: theme.textPrimary || "#111827",
+                  marginBottom: "0.375rem",
+                }}
+              >
+                {attendee.name || "Unknown"}
+              </div>
+
+              {/* Details Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.25rem 1rem",
+                  fontSize: "0.8rem",
+                }}
+              >
+                {/* Email */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Email</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.email || `${(attendee.name || "user").toLowerCase().replace(/\s+/g, ".")}@example.com`}
+                  </span>
+                </div>
+
+                {/* Position */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Position</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.position || attendee.title || "Member"}
+                  </span>
+                </div>
+
+                {/* Company */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Company</span>
+                  <span style={{ color: theme.textSecondary || "#374151" }}>
+                    {attendee.company || attendee.organization || "—"}
+                  </span>
+                </div>
+
+                {/* Reg Number */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ color: theme.textMuted || "#9ca3af", fontSize: "0.7rem" }}>Reg #</span>
+                  <span style={{ color: theme.primary || "#2563eb", fontFamily: "monospace", fontSize: "0.75rem" }}>
+                    {generateRegNumber(attendee.id || idx + 1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {attendees.length === 0 && (
+            <div
+              style={{
+                padding: "2rem",
+                textAlign: "center",
+                color: theme.textMuted || "#9ca3af",
+                fontSize: "0.85rem",
+              }}
+            >
+              No contacts found
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: "0.75rem 1.25rem",
+            borderTop: "1px solid #e5e7eb",
+            background: "#f9fafb",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #d1d5db",
+              background: "white",
+              borderRadius: "0.375rem",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              color: theme.textPrimary || "#374151",
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -5925,6 +6861,420 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick,
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// -------------------- Push Panel Components --------------------
+
+function ChartPreviewPushPanel({ isOpen, data, title, attendees, onClose, showConfig, onOpenConfig, onCloseConfig }) {
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
+
+  const transformedData = useMemo(
+    () => data ? transformChartData(data, config, attendees) : [],
+    [data, config, attendees]
+  );
+
+  const totalRegistrations = transformedData.length > 0 ? transformedData[transformedData.length - 1]?.registrations || 0 : 0;
+  const totalRevenue = transformedData.length > 0 ? transformedData[transformedData.length - 1]?.revenue || 0 : 0;
+  const avgRevenuePerRegistrant = totalRegistrations > 0 ? (totalRevenue / totalRegistrations).toFixed(0) : 0;
+  const peakWeek = transformedData.length > 0 ? transformedData.reduce((max, item) => item.registrations > max.registrations ? item : max, transformedData[0]) : null;
+
+  // Calculate right position based on config panel
+  const rightPosition = showConfig ? 380 : 0;
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "48px",
+        right: `${rightPosition}px`,
+        bottom: 0,
+        width: "420px",
+        background: "white",
+        boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        transition: "right 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflowY: "auto",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "1.25rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#fafafa",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+            {title || "Chart Preview"}
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+            Chart Preview & Analysis
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "#f3f4f6",
+            borderRadius: "0.375rem",
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            color: "#374151",
+            fontWeight: 500,
+          }}
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Chart Content */}
+      <div style={{ padding: "1.25rem", flex: 1 }}>
+        {data && (
+          <>
+            <div
+              style={{
+                background: "#f9fafb",
+                borderRadius: "0.5rem",
+                padding: "1rem",
+                border: "1px solid #e5e7eb",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <ResponsiveContainer width="100%" height={320}>
+                <ComposedChart
+                  data={transformedData}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    stroke="#9ca3af"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "0.5rem",
+                      fontSize: "0.75rem",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "0.7rem" }} />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="registrations"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="Registrations"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: "#10b981" }}
+                    name="Revenue ($)"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Stats */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "0.75rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Total Registrations</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>{totalRegistrations}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Total Revenue</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#10b981" }}>${totalRevenue.toLocaleString()}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Avg Revenue/Person</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>${avgRevenuePerRegistrant}</div>
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.75rem", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.65rem", color: "#6b7280", marginBottom: "0.25rem" }}>Peak Week</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#111827" }}>{peakWeek?.label || "N/A"}</div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button
+            onClick={onOpenConfig}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #3b82f6",
+              background: showConfig ? "#3b82f6" : "white",
+              color: showConfig ? "white" : "#3b82f6",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontWeight: 600,
+              transition: "all 0.2s",
+            }}
+          >
+            Configure Chart
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              background: "#e5e7eb",
+              color: "#374151",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartConfigPushPanel({ isOpen, onClose }) {
+  const [config, setConfig] = useState({
+    viewMode: "count",
+    selectedMembershipTypes: [],
+    dateRange: "all",
+  });
+
+  const membershipTypes = ["CPA", "Student", "Non-member", "Guest"];
+
+  function handleReset() {
+    setConfig({
+      viewMode: "count",
+      selectedMembershipTypes: [],
+      dateRange: "all",
+    });
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "48px",
+        right: 0,
+        bottom: 0,
+        width: "380px",
+        background: "white",
+        boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+        borderLeft: "1px solid #e5e7eb",
+        zIndex: 101,
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "1.25rem",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#fafafa",
+        }}
+      >
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+            Chart Configuration
+          </h3>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+            Customize chart display and filters
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: "1.25rem",
+            cursor: "pointer",
+            color: "#6b7280",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Config Content */}
+      <div style={{ padding: "1.25rem", flex: 1 }}>
+        {/* View Mode */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            View Mode
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="count"
+                checked={config.viewMode === "count"}
+                onChange={(e) => setConfig({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Count
+            </label>
+            <label style={{ display: "flex", alignItems: "center", fontSize: "0.8rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="viewMode"
+                value="percentage"
+                checked={config.viewMode === "percentage"}
+                onChange={(e) => setConfig({ ...config, viewMode: e.target.value })}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Percentage
+            </label>
+          </div>
+        </div>
+
+        {/* Membership Filter */}
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Filter by Membership Type
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {membershipTypes.map((type) => {
+              const isSelected = config.selectedMembershipTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    const updated = isSelected
+                      ? config.selectedMembershipTypes.filter((t) => t !== type)
+                      : [...config.selectedMembershipTypes, type];
+                    setConfig({ ...config, selectedMembershipTypes: updated });
+                  }}
+                  style={{
+                    padding: "0.4rem 0.75rem",
+                    borderRadius: "999px",
+                    border: "1px solid #d1d5db",
+                    background: isSelected ? "#3b82f6" : "white",
+                    color: isSelected ? "white" : "#374151",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    fontWeight: isSelected ? 600 : 400,
+                  }}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Date Range */}
+        <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>
+            Date Range
+          </div>
+          <select
+            value={config.dateRange}
+            onChange={(e) => setConfig({ ...config, dateRange: e.target.value })}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              borderRadius: "0.375rem",
+              border: "1px solid #d1d5db",
+              fontSize: "0.8rem",
+              color: "#374151",
+            }}
+          >
+            <option value="all">All Time</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="90days">Last 90 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div style={{ padding: "1.25rem", borderTop: "1px solid #e5e7eb", display: "flex", gap: "0.75rem" }}>
+        <button
+          onClick={handleReset}
+          style={{
+            flex: 1,
+            padding: "0.75rem",
+            borderRadius: "0.5rem",
+            border: "1px solid #d1d5db",
+            background: "white",
+            color: "#374151",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Reset
+        </button>
+        <button
+          onClick={onClose}
+          style={{
+            flex: 1,
+            padding: "0.75rem",
+            borderRadius: "0.5rem",
+            border: "none",
+            background: "#3b82f6",
+            color: "white",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Apply
+        </button>
+      </div>
     </div>
   );
 }
