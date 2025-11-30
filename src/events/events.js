@@ -5515,6 +5515,13 @@ function MorePeopleListing({ attendees }) {
     }
   };
 
+  // Calculate margin-right for push panel behavior
+  const getPanelMargin = () => {
+    if (contactsSlideout) return "420px"; // Contacts panel width
+    if (attendeeOverview) return "400px"; // Attendee panel width (non-nested)
+    return "0";
+  };
+
   return (
     <div
       style={{
@@ -5526,6 +5533,8 @@ function MorePeopleListing({ attendees }) {
           : "180px minmax(0, 1fr)",
         gap: "1rem",
         marginTop: "0.5rem",
+        marginRight: getPanelMargin(),
+        transition: "margin-right 0.3s ease-out",
       }}
     >
       {/* Left Column - Cards Mode Navigation */}
