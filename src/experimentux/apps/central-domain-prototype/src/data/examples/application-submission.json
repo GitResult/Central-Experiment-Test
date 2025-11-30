@@ -1,0 +1,995 @@
+{
+  "id": "application-submission",
+  "name": "Job Application - Senior Software Engineer",
+  "type": "HR",
+  "description": "HR/Admissions application with canvas-based form, field-level discussions, and collaborative review - Greenhouse/Lever inspired",
+  "zones": [
+    {
+      "id": "header",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "header-row",
+          "marginBottom": 4,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "breadcrumb",
+                  "data": {
+                    "items": [
+                      { "label": "Applications", "href": "/applications" },
+                      { "label": "Senior Software Engineer", "current": true }
+                    ]
+                  },
+                  "settings": {
+                    "breadcrumb": {
+                      "showHome": true,
+                      "separator": "chevron"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "title-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "flex",
+                      "direction": "row",
+                      "justify": "space-between",
+                      "align": "center"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.1"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Application Form"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 2
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Position: Senior Software Engineer • San Francisco, CA"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "badge",
+                      "data": {
+                        "label": "Applicant: John Doe"
+                      },
+                      "settings": {
+                        "badge": {
+                          "variant": "secondary",
+                          "size": "md"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main-content",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "three-column-layout",
+          "gap": 6,
+          "columns": [
+            {
+              "width": "1/5",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm",
+                      "sticky": true
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.1"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Navigation"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 6
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "• Form"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "primary",
+                              "size": "sm"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• Resume"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#resume"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• Review"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#review"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• Discuss"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#discuss"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "• History"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#history"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "3/5",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "md",
+                      "background": "secondary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "📋 Application Form Canvas"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 5
+                            }
+                          }
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "justify": "space-between",
+                                  "align": "center"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "field",
+                                  "data": { "value": "John Doe" },
+                                  "settings": {
+                                    "field": {
+                                      "fieldType": "text",
+                                      "label": "Full Name *",
+                                      "placeholder": "Enter your full name",
+                                      "required": true
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "💬"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "[2 comments]"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#comments-name"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "justify": "space-between",
+                                  "align": "center"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "field",
+                                  "data": { "value": "john.doe@example.com" },
+                                  "settings": {
+                                    "field": {
+                                      "fieldType": "email",
+                                      "label": "Email Address *",
+                                      "placeholder": "your.email@example.com",
+                                      "required": true
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "💬"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "[1 comment]"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#comments-email"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "justify": "space-between",
+                                  "align": "center"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "field",
+                                  "data": { "value": "(555) 123-4567" },
+                                  "settings": {
+                                    "field": {
+                                      "fieldType": "text",
+                                      "label": "Phone *",
+                                      "placeholder": "(555) 123-4567",
+                                      "required": true
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "💬"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "[0 comments]"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "tertiary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "justify": "space-between",
+                                  "align": "center"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "field",
+                                  "data": { "value": "" },
+                                  "settings": {
+                                    "field": {
+                                      "fieldType": "file",
+                                      "label": "Resume Upload *",
+                                      "placeholder": "Drop file or click to upload",
+                                      "required": true
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "💬"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "[3 comments - @sarah: Need updated format]"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#comments-resume"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "flex",
+                                  "direction": "row",
+                                  "justify": "space-between",
+                                  "align": "center"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "field",
+                                  "data": { "value": "" },
+                                  "settings": {
+                                    "field": {
+                                      "fieldType": "file",
+                                      "label": "Cover Letter",
+                                      "placeholder": "Drop file or click to upload",
+                                      "required": false
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "💬"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "text"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "[2 comments]"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#comments-cover"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "divider"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "🔍 Pan & Zoom: 100%"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/5",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.4"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Status"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "● Draft"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "warning",
+                                  "size": "md"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Progress"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "60% Complete (3/5 fields)"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.2"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "**Required Fields:**"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "✅ Name"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "✅ Email"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "✅ Phone"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "⬜ Resume"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "⬜ Cover Letter"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Comments"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**8 total**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "3 unread"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "primary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Application Fee"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "$50.00"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 4
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "⬜ Unpaid"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "warning",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "card",
+                      "data": {},
+                      "settings": {
+                        "card": {
+                          "padding": "md",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Actions"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 6
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Save Draft"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Submit Application"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "primary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Preview"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

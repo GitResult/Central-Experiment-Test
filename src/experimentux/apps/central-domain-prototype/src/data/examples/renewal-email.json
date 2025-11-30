@@ -1,0 +1,707 @@
+{
+  "id": "renewal-email",
+  "name": "Subscription Renewal Reminder",
+  "type": "Email",
+  "description": "Professional email marketing template for subscription renewal with hero image and focused CTA - Email Marketing inspired",
+  "zones": [
+    {
+      "id": "email-header",
+      "maxWidth": "sm",
+      "padding": 4,
+      "rows": [
+        {
+          "id": "header-row",
+          "marginBottom": 0,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": false,
+                      "shadow": "none"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "justify": "space-between",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "EnterprisePro"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 5
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "View in browser →"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "link",
+                              "href": "#"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-hero",
+      "maxWidth": "sm",
+      "padding": 0,
+      "rows": [
+        {
+          "id": "hero-row",
+          "marginBottom": 0,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "record",
+                  "data": {
+                    "src": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
+                    "alt": "Team collaboration and success"
+                  },
+                  "settings": {
+                    "record": {
+                      "recordType": "image",
+                      "aspectRatio": "3/1",
+                      "fit": "cover",
+                      "rounded": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-body",
+      "maxWidth": "sm",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "body-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Hi Sarah,"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Your subscription to **EnterprisePro** is about to expire on **December 15, 2025**."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Don't miss out! Renew today to continue enjoying:"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Unlimited access to all features"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Priority customer support"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Advanced analytics and reporting"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Exclusive updates and new features"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "justify": "center",
+                              "align": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Renew Now - $99/year"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "primary",
+                                  "size": "lg"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "divider"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Questions? We're here to help. Reply to this email or visit our help center."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Thanks,\nThe EnterprisePro Team"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-value",
+      "maxWidth": "sm",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "value-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm",
+                      "background": "secondary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Your Plan Includes"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 4,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "grid",
+                              "columns": 2,
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "kpi",
+                              "data": {
+                                "label": "Team Members",
+                                "value": "Unlimited",
+                                "description": "No per-seat fees"
+                              },
+                              "settings": {
+                                "kpi": {
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "kpi",
+                              "data": {
+                                "label": "Storage",
+                                "value": "1 TB",
+                                "description": "Cloud storage"
+                              },
+                              "settings": {
+                                "kpi": {
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "kpi",
+                              "data": {
+                                "label": "API Calls",
+                                "value": "1M/mo",
+                                "description": "Premium tier"
+                              },
+                              "settings": {
+                                "kpi": {
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "kpi",
+                              "data": {
+                                "label": "Support",
+                                "value": "24/7",
+                                "description": "Priority access"
+                              },
+                              "settings": {
+                                "kpi": {
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "**Total Value: $299/month** • You pay only $99/year"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-testimonial",
+      "maxWidth": "sm",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "testimonial-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "⭐⭐⭐⭐⭐"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "\"EnterprisePro has transformed how our team collaborates. The analytics alone are worth 10x the price.\""
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "— Michael Chen, CTO at TechStartup Inc."
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-urgency",
+      "maxWidth": "sm",
+      "padding": 4,
+      "rows": [
+        {
+          "id": "urgency-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm",
+                      "background": "tertiary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "⏰ Your subscription expires in **7 days** on December 15, 2025"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph",
+                          "align": "center"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "email-footer",
+      "maxWidth": "sm",
+      "padding": 4,
+      "rows": [
+        {
+          "id": "footer-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": false,
+                      "shadow": "none"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "justify": "center",
+                              "gap": "@spacing.4"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Facebook"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Twitter"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "LinkedIn"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "123 Enterprise Way, San Francisco, CA 94105"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "justify": "center",
+                              "gap": "@spacing.2"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Unsubscribe"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "|"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Update Preferences"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "link",
+                                  "href": "#"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

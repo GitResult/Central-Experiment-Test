@@ -1,0 +1,1007 @@
+{
+  "id": "event-landing-page",
+  "name": "Annual Conference 2026",
+  "type": "Marketing",
+  "description": "Professional event landing page with hero section, speakers, and registration",
+  "zones": [
+    {
+      "id": "hero-zone",
+      "padding": 0,
+      "rows": [
+        {
+          "id": "hero-row",
+          "marginBottom": 0,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "hero",
+                  "data": {
+                    "title": "Transform Summit 2026",
+                    "subtitle": "Join 5,000+ leaders for three days of innovation, networking, and growth • June 15-17, 2026 • San Francisco, CA"
+                  },
+                  "settings": {
+                    "hero": {
+                      "height": "lg",
+                      "align": "center",
+                      "overlay": "gradient",
+                      "textColor": "white"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Register Now"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "button"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "View Agenda"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "button"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "content",
+      "maxWidth": "xl",
+      "padding": 12,
+      "rows": [
+        {
+          "id": "intro-row",
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Why Attend?"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 2
+                    }
+                  }
+                },
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Transform Summit brings together the brightest minds in technology, business, and innovation for an unforgettable experience of learning, networking, and discovery."
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "paragraph"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stats-row",
+          "gap": 8,
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Attendees",
+                    "value": "5000",
+                    "suffix": "+"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "lg"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Speakers",
+                    "value": "120",
+                    "suffix": "+"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "lg"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Sessions",
+                    "value": "75",
+                    "suffix": "+"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "lg"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "speakers-row",
+          "gap": 6,
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Featured Speakers"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 2
+                    }
+                  }
+                },
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Learn from industry leaders and innovators shaping the future of technology"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "paragraph"
+                    }
+                  }
+                },
+                {
+                  "type": "record",
+                  "data": [
+                    {
+                      "id": 1,
+                      "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400",
+                      "imageAlt": "Sarah Johnson",
+                      "title": "Sarah Johnson",
+                      "subtitle": "CEO, TechVentures",
+                      "description": "Pioneer in AI-driven business transformation"
+                    },
+                    {
+                      "id": 2,
+                      "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
+                      "imageAlt": "Michael Chen",
+                      "title": "Michael Chen",
+                      "subtitle": "CTO, CloudScale",
+                      "description": "Expert in distributed systems and cloud architecture"
+                    },
+                    {
+                      "id": 3,
+                      "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400",
+                      "imageAlt": "Emma Williams",
+                      "title": "Emma Williams",
+                      "subtitle": "VP Product, DataFlow",
+                      "description": "Leading data analytics and visualization innovation"
+                    },
+                    {
+                      "id": 4,
+                      "image": "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400",
+                      "imageAlt": "James Rodriguez",
+                      "title": "James Rodriguez",
+                      "subtitle": "Founder, AI Labs",
+                      "description": "Pioneering machine learning research and applications"
+                    },
+                    {
+                      "id": 5,
+                      "image": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
+                      "imageAlt": "Lisa Anderson",
+                      "title": "Lisa Anderson",
+                      "subtitle": "Head of Engineering, DevOps Pro",
+                      "description": "Transforming DevOps practices at scale"
+                    },
+                    {
+                      "id": 6,
+                      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+                      "imageAlt": "David Kim",
+                      "title": "David Kim",
+                      "subtitle": "Director of Innovation, FinTech Global",
+                      "description": "Revolutionizing financial technology solutions"
+                    }
+                  ],
+                  "settings": {
+                    "record": {
+                      "recordType": "grid",
+                      "columns": {
+                        "mobile": 1,
+                        "tablet": 2,
+                        "desktop": 3
+                      },
+                      "gap": "@spacing.6",
+                      "itemAspectRatio": "4/3",
+                      "itemRounded": true,
+                      "itemShadow": true,
+                      "staggerAnimation": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "schedule-row",
+          "gap": 6,
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Event Schedule"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 2
+                    }
+                  }
+                },
+                {
+                  "type": "tabs",
+                  "data": {
+                    "tabs": [
+                      {
+                        "id": "day1",
+                        "label": "Day 1 - June 15",
+                        "content": "Opening Keynote and Workshops"
+                      },
+                      {
+                        "id": "day2",
+                        "label": "Day 2 - June 16",
+                        "content": "Technical Sessions and Networking"
+                      },
+                      {
+                        "id": "day3",
+                        "label": "Day 3 - June 17",
+                        "content": "Advanced Topics and Closing"
+                      }
+                    ]
+                  },
+                  "settings": {
+                    "tabs": {
+                      "variant": "underline"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "timeline",
+                      "data": {
+                        "items": [
+                          {
+                            "id": 1,
+                            "date": "9:00 AM",
+                            "type": "Opening Keynote",
+                            "description": "Transform Summit 2026: The Future is Now",
+                            "icon": "Rocket",
+                            "user": "Sarah Johnson",
+                            "status": "info"
+                          },
+                          {
+                            "id": 2,
+                            "date": "10:30 AM",
+                            "type": "Workshop Track A",
+                            "description": "AI in Production: Best Practices and Pitfalls",
+                            "icon": "Code",
+                            "user": "Michael Chen",
+                            "status": "success"
+                          },
+                          {
+                            "id": 3,
+                            "date": "1:00 PM",
+                            "type": "Lunch & Networking",
+                            "description": "Connect with peers and speakers",
+                            "icon": "Coffee",
+                            "status": "warning"
+                          },
+                          {
+                            "id": 4,
+                            "date": "2:30 PM",
+                            "type": "Workshop Track B",
+                            "description": "Building Scalable Cloud Infrastructure",
+                            "icon": "Cloud",
+                            "user": "Emma Williams"
+                          },
+                          {
+                            "id": 5,
+                            "date": "4:00 PM",
+                            "type": "Panel Discussion",
+                            "description": "The Future of Work: Remote, Hybrid, or In-Person?",
+                            "icon": "Users",
+                            "meta": "All speakers"
+                          }
+                        ]
+                      },
+                      "settings": {
+                        "timeline": {
+                          "compact": false,
+                          "animate": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "venue-row",
+          "gap": 6,
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "1/2",
+              "elements": [
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Venue & Location"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 2
+                    }
+                  }
+                },
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Moscone Center"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 3
+                    }
+                  }
+                },
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "747 Howard Street\nSan Francisco, CA 94103\nUnited States"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "paragraph"
+                    }
+                  }
+                },
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "The Moscone Center is located in the heart of downtown San Francisco, easily accessible by public transportation and surrounded by hotels, restaurants, and attractions."
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "paragraph"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/2",
+              "elements": [
+                {
+                  "type": "record",
+                  "data": {
+                    "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6?w=800",
+                    "alt": "Moscone Center San Francisco",
+                    "width": 800,
+                    "height": 600
+                  },
+                  "settings": {
+                    "record": {
+                      "recordType": "image",
+                      "lazy": true,
+                      "aspectRatio": "16/9",
+                      "fit": "cover",
+                      "rounded": true,
+                      "shadow": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sponsors-row",
+          "gap": 6,
+          "marginBottom": 12,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "markup",
+                  "data": {
+                    "content": "Our Sponsors"
+                  },
+                  "settings": {
+                    "markup": {
+                      "markupType": "heading",
+                      "level": 2
+                    }
+                  }
+                },
+                {
+                  "type": "record",
+                  "data": [
+                    {
+                      "id": 1,
+                      "badge": "Diamond",
+                      "title": "TechCorp Global",
+                      "meta": "Diamond Sponsor"
+                    },
+                    {
+                      "id": 2,
+                      "badge": "Platinum",
+                      "title": "CloudScale Inc",
+                      "meta": "Platinum Sponsor"
+                    },
+                    {
+                      "id": 3,
+                      "badge": "Gold",
+                      "title": "DataFlow Systems",
+                      "meta": "Gold Sponsor"
+                    },
+                    {
+                      "id": 4,
+                      "badge": "Gold",
+                      "title": "AI Labs",
+                      "meta": "Gold Sponsor"
+                    }
+                  ],
+                  "settings": {
+                    "record": {
+                      "recordType": "grid",
+                      "columns": {
+                        "mobile": 1,
+                        "tablet": 2,
+                        "desktop": 4
+                      },
+                      "gap": "@spacing.4",
+                      "itemRounded": true,
+                      "itemShadow": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cta-row",
+          "gap": 6,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "xl",
+                      "border": false,
+                      "shadow": "lg",
+                      "background": "@colors.primary.50"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Ready to Transform?"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Join us for three days of learning, networking, and innovation. Early bird pricing ends April 30th!"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Register Now - Save $200"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "button"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "testimonials",
+      "maxWidth": "lg",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "testimonials-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.6"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "What Attendees Say"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2,
+                          "align": "center"
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "grid",
+                          "columns": 3,
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "lg",
+                              "border": true,
+                              "shadow": "md"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.3"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "⭐⭐⭐⭐⭐"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "\"TechConf 2024 was absolutely incredible. The speakers were world-class and I made connections that changed my career.\""
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "— Alex Thompson, Software Engineer"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "lg",
+                              "border": true,
+                              "shadow": "md"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.3"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "⭐⭐⭐⭐⭐"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "\"Best tech conference I've ever attended. The workshops were hands-on and practical. Highly recommend!\""
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "— Maria Garcia, Product Manager"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "lg",
+                              "border": true,
+                              "shadow": "md"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "structure",
+                              "data": {},
+                              "settings": {
+                                "structure": {
+                                  "structureType": "stack",
+                                  "gap": "@spacing.3"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "⭐⭐⭐⭐⭐"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "\"The networking opportunities alone were worth the ticket price. Can't wait for next year!\""
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "— David Kim, CTO"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "paragraph"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "faq",
+      "maxWidth": "md",
+      "padding": 8,
+      "rows": [
+        {
+          "id": "faq-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "stack",
+                      "gap": "@spacing.6"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Frequently Asked Questions"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 2,
+                          "align": "center"
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**When and where is TechConf 2025?**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "March 15-17, 2025 at the San Francisco Convention Center."
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**What's included in my ticket?**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Access to all talks, workshops, networking events, meals, and the after-party."
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Is there a refund policy?**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Full refunds available until February 15, 2025. After that, tickets can be transferred to someone else."
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "sm"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "**Will sessions be recorded?**"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Yes! All main stage talks will be recorded and available to ticket holders for 6 months after the event."
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

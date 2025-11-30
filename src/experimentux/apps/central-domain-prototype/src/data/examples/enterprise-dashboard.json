@@ -1,0 +1,657 @@
+{
+  "id": "enterprise-dashboard",
+  "name": "Enterprise Dashboard",
+  "type": "Analytics",
+  "description": "Executive dashboard with KPIs, charts, and real-time metrics",
+  "zones": [
+    {
+      "id": "header",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "title-row",
+          "marginBottom": 6,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "structure",
+                  "data": {},
+                  "settings": {
+                    "structure": {
+                      "structureType": "flex",
+                      "direction": "row",
+                      "align": "center",
+                      "justify": "space-between"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Enterprise Dashboard"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "title"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Real-time overview of key business metrics and performance indicators"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "Last 30 Days"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "primary",
+                              "size": "md"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Export"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Refresh"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kpis",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "kpi-row",
+          "gap": 6,
+          "marginBottom": 8,
+          "columns": [
+            {
+              "width": "1/4",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Total Revenue",
+                    "value": 2847500,
+                    "prefix": "$",
+                    "change": 12.5,
+                    "changeType": "positive"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "md"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/4",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Active Users",
+                    "value": 15847,
+                    "change": 8.3,
+                    "changeType": "positive"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "md"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/4",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Conversion Rate",
+                    "value": 4.8,
+                    "suffix": "%",
+                    "change": -2.1,
+                    "changeType": "negative"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "md"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/4",
+              "elements": [
+                {
+                  "type": "kpi",
+                  "data": {
+                    "label": "Avg. Deal Size",
+                    "value": 125000,
+                    "prefix": "$",
+                    "change": 0,
+                    "changeType": "neutral"
+                  },
+                  "settings": {
+                    "kpi": {
+                      "size": "md"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "charts-row",
+          "gap": 6,
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "chart",
+                  "data": {
+                    "chartData": [
+                      { "name": "Jan", "revenue": 145000, "users": 12400 },
+                      { "name": "Feb", "revenue": 178000, "users": 13200 },
+                      { "name": "Mar", "revenue": 195000, "users": 14100 },
+                      { "name": "Apr", "revenue": 210000, "users": 14800 },
+                      { "name": "May", "revenue": 225000, "users": 15200 },
+                      { "name": "Jun", "revenue": 242000, "users": 15847 }
+                    ],
+                    "dataKeys": ["revenue", "users"]
+                  },
+                  "settings": {
+                    "chart": {
+                      "type": "area",
+                      "height": 350,
+                      "showGrid": true,
+                      "showLegend": true
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "chart",
+                  "data": {
+                    "chartData": [
+                      { "name": "Enterprise", "value": 45 },
+                      { "name": "Professional", "value": 30 },
+                      { "name": "Starter", "value": 25 }
+                    ],
+                    "dataKeys": ["value"]
+                  },
+                  "settings": {
+                    "chart": {
+                      "type": "pie",
+                      "height": 350,
+                      "showGrid": false,
+                      "showLegend": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bar-chart-row",
+          "gap": 6,
+          "marginBottom": 8,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "chart",
+                  "data": {
+                    "chartData": [
+                      { "name": "Mon", "deals": 12, "calls": 45, "meetings": 8 },
+                      { "name": "Tue", "deals": 15, "calls": 52, "meetings": 11 },
+                      { "name": "Wed", "deals": 18, "calls": 48, "meetings": 9 },
+                      { "name": "Thu", "deals": 14, "calls": 55, "meetings": 12 },
+                      { "name": "Fri", "deals": 21, "calls": 42, "meetings": 7 }
+                    ],
+                    "dataKeys": ["deals", "calls", "meetings"]
+                  },
+                  "settings": {
+                    "chart": {
+                      "type": "bar",
+                      "height": 300,
+                      "showGrid": true,
+                      "showLegend": true
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data-tables-row",
+          "gap": 6,
+          "marginBottom": 8,
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Top Performing Regions"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 3
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": 1,
+                          "region": "North America",
+                          "revenue": 1250000,
+                          "customers": 456,
+                          "growth": "+15.2%",
+                          "growthColor": "@colors.success.500",
+                          "status": "On Target",
+                          "statusColor": "@colors.success.500"
+                        },
+                        {
+                          "id": 2,
+                          "region": "Europe",
+                          "revenue": 980000,
+                          "customers": 382,
+                          "growth": "+12.8%",
+                          "growthColor": "@colors.success.500",
+                          "status": "On Target",
+                          "statusColor": "@colors.success.500"
+                        },
+                        {
+                          "id": 3,
+                          "region": "Asia Pacific",
+                          "revenue": 547500,
+                          "customers": 245,
+                          "growth": "+8.5%",
+                          "growthColor": "@colors.success.500",
+                          "status": "Growing",
+                          "statusColor": "@colors.primary.500"
+                        },
+                        {
+                          "id": 4,
+                          "region": "Latin America",
+                          "revenue": 70000,
+                          "customers": 67,
+                          "growth": "-3.2%",
+                          "growthColor": "@colors.error.500",
+                          "status": "At Risk",
+                          "statusColor": "@colors.error.500"
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "data-grid",
+                          "columns": [
+                            { "key": "region", "label": "Region", "type": "text" },
+                            { "key": "revenue", "label": "Revenue", "type": "number", "align": "right" },
+                            { "key": "customers", "label": "Customers", "type": "number", "align": "center" },
+                            { "key": "growth", "label": "Growth", "type": "badge", "align": "center" },
+                            { "key": "status", "label": "Status", "type": "badge", "align": "center" }
+                          ],
+                          "sortable": true,
+                          "striped": true,
+                          "hoverable": true,
+                          "bordered": true,
+                          "compact": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Top Sales Reps"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 3
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": 1,
+                          "avatar": "JD",
+                          "primary": "John Davis",
+                          "secondary": "12 deals closed",
+                          "meta": "$1.2M",
+                          "status": "Top Performer",
+                          "statusColor": "@colors.success.500"
+                        },
+                        {
+                          "id": 2,
+                          "avatar": "SK",
+                          "primary": "Sarah Kim",
+                          "secondary": "9 deals closed",
+                          "meta": "$945K",
+                          "status": "High Performer",
+                          "statusColor": "@colors.primary.500"
+                        },
+                        {
+                          "id": 3,
+                          "avatar": "MR",
+                          "primary": "Michael Rodriguez",
+                          "secondary": "8 deals closed",
+                          "meta": "$780K"
+                        },
+                        {
+                          "id": 4,
+                          "avatar": "EW",
+                          "primary": "Emma Wilson",
+                          "secondary": "7 deals closed",
+                          "meta": "$650K"
+                        },
+                        {
+                          "id": 5,
+                          "avatar": "DL",
+                          "primary": "David Lee",
+                          "secondary": "6 deals closed",
+                          "meta": "$525K"
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "association-list",
+                          "showAvatar": true,
+                          "showChevron": false,
+                          "showStatus": true,
+                          "dividers": true,
+                          "compact": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "activity-row",
+          "gap": 6,
+          "marginBottom": 0,
+          "columns": [
+            {
+              "width": "1/2",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Recent Activity"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 3
+                        }
+                      }
+                    },
+                    {
+                      "type": "timeline",
+                      "data": {
+                        "items": [
+                          {
+                            "id": 1,
+                            "date": "2 hours ago",
+                            "type": "Deal Closed",
+                            "description": "Enterprise license agreement with Acme Corp finalized",
+                            "icon": "TrendingUp",
+                            "user": "John Davis",
+                            "status": "success"
+                          },
+                          {
+                            "id": 2,
+                            "date": "5 hours ago",
+                            "type": "New Customer",
+                            "description": "Beta Systems signed up for Professional plan",
+                            "icon": "UserPlus",
+                            "user": "Sarah Kim",
+                            "status": "info"
+                          },
+                          {
+                            "id": 3,
+                            "date": "Yesterday",
+                            "type": "Support Ticket",
+                            "description": "High priority issue resolved for Global Tech Inc",
+                            "icon": "AlertCircle",
+                            "user": "Support Team",
+                            "status": "warning"
+                          },
+                          {
+                            "id": 4,
+                            "date": "2 days ago",
+                            "type": "Product Launch",
+                            "description": "Version 3.0 released with new analytics features",
+                            "icon": "Rocket",
+                            "user": "Product Team",
+                            "status": "info"
+                          }
+                        ]
+                      },
+                      "settings": {
+                        "timeline": {
+                          "compact": true,
+                          "animate": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/2",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Alerts & Notifications"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 3
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": 1,
+                          "primary": "Revenue target exceeded",
+                          "secondary": "Monthly revenue goal achieved 3 days early",
+                          "status": "Success",
+                          "statusColor": "@colors.success.500",
+                          "meta": "Just now"
+                        },
+                        {
+                          "id": 2,
+                          "primary": "Low conversion rate alert",
+                          "secondary": "Conversion rate dropped below 5% threshold",
+                          "status": "Warning",
+                          "statusColor": "@colors.warning.500",
+                          "meta": "1 hour ago"
+                        },
+                        {
+                          "id": 3,
+                          "primary": "System maintenance scheduled",
+                          "secondary": "Planned downtime on Sunday 2-4 AM EST",
+                          "status": "Info",
+                          "statusColor": "@colors.primary.500",
+                          "meta": "3 hours ago"
+                        },
+                        {
+                          "id": 4,
+                          "primary": "Churn risk identified",
+                          "secondary": "3 enterprise accounts showing low engagement",
+                          "status": "Critical",
+                          "statusColor": "@colors.error.500",
+                          "meta": "Yesterday"
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "association-list",
+                          "showAvatar": false,
+                          "showChevron": false,
+                          "showStatus": true,
+                          "dividers": true,
+                          "compact": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,743 @@
+{
+  "id": "hubspot-crm-contact",
+  "name": "HubSpot CRM Contact",
+  "type": "CRM",
+  "description": "Professional CRM contact management with 360° view, activity timeline, and deal pipeline - HubSpot inspired",
+  "zones": [
+    {
+      "id": "header",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "breadcrumb-row",
+          "marginBottom": 4,
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "breadcrumb",
+                  "data": {
+                    "items": [
+                      { "label": "Contacts", "href": "/contacts" },
+                      { "label": "Sarah Chen", "current": true }
+                    ]
+                  },
+                  "settings": {
+                    "breadcrumb": {
+                      "showHome": true,
+                      "separator": "chevron"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main-content",
+      "maxWidth": "2xl",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "three-column-layout",
+          "gap": 6,
+          "columns": [
+            {
+              "width": "1/5",
+              "fluid": false,
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Navigation"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.1"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "About"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "primary",
+                              "size": "sm"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Activity"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Emails"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Deals"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Companies"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Tickets"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "fluid": true,
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "lg",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "align": "center",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "avatar",
+                          "data": {
+                            "name": "Sarah Chen",
+                            "src": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100"
+                          },
+                          "settings": {
+                            "avatar": {
+                              "size": "2xl",
+                              "shape": "circle",
+                              "status": "online"
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "stack",
+                              "gap": "@spacing.1"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Sarah Chen"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 2
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Senior Director, Engineering"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "TechCorp Industries"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tabs",
+                  "data": {
+                    "tabs": [
+                      { "id": "overview", "label": "Overview" },
+                      { "id": "activity", "label": "Activity", "badge": "12" },
+                      { "id": "emails", "label": "Emails", "badge": "8" }
+                    ]
+                  },
+                  "settings": {
+                    "tabs": {
+                      "variant": "line",
+                      "size": "md"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "card",
+                      "data": {
+                        "tabId": "overview"
+                      },
+                      "settings": {
+                        "card": {
+                          "padding": "lg",
+                          "border": true,
+                          "shadow": "sm"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Recent Activities"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 4
+                            }
+                          }
+                        },
+                        {
+                          "type": "timeline",
+                          "data": {
+                            "items": [
+                              {
+                                "id": 1,
+                                "date": "2 hours ago",
+                                "type": "Email sent",
+                                "description": "Follow-up on Q1 expansion proposal sent to decision makers",
+                                "icon": "Mail",
+                                "user": "You",
+                                "status": "success"
+                              },
+                              {
+                                "id": 2,
+                                "date": "1 day ago",
+                                "type": "Call logged",
+                                "description": "Discovery call discussing technical requirements and timeline",
+                                "icon": "Phone",
+                                "user": "Sarah Chen",
+                                "meta": "30 min",
+                                "status": "info"
+                              },
+                              {
+                                "id": 3,
+                                "date": "3 days ago",
+                                "type": "Deal updated",
+                                "description": "Enterprise License Upgrade moved to Negotiation stage",
+                                "icon": "TrendingUp",
+                                "user": "You",
+                                "status": "warning"
+                              }
+                            ]
+                          },
+                          "settings": {
+                            "timeline": {
+                              "compact": true,
+                              "animate": true
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Upcoming Tasks"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 4
+                            }
+                          }
+                        },
+                        {
+                          "type": "record",
+                          "data": [
+                            {
+                              "id": 1,
+                              "primary": "Follow-up call",
+                              "secondary": "Discuss contract terms and pricing",
+                              "meta": "Tomorrow",
+                              "status": "High",
+                              "statusColor": "@colors.error.500"
+                            },
+                            {
+                              "id": 2,
+                              "primary": "Send proposal",
+                              "secondary": "Final pricing and SOW document",
+                              "meta": "This week",
+                              "status": "Medium",
+                              "statusColor": "@colors.warning.500"
+                            }
+                          ],
+                          "settings": {
+                            "record": {
+                              "recordType": "association-list",
+                              "showAvatar": false,
+                              "showChevron": false,
+                              "showStatus": true,
+                              "dividers": true,
+                              "compact": true
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "tabId": "activity",
+                        "content": "Activity feed showing all interactions with this contact..."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    },
+                    {
+                      "type": "markup",
+                      "data": {
+                        "tabId": "emails",
+                        "content": "Email history and correspondence with Sarah Chen..."
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "paragraph"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/5",
+              "fluid": false,
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Quick Actions"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "📞 Call"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "✉️ Email"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "✓ Task"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "📝 Note"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "button"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Associated Records"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": 1,
+                          "primary": "Deals",
+                          "meta": "3",
+                          "status": "Active",
+                          "statusColor": "@colors.success.500"
+                        },
+                        {
+                          "id": 2,
+                          "primary": "Companies",
+                          "meta": "1"
+                        },
+                        {
+                          "id": 3,
+                          "primary": "Tickets",
+                          "meta": "0"
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "association-list",
+                          "showAvatar": false,
+                          "showChevron": true,
+                          "showStatus": false,
+                          "dividers": true,
+                          "compact": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Tags"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "gap": "@spacing.2"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "#enterprise"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "primary",
+                              "size": "sm"
+                            }
+                          }
+                        },
+                        {
+                          "type": "badge",
+                          "data": {
+                            "label": "#hot-lead"
+                          },
+                          "settings": {
+                            "badge": {
+                              "variant": "warning",
+                              "size": "sm"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Contact Owner"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "record",
+                      "data": [
+                        {
+                          "id": 1,
+                          "avatar": "SJ",
+                          "primary": "Sarah Jones",
+                          "secondary": "Account Executive"
+                        }
+                      ],
+                      "settings": {
+                        "record": {
+                          "recordType": "association-list",
+                          "showAvatar": true,
+                          "showChevron": false,
+                          "dividers": false,
+                          "compact": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "markup",
+                      "data": {
+                        "content": "Contact Info"
+                      },
+                      "settings": {
+                        "markup": {
+                          "markupType": "heading",
+                          "level": 6
+                        }
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "data": {
+                        "label": "Email",
+                        "value": "sarah.chen@techcorp.com",
+                        "type": "email"
+                      },
+                      "settings": {
+                        "field": {
+                          "fieldType": "display",
+                          "layout": "vertical",
+                          "size": "sm"
+                        }
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "data": {
+                        "label": "Phone",
+                        "value": "+1 (415) 555-0123",
+                        "type": "phone"
+                      },
+                      "settings": {
+                        "field": {
+                          "fieldType": "display",
+                          "layout": "vertical",
+                          "size": "sm"
+                        }
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "data": {
+                        "label": "Lifecycle Stage",
+                        "value": "Opportunity"
+                      },
+                      "settings": {
+                        "field": {
+                          "fieldType": "display",
+                          "layout": "vertical",
+                          "size": "sm"
+                        }
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "data": {
+                        "label": "Lead Status",
+                        "value": "Qualified"
+                      },
+                      "settings": {
+                        "field": {
+                          "fieldType": "display",
+                          "layout": "vertical",
+                          "size": "sm"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,772 @@
+{
+  "id": "figma-canvas",
+  "name": "User Flow Diagram",
+  "type": "Design",
+  "description": "Infinite canvas for diagramming, wireframing, and mind mapping with pan/zoom controls - Figma/Miro inspired",
+  "zones": [
+    {
+      "id": "toolbar",
+      "maxWidth": "full",
+      "padding": 4,
+      "rows": [
+        {
+          "id": "toolbar-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "flex",
+                          "direction": "row",
+                          "justify": "space-between",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.2",
+                              "align": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Tools:"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "text"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "▢"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "○"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "─"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✎"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "T"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "primary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.3",
+                              "align": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "badge",
+                              "data": {
+                                "label": "Zoom: 100%"
+                              },
+                              "settings": {
+                                "badge": {
+                                  "variant": "secondary",
+                                  "size": "md"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Share"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Export"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "button",
+                                  "variant": "secondary",
+                                  "size": "sm"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "canvas-area",
+      "maxWidth": "full",
+      "padding": 0,
+      "rows": [
+        {
+          "id": "canvas-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "2xl",
+                      "border": true,
+                      "shadow": "md",
+                      "background": "secondary"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.6",
+                          "align": "center"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "🎨 INFINITE CANVAS (Pan & Zoom Enabled)"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 5,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "lg",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Start"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 5,
+                                  "align": "center"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "↓"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 3,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "lg",
+                              "background": "tertiary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "Process Data"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 5,
+                                  "align": "center"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.8",
+                              "justify": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "↓"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 3
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "↓"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 3
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "flex",
+                              "direction": "row",
+                              "gap": "@spacing.8",
+                              "justify": "center"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "card",
+                              "data": {},
+                              "settings": {
+                                "card": {
+                                  "padding": "md",
+                                  "border": true,
+                                  "shadow": "lg",
+                                  "background": "primary"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "✓ Valid?"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "heading",
+                                      "level": 5,
+                                      "align": "center"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "data": {},
+                              "settings": {
+                                "card": {
+                                  "padding": "md",
+                                  "border": true,
+                                  "shadow": "lg",
+                                  "background": "tertiary"
+                                }
+                              },
+                              "elements": [
+                                {
+                                  "type": "markup",
+                                  "data": {
+                                    "content": "✗ Error"
+                                  },
+                                  "settings": {
+                                    "markup": {
+                                      "markupType": "heading",
+                                      "level": 5,
+                                      "align": "center"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "↓"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 3,
+                              "align": "center"
+                            }
+                          }
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "md",
+                              "border": true,
+                              "shadow": "lg",
+                              "background": "primary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "End"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "heading",
+                                  "level": 5,
+                                  "align": "center"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "canvas-info",
+      "maxWidth": "full",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "info-row",
+          "gap": 6,
+          "columns": [
+            {
+              "width": "2/3",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Canvas Features"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 5
+                            }
+                          }
+                        },
+                        {
+                          "type": "structure",
+                          "data": {},
+                          "settings": {
+                            "structure": {
+                              "structureType": "grid",
+                              "columns": 2,
+                              "gap": "@spacing.3"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Infinite canvas with pan & zoom"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Shape tools (rectangle, circle, line)"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Free positioning (absolute X/Y)"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Auto-routing connectors"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Layers & Z-index management"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            },
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "✓ Collaborative cursors (real-time)"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": "1/3",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.3"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Minimap"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 6
+                            }
+                          }
+                        },
+                        {
+                          "type": "card",
+                          "data": {},
+                          "settings": {
+                            "card": {
+                              "padding": "lg",
+                              "border": true,
+                              "shadow": "sm",
+                              "background": "secondary"
+                            }
+                          },
+                          "elements": [
+                            {
+                              "type": "markup",
+                              "data": {
+                                "content": "┌─────┐\n│  •  │\n└─────┘"
+                              },
+                              "settings": {
+                                "markup": {
+                                  "markupType": "paragraph",
+                                  "align": "center"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Viewport indicator"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "paragraph",
+                              "align": "center"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "templates",
+      "maxWidth": "full",
+      "padding": 6,
+      "rows": [
+        {
+          "id": "templates-row",
+          "columns": [
+            {
+              "width": "full",
+              "elements": [
+                {
+                  "type": "card",
+                  "data": {},
+                  "settings": {
+                    "card": {
+                      "padding": "md",
+                      "border": true,
+                      "shadow": "sm"
+                    }
+                  },
+                  "elements": [
+                    {
+                      "type": "structure",
+                      "data": {},
+                      "settings": {
+                        "structure": {
+                          "structureType": "stack",
+                          "gap": "@spacing.4"
+                        }
+                      },
+                      "elements": [
+                        {
+                          "type": "markup",
+                          "data": {
+                            "content": "Available Templates"
+                          },
+                          "settings": {
+                            "markup": {
+                              "markupType": "heading",
+                              "level": 5
+                            }
+                          }
+                        },
+                        {
+                          "type": "record",
+                          "data": [
+                            {
+                              "id": "1",
+                              "image": "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=200&fit=crop",
+                              "title": "Flowchart",
+                              "subtitle": "Process diagrams",
+                              "description": "Standard flowchart with decision nodes and connectors"
+                            },
+                            {
+                              "id": "2",
+                              "image": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=200&fit=crop",
+                              "title": "Wireframe",
+                              "subtitle": "UI/UX design",
+                              "description": "Mobile and web interface mockups"
+                            },
+                            {
+                              "id": "3",
+                              "image": "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=400&h=200&fit=crop",
+                              "title": "Mind Map",
+                              "subtitle": "Brainstorming",
+                              "description": "Radial layouts for idea exploration"
+                            }
+                          ],
+                          "settings": {
+                            "record": {
+                              "recordType": "grid",
+                              "columns": {
+                                "mobile": 1,
+                                "tablet": 2,
+                                "desktop": 3
+                              },
+                              "gap": "@spacing.4",
+                              "itemAspectRatio": "16/9",
+                              "itemRounded": true,
+                              "itemShadow": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -358,6 +358,31 @@ const ICONS = {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="15" x2="21" y2="15" />
     </svg>
   ),
+  building: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" /><path d="M12 10h.01" /><path d="M12 14h.01" /><path d="M16 10h.01" /><path d="M16 14h.01" /><path d="M8 10h.01" /><path d="M8 14h.01" />
+    </svg>
+  ),
+  award: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+    </svg>
+  ),
+  chevronLeft: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  ),
+  mail: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+    </svg>
+  ),
+  phone: ({ size = 20, color = "currentColor", ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
 };
 
 // ==================== GLOBAL TOP NAVIGATION BAR ====================
@@ -2102,6 +2127,14 @@ const PRIMARY_REASON_DIST = [
   ["Networking", 0.30], ["Professional Development", 0.25], ["Learning", 0.20], ["Career", 0.10],
   ["Thought Leadership", 0.05], ["Speaker", 0.03], ["Exploring Membership", 0.05], ["Guest", 0.02]
 ];
+const VENUE_ROOM_DIST = [
+  ["Grand Ballroom", 0.25], ["Conference Hall A", 0.20], ["Conference Hall B", 0.18],
+  ["Breakout Room 1", 0.12], ["Breakout Room 2", 0.10], ["Innovation Lab", 0.08], ["Executive Suite", 0.07]
+];
+const SPONSOR_DIST = [
+  ["Gold Sponsor - Deloitte", 0.25], ["Silver Sponsor - KPMG", 0.22], ["Bronze Sponsor - PwC", 0.20],
+  ["Partner - CPA Canada", 0.18], ["Exhibitor - TechFirm", 0.15]
+];
 
 function generateAttendee(id) {
   const seed1 = id * 13;
@@ -2123,6 +2156,8 @@ function generateAttendee(id) {
   const dietary = weightedPick(seed7, DIETARY_DIST);
   const session = memberType === "Student" ? weightedPick(seed8, [["Student Track", 0.6], ["Keynote", 0.2], ["Technology Track", 0.2]]) : weightedPick(seed8, SESSION_DIST);
   const primaryReason = memberType === "Student" ? "Career" : memberType === "Guest" ? "Guest" : weightedPick(seed9, PRIMARY_REASON_DIST);
+  const venueRoom = weightedPick(id * 67, VENUE_ROOM_DIST);
+  const sponsor = weightedPick(id * 71, SPONSOR_DIST);
 
   // Determine membership status based on member type
   let membershipStatus, isMember;
@@ -2179,6 +2214,8 @@ function generateAttendee(id) {
     session,
     ticketType,
     renewed,
+    venueRoom,
+    sponsor,
   };
 }
 
@@ -2194,6 +2231,18 @@ const COMPANY_LIST = [
   "Baker Tilly Canada", "Crowe Soberman", "Collins Barrow", "Richter LLP"
 ];
 
+// Position titles by seniority level and company type
+const POSITION_LIST = {
+  // Big 4 and large firms (indices 0-3)
+  senior: ["Partner", "Senior Manager", "Manager", "Senior Associate", "Associate"],
+  // Mid-size firms (indices 4-7)
+  midLevel: ["Director", "Senior Consultant", "Consultant", "Senior Analyst", "Analyst"],
+  // Smaller firms (indices 8-11)
+  junior: ["Controller", "Senior Accountant", "Staff Accountant", "Accounting Manager", "Bookkeeper"],
+  // Student positions
+  student: ["Accounting Student", "Finance Intern", "Co-op Student", "Graduate Trainee"]
+};
+
 function enrichAttendeesWithListData(attendees) {
   return attendees.map((a) => {
     const nameParts = a.name.split(" ");
@@ -2201,15 +2250,39 @@ function enrichAttendeesWithListData(attendees) {
     const lastName = nameParts[nameParts.length - 1]?.toLowerCase() || "unknown";
     const companyIdx = (a.id * 7) % COMPANY_LIST.length;
     const regDay = 1 + (a.id % 28);
-    const regMonth = 3 + Math.floor(a.id / 10);
+    const regMonth = 3 + Math.floor(a.id / 100) + 3; // Spread across Mar-Jun
+
+    // Determine position based on member type and company tier
+    let position;
+    if (a.memberType === "Student") {
+      const studentPositions = POSITION_LIST.student;
+      position = studentPositions[a.id % studentPositions.length];
+    } else {
+      // Assign position tier based on company index
+      let positionTier;
+      if (companyIdx <= 3) {
+        positionTier = POSITION_LIST.senior; // Big 4
+      } else if (companyIdx <= 7) {
+        positionTier = POSITION_LIST.midLevel; // Mid-size
+      } else {
+        positionTier = POSITION_LIST.junior; // Smaller firms
+      }
+      // Use a combination of id and age group to vary seniority
+      const seniorityIndex = (a.id + (a.ageGroup === "55-64" || a.ageGroup === "65+" ? 0 :
+        a.ageGroup === "45-54" ? 1 :
+        a.ageGroup === "35-44" ? 2 :
+        a.ageGroup === "25-34" ? 3 : 4)) % positionTier.length;
+      position = positionTier[seniorityIndex];
+    }
 
     return {
       ...a,
       company: a.memberType === "Student" ? "N/A - Student" : COMPANY_LIST[companyIdx],
+      position,
       email: `${firstName}.${lastName}@example.com`,
       phone: `(${500 + (a.id % 400)}) ${100 + (a.id * 3) % 900}-${1000 + (a.id * 7) % 9000}`,
       confirmationId: `CPA2025-${String(a.id).padStart(4, "0")}`,
-      registrationDate: `2025-${String(regMonth).padStart(2, "0")}-${String(regDay).padStart(2, "0")}`,
+      registrationDate: `2025-${String(Math.min(regMonth, 6)).padStart(2, "0")}-${String(regDay).padStart(2, "0")}`,
     };
   });
 }
@@ -5311,12 +5384,21 @@ function MorePeopleListing({ attendees }) {
   const [selectedAttendee, setSelectedAttendee] = useState(null); // for attendee peek
   const [showSaveModal, setShowSaveModal] = useState(false); // P2.3: Save View Modal
   const [contactsSlideout, setContactsSlideout] = useState(null); // { field, segment, attendees }
+  const [showInsightCards, setShowInsightCards] = useState(false); // Toggle for insight cards visibility
+  const [attendeeOverview, setAttendeeOverview] = useState(null); // Selected attendee for overview panel
 
-  const cards = [
+  // Event-specific cards (shown by default)
+  const eventCards = [
     { title: "Registration Types", field: "registrationType", Icon: ICONS.reports },
     { title: "Dietary Restrictions", field: "dietary", Icon: ICONS.users },
     { title: "Sessions", field: "session", Icon: ICONS.timeline },
     { title: "Tickets", field: "ticketType", Icon: ICONS.ticket },
+    { title: "Venue Room", field: "venueRoom", Icon: ICONS.building },
+    { title: "Sponsors", field: "sponsor", Icon: ICONS.award },
+  ];
+
+  // Insight/demographic cards (hidden until user requests)
+  const insightCards = [
     { title: "Membership Type", field: "memberType", Icon: ICONS.user },
     { title: "Age Group", field: "ageGroup", Icon: ICONS.insights },
     { title: "Province", field: "province", Icon: ICONS.mapPin },
@@ -5324,11 +5406,16 @@ function MorePeopleListing({ attendees }) {
     { title: "Education", field: "education", Icon: ICONS.graduation },
   ];
 
+  // Combined cards based on visibility state
+  const cards = showInsightCards ? [...eventCards, ...insightCards] : eventCards;
+
   const colorPalettes = {
     registrationType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"],
     dietary: ["#22c55e", "#10b981", "#14b8a6", "#06b6d4"],
     session: ["#f59e0b", "#eab308", "#84cc16", "#22c55e"],
     ticketType: ["#3b82f6", "#8b5cf6"],
+    venueRoom: ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"],
+    sponsor: ["#f59e0b", "#eab308", "#fbbf24", "#fcd34d"],
     memberType: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"],
     ageGroup: ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"],
     province: ["#f43f5e", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4"],
@@ -5428,6 +5515,14 @@ function MorePeopleListing({ attendees }) {
     }
   };
 
+  // Calculate margin-right for push panel behavior
+  const getPanelMargin = () => {
+    if (contactsSlideout && attendeeOverview) return "800px"; // Both panels: 420px + 380px
+    if (contactsSlideout) return "420px"; // Contacts panel width
+    if (attendeeOverview) return "400px"; // Attendee panel width (non-nested)
+    return "0";
+  };
+
   return (
     <div
       style={{
@@ -5439,6 +5534,8 @@ function MorePeopleListing({ attendees }) {
           : "180px minmax(0, 1fr)",
         gap: "1rem",
         marginTop: "0.5rem",
+        marginRight: getPanelMargin(),
+        transition: "margin-right 0.3s ease-out",
       }}
     >
       {/* Left Column - Cards Mode Navigation */}
@@ -5464,9 +5561,9 @@ function MorePeopleListing({ attendees }) {
               marginBottom: "0.25rem",
             }}
           >
-            Categories
+            Event Cards
           </div>
-          {cards.map((card) => {
+          {eventCards.map((card) => {
             const isActive = selectedCard === card.field;
             return (
               <button
@@ -5505,6 +5602,66 @@ function MorePeopleListing({ attendees }) {
               </button>
             );
           })}
+          {/* Insight Cards Section - Only show when expanded */}
+          {showInsightCards && (
+            <>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  color: theme.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  padding: "0.5rem 0.75rem",
+                  marginTop: "0.75rem",
+                  marginBottom: "0.25rem",
+                  borderTop: `1px solid ${theme.border || "#e5e7eb"}`,
+                  paddingTop: "0.75rem",
+                }}
+              >
+                Insight Cards
+              </div>
+              {insightCards.map((card) => {
+                const isActive = selectedCard === card.field;
+                return (
+                  <button
+                    key={card.field}
+                    onClick={() => scrollToCard(card.field)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.5rem 0.75rem",
+                      border: "none",
+                      borderRadius: "0.375rem",
+                      background: isActive ? theme.primaryLight : "transparent",
+                      color: isActive ? theme.primary : theme.textPrimary,
+                      fontSize: "0.8rem",
+                      fontWeight: isActive ? 600 : 400,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = theme.backgroundSecondary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    <card.Icon size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {card.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
 
@@ -5530,7 +5687,8 @@ function MorePeopleListing({ attendees }) {
               overflowY: "auto",
             }}
           >
-            {cards.map((card) => {
+            {/* Event Cards */}
+            {eventCards.map((card) => {
               const segments = groupByField(attendees, card.field);
               const selectedValues = filters[card.field] || [];
               const isActive = selectedCard === card.field;
@@ -5549,6 +5707,64 @@ function MorePeopleListing({ attendees }) {
                 />
               );
             })}
+            {/* Insight Cards - Only show when expanded */}
+            {showInsightCards && insightCards.map((card) => {
+              const segments = groupByField(attendees, card.field);
+              const selectedValues = filters[card.field] || [];
+              const isActive = selectedCard === card.field;
+              return (
+                <VerticalNavCard
+                  key={card.title}
+                  title={card.title}
+                  Icon={card.Icon}
+                  field={card.field}
+                  segments={segments}
+                  selectedValues={selectedValues}
+                  isActive={isActive}
+                  onCardClick={() => handleCardSelect(card.field)}
+                  onToggle={(segment) => handleToggle(card.field, segment)}
+                  onSegmentPeek={(segment) => handleSegmentPeek(card.field, segment)}
+                />
+              );
+            })}
+            {/* Add/Hide Insight Cards Toggle for List Mode */}
+            <button
+              onClick={() => setShowInsightCards(!showInsightCards)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                padding: "0.5rem 0.75rem",
+                marginTop: "0.5rem",
+                border: `1px dashed ${theme.border || "#e5e7eb"}`,
+                background: "transparent",
+                color: theme.primary || "#2563eb",
+                fontSize: "0.8rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                borderRadius: "0.375rem",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.primaryLight || "#eff6ff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {showInsightCards ? (
+                <>
+                  <span style={{ fontSize: "1rem" }}>−</span>
+                  Hide insight cards
+                </>
+              ) : (
+                <>
+                  <ICONS.plus size={14} />
+                  Add insight cards
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -5611,34 +5827,84 @@ function MorePeopleListing({ attendees }) {
         {viewMode === "list" ? (
           <AttendeeList attendees={filteredAttendees} onAttendeeClick={handleAttendeeClick} />
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {cards.map((card) => (
-              <div
-                key={card.title}
-                ref={(el) => (cardRefs.current[card.field] = el)}
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "1rem",
+              }}
+            >
+              {cards.map((card) => (
+                <div
+                  key={card.title}
+                  ref={(el) => (cardRefs.current[card.field] = el)}
+                  style={{
+                    borderRadius: "0.5rem",
+                    transition: "box-shadow 0.2s ease",
+                    boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                  }}
+                >
+                  <DemographicCard
+                    title={card.title}
+                    field={card.field}
+                    attendees={filteredAttendees}
+                    colorPalette={colorPalettes[card.field]}
+                    onFilterClick={handleCardFilterClick}
+                    onCountClick={handleCardCountClick}
+                    onAttendeeClick={(attendee) => setAttendeeOverview(attendee)}
+                  />
+                </div>
+              ))}
+            </div>
+            {/* Add/Hide Insight Cards Toggle Link */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: "1.5rem",
+                paddingTop: "1rem",
+                borderTop: `1px dashed ${theme.border || "#e5e7eb"}`,
+              }}
+            >
+              <button
+                onClick={() => setShowInsightCards(!showInsightCards)}
                 style={{
-                  borderRadius: "0.5rem",
-                  transition: "box-shadow 0.2s ease",
-                  boxShadow: selectedCard === card.field ? `0 0 0 2px ${theme.primary}` : "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  border: "none",
+                  background: "transparent",
+                  color: theme.primary || "#2563eb",
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  borderRadius: "0.375rem",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.primaryLight || "#eff6ff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
-                <DemographicCard
-                  title={card.title}
-                  field={card.field}
-                  attendees={filteredAttendees}
-                  colorPalette={colorPalettes[card.field]}
-                  onFilterClick={handleCardFilterClick}
-                  onCountClick={handleCardCountClick}
-                />
-              </div>
-            ))}
-          </div>
+                {showInsightCards ? (
+                  <>
+                    <span style={{ fontSize: "1rem" }}>−</span>
+                    Hide insight cards
+                  </>
+                ) : (
+                  <>
+                    <ICONS.plus size={16} />
+                    Add insight cards
+                  </>
+                )}
+              </button>
+            </div>
+          </>
         )}
       </div>
 
@@ -5670,7 +5936,19 @@ function MorePeopleListing({ attendees }) {
           segment={contactsSlideout.segment}
           categoryTitle={contactsSlideout.title}
           attendees={contactsSlideout.attendees}
-          onClose={() => setContactsSlideout(null)}
+          onClose={() => { setContactsSlideout(null); setAttendeeOverview(null); }}
+          onAttendeeClick={(attendee) => setAttendeeOverview(attendee)}
+          hasNestedPanel={!!attendeeOverview}
+        />
+      )}
+
+      {/* Attendee Overview Panel - Can be opened from DemographicCard inline list or ContactsSlideoutPanel */}
+      {attendeeOverview && (
+        <AttendeeOverviewPanel
+          isOpen={!!attendeeOverview}
+          attendee={attendeeOverview}
+          onClose={() => setAttendeeOverview(null)}
+          isNested={!!contactsSlideout}
         />
       )}
     </div>
@@ -5679,7 +5957,7 @@ function MorePeopleListing({ attendees }) {
 
 // -------------------- Contacts Slideout Panel --------------------
 
-function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose }) {
+function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onClose, onAttendeeClick, hasNestedPanel = false }) {
   const { theme } = useTheme();
 
   // Generate dummy registration numbers
@@ -5694,25 +5972,12 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.3)",
-          zIndex: 999,
-        }}
-      />
-      {/* Slide-out Panel */}
+      {/* Slide-out Push Panel - No overlay, starts below top bar, shifts left when overview panel opens */}
       <div
         style={{
           position: "fixed",
-          top: 0,
-          right: 0,
+          top: "48px",
+          right: hasNestedPanel ? "380px" : 0, // Shift left when AttendeeOverviewPanel is open
           bottom: 0,
           width: "420px",
           background: "white",
@@ -5720,7 +5985,7 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
           zIndex: 1000,
           display: "flex",
           flexDirection: "column",
-          animation: "slideInRight 0.3s ease-out",
+          transition: "right 0.25s ease-out",
         }}
       >
         {/* Header */}
@@ -5775,24 +6040,45 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
           {attendees.map((attendee, idx) => (
             <div
               key={attendee.id || idx}
+              onClick={() => onAttendeeClick && onAttendeeClick(attendee)}
               style={{
                 padding: "0.875rem 1rem",
                 borderBottom: "1px solid #f3f4f6",
-                transition: "background 0.15s",
+                transition: "all 0.15s",
+                cursor: onAttendeeClick ? "pointer" : "default",
+                borderRadius: "0.375rem",
+                margin: "0.25rem 0",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#f9fafb"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#eff6ff";
+                e.currentTarget.style.transform = "translateX(4px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.transform = "translateX(0)";
+              }}
             >
-              {/* Name */}
+              {/* Name with click indicator */}
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  color: theme.textPrimary || "#111827",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: "0.375rem",
                 }}
               >
-                {attendee.name || "Unknown"}
+                <span
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    color: theme.textPrimary || "#111827",
+                  }}
+                >
+                  {attendee.name || "Unknown"}
+                </span>
+                {onAttendeeClick && (
+                  <ICONS.chevronRight size={14} style={{ color: "#9ca3af", flexShrink: 0 }} />
+                )}
               </div>
 
               {/* Details Grid */}
@@ -5853,32 +6139,234 @@ function ContactsSlideoutPanel({ isOpen, segment, categoryTitle, attendees, onCl
           )}
         </div>
 
-        {/* Footer */}
+      </div>
+    </>
+  );
+}
+
+// -------------------- Attendee Overview Panel (Nested Push Panel) --------------------
+
+function AttendeeOverviewPanel({ isOpen, attendee, onClose, isNested = false }) {
+  const { theme } = useTheme();
+
+  if (!isOpen || !attendee) return null;
+
+  // Generate initials for avatar
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : name[0].toUpperCase();
+  };
+
+  // Avatar color based on name
+  const getAvatarColor = (name) => {
+    const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#06b6d4"];
+    const index = name ? name.charCodeAt(0) % colors.length : 0;
+    return colors[index];
+  };
+
+  return (
+    <>
+      {/* Push Panel - No overlay, starts below top bar, always on the right */}
+      <div
+        style={{
+          position: "fixed",
+          top: "48px",
+          right: 0, // Always on the far right
+          bottom: 0,
+          width: isNested ? "380px" : "400px",
+          background: "white",
+          boxShadow: "-4px 0 24px rgba(0, 0, 0, 0.15)",
+          zIndex: 1001,
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideInRight 0.25s ease-out",
+        }}
+      >
+        {/* Header */}
         <div
           style={{
-            padding: "0.75rem 1.25rem",
-            borderTop: "1px solid #e5e7eb",
-            background: "#f9fafb",
+            padding: "1rem 1.25rem",
+            borderBottom: "1px solid #e5e7eb",
             display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.5rem",
+            alignItems: "center",
+            gap: "0.75rem",
+            background: theme.primaryLight || "#eff6ff",
           }}
         >
           <button
             onClick={onClose}
             style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #d1d5db",
-              background: "white",
-              borderRadius: "0.375rem",
-              fontSize: "0.8rem",
+              border: "none",
+              background: "transparent",
               cursor: "pointer",
-              color: theme.textPrimary || "#374151",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0.25rem",
+              borderRadius: "0.25rem",
+              color: theme.textMuted || "#6b7280",
+            }}
+            title="Back"
+          >
+            <ICONS.chevronLeft size={20} />
+          </button>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: theme.textPrimary || "#111827" }}>
+              Attendee Overview
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: "1.5rem",
+              color: theme.textMuted || "#6b7280",
+              padding: "0.25rem",
+              lineHeight: 1,
+              borderRadius: "0.25rem",
             }}
           >
-            Close
+            ×
           </button>
         </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
+          {/* Profile Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "50%",
+                background: getAvatarColor(attendee.name),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: "1.25rem",
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              {getInitials(attendee.name)}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 600, color: theme.textPrimary || "#111827", marginBottom: "0.25rem" }}>
+                {attendee.name || "Unknown"}
+              </div>
+              <div style={{ fontSize: "0.85rem", color: theme.primary || "#2563eb", marginBottom: "0.15rem" }}>
+                {attendee.position || "Member"}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: theme.textSecondary || "#6b7280" }}>
+                {attendee.company || "—"}
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: theme.textMuted || "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+              Contact Information
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "0.375rem", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ICONS.mail size={14} style={{ color: "#6b7280" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af" }}>Email</div>
+                  <div style={{ fontSize: "0.8rem", color: theme.primary || "#2563eb" }}>{attendee.email || "—"}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "0.375rem", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ICONS.phone size={14} style={{ color: "#6b7280" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af" }}>Phone</div>
+                  <div style={{ fontSize: "0.8rem", color: theme.textPrimary || "#374151" }}>{attendee.phone || "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Event Registration */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: theme.textMuted || "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+              Event Registration
+            </div>
+            <div style={{ background: "#f9fafb", borderRadius: "0.5rem", padding: "0.875rem", border: "1px solid #e5e7eb" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af", marginBottom: "0.15rem" }}>Registration Type</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.registrationType || "—"}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af", marginBottom: "0.15rem" }}>Ticket Type</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.ticketType || "—"}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af", marginBottom: "0.15rem" }}>Confirmation #</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: theme.primary || "#2563eb", fontFamily: "monospace" }}>{attendee.confirmationId || "—"}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.7rem", color: theme.textMuted || "#9ca3af", marginBottom: "0.15rem" }}>Registered</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.registrationDate || "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Demographics */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: theme.textMuted || "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+              Demographics
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+              {[
+                { label: "Member Type", value: attendee.memberType },
+                { label: "Status", value: attendee.membershipStatus },
+                { label: "Province", value: attendee.province },
+                { label: "Age Group", value: attendee.ageGroup },
+                { label: "Education", value: attendee.education },
+                { label: "Dietary", value: attendee.dietary },
+              ].map((item, idx) => (
+                <div key={idx} style={{ padding: "0.5rem", background: "#f9fafb", borderRadius: "0.375rem" }}>
+                  <div style={{ fontSize: "0.65rem", color: theme.textMuted || "#9ca3af", marginBottom: "0.1rem" }}>{item.label}</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{item.value || "—"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Session & Venue */}
+          <div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: theme.textMuted || "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+              Session Details
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f3f4f6" }}>
+                <span style={{ fontSize: "0.75rem", color: theme.textMuted || "#6b7280" }}>Session</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.session || "—"}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f3f4f6" }}>
+                <span style={{ fontSize: "0.75rem", color: theme.textMuted || "#6b7280" }}>Venue Room</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.venueRoom || "—"}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0" }}>
+                <span style={{ fontSize: "0.75rem", color: theme.textMuted || "#6b7280" }}>Sponsor</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: theme.textPrimary || "#374151" }}>{attendee.sponsor || "—"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </>
   );
@@ -6658,7 +7146,7 @@ function AttendeeList({ attendees, onAttendeeClick }) {
   );
 }
 
-function DemographicCard({ title, field, attendees, colorPalette, onFilterClick, onCountClick }) {
+function DemographicCard({ title, field, attendees, colorPalette, onFilterClick, onCountClick, onAttendeeClick }) {
   const segments = useMemo(() => groupByField(attendees, field), [attendees, field]);
   const totalCount = attendees.length;
   const segmentsWithPercentage = useMemo(
@@ -6666,6 +7154,7 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick,
     [segments, totalCount]
   );
   const [peekSegment, setPeekSegment] = useState(null);
+  const [expandedSegments, setExpandedSegments] = useState({}); // Track which segments have expanded inline lists
 
   const getColor = (idx) => colorPalette[idx % colorPalette.length];
 
@@ -6674,6 +7163,26 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick,
     if (!peekSegment) return [];
     return attendees.filter((a) => (a[field] || "Unknown") === peekSegment);
   }, [attendees, field, peekSegment]);
+
+  // Get most recent attendees for a segment (sorted by registration date descending)
+  const getRecentAttendees = useCallback((segmentLabel) => {
+    const segmentAttendees = attendees.filter((a) => (a[field] || "Unknown") === segmentLabel);
+    // Sort by registration date descending (most recent first)
+    return [...segmentAttendees].sort((a, b) => {
+      const dateA = a.registrationDate || "1970-01-01";
+      const dateB = b.registrationDate || "1970-01-01";
+      return dateB.localeCompare(dateA);
+    });
+  }, [attendees, field]);
+
+  // Toggle inline list expansion for a segment
+  const toggleSegmentExpansion = (segmentLabel, e) => {
+    e.stopPropagation();
+    setExpandedSegments((prev) => ({
+      ...prev,
+      [segmentLabel]: !prev[segmentLabel],
+    }));
+  };
 
   return (
     <div
@@ -6704,99 +7213,227 @@ function DemographicCard({ title, field, attendees, colorPalette, onFilterClick,
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {segmentsWithPercentage.map((seg, idx) => {
           const color = getColor(idx);
+          const isExpanded = expandedSegments[seg.label];
+          const recentAttendees = isExpanded ? getRecentAttendees(seg.label) : [];
+
           return (
-            <div
-              key={seg.label}
-              style={{
-                cursor: onFilterClick ? "pointer" : "default",
-                transition: "all 0.2s",
-              }}
-              onClick={() => onFilterClick && onFilterClick(field, seg.label)}
-              onMouseEnter={(e) => {
-                if (onFilterClick) {
-                  e.currentTarget.style.transform = "scale(1.02)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (onFilterClick) {
-                  e.currentTarget.style.transform = "scale(1)";
-                }
-              }}
-            >
+            <div key={seg.label}>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  fontSize: "0.72rem",
-                  color: "#374151",
-                  marginBottom: "0.25rem",
-                  fontWeight: 500,
+                  cursor: onFilterClick ? "pointer" : "default",
+                  transition: "all 0.2s",
                 }}
-              >
-                <span
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {seg.label}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPeekSegment(peekSegment === seg.label ? null : seg.label);
-                    if (onCountClick) onCountClick(field, seg.label);
-                  }}
-                  style={{
-                    marginLeft: "0.5rem",
-                    fontWeight: 700,
-                    color: peekSegment === seg.label ? "#2563eb" : "#111827",
-                    fontSize: "0.75rem",
-                    background: peekSegment === seg.label ? "#eff6ff" : "transparent",
-                    border: "none",
-                    padding: "0.1rem 0.35rem",
-                    borderRadius: "0.25rem",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                  title="Click to preview"
-                >
-                  {seg.count}
-                </button>
-                <span
-                  style={{
-                    marginLeft: "0.35rem",
-                    fontSize: "0.7rem",
-                    color: "#6b7280",
-                  }}
-                >
-                  ({seg.percentage}%)
-                </span>
-              </div>
-              <div
-                style={{
-                  height: "6px",
-                  borderRadius: "999px",
-                  background: "#f3f4f6",
-                  overflow: "hidden",
-                  position: "relative",
+                onClick={() => onFilterClick && onFilterClick(field, seg.label)}
+                onMouseEnter={(e) => {
+                  if (onFilterClick) {
+                    e.currentTarget.style.transform = "scale(1.02)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (onFilterClick) {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }
                 }}
               >
                 <div
                   style={{
-                    height: "100%",
-                    width: `${seg.percentage}%`,
-                    background: `linear-gradient(90deg, ${color}, ${color}dd)`,
-                    borderRadius: "999px",
-                    transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    boxShadow: `0 0 8px ${color}40`,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: "0.72rem",
+                    color: "#374151",
+                    marginBottom: "0.25rem",
+                    fontWeight: 500,
                   }}
-                />
+                >
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {seg.label}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPeekSegment(peekSegment === seg.label ? null : seg.label);
+                      if (onCountClick) onCountClick(field, seg.label);
+                    }}
+                    style={{
+                      marginLeft: "0.5rem",
+                      fontWeight: 700,
+                      color: peekSegment === seg.label ? "#2563eb" : "#111827",
+                      fontSize: "0.75rem",
+                      background: peekSegment === seg.label ? "#eff6ff" : "transparent",
+                      border: "none",
+                      padding: "0.1rem 0.35rem",
+                      borderRadius: "0.25rem",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    title="Click to open contacts panel"
+                  >
+                    {seg.count}
+                  </button>
+                  <span
+                    style={{
+                      marginLeft: "0.35rem",
+                      fontSize: "0.7rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    ({seg.percentage}%)
+                  </span>
+                  {/* Chevron toggle for inline attendee list */}
+                  <button
+                    onClick={(e) => toggleSegmentExpansion(seg.label, e)}
+                    style={{
+                      marginLeft: "0.35rem",
+                      border: "none",
+                      background: isExpanded ? "#eff6ff" : "transparent",
+                      borderRadius: "0.25rem",
+                      padding: "0.15rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.15s",
+                      color: isExpanded ? "#2563eb" : "#9ca3af",
+                    }}
+                    title={isExpanded ? "Hide attendees" : "Show recent attendees"}
+                    aria-expanded={isExpanded}
+                  >
+                    <ICONS.chevronDown
+                      size={14}
+                      style={{
+                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s ease",
+                      }}
+                    />
+                  </button>
+                </div>
+                <div
+                  style={{
+                    height: "6px",
+                    borderRadius: "999px",
+                    background: "#f3f4f6",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${seg.percentage}%`,
+                      background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                      borderRadius: "999px",
+                      transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      boxShadow: `0 0 8px ${color}40`,
+                    }}
+                  />
+                </div>
               </div>
+
+              {/* Inline Attendee List - Most Recent Attendees */}
+              {isExpanded && (
+                <div
+                  style={{
+                    marginTop: "0.5rem",
+                    marginLeft: "0.5rem",
+                    padding: "0.5rem",
+                    background: "#f9fafb",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #e5e7eb",
+                    animation: "fadeIn 0.2s ease-out",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                      Most Recent Attendees
+                    </span>
+                    <span style={{ fontSize: "0.6rem", color: "#9ca3af" }}>
+                      {Math.min(5, recentAttendees.length)} of {recentAttendees.length}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                    {recentAttendees.slice(0, 5).map((attendee) => (
+                      <button
+                        key={attendee.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onAttendeeClick) onAttendeeClick(attendee);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          padding: "0.375rem 0.5rem",
+                          border: "none",
+                          background: "white",
+                          borderRadius: "0.375rem",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          width: "100%",
+                          transition: "all 0.15s",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#eff6ff";
+                          e.currentTarget.style.transform = "translateX(2px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "white";
+                          e.currentTarget.style.transform = "translateX(0)";
+                        }}
+                      >
+                        {/* Mini Avatar */}
+                        <div
+                          style={{
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "50%",
+                            background: color,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontSize: "0.6rem",
+                            fontWeight: 600,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {attendee.name ? attendee.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "?"}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "0.7rem", fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {attendee.name}
+                          </div>
+                          <div style={{ fontSize: "0.6rem", color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {attendee.position || "Member"} • {attendee.company || "—"}
+                          </div>
+                        </div>
+                        <ICONS.chevronRight size={12} style={{ color: "#9ca3af", flexShrink: 0 }} />
+                      </button>
+                    ))}
+                    {recentAttendees.length > 5 && (
+                      <div style={{ fontSize: "0.6rem", color: "#6b7280", textAlign: "center", marginTop: "0.25rem", fontStyle: "italic" }}>
+                        +{recentAttendees.length - 5} more attendees
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

@@ -1,0 +1,603 @@
+/* React Grid Layout styles */
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Elegant scrollbar styling - Apple-inspired */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover {
+  scrollbar-color: rgb(212 212 216) transparent;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(212 212 216);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(161 161 170);
+}
+
+/* Responsive Page Column Grid */
+@media (max-width: 768px) {
+  .page-column-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-column-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile stack reverse - when enabled */
+.page-column-grid.mobile-reverse {
+  flex-direction: column-reverse;
+}
+
+@media (max-width: 768px) {
+  .page-column-grid.mobile-reverse > * {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+
+/* ========================================
+   CENTRALIZED ANIMATION CONFIGURATION
+   ======================================== */
+
+/* Animation Durations - Fast and delightful */
+:root {
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;        /* Quick, responsive interactions */
+  --duration-normal: 300ms;      /* Standard transitions - smooth and fast */
+  --duration-slow: 400ms;        /* Deliberate movements - still snappy */
+  --duration-slower: 500ms;      /* Emphasis animations */
+
+  /* Easing Functions - Smooth and delightful */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);           /* Smooth deceleration */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);         /* Balanced easing */
+  --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);     /* Gentle spring - delightful bounce */
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);     /* Subtle, refined */
+  --ease-snappy: cubic-bezier(0.4, 0, 0.1, 1);         /* Quick response */
+}
+
+/* Toast notification animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+/* Studio panel slide-down animation - Normal speed */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown var(--duration-instant) var(--ease-out);
+}
+
+/* Minimal Sidebar Animations - Very subtle fade and slide */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+/* Panel Animation Classes - Normal speed */
+.animate-slide-in-left {
+  animation: slideInLeft var(--duration-instant) var(--ease-out);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--duration-instant) var(--ease-out);
+}
+
+.animate-slide-out-left {
+  animation: slideOutLeft var(--duration-instant) var(--ease-out);
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight var(--duration-instant) var(--ease-out);
+}
+
+/* Panel Transition Classes for smooth resizing - No transform to prevent distortion */
+.panel-transition {
+  transition: all var(--duration-normal) var(--ease-out);
+  transition-property: width, height, left, right, top, bottom, opacity;
+}
+
+.panel-transition-fast {
+  transition: all var(--duration-fast) var(--ease-out);
+  transition-property: width, height, left, right, top, bottom, opacity;
+}
+
+.panel-backdrop-transition {
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              backdrop-filter var(--duration-fast) var(--ease-in-out);
+}
+
+/* View Content Fade Animation - No scale to preserve shapes */
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-view-fade-in {
+  animation: viewFadeIn var(--duration-normal) var(--ease-out);
+}
+
+/* ========================================
+   ACCESSIBILITY - REDUCED MOTION
+   ======================================== */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   MICRO-INTERACTIONS - DELIGHTFUL UX
+   ======================================== */
+
+/* Button Press Feedback */
+.button-press {
+  transition: transform var(--duration-fast) var(--ease-snappy),
+              box-shadow var(--duration-fast) var(--ease-snappy);
+}
+
+.button-press:active {
+  transform: scale(0.97);
+}
+
+/* Card Hover Lift */
+.card-lift {
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon Interaction - Subtle rotation and scale */
+.icon-interactive {
+  transition: transform var(--duration-normal) var(--ease-out);
+  display: inline-block;
+}
+
+.icon-interactive:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Smooth Focus Ring - Apple-inspired */
+.focus-ring {
+  outline: none;
+  transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Badge Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.badge-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Subtle Scale on Hover */
+.scale-hover {
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.scale-hover:hover {
+  transform: scale(1.02);
+}
+
+/* Smooth Underline Animation */
+.underline-animated {
+  position: relative;
+  display: inline-block;
+}
+
+.underline-animated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: currentColor;
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+.underline-animated:hover::after {
+  width: 100%;
+}
+
+/* Ripple Effect for Click Feedback */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+}
+
+.ripple:active::after {
+  animation: ripple var(--duration-slower) var(--ease-out);
+}
+
+/* Checkbox/Toggle Smooth Transition */
+.toggle-smooth {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+/* Input Field Focus Glow */
+.input-glow {
+  transition: border-color var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.input-glow:focus {
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smooth Opacity Transition */
+.opacity-smooth {
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+/* Skeleton Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(244, 244, 245) 0%,
+    rgb(228, 228, 231) 50%,
+    rgb(244, 244, 245) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Stagger Animation for Lists */
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp var(--duration-slow) var(--ease-out) forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth Color Transition */
+.color-smooth {
+  transition: color var(--duration-normal) var(--ease-out),
+              background-color var(--duration-normal) var(--ease-out);
+}
+
+/* React Grid Layout - Apple-inspired styling */
+.react-grid-layout {
+  position: relative;
+  background-color: rgb(250 250 250);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-height: 400px;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+  background-color: white;
+  border: 2px solid rgb(212 212 216);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.react-grid-item:hover {
+  border-color: rgb(23 23 23);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  border-color: rgb(23 23 23);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.react-grid-item.resizing {
+  opacity: 0.9;
+  border-color: rgb(23 23 23);
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 1;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgb(163 163 163);
+  border-bottom: 2px solid rgb(163 163 163);
+}
+
+.react-grid-placeholder {
+  background: rgb(59 130 246);
+  opacity: 0.15;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 0.5rem;
+  border: 2px dashed rgb(59 130 246);
+}
+
+/* Calendar Heatmap Styles - Apple-inspired */
+.react-calendar-heatmap {
+  width: 100%;
+  max-height: 200px;
+}
+
+.react-calendar-heatmap svg {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 200px !important;
+}
+
+.react-calendar-heatmap text {
+  font-size: 10px;
+  fill: #737373;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.react-calendar-heatmap .react-calendar-heatmap-small-text {
+  font-size: 8px;
+}
+
+.react-calendar-heatmap rect {
+  cursor: pointer;
+}
+
+.react-calendar-heatmap rect:hover {
+  stroke: #171717;
+  stroke-width: 2;
+}
+
+.react-calendar-heatmap .color-empty {
+  fill: #f5f5f5;
+}
+
+.react-calendar-heatmap .color-scale-1 {
+  fill: #dbeafe;
+}
+
+.react-calendar-heatmap .color-scale-2 {
+  fill: #93c5fd;
+}
+
+.react-calendar-heatmap .color-scale-3 {
+  fill: #3b82f6;
+}
+
+.react-calendar-heatmap .color-scale-4 {
+  fill: #1d4ed8;
+}
+
+/* Timeline panel slide-up animation - Normal speed */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp var(--duration-instant) var(--ease-out);
+}
+
+/* ========================================
+   DEBUGGING - REMOVE AFTER TESTING
+   ======================================== */
+
+/* Add this class to any element to see animation debugging info */
+.debug-animation {
+  outline: 3px solid red !important;
+  outline-offset: -3px;
+}
+
+.debug-animation::before {
+  content: 'ANIMATING' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  background: red !important;
+  color: white !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  font-weight: bold !important;
+  z-index: 99999 !important;
+  pointer-events: none !important;
+}
+
+/* Visual indicator that shows exactly when animations are running */
+.animate-slide-in-left,
+.animate-slide-in-right,
+.animate-slide-out-left,
+.animate-slide-out-right,
+.animate-slide-down,
+.animate-slide-up {
+  /* Uncomment the line below to see a red border during animation */
+  /* outline: 3px solid red !important; */
+}
