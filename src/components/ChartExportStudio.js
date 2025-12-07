@@ -288,18 +288,22 @@ const ChartExportStudio = () => {
         imageSheet.getCell('B1').font = { bold: true, size: 14 };
       }
 
-      // Sheet 2: Native Excel Chart
+      // Sheet 2: Chart Data (for creating native Excel chart)
       if (includeNativeChart) {
-        const chartSheet = workbook.addWorksheet('Native Chart');
+        const chartSheet = workbook.addWorksheet('Chart Data');
 
         if (chartType === 'bar' || chartType === 'line') {
           const data = chartType === 'bar' ? barData : lineData;
-          const dataLength = data.length;
 
           // Add title
           chartSheet.getCell('A1').value = chartTitle || (chartType === 'bar' ? 'Bar Chart' : 'Line Chart');
           chartSheet.getCell('A1').font = { bold: true, size: 14 };
           chartSheet.mergeCells('A1:C1');
+
+          // Add instruction
+          chartSheet.getCell('A2').value = 'Select data below (A3:C' + (3 + data.length) + ') → Insert → Chart to create a native Excel chart';
+          chartSheet.getCell('A2').font = { italic: true, color: { argb: 'FF666666' } };
+          chartSheet.mergeCells('A2:C2');
 
           // Add headers
           chartSheet.getCell('A3').value = 'Category';
@@ -319,44 +323,17 @@ const ChartExportStudio = () => {
             chartSheet.getCell(`C${index + 4}`).value = row.value2025;
           });
 
-          // Create native Excel chart
-          const chart = chartSheet.addChart({
-            type: chartType === 'bar' ? 'bar' : 'line',
-            series: [
-              {
-                name: '2024',
-                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
-                values: { ref: `'Native Chart'!$B$4:$B$${3 + dataLength}` },
-              },
-              {
-                name: '2025',
-                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
-                values: { ref: `'Native Chart'!$C$4:$C$${3 + dataLength}` },
-              },
-            ],
-            title: {
-              text: chartTitle || (chartType === 'bar' ? 'Bar Chart' : 'Line Chart'),
-            },
-            legend: {
-              position: 'bottom',
-            },
-          });
-
-          // Position the chart
-          chart.position = {
-            type: 'twoCellAnchor',
-            from: { col: 5, row: 2 },
-            to: { col: 14, row: 18 },
-          };
-
         } else {
           // Pie chart data
-          const dataLength = pieData.length;
-
           // Add title
           chartSheet.getCell('A1').value = chartTitle || 'Pie Chart';
           chartSheet.getCell('A1').font = { bold: true, size: 14 };
           chartSheet.mergeCells('A1:B1');
+
+          // Add instruction
+          chartSheet.getCell('A2').value = 'Select data below (A3:B' + (3 + pieData.length) + ') → Insert → Chart → Pie to create a native Excel chart';
+          chartSheet.getCell('A2').font = { italic: true, color: { argb: 'FF666666' } };
+          chartSheet.mergeCells('A2:B2');
 
           // Add headers
           chartSheet.getCell('A3').value = 'Category';
@@ -372,31 +349,6 @@ const ChartExportStudio = () => {
             chartSheet.getCell(`A${index + 4}`).value = row.name;
             chartSheet.getCell(`B${index + 4}`).value = row.value;
           });
-
-          // Create native Excel pie chart
-          const chart = chartSheet.addChart({
-            type: 'pie',
-            series: [
-              {
-                name: 'Distribution',
-                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
-                values: { ref: `'Native Chart'!$B$4:$B$${3 + dataLength}` },
-              },
-            ],
-            title: {
-              text: chartTitle || 'Pie Chart',
-            },
-            legend: {
-              position: 'right',
-            },
-          });
-
-          // Position the chart
-          chart.position = {
-            type: 'twoCellAnchor',
-            from: { col: 4, row: 2 },
-            to: { col: 13, row: 18 },
-          };
         }
 
         // Style columns
@@ -980,13 +932,13 @@ const ChartExportStudio = () => {
                     </button>
                   </div>
 
-                  {/* Native Chart Toggle */}
+                  {/* Chart Data Toggle */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <BarChart3 className={`w-5 h-5 ${textSecondary}`} />
                       <div>
-                        <div className={`font-medium ${textColor}`}>Native Excel Chart</div>
-                        <div className={`text-sm ${textSecondary}`}>Editable in Excel</div>
+                        <div className={`font-medium ${textColor}`}>Chart Data</div>
+                        <div className={`text-sm ${textSecondary}`}>For native Excel chart</div>
                       </div>
                     </div>
                     <button
@@ -1052,7 +1004,7 @@ const ChartExportStudio = () => {
                   )}
                   {includeNativeChart && (
                     <div className={`px-3 py-1.5 rounded-lg text-sm font-medium ${darkMode ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
-                      Sheet 2: Native Chart
+                      Sheet 2: Chart Data
                     </div>
                   )}
                   {includeRawData && (
@@ -1097,7 +1049,7 @@ const ChartExportStudio = () => {
             {/* Info Box */}
             <div className={`${darkMode ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-100'} rounded-2xl p-4 border`}>
               <p className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-                <strong>Tip:</strong> Excel exports include multiple sheets. Native charts can be edited directly in Excel, while chart images preserve the exact UI appearance.
+                <strong>Tip:</strong> Excel exports include multiple sheets. The Chart Data sheet lets you create native Excel charts by selecting the data and using Insert → Chart in Excel.
               </p>
             </div>
           </div>
