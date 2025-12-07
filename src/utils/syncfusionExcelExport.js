@@ -151,9 +151,9 @@ export const exportWithSyncfusion = async (options) => {
     }]
   }, 'xlsx');
 
-  // Save the file
-  const blob = await workbook.saveAsBlob('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  saveAs(blob, `${filename}.xlsx`);
+  // Save the file - saveAsBlob returns { blobData: Blob }
+  const result = await workbook.saveAsBlob('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  saveAs(result.blobData, `${filename}.xlsx`);
 };
 
 /**
