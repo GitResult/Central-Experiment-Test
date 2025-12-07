@@ -165,10 +165,10 @@ const Navigation = ({ onNavigate }) => {
     {
       id: 'chart-export-studio',
       name: 'Chart Export Studio',
-      description: 'Create and export charts to Excel with native charts, embedded images, and raw data tables.',
+      description: 'Create and export charts to Excel with native Excel charts, embedded images, and raw data tables.',
       icon: FileSpreadsheet,
       color: 'bg-sky-500',
-      features: ['Bar & Pie Charts', 'Excel Export', 'Chart Images', 'Editable Data'],
+      features: ['Native Excel Charts', 'Bar/Line/Pie', 'Color Palettes', 'Data Presets'],
       mainFile: 'src/components/ChartExportStudio.js',
       linkedFiles: []
     }

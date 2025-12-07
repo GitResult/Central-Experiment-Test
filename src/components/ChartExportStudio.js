@@ -294,53 +294,115 @@ const ChartExportStudio = () => {
 
         if (chartType === 'bar' || chartType === 'line') {
           const data = chartType === 'bar' ? barData : lineData;
+          const dataLength = data.length;
+
+          // Add title
+          chartSheet.getCell('A1').value = chartTitle || (chartType === 'bar' ? 'Bar Chart' : 'Line Chart');
+          chartSheet.getCell('A1').font = { bold: true, size: 14 };
+          chartSheet.mergeCells('A1:C1');
+
           // Add headers
-          chartSheet.getCell('A1').value = 'Category';
-          chartSheet.getCell('B1').value = '2024';
-          chartSheet.getCell('C1').value = '2025';
-          chartSheet.getRow(1).font = { bold: true };
+          chartSheet.getCell('A3').value = 'Category';
+          chartSheet.getCell('B3').value = '2024';
+          chartSheet.getCell('C3').value = '2025';
+          chartSheet.getRow(3).font = { bold: true };
+          chartSheet.getRow(3).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE8E8E8' }
+          };
 
           // Add data
           data.forEach((row, index) => {
-            chartSheet.getCell(`A${index + 2}`).value = row.category;
-            chartSheet.getCell(`B${index + 2}`).value = row.value2024;
-            chartSheet.getCell(`C${index + 2}`).value = row.value2025;
+            chartSheet.getCell(`A${index + 4}`).value = row.category;
+            chartSheet.getCell(`B${index + 4}`).value = row.value2024;
+            chartSheet.getCell(`C${index + 4}`).value = row.value2025;
           });
 
-          // Add chart
-          chartSheet.addImage(workbook.addImage({
-            base64: await captureChartImage().then(d => d?.split(',')[1]),
-            extension: 'png',
-          }), {
-            tl: { col: 5, row: 1 },
-            ext: { width: 500, height: 300 }
+          // Create native Excel chart
+          const chart = chartSheet.addChart({
+            type: chartType === 'bar' ? 'bar' : 'line',
+            series: [
+              {
+                name: '2024',
+                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
+                values: { ref: `'Native Chart'!$B$4:$B$${3 + dataLength}` },
+              },
+              {
+                name: '2025',
+                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
+                values: { ref: `'Native Chart'!$C$4:$C$${3 + dataLength}` },
+              },
+            ],
+            title: {
+              text: chartTitle || (chartType === 'bar' ? 'Bar Chart' : 'Line Chart'),
+            },
+            legend: {
+              position: 'bottom',
+            },
           });
+
+          // Position the chart
+          chart.position = {
+            type: 'twoCellAnchor',
+            from: { col: 5, row: 2 },
+            to: { col: 14, row: 18 },
+          };
 
         } else {
           // Pie chart data
-          chartSheet.getCell('A1').value = 'Category';
-          chartSheet.getCell('B1').value = 'Value';
-          chartSheet.getRow(1).font = { bold: true };
+          const dataLength = pieData.length;
+
+          // Add title
+          chartSheet.getCell('A1').value = chartTitle || 'Pie Chart';
+          chartSheet.getCell('A1').font = { bold: true, size: 14 };
+          chartSheet.mergeCells('A1:B1');
+
+          // Add headers
+          chartSheet.getCell('A3').value = 'Category';
+          chartSheet.getCell('B3').value = 'Value';
+          chartSheet.getRow(3).font = { bold: true };
+          chartSheet.getRow(3).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE8E8E8' }
+          };
 
           pieData.forEach((row, index) => {
-            chartSheet.getCell(`A${index + 2}`).value = row.name;
-            chartSheet.getCell(`B${index + 2}`).value = row.value;
+            chartSheet.getCell(`A${index + 4}`).value = row.name;
+            chartSheet.getCell(`B${index + 4}`).value = row.value;
           });
 
-          // Add chart image
-          chartSheet.addImage(workbook.addImage({
-            base64: await captureChartImage().then(d => d?.split(',')[1]),
-            extension: 'png',
-          }), {
-            tl: { col: 4, row: 1 },
-            ext: { width: 400, height: 400 }
+          // Create native Excel pie chart
+          const chart = chartSheet.addChart({
+            type: 'pie',
+            series: [
+              {
+                name: 'Distribution',
+                categories: { ref: `'Native Chart'!$A$4:$A$${3 + dataLength}` },
+                values: { ref: `'Native Chart'!$B$4:$B$${3 + dataLength}` },
+              },
+            ],
+            title: {
+              text: chartTitle || 'Pie Chart',
+            },
+            legend: {
+              position: 'right',
+            },
           });
+
+          // Position the chart
+          chart.position = {
+            type: 'twoCellAnchor',
+            from: { col: 4, row: 2 },
+            to: { col: 13, row: 18 },
+          };
         }
 
         // Style columns
-        chartSheet.columns.forEach(col => {
-          col.width = 15;
-        });
+        chartSheet.getColumn('A').width = 18;
+        chartSheet.getColumn('B').width = 12;
+        chartSheet.getColumn('C').width = 12;
       }
 
       // Sheet 3: Raw Data
