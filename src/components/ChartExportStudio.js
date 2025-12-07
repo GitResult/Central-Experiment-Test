@@ -26,6 +26,7 @@ import {
 import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
+import { addNativeChart } from '../utils/excelChartUtils';
 
 // Sample data presets
 const DATA_PRESETS = {
@@ -288,7 +289,7 @@ const ChartExportStudio = () => {
         imageSheet.getCell('B1').font = { bold: true, size: 14 };
       }
 
-      // Sheet 2: Chart Data (for creating native Excel chart)
+      // Sheet 2: Chart Data (with native Excel chart)
       if (includeNativeChart) {
         const chartSheet = workbook.addWorksheet('Chart Data');
 
@@ -300,8 +301,8 @@ const ChartExportStudio = () => {
           chartSheet.getCell('A1').font = { bold: true, size: 14 };
           chartSheet.mergeCells('A1:C1');
 
-          // Add instruction
-          chartSheet.getCell('A2').value = 'Select data below (A3:C' + (3 + data.length) + ') → Insert → Chart to create a native Excel chart';
+          // Add subtitle (chart will be generated)
+          chartSheet.getCell('A2').value = 'Native Excel chart is displayed to the right →';
           chartSheet.getCell('A2').font = { italic: true, color: { argb: 'FF666666' } };
           chartSheet.mergeCells('A2:C2');
 
@@ -330,8 +331,8 @@ const ChartExportStudio = () => {
           chartSheet.getCell('A1').font = { bold: true, size: 14 };
           chartSheet.mergeCells('A1:B1');
 
-          // Add instruction
-          chartSheet.getCell('A2').value = 'Select data below (A3:B' + (3 + pieData.length) + ') → Insert → Chart → Pie to create a native Excel chart';
+          // Add subtitle
+          chartSheet.getCell('A2').value = 'Native Excel chart is displayed to the right →';
           chartSheet.getCell('A2').font = { italic: true, color: { argb: 'FF666666' } };
           chartSheet.mergeCells('A2:B2');
 
@@ -429,10 +430,45 @@ const ChartExportStudio = () => {
         };
       }
 
-      // Generate and download
+      // Generate Excel buffer
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, `${filename}.xlsx`);
+      let finalBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      // Add native Excel chart if enabled
+      if (includeNativeChart) {
+        try {
+          // Prepare chart data
+          let categories, series;
+          if (chartType === 'bar' || chartType === 'line') {
+            const data = chartType === 'bar' ? barData : lineData;
+            categories = data.map(d => d.category);
+            series = [
+              { name: '2024', values: data.map(d => d.value2024) },
+              { name: '2025', values: data.map(d => d.value2025) }
+            ];
+          } else {
+            categories = pieData.map(d => d.name);
+            series = [{ name: 'Value', values: pieData.map(d => d.value) }];
+          }
+
+          // Calculate sheet index (Chart Data sheet)
+          const sheetIndex = includeChartImage ? 1 : 0;
+
+          // Add native chart to the xlsx
+          finalBlob = await addNativeChart(buffer, {
+            chartType: chartType,
+            title: chartTitle || (chartType === 'bar' ? 'Bar Chart' : chartType === 'line' ? 'Line Chart' : 'Pie Chart'),
+            categories,
+            series,
+            sheetIndex
+          });
+        } catch (chartError) {
+          console.warn('Native chart generation failed, using basic export:', chartError);
+          // Continue with basic export if chart injection fails
+        }
+      }
+
+      saveAs(finalBlob, `${filename}.xlsx`);
 
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 3000);
@@ -932,13 +968,13 @@ const ChartExportStudio = () => {
                     </button>
                   </div>
 
-                  {/* Chart Data Toggle */}
+                  {/* Native Chart Toggle */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <BarChart3 className={`w-5 h-5 ${textSecondary}`} />
                       <div>
-                        <div className={`font-medium ${textColor}`}>Chart Data</div>
-                        <div className={`text-sm ${textSecondary}`}>For native Excel chart</div>
+                        <div className={`font-medium ${textColor}`}>Native Excel Chart</div>
+                        <div className={`text-sm ${textSecondary}`}>Editable in Excel</div>
                       </div>
                     </div>
                     <button
@@ -1004,7 +1040,7 @@ const ChartExportStudio = () => {
                   )}
                   {includeNativeChart && (
                     <div className={`px-3 py-1.5 rounded-lg text-sm font-medium ${darkMode ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
-                      Sheet 2: Chart Data
+                      Sheet 2: Native Chart
                     </div>
                   )}
                   {includeRawData && (
@@ -1049,7 +1085,7 @@ const ChartExportStudio = () => {
             {/* Info Box */}
             <div className={`${darkMode ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-100'} rounded-2xl p-4 border`}>
               <p className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-                <strong>Tip:</strong> Excel exports include multiple sheets. The Chart Data sheet lets you create native Excel charts by selecting the data and using Insert → Chart in Excel.
+                <strong>Tip:</strong> Excel exports include multiple sheets. Native Excel charts can be edited, resized, and customized directly in Excel.
               </p>
             </div>
           </div>
