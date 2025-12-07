@@ -27,6 +27,7 @@ import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 import { addNativeChart } from '../utils/excelChartUtils';
+import { exportWithSyncfusion } from '../utils/syncfusionExcelExport';
 
 // Sample data presets
 const DATA_PRESETS = {
@@ -142,6 +143,7 @@ const ChartExportStudio = () => {
   const [includeRawData, setIncludeRawData] = useState(true);
   const [filename, setFilename] = useState('chart-export');
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingSyncfusion, setIsExportingSyncfusion] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [colorPalette, setColorPalette] = useState('default');
   const [dataPreset, setDataPreset] = useState('sales');
@@ -511,6 +513,53 @@ const ChartExportStudio = () => {
       exportToExcel();
     } else {
       exportAsImage();
+    }
+  };
+
+  // Export with Syncfusion
+  const handleSyncfusionExport = async () => {
+    setIsExportingSyncfusion(true);
+    setExportSuccess(false);
+
+    try {
+      // Prepare chart data
+      let categories, series;
+      if (chartType === 'bar' || chartType === 'line') {
+        const data = chartType === 'bar' ? barData : lineData;
+        categories = data.map(d => d.category);
+        series = [
+          { name: '2024', values: data.map(d => d.value2024) },
+          { name: '2025', values: data.map(d => d.value2025) }
+        ];
+      } else {
+        categories = pieData.map(d => d.name);
+        series = [{ name: 'Value', values: pieData.map(d => d.value) }];
+      }
+
+      // Get chart image if needed
+      let imageData = null;
+      if (includeChartImage) {
+        imageData = await captureChartImage();
+      }
+
+      // Export using Syncfusion
+      await exportWithSyncfusion({
+        chartType,
+        title: chartTitle || (chartType === 'bar' ? 'Bar Chart' : chartType === 'line' ? 'Line Chart' : 'Pie Chart'),
+        categories,
+        series,
+        filename: `${filename}-syncfusion`,
+        includeImage: includeChartImage,
+        imageData
+      });
+
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 3000);
+    } catch (error) {
+      console.error('Syncfusion export failed:', error);
+      alert('Syncfusion export failed. Please try again.');
+    } finally {
+      setIsExportingSyncfusion(false);
     }
   };
 
@@ -1085,6 +1134,31 @@ const ChartExportStudio = () => {
                 </>
               )}
             </button>
+
+            {/* Syncfusion Export Button */}
+            {exportFormat === 'excel' && (
+              <button
+                onClick={handleSyncfusionExport}
+                disabled={isExportingSyncfusion}
+                className={`w-full py-4 px-6 rounded-2xl font-semibold text-white text-lg flex items-center justify-center gap-3 transition-all ${
+                  isExportingSyncfusion
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-emerald-500 hover:bg-emerald-600 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                {isExportingSyncfusion ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Exporting with Syncfusion...
+                  </>
+                ) : (
+                  <>
+                    <FileSpreadsheet className="w-5 h-5" />
+                    Download Excel (Syncfusion)
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Info Box */}
             <div className={`${darkMode ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-100'} rounded-2xl p-4 border`}>

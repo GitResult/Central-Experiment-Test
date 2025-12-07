@@ -6,6 +6,8 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@syncfusion/ej2-base": "^31.2.12",
+    "@syncfusion/ej2-excel-export": "^31.2.12",
     "bootstrap": "^5.3.8",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
