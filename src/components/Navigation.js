@@ -19,7 +19,7 @@
 import React, { useState } from 'react';
 import {
   BarChart3, Users, Search, FileText, TrendingUp,
-  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck, Calendar, FileCode, Link2
+  Database, Maximize2, Cpu, Home, Briefcase, ListFilter, ChevronRight, UserCheck, Calendar, FileCode, Link2, FileSpreadsheet
 } from 'lucide-react';
 
 const Navigation = ({ onNavigate }) => {
@@ -160,6 +160,16 @@ const Navigation = ({ onNavigate }) => {
       color: 'bg-amber-500',
       features: ['1-Click Insights', 'Listing Reports', 'Correlation Analysis', 'Calendar View'],
       mainFile: 'src/events/events.js',
+      linkedFiles: []
+    },
+    {
+      id: 'chart-export-studio',
+      name: 'Chart Export Studio',
+      description: 'Create and export charts to Excel with native charts, embedded images, and raw data tables.',
+      icon: FileSpreadsheet,
+      color: 'bg-sky-500',
+      features: ['Bar & Pie Charts', 'Excel Export', 'Chart Images', 'Editable Data'],
+      mainFile: 'src/components/ChartExportStudio.js',
       linkedFiles: []
     }
   ];

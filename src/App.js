@@ -21,6 +21,7 @@ import RecordListingAdvanced from './components/RecordListingAdvanced';
 import ContactList from './contactList';
 import PersonEssential from './personEssential';
 import CentralEventReportingDemo from './events/events';
+import ChartExportStudio from './components/ChartExportStudio';
 
 /**
  * Main App Component with Navigation
@@ -45,6 +46,7 @@ function App() {
     'contact-list': ContactList,
     'person-essential': PersonEssential,
     'events': CentralEventReportingDemo,
+    'chart-export-studio': ChartExportStudio,
   };
 
   // Get the component to render
