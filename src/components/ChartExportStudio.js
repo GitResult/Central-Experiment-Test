@@ -1137,27 +1137,32 @@ const ChartExportStudio = () => {
 
             {/* Syncfusion Export Button */}
             {exportFormat === 'excel' && (
-              <button
-                onClick={handleSyncfusionExport}
-                disabled={isExportingSyncfusion}
-                className={`w-full py-4 px-6 rounded-2xl font-semibold text-white text-lg flex items-center justify-center gap-3 transition-all ${
-                  isExportingSyncfusion
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-emerald-500 hover:bg-emerald-600 shadow-lg hover:shadow-xl'
-                }`}
-              >
-                {isExportingSyncfusion ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Exporting with Syncfusion...
-                  </>
-                ) : (
-                  <>
-                    <FileSpreadsheet className="w-5 h-5" />
-                    Download Excel (Syncfusion)
-                  </>
-                )}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleSyncfusionExport}
+                  disabled={isExportingSyncfusion}
+                  className={`w-full py-4 px-6 rounded-2xl font-semibold text-white text-lg flex items-center justify-center gap-3 transition-all ${
+                    isExportingSyncfusion
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-emerald-500 hover:bg-emerald-600 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {isExportingSyncfusion ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Exporting with Syncfusion...
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="w-5 h-5" />
+                      Download Data Only (Syncfusion)
+                    </>
+                  )}
+                </button>
+                <p className={`text-xs text-center ${textSecondary}`}>
+                  Syncfusion ej2-excel-export: Data tables only (no native charts)
+                </p>
+              </div>
             )}
 
             {/* Info Box */}

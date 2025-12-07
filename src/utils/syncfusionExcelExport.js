@@ -1,14 +1,19 @@
 /**
  * Syncfusion Excel Export Utility
  *
- * Uses Syncfusion's ej2-excel-export for native Excel chart generation.
- * This provides more reliable chart rendering than custom XML.
+ * Uses Syncfusion's ej2-excel-export for Excel file generation.
+ *
+ * NOTE: @syncfusion/ej2-excel-export does NOT support native Excel chart creation.
+ * Native charts require Syncfusion's XlsIO library (.NET).
+ * This implementation exports formatted data tables only.
+ * For native Excel charts, use the custom XML approach (excelChartUtils.js).
  */
 
-import { Workbook } from '@syncfusion/ej2-excel-export';
+import { Workbook, Worksheet, Column, Row, Cell, CellStyle } from '@syncfusion/ej2-excel-export';
+import { saveAs } from 'file-saver';
 
 /**
- * Export data to Excel with native charts using Syncfusion
+ * Export data to Excel using Syncfusion ej2-excel-export
  *
  * @param {Object} options - Export options
  * @param {string} options.chartType - 'bar', 'line', or 'pie'
@@ -16,8 +21,8 @@ import { Workbook } from '@syncfusion/ej2-excel-export';
  * @param {Array} options.categories - Category labels
  * @param {Array} options.series - Data series [{name, values}]
  * @param {string} options.filename - Output filename
- * @param {boolean} options.includeImage - Include chart image sheet
- * @param {string} options.imageData - Base64 image data (optional)
+ * @param {boolean} options.includeImage - Include chart image sheet (not supported)
+ * @param {string} options.imageData - Base64 image data (not supported in ej2-excel-export)
  */
 export const exportWithSyncfusion = async (options) => {
   const {
@@ -25,62 +30,65 @@ export const exportWithSyncfusion = async (options) => {
     title,
     categories,
     series,
-    filename = 'chart-export',
-    includeImage = false,
-    imageData = null
+    filename = 'chart-export'
   } = options;
 
-  // Create workbook
-  const workbook = new Workbook({
-    worksheets: []
-  }, 'xlsx');
+  // Create worksheets array
+  const worksheets = [];
 
-  // Sheet 1: Chart Image (if enabled)
-  if (includeImage && imageData) {
-    workbook.worksheets.push({
-      name: 'Chart Image',
-      rows: [
-        {
-          index: 1,
-          cells: [{ index: 1, value: title || 'Chart', style: { bold: true, fontSize: 14 } }]
-        }
-      ],
-      images: [{
-        image: imageData.split(',')[1], // Remove data:image/png;base64, prefix
-        row: 2,
-        column: 1,
-        width: 600,
-        height: 400
-      }]
-    });
+  // --- Sheet 1: Chart Data ---
+  const chartDataSheet = createChartDataSheet(chartType, title, categories, series);
+  worksheets.push(chartDataSheet);
+
+  // --- Sheet 2: Raw Data with Analysis ---
+  const rawDataSheet = createRawDataSheet(chartType, categories, series);
+  worksheets.push(rawDataSheet);
+
+  // Create and save workbook
+  const workbook = new Workbook({ worksheets }, 'xlsx');
+
+  try {
+    // Use saveAsBlob for better browser compatibility
+    const blob = await workbook.saveAsBlob('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    saveAs(blob, `${filename}.xlsx`);
+  } catch (error) {
+    // Fallback to direct save
+    console.warn('Blob save failed, trying direct save:', error);
+    workbook.save(`${filename}.xlsx`);
   }
+};
 
-  // Sheet 2: Chart Data with Native Chart
-  const chartDataRows = [];
+/**
+ * Create chart data worksheet
+ */
+function createChartDataSheet(chartType, title, categories, series) {
+  const rows = [];
 
-  // Title row
-  chartDataRows.push({
+  // Row 1: Title
+  rows.push({
     index: 1,
     cells: [{
       index: 1,
-      value: title || (chartType === 'bar' ? 'Bar Chart' : chartType === 'line' ? 'Line Chart' : 'Pie Chart'),
-      style: { bold: true, fontSize: 14 }
+      value: title || getDefaultTitle(chartType),
+      style: { bold: true, fontSize: 16, fontColor: '#1D4ED8' }
     }]
   });
 
-  // Header row
+  // Row 2: Empty row for spacing
+  rows.push({ index: 2, cells: [] });
+
   if (chartType === 'pie') {
-    chartDataRows.push({
+    // Pie chart: Category | Value
+    rows.push({
       index: 3,
       cells: [
-        { index: 1, value: 'Category', style: { bold: true, backColor: '#E8E8E8' } },
-        { index: 2, value: 'Value', style: { bold: true, backColor: '#E8E8E8' } }
+        { index: 1, value: 'Category', style: { bold: true, backColor: '#DBEAFE', fontColor: '#1E40AF' } },
+        { index: 2, value: 'Value', style: { bold: true, backColor: '#DBEAFE', fontColor: '#1E40AF' } }
       ]
     });
 
-    // Data rows
     categories.forEach((cat, idx) => {
-      chartDataRows.push({
+      rows.push({
         index: 4 + idx,
         cells: [
           { index: 1, value: cat },
@@ -89,89 +97,73 @@ export const exportWithSyncfusion = async (options) => {
       });
     });
   } else {
-    // Bar/Line chart headers
+    // Bar/Line: Category | Series1 | Series2 | ...
     const headerCells = [
-      { index: 1, value: 'Category', style: { bold: true, backColor: '#E8E8E8' } }
+      { index: 1, value: 'Category', style: { bold: true, backColor: '#DBEAFE', fontColor: '#1E40AF' } }
     ];
     series.forEach((s, idx) => {
       headerCells.push({
         index: 2 + idx,
         value: s.name,
-        style: { bold: true, backColor: '#E8E8E8' }
+        style: { bold: true, backColor: '#DBEAFE', fontColor: '#1E40AF' }
       });
     });
-    chartDataRows.push({ index: 3, cells: headerCells });
+    rows.push({ index: 3, cells: headerCells });
 
-    // Data rows
     categories.forEach((cat, idx) => {
       const rowCells = [{ index: 1, value: cat }];
       series.forEach((s, sIdx) => {
         rowCells.push({ index: 2 + sIdx, value: s.values[idx] });
       });
-      chartDataRows.push({ index: 4 + idx, cells: rowCells });
+      rows.push({ index: 4 + idx, cells: rowCells });
     });
   }
 
-  // Build chart configuration
-  const dataRange = chartType === 'pie'
-    ? `A3:B${3 + categories.length}`
-    : `A3:${String.fromCharCode(65 + series.length)}${3 + categories.length}`;
-
-  // Map chart type to Syncfusion chart type
-  const syncfusionChartType = chartType === 'bar' ? 'Column' :
-                              chartType === 'line' ? 'Line' : 'Pie';
-
-  const chartSheet = {
-    name: 'Chart Data',
-    rows: chartDataRows,
-    columns: [
-      { index: 1, width: 120 },
-      { index: 2, width: 80 },
-      { index: 3, width: 80 }
-    ],
-    charts: [{
-      name: 'Chart1',
-      chartType: syncfusionChartType,
-      range: dataRange,
-      title: title || (chartType === 'bar' ? 'Bar Chart' : chartType === 'line' ? 'Line Chart' : 'Pie Chart'),
-      primaryXAxis: {
-        title: 'Category'
-      },
-      primaryYAxis: {
-        title: 'Value'
-      },
-      // Position chart to the right of data
-      top: 20,
-      left: 250,
-      width: 500,
-      height: 300,
-      legend: {
-        position: 'Bottom'
-      }
+  // Note about charts
+  const noteRowIndex = 4 + categories.length + 2;
+  rows.push({
+    index: noteRowIndex,
+    cells: [{
+      index: 1,
+      value: 'Note: Select data above and use Insert > Chart in Excel to create a chart',
+      style: { italic: true, fontColor: '#6B7280', fontSize: 10 }
     }]
+  });
+
+  return {
+    name: 'Chart Data',
+    rows,
+    columns: [
+      { index: 1, width: 150 },
+      { index: 2, width: 100 },
+      { index: 3, width: 100 },
+      { index: 4, width: 100 }
+    ]
   };
+}
 
-  workbook.worksheets.push(chartSheet);
-
-  // Sheet 3: Raw Data
-  const rawDataRows = [];
+/**
+ * Create raw data worksheet with analysis
+ */
+function createRawDataSheet(chartType, categories, series) {
+  const rows = [];
 
   if (chartType === 'pie') {
-    // Headers
-    rawDataRows.push({
+    // Headers: Category | Value | Percentage
+    rows.push({
       index: 1,
       cells: [
-        { index: 1, value: 'Category', style: { bold: true, backColor: '#E8E8E8' } },
-        { index: 2, value: 'Value', style: { bold: true, backColor: '#E8E8E8' } },
-        { index: 3, value: 'Percentage', style: { bold: true, backColor: '#E8E8E8' } }
+        { index: 1, value: 'Category', style: { bold: true, backColor: '#F3F4F6' } },
+        { index: 2, value: 'Value', style: { bold: true, backColor: '#F3F4F6' } },
+        { index: 3, value: 'Percentage', style: { bold: true, backColor: '#F3F4F6' } }
       ]
     });
 
     const total = series[0].values.reduce((sum, v) => sum + v, 0);
     categories.forEach((cat, idx) => {
       const value = series[0].values[idx];
-      const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-      rawDataRows.push({
+      const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+      rows.push({
         index: 2 + idx,
         cells: [
           { index: 1, value: cat },
@@ -182,34 +174,34 @@ export const exportWithSyncfusion = async (options) => {
     });
 
     // Total row
-    rawDataRows.push({
+    rows.push({
       index: 2 + categories.length,
       cells: [
-        { index: 1, value: 'TOTAL', style: { bold: true } },
-        { index: 2, value: total, style: { bold: true } },
-        { index: 3, value: '100%', style: { bold: true } }
+        { index: 1, value: 'TOTAL', style: { bold: true, backColor: '#E5E7EB' } },
+        { index: 2, value: total, style: { bold: true, backColor: '#E5E7EB' } },
+        { index: 3, value: '100.0%', style: { bold: true, backColor: '#E5E7EB' } }
       ]
     });
   } else {
-    // Headers for bar/line
+    // Bar/Line: Category | Series values | Change | Change %
     const headerCells = [
-      { index: 1, value: 'Category', style: { bold: true, backColor: '#E8E8E8' } }
+      { index: 1, value: 'Category', style: { bold: true, backColor: '#F3F4F6' } }
     ];
     series.forEach((s, idx) => {
       headerCells.push({
         index: 2 + idx,
         value: s.name,
-        style: { bold: true, backColor: '#E8E8E8' }
+        style: { bold: true, backColor: '#F3F4F6' }
       });
     });
     if (series.length === 2) {
-      headerCells.push({ index: 4, value: 'Change', style: { bold: true, backColor: '#E8E8E8' } });
-      headerCells.push({ index: 5, value: 'Change %', style: { bold: true, backColor: '#E8E8E8' } });
+      headerCells.push({ index: 4, value: 'Change', style: { bold: true, backColor: '#F3F4F6' } });
+      headerCells.push({ index: 5, value: 'Change %', style: { bold: true, backColor: '#F3F4F6' } });
     }
-    rawDataRows.push({ index: 1, cells: headerCells });
+    rows.push({ index: 1, cells: headerCells });
 
     // Data rows
-    let totals = series.map(() => 0);
+    const totals = series.map(() => 0);
     categories.forEach((cat, idx) => {
       const rowCells = [{ index: 1, value: cat }];
       series.forEach((s, sIdx) => {
@@ -220,42 +212,53 @@ export const exportWithSyncfusion = async (options) => {
         const change = series[1].values[idx] - series[0].values[idx];
         const changePct = series[0].values[idx] > 0
           ? ((change / series[0].values[idx]) * 100).toFixed(1)
-          : '0';
+          : '0.0';
         rowCells.push({ index: 4, value: change });
         rowCells.push({ index: 5, value: `${changePct}%` });
       }
-      rawDataRows.push({ index: 2 + idx, cells: rowCells });
+      rows.push({ index: 2 + idx, cells: rowCells });
     });
 
     // Total row
-    const totalCells = [{ index: 1, value: 'TOTAL', style: { bold: true } }];
+    const totalCells = [
+      { index: 1, value: 'TOTAL', style: { bold: true, backColor: '#E5E7EB' } }
+    ];
     totals.forEach((t, idx) => {
-      totalCells.push({ index: 2 + idx, value: t, style: { bold: true } });
+      totalCells.push({ index: 2 + idx, value: t, style: { bold: true, backColor: '#E5E7EB' } });
     });
     if (series.length === 2) {
       const totalChange = totals[1] - totals[0];
-      const totalChangePct = totals[0] > 0 ? ((totalChange / totals[0]) * 100).toFixed(1) : '0';
-      totalCells.push({ index: 4, value: totalChange, style: { bold: true } });
-      totalCells.push({ index: 5, value: `${totalChangePct}%`, style: { bold: true } });
+      const totalChangePct = totals[0] > 0 ? ((totalChange / totals[0]) * 100).toFixed(1) : '0.0';
+      totalCells.push({ index: 4, value: totalChange, style: { bold: true, backColor: '#E5E7EB' } });
+      totalCells.push({ index: 5, value: `${totalChangePct}%`, style: { bold: true, backColor: '#E5E7EB' } });
     }
-    rawDataRows.push({ index: 2 + categories.length, cells: totalCells });
+    rows.push({ index: 2 + categories.length, cells: totalCells });
   }
 
-  workbook.worksheets.push({
+  return {
     name: 'Raw Data',
-    rows: rawDataRows,
+    rows,
     columns: [
-      { index: 1, width: 100 },
-      { index: 2, width: 80 },
-      { index: 3, width: 80 },
-      { index: 4, width: 80 },
-      { index: 5, width: 80 }
+      { index: 1, width: 120 },
+      { index: 2, width: 100 },
+      { index: 3, width: 100 },
+      { index: 4, width: 100 },
+      { index: 5, width: 100 }
     ]
-  });
+  };
+}
 
-  // Save the workbook
-  workbook.save(`${filename}.xlsx`);
-};
+/**
+ * Get default title based on chart type
+ */
+function getDefaultTitle(chartType) {
+  switch (chartType) {
+    case 'bar': return 'Bar Chart Data';
+    case 'line': return 'Line Chart Data';
+    case 'pie': return 'Pie Chart Data';
+    default: return 'Chart Data';
+  }
+}
 
 const syncfusionExcelExport = { exportWithSyncfusion };
 export default syncfusionExcelExport;
