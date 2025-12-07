@@ -14,42 +14,126 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
   ArrowLeft, Download, FileSpreadsheet, Image, Table2,
   Plus, Minus, RotateCcw, Check, Loader2, Sun, Moon,
-  BarChart3, PieChart as PieChartIcon, HelpCircle, Settings
+  BarChart3, PieChart as PieChartIcon, TrendingUp, HelpCircle, Settings,
+  Copy, Palette, Database
 } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 
-// Sample data for charts
-const initialBarData = [
-  { category: 'Q1', value2024: 4200, value2025: 5100 },
-  { category: 'Q2', value2024: 3800, value2025: 4600 },
-  { category: 'Q3', value2024: 5100, value2025: 5800 },
-  { category: 'Q4', value2024: 4700, value2025: 6200 },
-];
+// Sample data presets
+const DATA_PRESETS = {
+  sales: {
+    name: 'Sales Report',
+    bar: [
+      { category: 'Q1', value2024: 4200, value2025: 5100 },
+      { category: 'Q2', value2024: 3800, value2025: 4600 },
+      { category: 'Q3', value2024: 5100, value2025: 5800 },
+      { category: 'Q4', value2024: 4700, value2025: 6200 },
+    ],
+    pie: [
+      { name: 'Product A', value: 35 },
+      { name: 'Product B', value: 28 },
+      { name: 'Product C', value: 22 },
+      { name: 'Product D', value: 15 },
+    ],
+    line: [
+      { category: 'Jan', value2024: 1200, value2025: 1400 },
+      { category: 'Feb', value2024: 1350, value2025: 1550 },
+      { category: 'Mar', value2024: 1100, value2025: 1650 },
+      { category: 'Apr', value2024: 1450, value2025: 1700 },
+      { category: 'May', value2024: 1600, value2025: 1850 },
+      { category: 'Jun', value2024: 1750, value2025: 2100 },
+    ],
+  },
+  survey: {
+    name: 'Survey Results',
+    bar: [
+      { category: 'Very Satisfied', value2024: 42, value2025: 48 },
+      { category: 'Satisfied', value2024: 35, value2025: 32 },
+      { category: 'Neutral', value2024: 15, value2025: 12 },
+      { category: 'Dissatisfied', value2024: 8, value2025: 8 },
+    ],
+    pie: [
+      { name: 'Excellent', value: 45 },
+      { name: 'Good', value: 30 },
+      { name: 'Average', value: 18 },
+      { name: 'Poor', value: 7 },
+    ],
+    line: [
+      { category: 'Week 1', value2024: 72, value2025: 78 },
+      { category: 'Week 2', value2024: 75, value2025: 82 },
+      { category: 'Week 3', value2024: 71, value2025: 85 },
+      { category: 'Week 4', value2024: 78, value2025: 88 },
+    ],
+  },
+  budget: {
+    name: 'Budget Analysis',
+    bar: [
+      { category: 'Marketing', value2024: 25000, value2025: 32000 },
+      { category: 'Operations', value2024: 45000, value2025: 48000 },
+      { category: 'R&D', value2024: 35000, value2025: 42000 },
+      { category: 'HR', value2024: 18000, value2025: 20000 },
+    ],
+    pie: [
+      { name: 'Salaries', value: 45 },
+      { name: 'Equipment', value: 25 },
+      { name: 'Marketing', value: 18 },
+      { name: 'Other', value: 12 },
+    ],
+    line: [
+      { category: 'Jan', value2024: 8500, value2025: 9200 },
+      { category: 'Feb', value2024: 8800, value2025: 9500 },
+      { category: 'Mar', value2024: 9200, value2025: 10100 },
+      { category: 'Apr', value2024: 8900, value2025: 9800 },
+      { category: 'May', value2024: 9500, value2025: 10500 },
+      { category: 'Jun', value2024: 10200, value2025: 11200 },
+    ],
+  },
+};
 
-const initialPieData = [
-  { name: 'Product A', value: 35 },
-  { name: 'Product B', value: 28 },
-  { name: 'Product C', value: 22 },
-  { name: 'Product D', value: 15 },
-];
+// Color palettes
+const COLOR_PALETTES = {
+  default: {
+    name: 'Default',
+    light: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#5856D6'],
+    dark: ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#BF5AF2', '#5E5CE6'],
+  },
+  ocean: {
+    name: 'Ocean',
+    light: ['#0077B6', '#00B4D8', '#90E0EF', '#023E8A', '#48CAE4', '#CAF0F8'],
+    dark: ['#0096C7', '#48CAE4', '#90E0EF', '#0077B6', '#00B4D8', '#ADE8F4'],
+  },
+  forest: {
+    name: 'Forest',
+    light: ['#2D6A4F', '#40916C', '#52B788', '#74C69D', '#95D5B2', '#B7E4C7'],
+    dark: ['#40916C', '#52B788', '#74C69D', '#95D5B2', '#B7E4C7', '#D8F3DC'],
+  },
+  sunset: {
+    name: 'Sunset',
+    light: ['#F72585', '#B5179E', '#7209B7', '#560BAD', '#480CA8', '#3A0CA3'],
+    dark: ['#F72585', '#B5179E', '#7209B7', '#560BAD', '#480CA8', '#3F37C9'],
+  },
+};
 
-// Color palette
-const CHART_COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#5856D6'];
-const CHART_COLORS_DARK = ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#BF5AF2', '#5E5CE6'];
+// Default data
+const initialBarData = DATA_PRESETS.sales.bar;
+const initialPieData = DATA_PRESETS.sales.pie;
+const initialLineData = DATA_PRESETS.sales.line;
 
 const ChartExportStudio = () => {
   // State
   const [chartType, setChartType] = useState('bar');
+  const [chartTitle, setChartTitle] = useState('Quarterly Performance');
   const [barData, setBarData] = useState(initialBarData);
   const [pieData, setPieData] = useState(initialPieData);
+  const [lineData, setLineData] = useState(initialLineData);
   const [darkMode, setDarkMode] = useState(false);
   const [exportFormat, setExportFormat] = useState('excel');
   const [includeChartImage, setIncludeChartImage] = useState(true);
@@ -58,23 +142,29 @@ const ChartExportStudio = () => {
   const [filename, setFilename] = useState('chart-export');
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [colorPalette, setColorPalette] = useState('default');
+  const [dataPreset, setDataPreset] = useState('sales');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Refs
   const chartRef = useRef(null);
 
-  // Get colors based on theme
-  const colors = darkMode ? CHART_COLORS_DARK : CHART_COLORS;
+  // Get colors based on theme and palette
+  const currentPalette = COLOR_PALETTES[colorPalette];
+  const colors = darkMode ? currentPalette.dark : currentPalette.light;
 
   // Handle cell edit
   const handleCellEdit = useCallback((rowIndex, field, value) => {
-    if (chartType === 'bar') {
-      const newData = [...barData];
+    if (chartType === 'bar' || chartType === 'line') {
+      const currentData = chartType === 'bar' ? barData : lineData;
+      const setData = chartType === 'bar' ? setBarData : setLineData;
+      const newData = [...currentData];
       if (field === 'category') {
         newData[rowIndex].category = value;
       } else {
         newData[rowIndex][field] = parseFloat(value) || 0;
       }
-      setBarData(newData);
+      setData(newData);
     } else {
       const newData = [...pieData];
       if (field === 'name') {
@@ -84,31 +174,73 @@ const ChartExportStudio = () => {
       }
       setPieData(newData);
     }
-  }, [chartType, barData, pieData]);
+  }, [chartType, barData, pieData, lineData]);
 
   // Add row
   const addRow = useCallback(() => {
     if (chartType === 'bar') {
       setBarData([...barData, { category: `Q${barData.length + 1}`, value2024: 0, value2025: 0 }]);
+    } else if (chartType === 'line') {
+      setLineData([...lineData, { category: `Point ${lineData.length + 1}`, value2024: 0, value2025: 0 }]);
     } else {
       setPieData([...pieData, { name: `Item ${pieData.length + 1}`, value: 0 }]);
     }
-  }, [chartType, barData, pieData]);
+  }, [chartType, barData, pieData, lineData]);
 
   // Remove row
   const removeRow = useCallback((index) => {
     if (chartType === 'bar' && barData.length > 1) {
       setBarData(barData.filter((_, i) => i !== index));
+    } else if (chartType === 'line' && lineData.length > 1) {
+      setLineData(lineData.filter((_, i) => i !== index));
     } else if (chartType === 'pie' && pieData.length > 1) {
       setPieData(pieData.filter((_, i) => i !== index));
     }
-  }, [chartType, barData, pieData]);
+  }, [chartType, barData, pieData, lineData]);
 
   // Reset data
   const resetData = useCallback(() => {
-    setBarData(initialBarData);
-    setPieData(initialPieData);
+    const preset = DATA_PRESETS[dataPreset];
+    setBarData(preset.bar);
+    setPieData(preset.pie);
+    setLineData(preset.line);
+  }, [dataPreset]);
+
+  // Load preset
+  const loadPreset = useCallback((presetKey) => {
+    const preset = DATA_PRESETS[presetKey];
+    setDataPreset(presetKey);
+    setBarData(preset.bar);
+    setPieData(preset.pie);
+    setLineData(preset.line);
+    setChartTitle(preset.name);
   }, []);
+
+  // Copy chart to clipboard
+  const copyToClipboard = async () => {
+    if (!chartRef.current) return;
+
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: darkMode ? '#1c1c1e' : '#ffffff',
+        scale: 2,
+        logging: false,
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        }
+      });
+    } catch (error) {
+      console.error('Copy failed:', error);
+      alert('Copy to clipboard failed. Try using the download option instead.');
+    }
+  };
 
   // Capture chart as image
   const captureChartImage = async () => {
@@ -151,7 +283,8 @@ const ChartExportStudio = () => {
         }
 
         // Add title
-        imageSheet.getCell('B1').value = `${chartType === 'bar' ? 'Bar' : 'Pie'} Chart - Exported from Chart Export Studio`;
+        const chartTypeName = chartType === 'bar' ? 'Bar' : chartType === 'line' ? 'Line' : 'Pie';
+        imageSheet.getCell('B1').value = chartTitle || `${chartTypeName} Chart`;
         imageSheet.getCell('B1').font = { bold: true, size: 14 };
       }
 
@@ -159,7 +292,8 @@ const ChartExportStudio = () => {
       if (includeNativeChart) {
         const chartSheet = workbook.addWorksheet('Native Chart');
 
-        if (chartType === 'bar') {
+        if (chartType === 'bar' || chartType === 'line') {
+          const data = chartType === 'bar' ? barData : lineData;
           // Add headers
           chartSheet.getCell('A1').value = 'Category';
           chartSheet.getCell('B1').value = '2024';
@@ -167,7 +301,7 @@ const ChartExportStudio = () => {
           chartSheet.getRow(1).font = { bold: true };
 
           // Add data
-          barData.forEach((row, index) => {
+          data.forEach((row, index) => {
             chartSheet.getCell(`A${index + 2}`).value = row.category;
             chartSheet.getCell(`B${index + 2}`).value = row.value2024;
             chartSheet.getCell(`C${index + 2}`).value = row.value2025;
@@ -213,7 +347,8 @@ const ChartExportStudio = () => {
       if (includeRawData) {
         const dataSheet = workbook.addWorksheet('Raw Data');
 
-        if (chartType === 'bar') {
+        if (chartType === 'bar' || chartType === 'line') {
+          const data = chartType === 'bar' ? barData : lineData;
           dataSheet.columns = [
             { header: 'Category', key: 'category', width: 15 },
             { header: '2024 Value', key: 'value2024', width: 15 },
@@ -222,9 +357,9 @@ const ChartExportStudio = () => {
             { header: 'Change %', key: 'changePct', width: 15 },
           ];
 
-          barData.forEach(row => {
+          data.forEach(row => {
             const change = row.value2025 - row.value2024;
-            const changePct = ((change / row.value2024) * 100).toFixed(1);
+            const changePct = row.value2024 > 0 ? ((change / row.value2024) * 100).toFixed(1) : '0';
             dataSheet.addRow({
               category: row.category,
               value2024: row.value2024,
@@ -235,8 +370,8 @@ const ChartExportStudio = () => {
           });
 
           // Add total row
-          const total2024 = barData.reduce((sum, r) => sum + r.value2024, 0);
-          const total2025 = barData.reduce((sum, r) => sum + r.value2025, 0);
+          const total2024 = data.reduce((sum, r) => sum + r.value2024, 0);
+          const total2025 = data.reduce((sum, r) => sum + r.value2025, 0);
           dataSheet.addRow({
             category: 'TOTAL',
             value2024: total2024,
@@ -378,41 +513,111 @@ const ChartExportStudio = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Chart Preview & Data Table */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Chart Type Selector */}
-            <div className={`${cardBg} rounded-2xl p-1.5 shadow-sm border ${borderColor} inline-flex`}>
-              <button
-                onClick={() => setChartType('bar')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  chartType === 'bar'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : `${textSecondary} hover:${darkMode ? 'bg-[#3a3a3c]' : 'bg-gray-100'}`
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                Bar Chart
-              </button>
-              <button
-                onClick={() => setChartType('pie')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  chartType === 'pie'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : `${textSecondary} hover:${darkMode ? 'bg-[#3a3a3c]' : 'bg-gray-100'}`
-                }`}
-              >
-                <PieChartIcon className="w-4 h-4" />
-                Pie Chart
-              </button>
+            {/* Top Controls Row */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Chart Type Selector */}
+              <div className={`${cardBg} rounded-2xl p-1.5 shadow-sm border ${borderColor} inline-flex`}>
+                <button
+                  onClick={() => setChartType('bar')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                    chartType === 'bar'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : `${textSecondary} hover:${darkMode ? 'bg-[#3a3a3c]' : 'bg-gray-100'}`
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  Bar
+                </button>
+                <button
+                  onClick={() => setChartType('line')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                    chartType === 'line'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : `${textSecondary} hover:${darkMode ? 'bg-[#3a3a3c]' : 'bg-gray-100'}`
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Line
+                </button>
+                <button
+                  onClick={() => setChartType('pie')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                    chartType === 'pie'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : `${textSecondary} hover:${darkMode ? 'bg-[#3a3a3c]' : 'bg-gray-100'}`
+                  }`}
+                >
+                  <PieChartIcon className="w-4 h-4" />
+                  Pie
+                </button>
+              </div>
+
+              {/* Data Preset Selector */}
+              <div className="flex items-center gap-2">
+                <Database className={`w-4 h-4 ${textSecondary}`} />
+                <select
+                  value={dataPreset}
+                  onChange={(e) => loadPreset(e.target.value)}
+                  className={`px-3 py-2 rounded-xl border ${borderColor} ${cardBg} ${textColor} text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer`}
+                >
+                  {Object.entries(DATA_PRESETS).map(([key, preset]) => (
+                    <option key={key} value={key}>{preset.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Color Palette Selector */}
+              <div className="flex items-center gap-2">
+                <Palette className={`w-4 h-4 ${textSecondary}`} />
+                <select
+                  value={colorPalette}
+                  onChange={(e) => setColorPalette(e.target.value)}
+                  className={`px-3 py-2 rounded-xl border ${borderColor} ${cardBg} ${textColor} text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer`}
+                >
+                  {Object.entries(COLOR_PALETTES).map(([key, palette]) => (
+                    <option key={key} value={key}>{palette.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Chart Title Input */}
+            <div className={`${cardBg} rounded-2xl p-4 shadow-sm border ${borderColor}`}>
+              <input
+                type="text"
+                value={chartTitle}
+                onChange={(e) => setChartTitle(e.target.value)}
+                placeholder="Enter chart title..."
+                className={`w-full text-xl font-semibold ${textColor} bg-transparent border-none outline-none placeholder:${textSecondary}`}
+              />
             </div>
 
             {/* Chart Preview */}
             <div className={`${cardBg} rounded-2xl p-6 shadow-sm border ${borderColor}`}>
-              <h2 className={`text-lg font-semibold ${textColor} mb-4`}>Chart Preview</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-semibold ${textColor}`}>Chart Preview</h2>
+                <button
+                  onClick={copyToClipboard}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    copySuccess
+                      ? 'bg-green-500 text-white'
+                      : darkMode ? 'bg-[#3a3a3c] text-white hover:bg-[#4a4a4c]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copySuccess ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
               <div
                 ref={chartRef}
                 className={`${darkMode ? 'bg-[#1c1c1e]' : 'bg-white'} rounded-xl p-4`}
-                style={{ minHeight: 400 }}
+                style={{ minHeight: 420 }}
               >
-                <ResponsiveContainer width="100%" height={380}>
+                {/* Chart Title */}
+                {chartTitle && (
+                  <h3 className={`text-center text-lg font-semibold ${textColor} mb-2`}>{chartTitle}</h3>
+                )}
+                <ResponsiveContainer width="100%" height={chartTitle ? 360 : 380}>
                   {chartType === 'bar' ? (
                     <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#3a3a3c' : '#e5e7eb'} />
@@ -437,6 +642,30 @@ const ChartExportStudio = () => {
                       <Bar dataKey="value2024" name="2024" fill={colors[0]} radius={[6, 6, 0, 0]} />
                       <Bar dataKey="value2025" name="2025" fill={colors[1]} radius={[6, 6, 0, 0]} />
                     </BarChart>
+                  ) : chartType === 'line' ? (
+                    <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#3a3a3c' : '#e5e7eb'} />
+                      <XAxis
+                        dataKey="category"
+                        tick={{ fill: darkMode ? '#9ca3af' : '#374151', fontSize: 12 }}
+                        axisLine={{ stroke: darkMode ? '#3a3a3c' : '#e5e7eb' }}
+                      />
+                      <YAxis
+                        tick={{ fill: darkMode ? '#9ca3af' : '#374151', fontSize: 12 }}
+                        axisLine={{ stroke: darkMode ? '#3a3a3c' : '#e5e7eb' }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: darkMode ? '#2c2c2e' : '#fff',
+                          border: `1px solid ${darkMode ? '#3a3a3c' : '#e5e7eb'}`,
+                          borderRadius: 12,
+                          color: darkMode ? '#fff' : '#1f2937'
+                        }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="value2024" name="2024" stroke={colors[0]} strokeWidth={2} dot={{ fill: colors[0], strokeWidth: 2 }} />
+                      <Line type="monotone" dataKey="value2025" name="2025" stroke={colors[1]} strokeWidth={2} dot={{ fill: colors[1], strokeWidth: 2 }} />
+                    </LineChart>
                   ) : (
                     <PieChart>
                       <Pie
@@ -499,7 +728,7 @@ const ChartExportStudio = () => {
                 <table className="w-full">
                   <thead>
                     <tr className={`border-b ${borderColor}`}>
-                      {chartType === 'bar' ? (
+                      {(chartType === 'bar' || chartType === 'line') ? (
                         <>
                           <th className={`text-left py-3 px-4 font-medium ${textSecondary} text-sm`}>Category</th>
                           <th className={`text-left py-3 px-4 font-medium ${textSecondary} text-sm`}>2024 Value</th>
@@ -516,8 +745,8 @@ const ChartExportStudio = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {chartType === 'bar' ? (
-                      barData.map((row, index) => (
+                    {(chartType === 'bar' || chartType === 'line') ? (
+                      (chartType === 'bar' ? barData : lineData).map((row, index) => (
                         <tr key={index} className={`border-b ${borderColor} last:border-b-0`}>
                           <td className="py-3 px-4">
                             <input
@@ -546,9 +775,9 @@ const ChartExportStudio = () => {
                           <td className="py-3 px-4">
                             <button
                               onClick={() => removeRow(index)}
-                              disabled={barData.length <= 1}
+                              disabled={(chartType === 'bar' ? barData : lineData).length <= 1}
                               className={`p-2 rounded-lg ${
-                                barData.length <= 1
+                                (chartType === 'bar' ? barData : lineData).length <= 1
                                   ? 'opacity-30 cursor-not-allowed'
                                   : darkMode ? 'hover:bg-red-500/20 text-red-400' : 'hover:bg-red-50 text-red-500'
                               } transition-colors`}
