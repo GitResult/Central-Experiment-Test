@@ -327,6 +327,12 @@ export const addNativeChart = async (xlsxBuffer, options) => {
   // Load the xlsx file
   const zip = await JSZip.loadAsync(xlsxBuffer);
 
+  // Find next available drawing number (ExcelJS may have created drawing1 for images)
+  let drawingNum = 1;
+  while (zip.file(`xl/drawings/drawing${drawingNum}.xml`)) {
+    drawingNum++;
+  }
+
   // Determine sheet name from workbook.xml
   let sheetName = 'Chart Data';
   try {
@@ -353,20 +359,47 @@ export const addNativeChart = async (xlsxBuffer, options) => {
   // Create charts folder and add chart
   zip.file('xl/charts/chart1.xml', chartXml);
 
-  // Create drawings folder and add drawing
-  zip.file('xl/drawings/drawing1.xml', drawingXml);
+  // Create drawings folder and add drawing (use next available number)
+  zip.file(`xl/drawings/drawing${drawingNum}.xml`, drawingXml);
 
   // Create drawing relationships
   const drawingRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>
 </Relationships>`;
-  zip.file('xl/drawings/_rels/drawing1.xml.rels', drawingRelsXml);
+  zip.file(`xl/drawings/_rels/drawing${drawingNum}.xml.rels`, drawingRelsXml);
 
   // Update the target worksheet to reference the drawing
   const sheetPath = `xl/worksheets/sheet${sheetNum}.xml`;
   let sheetXml = await zip.file(sheetPath)?.async('string');
 
+  // Create or update worksheet relationships first to determine rId
+  const sheetRelsPath = `xl/worksheets/_rels/sheet${sheetNum}.xml.rels`;
+  let sheetRelsXml = await zip.file(sheetRelsPath)?.async('string');
+  let drawingRId = 'rId1';
+
+  if (!sheetRelsXml) {
+    // Create new rels file
+    sheetRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${drawingNum}.xml"/>
+</Relationships>`;
+  } else {
+    // Add drawing relationship to existing rels
+    // Find the highest rId and add one
+    const rIdMatches = sheetRelsXml.match(/rId(\d+)/g) || [];
+    const maxId = rIdMatches.reduce((max, id) => {
+      const num = parseInt(id.replace('rId', ''), 10);
+      return num > max ? num : max;
+    }, 0);
+    drawingRId = `rId${maxId + 1}`;
+
+    const newRel = `<Relationship Id="${drawingRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${drawingNum}.xml"/>`;
+    sheetRelsXml = sheetRelsXml.replace('</Relationships>', `  ${newRel}\n</Relationships>`);
+  }
+  zip.file(sheetRelsPath, sheetRelsXml);
+
+  // Now update sheet XML with the correct rId
   if (sheetXml) {
     // Add r namespace if not present
     if (!sheetXml.includes('xmlns:r=')) {
@@ -380,60 +413,29 @@ export const addNativeChart = async (xlsxBuffer, options) => {
     if (!sheetXml.includes('<drawing')) {
       sheetXml = sheetXml.replace(
         '</worksheet>',
-        '  <drawing r:id="rId1"/>\n</worksheet>'
+        `  <drawing r:id="${drawingRId}"/>\n</worksheet>`
       );
     }
 
     zip.file(sheetPath, sheetXml);
   }
 
-  // Create or update worksheet relationships
-  const sheetRelsPath = `xl/worksheets/_rels/sheet${sheetNum}.xml.rels`;
-  let sheetRelsXml = await zip.file(sheetRelsPath)?.async('string');
-
-  if (!sheetRelsXml) {
-    // Create new rels file
-    sheetRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>
-</Relationships>`;
-  } else if (!sheetRelsXml.includes('drawing1.xml')) {
-    // Add drawing relationship to existing rels
-    // Find the highest rId and add one
-    const rIdMatches = sheetRelsXml.match(/rId(\d+)/g) || [];
-    const maxId = rIdMatches.reduce((max, id) => {
-      const num = parseInt(id.replace('rId', ''), 10);
-      return num > max ? num : max;
-    }, 0);
-    const newRId = `rId${maxId + 1}`;
-
-    const newRel = `<Relationship Id="${newRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>`;
-    sheetRelsXml = sheetRelsXml.replace('</Relationships>', `  ${newRel}\n</Relationships>`);
-
-    // Update sheet XML to use new rId
-    if (sheetXml) {
-      sheetXml = sheetXml.replace(/r:id="rId1"/, `r:id="${newRId}"`);
-      zip.file(sheetPath, sheetXml);
-    }
-  }
-  zip.file(sheetRelsPath, sheetRelsXml);
-
   // Update Content_Types.xml
   let contentTypes = await zip.file('[Content_Types].xml')?.async('string');
   if (contentTypes) {
     // Add chart content type if not present
-    if (!contentTypes.includes('application/vnd.openxmlformats-officedocument.drawingml.chart+xml')) {
+    if (!contentTypes.includes('/xl/charts/chart1.xml')) {
       contentTypes = contentTypes.replace(
         '</Types>',
         '  <Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>\n</Types>'
       );
     }
 
-    // Add drawing content type if not present
-    if (!contentTypes.includes('application/vnd.openxmlformats-officedocument.drawing+xml')) {
+    // Add drawing content type for our new drawing
+    if (!contentTypes.includes(`/xl/drawings/drawing${drawingNum}.xml`)) {
       contentTypes = contentTypes.replace(
         '</Types>',
-        '  <Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>\n</Types>'
+        `  <Override PartName="/xl/drawings/drawing${drawingNum}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>\n</Types>`
       );
     }
 
