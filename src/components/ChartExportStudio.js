@@ -160,6 +160,8 @@ const ChartExportStudio = () => {
       const currentData = chartType === 'bar' ? barData : lineData;
       const setData = chartType === 'bar' ? setBarData : setLineData;
       const newData = [...currentData];
+      // Create a new object for the row to avoid mutating frozen preset objects
+      newData[rowIndex] = { ...newData[rowIndex] };
       if (field === 'category') {
         newData[rowIndex].category = value;
       } else {
@@ -168,6 +170,8 @@ const ChartExportStudio = () => {
       setData(newData);
     } else {
       const newData = [...pieData];
+      // Create a new object for the row to avoid mutating frozen preset objects
+      newData[rowIndex] = { ...newData[rowIndex] };
       if (field === 'name') {
         newData[rowIndex].name = value;
       } else {
